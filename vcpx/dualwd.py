@@ -21,6 +21,7 @@ from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir
 from svn import SvnWorkingDir
 from cvs import CvsWorkingDir
+from cvsps import CvspsWorkingDir
 from darcs import DarcsWorkingDir
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):

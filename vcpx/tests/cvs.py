@@ -1,6 +1,6 @@
 #! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- basic cvs tests
+# :Progetto: vcpx -- basic cvsps tests
 # :Creato:   ven 09 lug 2004 01:43:52 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
@@ -8,9 +8,12 @@
 from unittest import TestCase, TestSuite
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.cvs import changesets_from_cvsps
+from vcpx.cvsps import changesets_from_cvsps
 
-SIMPLE_TEST = """\
+class CvspsParserTest(TestCase):
+    """Ensure the cvsps parser does its job."""
+
+    SIMPLE_TEST = """\
 ---------------------
 PatchSet 1500
 Date: 2004/05/09 17:54:22
@@ -25,7 +28,7 @@ Members:
 
 """
 
-DOUBLE_TEST = """\
+    DOUBLE_TEST = """\
 ---------------------
 PatchSet 819
 Date: 2004/06/26 12:05:44
@@ -43,13 +46,10 @@ Members:
 
 """
 
-class CvspsParserTest(TestCase):
-    """Ensure the cvsps parser does its job."""
-
     def testBasicBehaviour(self):
-        """Verify basic cvsps parser behaviour"""
+        """Verify basic cvsps log parser behaviour"""
 
-        log = StringIO(SIMPLE_TEST)
+        log = StringIO(self.SIMPLE_TEST)
         csets = changesets_from_cvsps(log)
 
         cset = csets.next()
@@ -60,9 +60,9 @@ class CvspsParserTest(TestCase):
                                    "(not wrapping long lines).\n")
         
     def testDoubleEntry(self):
-        """Verify the parser recognizes double entries"""
+        """Verify the cvsps log parser recognizes double entries"""
 
-        log = StringIO(DOUBLE_TEST)
+        log = StringIO(self.DOUBLE_TEST)
         csets = changesets_from_cvsps(log)
 
         cset = csets.next()

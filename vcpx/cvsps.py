@@ -60,18 +60,6 @@ class CvsCheckout(SystemCommand):
     COMMAND = "cvs -q -d%(repository)s checkout -r %(revision)s %(module)s"
 
 
-def compare_cvs_revs(rev1, rev2):
-    """Compare two CVS revision numerically, not alphabetically."""
-
-    if not rev1: rev1 = '0'
-    if not rev2: rev2 = '0'
-
-    r1 = [int(n) for n in rev1.split('.')]
-    r2 = [int(n) for n in rev2.split('.')]
-    
-    return cmp(r1, r2)
-
-
 def changesets_from_cvsps(log, sincerev=None):
     """
     Parse CVSps log.
@@ -79,7 +67,8 @@ def changesets_from_cvsps(log, sincerev=None):
 
     from changes import Changeset, ChangesetEntry
     from datetime import datetime
-
+    from cvs import compare_cvs_revs
+    
     # cvsps output sample:
     ## ---------------------
     ## PatchSet 1500
@@ -177,8 +166,8 @@ def changesets_from_cvsps(log, sincerev=None):
             yield Changeset(**pset)
 
 
-class CvsWorkingDir(UpdatableSourceWorkingDir,
-                    SyncronizableTargetWorkingDir):
+class CvspsWorkingDir(UpdatableSourceWorkingDir,
+                      SyncronizableTargetWorkingDir):
 
     """
     An instance of this class represent a read/write CVS working directory,
@@ -217,6 +206,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
     def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname
         from os import makedirs
+        from cvs import CvsEntries
         
         entries = CvsEntries(root)
         
@@ -250,6 +240,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from os.path import join, exists
+        from cvs import CvsEntries, compare_cvs_revs
         
         wdir = join(basedir, module)
         if not exists(wdir):
@@ -457,134 +448,5 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, CvsAdd)
-
-
-class CvsEntry(object):
-    """Collect the info about a file in a CVS working dir."""
-    
-    __slots__ = ('filename', 'cvs_version', 'cvs_tag')
-
-    def __init__(self, entry):
-        """Initialize a CvsEntry."""
-        
-        dummy, fn, rev, date, dummy, tag = entry.split('/')
-        self.filename = fn
-        self.cvs_version = rev
-        self.cvs_tag = tag
-
-    def __str__(self):
-        return "CvsEntry('%s', '%s', '%s')" % (self.filename,
-                                               self.cvs_version,
-                                               self.cvs_tag)
-
-
-class CvsEntries(object):
-    """Collection of CvsEntry."""
-
-    __slots__ = ('files', 'directories', 'deleted')
-    
-    def __init__(self, root):
-        """Parse CVS/Entries file.
-
-           Walk down the working directory, collecting info from each
-           CVS/Entries found."""
-
-        from os.path import join, exists, isdir
-        from os import listdir
-        
-        self.files = {}
-        """Dict of `CvsEntry`, keyed on each file under revision control."""
-        
-        self.directories = {}
-        """Dict of `CvsEntries`, keyed on subdirectories under revision
-           control."""
-
-        self.deleted = False
-        """Flag to denote that this directory was removed."""
-        
-        entries = join(root, 'CVS/Entries')
-        if exists(entries):
-            for entry in open(entries).readlines():
-                entry = entry[:-1]
-
-                if entry.startswith('/'):
-                    e = CvsEntry(entry)
-                    if file and e.filename==file:
-                        return e
-                    else:
-                        self.files[e.filename] = e
-                elif entry.startswith('D/'):
-                    d = entry.split('/')[1]
-                    subdir = CvsEntries(join(root, d))
-                    self.directories[d] = subdir
-                elif entry == 'D':
-                    self.deleted = True 
-
-            # Sometimes the Entries file does not contain the directories:
-            # crawl the current directory looking for missing ones.
-
-            for entry in listdir(root):
-                if entry == '.svn':
-                    continue                
-                dir = join(root, entry)
-                if (isdir(dir) and exists(join(dir, 'CVS/Entries'))
-                    and not self.directories.has_key(entry)):
-                    self.directories[entry] = CvsEntries(dir)
-                    
-            if self.deleted:
-                self.deleted = not self.files and not self.directories
-            
-    def __str__(self):
-        return "CvsEntries(%d files, %d subdirectories)" % (
-            len(self.files), len(self.directories))
-
-    def getFileInfo(self, fpath):
-        """Fetch the info about a path, if known.  Otherwise return None."""
-
-        try:
-            if '/' in fpath:
-                dir,rest = fpath.split('/', 1)
-                return self.directories[dir].getFileInfo(rest)
-            else:
-                return self.files[fpath]
-        except KeyError:
-            return None
-
-    def removedDirectories(self, other, prefix=''):
-        from os.path import join
-        
-        result = []
-        for d in self.directories.keys():
-            a = self.directories.get(d)
-            b = other.directories.get(d)
-            dirpath = join(prefix, d)
-            if not b or b.deleted:
-                result.append(dirpath)
-            else:
-                result.extend(a.removedDirectories(b, prefix=dirpath))
-        return result
-
-    def addedDirectories(self, other, prefix=''):
-        from os.path import join
-        
-        result = []
-        for d in other.directories.keys():
-            a = self.directories.get(d)
-            b = other.directories.get(d)
-            dirpath = join(prefix, d)
-            if not a:
-                result.append(dirpath)
-            else:
-                result.extend(a.addedDirectories(b, prefix=dirpath))
-        return result
-    
-    def compareDirectories(self, other):
-        """Compare the directories with those of another instance and return
-           a tuple (added, removed)."""
-
-        added = self.addedDirectories(other)
-        removed = self.removedDirectories(other)
-
-        return (added, removed)
 
 
