@@ -61,32 +61,48 @@ class TailorConfig(object):
         self.basedir = split(self.configfile)[0]
         
     def __call__(self, args):
-        from os.path import join
+        from os.path import join, exists, split
         from source import ChangesetApplicationFailure
         
         self.__load()
 
-        if len(args) == 0 and self.options.update:
-            args = [join(self.basedir, r) for r in self.config.keys()]
-
+        if len(args) == 0:
+            fromconfig = True
+            if self.options.bootstrap:
+                f = lambda x: not exists(x)
+            else:
+                f = exists
+                
+            args = [p for p in [join(self.basedir, r)
+                                for r in self.config.keys()] if f(p)]
+            args.sort()
+        else:
+            fromconfig = False
+            
         try:
             for root in args:
-                if self.options.bootstrap:                
-                    if self.config.has_key(relpathto(root, self.basedir)):
-                        raise ExistingProjectError(
-                            "Project %r cannot be bootstrapped twice" % root)
-
-                    if not self.options.repository:
+                if not self.options.bootstrap:                
+                    if not (fromconfig or self.options.repository):
                         raise OptionError('Need a repository to bootstrap %r' %
-                                          root)
-                elif self.options.update:
+                                          root, '--bootstrap')
+                else:
                     if not self.config.has_key(relpathto(root, self.basedir)):
                         raise UnknownProjectError("Project %r does not exist" %
                                                   root)
                     
                 tailored = TailorizedProject(root, self.options.verbose, self)
 
-                if self.options.bootstrap:                
+                if self.options.bootstrap:
+                    if fromconfig:                        
+                        info = self.loadProject(root=root)
+                        self.options.source_kind = info['source_kind']
+                        self.options.target_kind = info['target_kind']
+                        self.options.repository = info['upstream_repos']
+                        self.options.module = info['module']
+                        self.options.subdir = info.get('subdir',
+                                                       split(info['module'])[1])
+                        self.options.revision = info['upstream_revision']
+                        
                     tailored.bootstrap(self.options.source_kind,
                                        self.options.target_kind,
                                        self.options.repository,
