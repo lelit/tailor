@@ -15,8 +15,9 @@ unversioned file named `tailor.info` at the root.
 
 __docformat__ = 'reStructuredText'
 
-from optparse import OptionParser, OptionError, OptionGroup, make_option
+from optparse import OptionParser, OptionGroup, make_option
 from dualwd import DualWorkingDir
+from source import InvocationError
 
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
@@ -83,8 +84,8 @@ class TailorConfig(object):
             for root in args:
                 if self.options.bootstrap:                
                     if not (fromconfig or self.options.repository):
-                        raise OptionError('Need a repository to bootstrap %r' %
-                                          root, '--bootstrap')
+                        raise InvocationError('Need a repository to bootstrap '
+                                              '%r' % root, '--bootstrap')
                 else:
                     if not self.config.has_key(relpathto(root, self.basedir)):
                         raise UnknownProjectError("Project %r does not exist" %
@@ -486,8 +487,8 @@ def main():
                         "Project %r cannot be bootstrapped twice" % proj)
 
                 if not options.repository:
-                    raise OptionError('Need a repository to bootstrap %r' %
-                                      proj)
+                    raise InvocationError('Need a repository to bootstrap %r' %
+                                          proj)
             else:
                 if not exists(proj):
                     raise UnknownProjectError("Project %r does not exist" %
