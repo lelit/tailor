@@ -43,7 +43,7 @@ class SystemCommand(object):
     def __call__(self, output=None, input=None, dry_run=False, **kwargs):
         """Execute the command."""
         
-        from os import system, popen, popen2, chdir
+        from os import system, popen, popen2, wait, chdir
         from shutil import copyfileobj
         
         wdir = self.working_dir or kwargs.get('working_dir')
@@ -76,13 +76,17 @@ class SystemCommand(object):
             copyfileobj(out, output, length=128)
             output.seek(0)
 
-            self.exit_status = out.close()
+            if input:
+                self.exit_status = wait()[1]
+            else:
+                self.exit_status = out.close()
         else:
             if input:
                 inp, out = popen2(command)
                 inp.write(input)
                 inp.close()
-                self.exit_status = out.close()
+                out.close()
+                self.exit_status = wait()[1]
             else:
                 self.exit_status = system(command)            
                     
