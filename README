@@ -117,7 +117,16 @@ Author
 
 Lele Gaifax <lele@nautilus.homeip.net>
 
+About this document
+===================
 
+This document uses the reStructuredText format so that it can be easily
+converted into other formats, such as HTML. For more information about this,
+please see:
+http://docutils.sourceforge.net/rst.html
+
+
+.. vim:ft=rest
 .. Local Variables:
 .. mode: rst
 .. End:
