@@ -42,13 +42,15 @@ class CvsRepos(object):
 
         if not reposdir:
             from tempfile import mkdtemp
-            reposdir = mkdtemp(prefix="rep")
+            self.tmpdir = reposdir = mkdtemp(prefix="rep")
+        else:
+            self.tmpdir = None
             
         self.reposdir = reposdir
         self.initialize()
         self.populateInitial()
 
-    def cleanup(self):
+    def __del__(self):
         """Remove the repository from the filesystem.
         """
         
@@ -107,16 +109,26 @@ class CvsTestWC(object):
         self.changed = []
         self.added_dirs = []
         self.removed_dirs = []        
-
+ 
         if not tmpdir:
             from tempfile import mkdtemp
-            tmpdir = mkdtemp(prefix="wc")
+            self.tmpdir = tmpdir = mkdtemp(prefix="wc")
+        else:
+            self.tmpdir = None
             
         cocmd = CvsCheckout(working_dir=tmpdir)
         cocmd(repos=repos.reposdir)
         assert (not cocmd.exit_status)
         
         self.wcdir = join(tmpdir, 'test')
+
+    def __del__(self):
+        """Cleanup the test working copy."""
+
+        from shutil import rmtree
+
+        if self.tmpdir:
+            rmtree(self.tmpdir)
 
     def commit(self, msg):
         """Execute a ``cvs commit``.

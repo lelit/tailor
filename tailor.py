@@ -19,8 +19,11 @@ Examples::
   # Bootstrap a new taylored project, starting at revision 10
   $ tailor.py --bootstrap ~/svnwc/MyProduct http://svn.example.com/Product@10
 
+  # Alternatively, use darcs for the tailorization
+  $ tailor.py --darcs --bootstrap ~/svnwc/MyProduct file:///repos/Product@10
+
   # Merge upstream changes since last update/bootstrap
-  $ tailor.py ~/svnwc/MyProducts
+  $ tailor.py ~/svnwc/MyProduct
 
   # Show what's changed in current working directory
   $ tailor.py --diff

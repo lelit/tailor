@@ -21,10 +21,6 @@ class SvnAdminLoad(SystemCommand):
     COMMAND = "svnadmin load --quiet %(repository)s < %(dumpfile)s"
 
 
-class SvnCheckout(SystemCommand):
-    COMMAND = "svn co --quiet --revision 0 %(repository)s %(wc)s"
-
-    
 class TestRepository(object):
     """A simple wrapper to a svn repository."""
 
@@ -47,27 +43,47 @@ class TestRepository(object):
         svnl(dumpfile=join(dirname(__file__),'testrepo.dump'),
              repository=self.repospath)
 
-        
-class SvnLogTest(TestCase):
-    """Test `svn log` parse functionality."""
 
+class SvnBasicTest(TestCase):
+    """Test basic svn related functionalities."""
+    
     def __init__(self, methodName):
         TestCase.__init__(self, methodName)
 
         repos = '/tmp/cvsync.test'
         self.repos = TestRepository(repos)
         wc = '/tmp/cvsync.wc'
-        svnco = SvnCheckout()
-        svnco(repository=self.repos.reposurl, wc=wc)
         self.wc = SvnWorkingDir(wc)
 
+    def testCheckout(self):
+        """Verify that svn checkout returns right info"""
+
+        info = self.wc.checkout(self.repos.reposurl+'@0')
+        self.assertEqual(info['URL'], self.repos.reposurl)
+        self.assertEqual(info['Revision'], '0')
+    
+class SvnLogTest(TestCase):
+    """Test `svn log` parse functionality."""
+
+    def __init__(self, methodName):
+        from os.path import exists
+        
+        TestCase.__init__(self, methodName)
+
+        repos = '/tmp/cvsync.test'
+        self.repos = TestRepository(repos)
+        wc = '/tmp/cvsync.wc'
+        self.wc = SvnWorkingDir(wc)
+        if not exists(wc):
+            self.wc.checkout(self.repos.reposurl + '@0')
+        
     def testLogParser(self):
         """Verify the `svn log` parser"""
         
         revisions = self.wc.log()
         self.assertEqual(len(revisions), 3)
         
-        self.assertEqual(revisions[0].revision, 1)
+        self.assertEqual(revisions[0].revision, '1')
         self.assertEqual(revisions[0].author, 'lele')
         self.assertEqual(revisions[0].date, '2004-05-31T14:38:46.210103Z')
         self.assertEqual(revisions[0].paths, [
@@ -78,7 +94,7 @@ class SvnLogTest(TestCase):
             (u'/DirA', u'A'),
             (u'/FileB.txt', u'A')])
         
-        self.assertEqual(revisions[1].revision, 2)
+        self.assertEqual(revisions[1].revision, '2')
         self.assertEqual(revisions[1].author, 'lele')
         self.assertEqual(revisions[1].date, '2004-05-31T14:40:58.583701Z')
         self.assertEqual(revisions[1].paths, [
@@ -86,7 +102,7 @@ class SvnLogTest(TestCase):
             (u'/FileC.txt', u'M'),
             (u'/FileA.txt', u'M')])
         
-        self.assertEqual(revisions[2].revision, 3)
+        self.assertEqual(revisions[2].revision, '3')
         self.assertEqual(revisions[2].author, 'lele')
         self.assertEqual(revisions[2].date, '2004-06-01T13:52:35.711425Z')
         self.assertEqual(revisions[2].paths, [

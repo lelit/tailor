@@ -138,6 +138,10 @@ class SvnDiff(SystemCommand):
     COMMAND = "svn diff --old %(other)s@%(otherrev)s --new ."
 
     
+class SvnCheckout(SystemCommand):
+    COMMAND = "svn co --quiet --revision %(revision)s %(repository)s %(wc)s"
+
+    
 def getHeadRevision(source, baserev):
     """Using ``svn log`` determine the HEAD revision of a source."""
 
@@ -173,6 +177,17 @@ class SvnWorkingDir(object):
         else:
             return mayberel
 
+    def checkout(self, uri):
+        if '@' in uri:
+            src,rev = uri.split('@')
+        else:
+            src = uri
+            rev = "HEAD"
+
+        svnco = SvnCheckout()
+        svnco(repository=src, wc=self.root, revision=rev)
+        return self.info(self.root)
+    
     def log(self):
         """Return an object representation of the ``svn log`` thru HEAD."""
 
@@ -199,7 +214,7 @@ class SvnWorkingDir(object):
             def startElement(self, name, attributes):
                 if name == 'logentry':
                     self.current = SvnRevisionLogEntry()
-                    self.current.revision = int(attributes['revision'])
+                    self.current.revision = attributes['revision']
                 elif name in ['author', 'date', 'msg']:
                     self.current_field = []
                 elif name == 'path':
@@ -267,8 +282,8 @@ class SvnWorkingDir(object):
                 res[key] = value[1:]
         return res
 
-    def copy(self, uri, dest, dry_run=False):
-        """Copy a source URI to dest."""
+    def copy(self, uri, dest=None, dry_run=False):
+        """Copy an external source URI into the working copy."""
 
         from os.path import dirname, commonprefix
             
@@ -278,6 +293,9 @@ class SvnWorkingDir(object):
             src = uri
             rev = "HEAD"
 
+        if not dest:
+            dest = self.root
+            
         info = self.info(dirname(dest))
         prefix = commonprefix([info['URL'], src])
         
