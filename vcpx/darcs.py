@@ -58,6 +58,10 @@ class DarcsTag(SystemCommand):
     COMMAND = "darcs tag --standard-verbosity --patch-name='%(tagname)s'"
 
 
+class DarcsChanges(SystemCommand):
+    COMMAND = "darcs changes --from-tag=tagname --xml-output --summary"
+
+
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
@@ -69,15 +73,94 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
         Do the actual work of fetching the upstream changeset.
         
-        This is different from the other mechanism: here we want register
-        with the target the changes we submitted to this repository to be
-        sent back to upstream.
-
-        So, here we actually list the changes after the last tag.
+        This is different from the other VC mechanisms: here we want
+        register with the target the changes we submitted to this
+        repository to be sent back to upstream. Since we may want to
+        regroup the various patchsets into a single one, we first
+        manually pull here what we wanna send, then the sync will replay 
+        the changes of all new changesets.
+        
+        So, here we actually list the changes after the last tag, not
+        those pending on the other side.
         """
 
         tagname = self._getLastTag(root)
-        # darcs changes --from-tag=tagname --xml-output
+        
+        c = DarcsChanges(working_dir=root)
+        changes = c(output=True)
+
+        changesets = self.__parseDarcsChanges(changes)
+
+        if changesets:
+            self._createTag(root,
+                            'Sent %d patchsets upstream' % len(changesets))
+
+        return changesets
+    
+    def __parseDarcsChanges(self, changes):
+        from xml.sax import parseString
+        from xml.sax.handler import ContentHandler
+        from changes import ChangesetEntry, Changeset
+        
+        class DarcsXMLChangesHandler(ContentHandler):
+            def __init__(self):
+                self.changesets = []
+                self.current = None
+                self.current_field = []
+
+            def startElement(self, name, attributes):
+                if name == 'patch':
+                    self.current = {}
+                    self.current['author'] = attributes['author']
+                    self.current['date'] = attributes['local_date']
+                    self.current['revision'] = attributes['revision']
+                    self.current['entries'] = []
+                elif name in ['name', 'comment',
+                              'add_file', 'add_directory',
+                              'modify_file', 'remove_file',
+                              'rename_file']:
+                    self.current_field = []
+                elif name == 'path':
+                    self.current_field = []
+                    if attributes.has_key('copyfrom-path'):
+                        self.current_path_action = (
+                            attributes['action'],
+                            attributes['copyfrom-path'][1:], # make it relative
+                            attributes['copyfrom-rev'])
+                    else:
+                        self.current_path_action = attributes['action']
+
+            def endElement(self, name):
+                if name == 'patch':
+                    # Sort the paths to make tests easier
+                    self.current['entries'].sort()
+                    self.changesets.append(Changeset(self.current['name'],
+                                                     self.current['date'],
+                                                     self.current['author'],
+                                                     self.current['comment'],
+                                                     self.current['entries']))
+                    self.current = None
+                elif name in ['name', 'comment']:
+                    self.current[name] = ''.join(self.current_field)
+                elif name in ['add_file', 'add_directory',
+                              'modify_file', 'remove_file',
+                              'rename_file']:
+                    entry = ChangesetEntry(''.join(self.current_field))
+                    entry.action_kind = { 'add_file': entry.ADDED,
+                                          'add_directory': entry.ADDED,
+                                          'modify_file': entry.MODIFIED,
+                                          'remove_file': entry.REMOVED,
+                                          'rename_file': entry.RENAMED
+                                        }[name]
+
+                    self.current['entries'].append(entry)
+
+            def characters(self, data):
+                self.current_field.append(data)
+        
+        handler = DarcsXMLChangesHandler()
+        parseString(changes.getvalue(), handler)
+        return handler.changesets
         
     def _applyChangeset(self, root, changeset):
         """
