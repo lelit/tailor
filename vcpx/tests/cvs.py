@@ -342,11 +342,3 @@ Fixed deepcopy problem in validations
         cset = csets[0]
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
         
-    def testChangesetsSinceDate(self): 
-        """Verify the parser omits already seen changesets"""
-
-        log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log, datetime(2004, 6, 10, 2, 17, 20),
-                                       reposprefix=self.DELETED_TEST_PREFIX)
-
-        self.assertEqual(len(csets), 0)

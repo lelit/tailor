@@ -28,12 +28,12 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s 2>/dev/null"
+    COMMAND = "TZ=UTC cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s 2>/dev/null"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
         if since:
-            kwargs['since'] = "-d'%s<'" % since
+            kwargs['since'] = "-d'%s UTC<'" % since
         else:
             kwargs['since'] = ''
 
@@ -47,7 +47,7 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log, sincedate=None, reposprefix=None):
+def changesets_from_cvslog(log, reposprefix=None):
     """
     Parse CVS log.
     """
@@ -61,9 +61,6 @@ def changesets_from_cvslog(log, sincedate=None, reposprefix=None):
     last = None
     
     for cs in collected:
-        if sincedate and cs.date <= sincedate:
-            continue
-        
         if not last:
             last = cs
             collapsed.append(cs)
@@ -238,8 +235,6 @@ class CvsWorkingDir(CvspsWorkingDir):
     
     def _getUpstreamChangesets(self, root, sincerev=None):
         from os.path import join, exists
-        from time import strptime
-        from datetime import datetime
 
         entries = CvsEntries(root)
         
@@ -249,12 +244,9 @@ class CvsWorkingDir(CvspsWorkingDir):
             # Start from the ancient entry timestamp.
             ancient = entries.getAncientEntry()
             since = ancient.timestamp.isoformat(sep=' ')
-            sincedate = None
         else:
             # Assume this is from __getGlobalRevision()
             since,author = sincerev.split(' by ')
-            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(since, "%Y-%m-%d %H:%M:%S")
-            sincedate = datetime(y,m,d,hh,mm,ss)
 
         pivot = entries.getPivotEntry()
         reposprefix = self.__determineReposPrefix(root, pivot)
@@ -274,7 +266,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         changesets = []
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
-        for cs in changesets_from_cvslog(log, sincedate, reposprefix):
+        for cs in changesets_from_cvslog(log, reposprefix):
             changesets.append(cs)
 
         return changesets
