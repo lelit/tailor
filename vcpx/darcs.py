@@ -80,6 +80,85 @@ class DarcsGet(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
+def changesets_from_darcschanges(changes):
+    from xml.sax import parseString
+    from xml.sax.handler import ContentHandler
+    from changes import ChangesetEntry, Changeset
+    from datetime import datetime
+
+    class DarcsXMLChangesHandler(ContentHandler):
+        def __init__(self):
+            self.changesets = []
+            self.current = None
+            self.current_field = []
+
+        def startElement(self, name, attributes):
+            if name == 'patch':
+                self.current = {}
+                self.current['author'] = attributes['author']
+                date = attributes['date']
+                # 20040619130027
+                y = int(date[:4])
+                m = int(date[4:6])
+                d = int(date[6:8])
+                hh = int(date[8:10])
+                mm = int(date[10:12])
+                ss = int(date[12:14])
+                timestamp = datetime(y, m, d, hh, mm, ss)
+                self.current['date'] = timestamp
+                self.current['comment'] = ''
+                self.current['entries'] = []
+            elif name in ['name', 'comment',
+                          'add_file', 'add_directory',
+                          'modify_file', 'remove_file']:
+                self.current_field = []
+            elif name == 'move':
+                self.old_name = attributes['from']
+                self.new_name = attributes['to']
+
+        def endElement(self, name):
+            if name == 'patch':
+                # Sort the paths to make tests easier
+                self.current['entries'].sort()
+                self.changesets.append(Changeset(self.current['name'],
+                                                 self.current['date'],
+                                                 self.current['author'],
+                                                 self.current['comment'],
+                                                 self.current['entries']))
+                self.current = None
+            elif name in ['name', 'comment']:
+                self.current[name] = ''.join(self.current_field)
+            elif name == 'move':
+                entry = ChangesetEntry(self.new_name)
+                entry.action_kind = entry.RENAMED
+                entry.old_name = self.old_name
+                self.current['entries'].append(entry)
+            elif name in ['add_file', 'add_directory',
+                          'modify_file', 'remove_file']:
+                entry = ChangesetEntry(''.join(self.current_field))
+                entry.action_kind = { 'add_file': entry.ADDED,
+                                      'add_directory': entry.ADDED,
+                                      'modify_file': entry.UPDATED,
+                                      'remove_file': entry.DELETED,
+                                      'rename_file': entry.RENAMED
+                                    }[name]
+
+                self.current['entries'].append(entry)
+
+        def characters(self, data):
+            self.current_field.append(data)
+
+    handler = DarcsXMLChangesHandler()
+    parseString(changes.getvalue(), handler)
+
+    changesets = handler.changesets
+    
+    # sort changeset by date
+    changesets.sort(lambda x, y: cmp(x.date, y.date))
+
+    return changesets
+
+    
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
@@ -108,94 +187,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = DarcsChanges(working_dir=root)
         changes = c(output=True, patch=sincerev)
 
-        changesets = self.__parseDarcsChanges(changes)
-
-        # sort changeset by date
-        changesets.sort(lambda x, y: cmp(x.date, y.date))
+        changesets = changesets_from_darcschanges(changes)
 
         return changesets
-    
-    def __parseDarcsChanges(self, changes):
-        from xml.sax import parseString
-        from xml.sax.handler import ContentHandler
-        from changes import ChangesetEntry, Changeset
-        from datetime import datetime
-        
-        class DarcsXMLChangesHandler(ContentHandler):
-            def __init__(self):
-                self.changesets = []
-                self.current = None
-                self.current_field = []
-
-            def startElement(self, name, attributes):
-                if name == 'patch':
-                    self.current = {}
-                    self.current['author'] = attributes['author']
-                    date = attributes['date']
-                    # 20040619130027
-                    y = int(date[:4])
-                    m = int(date[4:6])
-                    d = int(date[6:8])
-                    hh = int(date[8:10])
-                    mm = int(date[10:12])
-                    ss = int(date[12:14])
-                    timestamp = datetime(y, m, d, hh, mm, ss)
-                    self.current['date'] = timestamp
-                    self.current['comment'] = ''
-                    self.current['entries'] = []
-                elif name in ['name', 'comment',
-                              'add_file', 'add_directory',
-                              'modify_file', 'remove_file']:
-                    self.current_field = []
-                elif name == 'path':
-                    self.current_field = []
-                    if attributes.has_key('copyfrom-path'):
-                        self.current_path_action = (
-                            attributes['action'],
-                            attributes['copyfrom-path'][1:], # make it relative
-                            attributes['copyfrom-rev'])
-                    else:
-                        self.current_path_action = attributes['action']
-                elif name == 'move':
-                    self.old_name = attributes['from']
-                    self.new_name = attributes['to']
-                    
-            def endElement(self, name):
-                if name == 'patch':
-                    # Sort the paths to make tests easier
-                    self.current['entries'].sort()
-                    self.changesets.append(Changeset(self.current['name'],
-                                                     self.current['date'],
-                                                     self.current['author'],
-                                                     self.current['comment'],
-                                                     self.current['entries']))
-                    self.current = None
-                elif name in ['name', 'comment']:
-                    self.current[name] = ''.join(self.current_field)
-                elif name == 'move':
-                    entry = ChangesetEntry(self.new_name)
-                    entry.action_kind = entry.RENAMED
-                    entry.old_name = self.old_name
-                    self.current['entries'].append(entry)
-                elif name in ['add_file', 'add_directory',
-                              'modify_file', 'remove_file']:
-                    entry = ChangesetEntry(''.join(self.current_field))
-                    entry.action_kind = { 'add_file': entry.ADDED,
-                                          'add_directory': entry.ADDED,
-                                          'modify_file': entry.UPDATED,
-                                          'remove_file': entry.DELETED,
-                                          'rename_file': entry.RENAMED
-                                        }[name]
-
-                    self.current['entries'].append(entry)
-
-            def characters(self, data):
-                self.current_field.append(data)
-        
-        handler = DarcsXMLChangesHandler()
-        parseString(changes.getvalue(), handler)
-        return handler.changesets
-        
+            
     def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
@@ -224,7 +219,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = DarcsLastChange(working_dir=wdir)
         changes = c(output=True)
-        last = self.__parseDarcsChanges(c(output=True))
+        last = changesets_from_darcschanges(c(output=True))
         
         return last[0].revision
 

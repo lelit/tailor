@@ -7,6 +7,7 @@
 from shwrap import *
 from cvsps import *
 from cvs import *
+from darcs import *
 
 SystemCommand.VERBOSE = False
 
