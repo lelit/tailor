@@ -190,7 +190,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         changesets = changesets_from_darcschanges(changes)
 
         return changesets
-            
+    
     def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
@@ -206,7 +206,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Concretely do the checkout of the upstream revision.
         """
 
-        from os.path import join, isdir, abspath, exists
+        from os.path import join, exists
         
         wdir = join(basedir, module)
 
@@ -231,7 +231,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Add a new entry, maybe registering the directory as well.
         """
 
-        from os.path import split, join, exists
+        from os.path import split
 
         basedir = split(entry)[0]
 
@@ -289,7 +289,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Tag the current situation and remember this as the *last tag*.
         """
 
-        from os.path import join, exists
+        from os.path import join
         
         c = DarcsTag(working_dir=root)
         c(output=True, tagname=tagname)
