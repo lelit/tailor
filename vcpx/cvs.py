@@ -13,6 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
 from cvsps import CvspsWorkingDir
+from source import GetUpstreamChangesetsFailure
 
 class EmptyRepositoriesFoolsMe(Exception):
     "Cannot handle empty repositories. Maybe wrong module/repository?"
