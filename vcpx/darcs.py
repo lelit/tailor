@@ -298,7 +298,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         motd.close()
 
         boring = open(join(root, '_darcs/prefs/boring'), 'a')
-        boring.write('tailor.log\ntailor.info\n')
+        boring.write('^tailor.log$\n^tailor.info$\n')
         boring.close()
         
         c = SystemCommand(working_dir=root,
