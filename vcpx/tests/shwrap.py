@@ -31,7 +31,7 @@ class SystemCommandTest(TestCase):
         """Verify SystemCommand exit_status of ``true`` feeding input.
         """
 
-        c = SystemCommand('true')
+        c = SystemCommand('cat > /dev/null && true')
         c(input="Ciao")
         self.assertEqual(c.exit_status, 0)
 
@@ -63,7 +63,7 @@ class SystemCommandTest(TestCase):
         """Verify SystemCommand exit_status of ``false`` feeding input.
         """
 
-        c = SystemCommand('false')
+        c = SystemCommand('cat > /dev/null && false')
         c(input="Ciao")
         self.assertNotEqual(c.exit_status, 0)
 
