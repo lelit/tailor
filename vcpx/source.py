@@ -14,8 +14,22 @@ __docformat__ = 'reStructuredText'
 
 
 class UpdatableSourceWorkingDir(object):
-    """This is an abstract working dir. Subclasses MUST override at least
-       the _underscoredMethods."""
+    """
+    This is an abstract working dir able to follow an upstream
+    source of `changesets`.
+
+    It has two main functionalities:
+
+    applyUpstreamChangesets
+        to query the upstream server about new changesets and
+        apply them to the working directory
+
+    checkoutUpstreamRevision
+        to extract a new copy of the sources, actually initializing
+        the mechanism.
+      
+    Subclasses MUST override at least the _underscoredMethods.
+    """
 
     def applyUpstreamChangesets(self, root, replay=None):
         """
@@ -55,6 +69,10 @@ class UpdatableSourceWorkingDir(object):
     def _applyChangeset(self, root, changeset):
         """
         Do the actual work of applying the changeset to the working copy.
+
+        Subclasses should reimplement this method performing the
+        necessary steps to *merge* given `changeset`, returning a list
+        with the conflicts, if any.
         """
 
         raise "%s should override this method" % self.__class__
@@ -62,6 +80,14 @@ class UpdatableSourceWorkingDir(object):
     def checkoutUpstreamRevision(self, root, repository, revision):
         """
         Extract a working copy from a repository.
+
+        :root: the name of the directory (that should **not** exists)
+               that will contain the working copy of the sources
+
+        :repository: the address of the repository (the format depends on
+                     the actual method used by the subclass)
+
+        :revision: extract that revision/branch
         """
 
         from os.path import split

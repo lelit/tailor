@@ -16,8 +16,22 @@ PATCH_AUTHOR = "tailor@localhost"
 
 class SyncronizableTargetWorkingDir(object):
     """
-    This is an abstract working dir. Subclasses MUST override at least
-    the _underscoredMethods.
+    This is an abstract working dir usable as a *shadow* of another
+    kind of VC, sharing the same working directory.
+
+    Most interesting entry points are:
+
+    replayChangeset
+        to replay an already applied changeset, to mimic the actions
+        performed by the upstream VC system on the tree such as
+        renames, deletions and adds.  This is an useful argument to
+        feed as `replay` to `applyUpstreamChangesets`
+
+    initializeNewWorkingDir
+        to initialize a pristine working directory tree under this VC
+        system, possibly extracted under a different kind of VC
+    
+    Subclasses MUST override at least the _underscoredMethods.
     """
 
     def replayChangeset(self, root, changeset):
@@ -91,6 +105,15 @@ class SyncronizableTargetWorkingDir(object):
         Assuming the `root` directory is a new working copy extracted
         from some VC repository, add it and all its content to the
         target repository.
+
+        This implementation first runs the given `addentry`
+        *SystemCommand* on the `root` directory, then it walks down
+        the `root` tree executing the same command on each entry
+        excepted the usual VC-specific control directories such as
+        ``.svn``, ``_darcs`` or ``CVS``.
+
+        If this does make sense, subclasses should just call this
+        method with the right `addentry` command.
         """
 
         assert addentry, "Subclass should have specified something as addentry"
