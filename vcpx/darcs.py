@@ -16,10 +16,6 @@ from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
-class DarcsInitialize(SystemCommand):
-    COMMAND = "darcs initialize"
-
-
 class DarcsRecord(SystemCommand):
     COMMAND = "darcs record --all --pipe %(entries)s"
 
@@ -36,52 +32,6 @@ class DarcsRecord(SystemCommand):
         return SystemCommand.__call__(self, output=output, input=input,
                                       dry_run=dry_run, 
                                       **kwargs)
-
-
-class DarcsMv(SystemCommand):
-    COMMAND = "darcs mv --standard-verbosity %(old)s %(new)s"
-
-
-class DarcsRemove(SystemCommand):
-    COMMAND = "darcs remove --standard-verbosity %(entry)s"
-
-
-class DarcsAdd(SystemCommand):
-    COMMAND = "darcs add --not-recursive --standard-verbosity %(entry)s"
-
-
-class DarcsAddAll(SystemCommand):
-    COMMAND = "darcs add --recursive --standard-verbosity %(entry)s"
-
-
-class DarcsTag(SystemCommand):
-    COMMAND = "darcs tag --standard-verbosity --patch-name='%(tagname)s'"
-
-
-class DarcsChanges(SystemCommand):
-    COMMAND = "darcs changes --from-patch='%(patch)s' --xml-output --summary"
-
-
-class DarcsLastChange(SystemCommand):
-    COMMAND = "darcs changes --last=1 --xml-output"
-
-
-class DarcsAnnotate(SystemCommand):
-    COMMAND = "darcs annotate --standard-verbosity %(entry)s >/dev/null 2>&1"
-
-    
-class DarcsGet(SystemCommand):
-    COMMAND = "darcs get --standard-verbosity %(tag)s '%(repository)s'"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        tag = kwargs.get('tag')
-        if tag and tag <> 'HEAD':
-            kwargs['tag'] = '--tag=%s' % tag
-        else:
-            kwargs['tag'] = ''
-            
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
 
 
 def changesets_from_darcschanges(changes):
@@ -176,33 +126,60 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     def _getUpstreamChangesets(self, root, sincerev=None):
         """
         Do the actual work of fetching the upstream changeset.
-        
-        This is different from the other VC mechanisms: here we want
-        register with the target the changes we submitted to this
-        repository to be sent back to upstream. Since we may want to
-        regroup the various patchsets into a single one, we first
-        manually pull here what we wanna send, then the sync will replay 
-        the changes of all new changesets.
-        
-        So, here we actually list the changes after the last tag, not
-        those pending on the other side.
         """
 
-        c = DarcsChanges(working_dir=root)
-        changes = c(output=True, patch=sincerev)
+        from datetime import datetime
+        from time import strptime
+        from changes import Changeset
+        
+        c = SystemCommand(working_dir=root, command="darcs pull --dry-run")
+        output = c(output=True)
 
-        changesets = changesets_from_darcschanges(changes)
+        l = output.readline()
+        while l and not l.startswith('Would pull the following changes:'):
+            l = output.readline()
+
+        changesets = []
+        
+        ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
+        ##   * Refix _getUpstreamChangesets for darcs
+
+        l = output.readline()
+        while not l.startswith('Making no changes:  this is a dry run.'):
+            date,author = l.split('  ')
+            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
+            date = datetime(y,m,d,hh,mm,ss)
+            author = author[:-1]
+            l = output.readline()
+            assert l.startswith('  * ')
+            name = l[4:-1]
+            
+            changelog = []
+            l = output.readline()
+            while l.startswith(' '):
+                changelog.append(l.strip())
+                l = output.readline()
+
+            changesets.append(Changeset(name,date,author,' '.join(changelog)))
+            
+            while not l.strip():
+                l = output.readline()
 
         return changesets
     
     def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
-
-        The changeset is already applied, so this is a do nothing method.
         """
 
-        return
+        c = SystemCommand(working_dir=root,
+                          command="darcs pull --all --patches=%(patch)s")
+        output = c(output=True, patch=repr(changeset.revision))
+
+        c = SystemCommand(working_dir=root,
+                          command="darcs changes --last=1 --xml-output --summ")
+        last = changesets_from_darcschanges(c(output=True))
+        changeset.entries.extend(last[0].entries)
 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   logger=None):
@@ -215,13 +192,19 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         wdir = join(basedir, module)
 
         if not exists(wdir):
-            dget = DarcsGet(working_dir=basedir)
-            dget(output=True, repository=repository, tag=revision)
+            dget = SystemCommand(working_dir=basedir,
+                                 command="darcs get --partial --verbose"
+                                         " %(tag)s '%(repository)s'")
+            
+            dget(output=True, repository=repository,
+                 tag=revision<>'HEAD' and '--tag=%s' % repr(revision) or '')
             if dget.exit_status:
                 raise TargetInitializationFailure(
                     "'darcs get' returned status %s" % dget.exit_status)
 
-        c = DarcsLastChange(working_dir=wdir)
+        c = SystemCommand(working_dir=wdir,
+                          command="darcs changes --last=1 --xml-output")
+        
         changes = c(output=True)
         last = changesets_from_darcschanges(c(output=True))
         
@@ -245,7 +228,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 # whether a particular directory is already version
                 # controlled by darcs.
         
-                dannot = DarcsAnnotate(working_dir=root)
+                dannot = SystemCommand(working_dir=root,
+                                       command="darcs annotate --standard-verb"
+                                               " %(entry)s >/dev/null 2>&1")
         
                 dannot(entry=basedir)
                 if dannot.exit_status:
@@ -253,7 +238,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 self.__visitedDirs[basedir] = True
                 
-        c = DarcsAdd(working_dir=root)
+        c = SystemCommand(working_dir=root,
+                          command="darcs add --not-recursive"
+                                  " --standard-verbosity %(entry)s")
         c(entry=entry)
 
         
@@ -277,7 +264,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Remove an entry.
         """
 
-        c = DarcsRemove(working_dir=root)
+        c = SystemCommand(working_dir=root,
+                          command="darcs remove --standard-verbosity"
+                                  " %(entry)s")
         c(entry=entry)
 
     def _renameEntry(self, root, oldentry, newentry):
@@ -285,51 +274,25 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Rename an entry.
         """
 
-        c = DarcsMv(working_dir=root)
+        c = SystemCommand(working_dir=root,
+                          command="darcs mv --standard-verbosity"
+                                  " %(old)s %(new)s")
         c(old=oldentry, new=newentry)
-
-    def _createTag(self, root, tagname):
-        """
-        Tag the current situation and remember this as the *last tag*.
-        """
-
-        from os.path import join
-        
-        c = DarcsTag(working_dir=root)
-        c(output=True, tagname=tagname)
-        
-        fname = join(root, '_darcs', 'last-sync-tag')
-        f = open(fname, 'w')
-        f.write(tagname)
-        f.close()
-        
-    def _getLastTag(self, root):
-        """
-        Return the name of the last emitted tag, if any, otherwise None.
-        """
-        
-        from os.path import join, exists
-        
-        fname = join(root, '_darcs', 'last-sync-tag')
-        if exists(fname):
-            f = open(fname)
-            tagname = f.read()
-            f.close()
-            
-            return tagname
 
     def _initializeWorkingDir(self, root, module):
         """
         Execute `darcs initialize`.
         """
         
-        c = DarcsInitialize(working_dir=root)
+        c = SystemCommand(working_dir=root, command="darcs initialize")
         c(output=True)
 
         if c.exit_status:
             raise TargetInitializationFailure(
                 "'darcs initialize' returned status %s" % c.exit_status)
         else:
-            c = DarcsAddAll(working_dir=root)
+            c = SystemCommand(working_dir=root,
+                              command="darcs add --recursive"
+                                      " --standard-verbosity %(entry)s")
             c(entry=module)
 
