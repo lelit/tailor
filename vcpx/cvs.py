@@ -28,7 +28,7 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "cvs log -N -S %(branch)s %(since)s 2>/dev/null"
+    COMMAND = "cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s 2>/dev/null"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
@@ -47,7 +47,7 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log, sincedate=None):
+def changesets_from_cvslog(log, sincedate=None, url=None):
     """
     Parse CVS log.
     """
@@ -74,7 +74,7 @@ def changesets_from_cvslog(log, sincedate=None):
 
     from datetime import timedelta
 
-    collected = ChangeSetCollector(log)
+    collected = ChangeSetCollector(log, url)
     collapsed = []
 
     threshold = timedelta(seconds=180)
@@ -102,7 +102,7 @@ def changesets_from_cvslog(log, sincedate=None):
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
     
-    def __init__(self, log):
+    def __init__(self, log, url):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -112,7 +112,7 @@ class ChangeSetCollector(object):
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
        
-        self.__parseCvsLog(log)
+        self.__parseCvsLog(log, url)
         
     def __iter__(self):
         keys = self.changesets.keys()
@@ -214,29 +214,38 @@ class ChangeSetCollector(object):
             
         return (date, author, changelog, entry, rev, state, newentry)
     
-    def __parseCvsLog(self, log):
+    def __parseCvsLog(self, log, url):
         """Parse a complete CVS log."""
 
+        def get_entry_from_path(path, url=url):
+            # Given the CVSROOT of this wc, say
+            #   ":ext:caia:/tmp/reps/modulo"
+            # extract the "entry" portion (a relative path) from what
+            # cvs rlog says, ie
+            #   "/tmp/reps/modulo/dirb/c.txt,v"
+            # that is to say "dirb/c.txt"
+
+            from os.path import split
+
+            path = path.replace('Attic/', '', 1)
+            
+            prefix = split(path)[0]
+            while prefix:
+                if url.endswith(prefix):
+                    return path[len(prefix)+1:-2]
+
+                prefix = split(prefix)[0]
+            
         while 1:
             l = log.readline()
-            while l and not l.startswith('Working file: '):
+            while l and not l.startswith('RCS file: '):
                 l = log.readline()
             
-            if not l.startswith('Working file: '):
+            if not l.startswith('RCS file: '):
                 break
 
-            entry = l[14:-1]
+            entry = get_entry_from_path(l[10:-1])
             
-            l = log.readline()
-            while l and not l.startswith('total revisions: '):
-                l = log.readline()
-
-            assert l.startswith('total revisions: ')
-
-            total, selected = l.split(';')
-            total = total.strip()
-            selected = selected.strip()
-
             l = log.readline()
             while l and l <> '----------------------------\n':
                 l = log.readline()
@@ -267,8 +276,6 @@ class CvsWorkingDir(CvspsWorkingDir):
         from time import strptime
         from datetime import datetime
 
-        cvslog = CvsLog(working_dir=root)
-        
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
@@ -290,9 +297,16 @@ class CvsWorkingDir(CvspsWorkingDir):
             if tag.startswith('T'):
                 branch=tag[1:-1]
 
+        repository = open(join(root, 'CVS', 'Root')).read()[:-1]
+        module = open(join(root, 'CVS', 'Repository')).read()[:-1]
+        
+        cvslog = CvsLog(working_dir=root)
+        
         changesets = []
-        log = cvslog(output=True, since=since, branch=branch)
-        for cs in changesets_from_cvslog(log, sincedate):
+        log = cvslog(output=True, since=since, branch=branch,
+                     repository=repository, module=module)
+        for cs in changesets_from_cvslog(log, sincedate,
+                                         url=repository+module):
             changesets.append(cs)
 
         return changesets

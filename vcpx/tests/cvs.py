@@ -36,9 +36,9 @@ class CvsEntryTest(TestCase):
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""
 
+    SIMPLE_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
     SIMPLE_TEST = """\
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
-Working file: THANKS.txt
 head: 1.2
 branch:
 locks: strict
@@ -58,9 +58,9 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
+    DOUBLE_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
     DOUBLE_TEST = """\
 RCS file: /cvsroot/docutils/docutils/docutils/statemachine.py,v
-Working file: docutils/statemachine.py
 head: 1.16
 branch:
 locks: strict
@@ -79,7 +79,6 @@ support for CSV directive implementation
 =============================================================================
 
 RCS file: /cvsroot/docutils/docutils/docutils/utils.py,v
-Working file: docutils/utils.py
 head: 1.35
 branch:
 locks: strict
@@ -114,9 +113,9 @@ updated
 =============================================================================
 """
     
+    DELETED_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
     DELETED_TEST = """\
-RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
-Working file: THANKS.txt
+RCS file: /cvsroot/docutils/docutils/Attic/THANKS.txt,v
 head: 1.2
 branch:
 locks: strict
@@ -136,9 +135,9 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
+    COLLAPSE_TEST_URL = "/usr/local/CVSROOT/PyObjC"
     COLLAPSE_TEST = """\
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
-Working file: Doc/libObjCStreams.tex
 head: 1.4
 branch:
 locks: strict
@@ -165,7 +164,6 @@ Fake changelog 4
 =============================================================================
 
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libPyObjC.tex,v
-Working file: Doc/libPyObjC.tex
 head: 1.4
 branch:
 locks: strict
@@ -192,9 +190,9 @@ Fake changelog 4
 =============================================================================
 """
 
+    BRANCHES_TEST_URL = "cvs.sourceforge.net:/cvsroot/archetypes/Archetypes"
     BRANCHES_TEST = """\
 RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
-Working file: tests/test_classgen.py
 head: 1.18
 branch:
 locks: strict
@@ -222,7 +220,7 @@ Fixed deepcopy problem in validations
         """Verify basic cvs log parser behaviour"""
 
         log = StringIO(self.SIMPLE_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, url=self.SIMPLE_TEST_URL)
 
         self.assertEqual(len(csets), 2)
         
@@ -249,7 +247,7 @@ Fixed deepcopy problem in validations
         """Verify cvs log parser grouping capability"""
 
         log = StringIO(self.DOUBLE_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, url=self.DOUBLE_TEST_URL)
 
         self.assertEqual(len(csets), 5)
 
@@ -287,7 +285,7 @@ Fixed deepcopy problem in validations
         """Verify recognition of deleted entries in the cvs log"""
 
         log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, url=self.DELETED_TEST_URL)
 
         self.assertEqual(len(csets), 2)
 
@@ -297,13 +295,14 @@ Fixed deepcopy problem in validations
         
         cset = csets[1]
         entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.action_kind, entry.DELETED)
 
     def testCollapsedChangeset(self):
         """Verify the mechanism used to collapse related changesets"""
 
         log = StringIO(self.COLLAPSE_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, url=self.COLLAPSE_TEST_URL)
 
         self.assertEqual(len(csets), 5)
 
@@ -331,7 +330,7 @@ Fixed deepcopy problem in validations
         """Verify the parser groks with the branches info on revision"""
 
         log = StringIO(self.BRANCHES_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, url=self.BRANCHES_TEST_URL)
 
         self.assertEqual(len(csets), 3)
 
@@ -342,7 +341,8 @@ Fixed deepcopy problem in validations
         """Verify the parser omits already seen changesets"""
 
         log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log, datetime(2004, 6, 10, 2, 17, 20))
+        csets = changesets_from_cvslog(log, datetime(2004, 6, 10, 2, 17, 20),
+                                       url=self.DELETED_TEST_URL)
 
         self.assertEqual(len(csets), 0)
        

@@ -182,10 +182,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     ## UpdatableSourceWorkingDir
     
     def _getUpstreamChangesets(self, root, sincerev=None):
-        cvsps = CvsPsLog(working_dir=root)
-        
         from os.path import join, exists
          
+        cvsps = CvsPsLog(working_dir=root)
+        
         branch="HEAD"
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
@@ -202,10 +202,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             changesets.append(cs)
 
         return changesets
-    
+
+    def __maybeDeleteDirectory(self, root, entrydir, changeset):
+        from os.path import join, exists
+
+        if not entrydir:
+            return
+        
+        absentrydir = join(root, entrydir)
+        if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
+            deldir = changeset.addEntry(entrydir, None)
+            deldir.action_kind = deldir.DELETED
+        
     def _applyChangeset(self, root, changeset, logger=None):
-        from os.path import join, exists, dirname
-        from os import makedirs
+        from os.path import join, exists, dirname, split
+        from os import makedirs, listdir
         from cvs import CvsEntries
         from time import sleep
         
@@ -220,7 +231,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                             "at revision %s", e.name,
                                             e.new_revision)
                     continue
-                
+            elif e.action_kind == e.DELETED:
+                if not exists(join(root, e.name)):
+                    if logger: logger.debug("skipping '%s' since it's already "
+                                            "deleted", e.name)
+                    self.__maybeDeleteDirectory(root, split(e.name)[0],
+                                                changeset)
+                    continue
+                    
             cvsup(output=True, entry=e.name, revision=e.new_revision)
 
             if cvsup.exit_status:
@@ -242,8 +260,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     "'cvs update' returned status %s" % cvsup.exit_status)
             
             if e.action_kind == e.DELETED:
-                # XXX: should drop edir if empty
-                pass
+                self.__maybeDeleteDirectory(root, split(e.name)[0],
+                                            changeset)
                 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   logger=None):
