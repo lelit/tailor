@@ -45,7 +45,7 @@ class SvnPropSet(SystemCommand):
 
 
 class SvnLog(SystemCommand):
-    COMMAND = "svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s"
+    COMMAND = "svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s 2>&1"
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         quiet = kwargs.get('quiet', True)
@@ -118,12 +118,24 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def _getUpstreamChangesets(self, root, startfrom_rev=None):
-        actualrev = SvnInfo(working_dir=root)(entry='.')['Revision']
+    def _getUpstreamChangesets(self, root, sincerev=None):
+        if sincerev:
+            sincerev = int(sincerev)
+        else:
+            sincerev = 0
+            
         svnlog = SvnLog(working_dir=root)
         log = svnlog(quiet='--verbose', output=True, xml=True,
-                     startrev=int(actualrev)+1, entry='.')
-
+                     startrev=sincerev+1, entry='.')
+        
+        if svnlog.exit_status:
+            errmsg = log.getvalue()
+            # XXX
+            if 'No such revision' in errmsg:
+                return []
+            else:
+                raise 'XXX: svn log error: %s' % errmsg
+        
         return self.__parseSvnLog(log)
 
     def __parseSvnLog(self, log):

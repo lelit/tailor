@@ -109,7 +109,7 @@ class SyncronizableTargetWorkingDir(object):
 
     def _initializeWorkingDir(self, root, addentry=None):
         """
-        Assuming the `root` directory is a new working copy extracted
+        Assuming the `root` directory is a working copy extracted
         from some VC repository, add it and all its content to the
         target repository.
 

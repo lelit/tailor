@@ -65,7 +65,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## UpdatableSourceWorkingDir
     
-    def _getUpstreamChangesets(self, root):
+    def _getUpstreamChangesets(self, root, sincerev=None):
         """
         Do the actual work of fetching the upstream changeset.
         
@@ -237,7 +237,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                                               root,
                                                               repository,
                                                               revision)
-        self._createTag(root, 'Upstream revision %s' % revision)
+        #self._createTag(root, 'Upstream revision %s' % revision)
 
     def _createTag(self, root, tagname):
         """

@@ -80,44 +80,16 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
     so that it can be used both as source of patches, or as a target
     repository.
 
-    They use `cvsps` to actual fetch the changesets metadata from the
-    server, so that we can reasonably group related changes that would
-    otherwise be sparsed, as CVS is file-centric.
-
-    To accomodate this, the last revision (from cvsps point of view)
-    imported in the repository is stored in a file in the `CVS`
-    directory at the root of the working copy. This shouldn't
-    interfere with the normal operations, but since the file isn't
-    versioned you may easily loose it....
+    It uses `cvsps` to do the actual fetch of the changesets metadata
+    from the server, so that we can reasonably group together related
+    changes that would otherwise be sparsed, as CVS is file-centric.
     """
     
     ## UpdatableSourceWorkingDir
     
-    def __getLastUpstreamRevision(self, root):
-        from os.path import join, exists
-        
-        fname = join(root, 'CVS', 'last-synced-revision')
-        if exists(fname):
-            f = open(fname)
-            lastrev = f.read()
-            f.close()
-            return lastrev
-
-    def __setLastUpstreamRevision(self, root, revision):
-        from os.path import join, exists
-        
-        fname = join(root, 'CVS', 'last-synced-revision')
-        f = open(fname, 'w')
-        f.write(revision)
-        f.close()
-
-    def _getUpstreamChangesets(self, root):
+    def _getUpstreamChangesets(self, root, sincerev=None):
         cvsps = CvsPsLog(working_dir=root)
-
-        startfrom_rev = self.__getLastUpstreamRevision(root)
-        if startfrom_rev:
-            startfrom_rev = int(startfrom_rev)+1
-            
+        
         from os.path import join, exists
         
         fname = join(root, 'CVS', 'Tag')
@@ -126,14 +98,17 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         else:
             branch="HEAD"
 
+        if sincerev:
+            sincerev = int(sincerev)
+            
         changesets = []
         log = cvsps(output=True, update=True, branch=branch)
-        for cs in self.__enumerateChangesets(log, startfrom_rev):
+        for cs in self.__enumerateChangesets(log, sincerev):
             changesets.append(cs)
 
         return changesets
     
-    def __enumerateChangesets(self, log, startfrom_rev):
+    def __enumerateChangesets(self, log, sincerev=None):
         """
         Parse CVSps log.
         """
@@ -189,7 +164,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             l = log.readline()
 
             while l.startswith('\t'):
-                if not startfrom_rev or (startfrom_rev<=int(pset['revision'])):
+                if not sincerev or (sincerev<int(pset['revision'])):
                     file,revs = l[1:-1].split(':')
                     fromrev,torev = revs.split('->')
 
@@ -209,7 +184,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                     
                 l = log.readline()
 
-            if not startfrom_rev or (startfrom_rev<=int(pset['revision'])):
+            if not sincerev or (sincerev<int(pset['revision'])):
                 cvsdate = pset['date']
                 y,m,d = map(int, cvsdate[:10].split('/'))
                 hh,mm,ss = map(int, cvsdate[11:19].split(':'))
@@ -234,8 +209,6 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                 # XXX: should drop edir if empty
                 pass
                 
-        self.__setLastUpstreamRevision(root, changeset.revision)
-
 
     ## SyncronizableTargetWorkingDir
 
@@ -264,7 +237,6 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists
         
         wdir = join(basedir, module)
-
         if not exists(wdir):
             c = CvsCheckout(working_dir=basedir)
             c(output=True,
@@ -292,8 +264,9 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             if found:
                 last = cset
                 break
+
+        assert found, "Something went wrong, did not find the right cvsps revision in '%s'" % wdir
         
-        self.__setLastUpstreamRevision(wdir, last.revision)
         return last.revision
     
     def _commit(self,root, date, author, remark, changelog=None, entries=None):

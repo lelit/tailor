@@ -42,7 +42,7 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, replay=None):
+    def applyUpstreamChangesets(self, root, sincerev, replay=None):
         """
         Apply the collected upstream changes.
 
@@ -51,10 +51,14 @@ class UpdatableSourceWorkingDir(object):
         not raise conflicts call the `replay` function to mirror the
         changes on the target.
 
-        Return a sequence (potentially empty!) of conflicts.
+        Return a tuple of two elements:
+
+        - the last applied changeset, if any
+        - the sequence (potentially empty!) of conflicts.
         """
 
-        changesets = self._getUpstreamChangesets(root)
+        changesets = self._getUpstreamChangesets(root, sincerev)
+        c = None
         conflicts = []
         for c in changesets:
             print "# Applying upstream changeset", c.revision
@@ -66,16 +70,16 @@ class UpdatableSourceWorkingDir(object):
                     raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
                 except KeyboardInterrupt:
                     print "INTERRUPTED BY THE USER!"
-                    return conflicts
+                    return c, conflicts
                 
             if replay:
                 replay(root, c)
 
             print
             
-        return conflicts
+        return c, conflicts
         
-    def _getUpstreamChangesets(self, root):
+    def _getUpstreamChangesets(self, root, sincerev):
         """
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets
@@ -97,26 +101,25 @@ class UpdatableSourceWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def checkoutUpstreamRevision(self, root, repository, revision):
+    def checkoutUpstreamRevision(self, root, repository, module, revision):
         """
         Extract a working copy from a repository.
 
-        :root: the name of the directory (that should **not** exists)
-               that will contain the working copy of the sources
+        :root: the name of the directory (that **must** exists)
+               that will contain the working copy of the sources under the
+               *module* subdirectory
 
         :repository: the address of the repository (the format depends on
                      the actual method used by the subclass)
 
+        :module: the name of the module to extract
+        
         :revision: extract that revision/branch
 
         Return the checked out revision.
         """
 
-        from os.path import split
-
-        basedir,module = split(root)
-        
-        return self._checkoutUpstreamRevision(basedir, repository,
+        return self._checkoutUpstreamRevision(root, repository,
                                               module, revision)
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
