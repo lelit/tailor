@@ -132,16 +132,27 @@ class SyncronizableTargetWorkingDir(object):
         Replicate the actions performed by the changeset on the tree of
         files.
         """
-        
-        for e in changeset.entries:
-            if logger: logger.info('Replaying %s' % str(e))           
-            if e.action_kind == e.RENAMED:
-                self._renameEntry(root, e.old_name, e.name)
-            elif e.action_kind == e.ADDED:
-                self._addEntry(root, e.name)
-            elif e.action_kind == e.DELETED:
-                self._removeEntry(root, e.name)
 
+        added = changeset.addedEntries()
+        renamed = changeset.renamedEntries()
+        removed = changeset.removedEntries()
+
+        # Sort entries, to be sure added directories come before their
+        # entries.
+        added.sort(lambda x,y: cmp(x.name, y.name))
+
+        # Likewise, sort removed one, but in reverse order
+        removed.sort(lambda x,y: cmp(y.name, x.name))
+                
+        for e in added:
+            self._addEntry(root, e.name)
+
+        for e in renamed:
+            self._renameEntry(root, e.old_name, e.name)
+
+        for e in removed:
+            self._removeEntry(root, e.name)
+            
     def __registerAppliedChangeset(self, changeset):
         """
         Remember about an already applied but not committed changeset,
