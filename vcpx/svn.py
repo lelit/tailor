@@ -111,7 +111,7 @@ class SvnMv(SystemCommand):
 
     
 class SvnCheckout(SystemCommand):
-    COMMAND = "svn co --revision %(revision)s %(repository)s %(wc)s"
+    COMMAND = "svn co --revision %(revision)s %(repository)s/%(module)s %(wc)s"
 
 def changesets_from_svnlog(log, url):
     from xml.sax import parseString
@@ -278,8 +278,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if not exists(wdir):
             svnco = SvnCheckout(working_dir=basedir)
-            svnco(output=True, repository=repository,
-                  wc=module, revision=revision)
+            svnco(output=True, repository=repository, module=module,
+                  wc=subdir, revision=revision)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
                     "'svn checkout' returned status %s" % svnco.exit_status)
