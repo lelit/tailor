@@ -5,6 +5,12 @@
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
 
+"""
+This module contains supporting classes for CVS. To get a
+cross-repository revision number ala Subversion, the implementation
+uses `cvsps` to fetch the changes from the upstream repository.
+"""
+
 __docformat__ = 'reStructuredText'
 
 from cvsync.shwrap import SystemCommand
@@ -78,6 +84,22 @@ def refill(msg):
 class CvsWorkingDir(UpdatableSourceWorkingDir,
                     SyncronizableTargetWorkingDir):
 
+    """
+    An instance of this class represent a read/write CVS working directory,
+    so that it can be used both as source of patches, or as a target
+    repository.
+
+    They use `cvsps` to actual fetch the changesets metadata from the
+    server, so that we can reasonably group related changes that would
+    otherwise be sparsed, as CVS is file-centric.
+
+    To accomodate this, the last revision (from cvsps point of view)
+    imported in the repository is stored in a file in the `CVS`
+    directory at the root of the working copy. This shouldn't
+    interfere with the normal operations, but since the file isn't
+    versioned you may easily loose it....
+    """
+    
     ## UpdatableSourceWorkingDir
     
     def __getLastUpstreamRevision(self, root):

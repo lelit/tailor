@@ -5,6 +5,10 @@
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
 
+"""
+This module contains supporting classes for the `darcs` versioning system.
+"""
+
 __docformat__ = 'reStructuredText'
 
 from cvsync.shwrap import SystemCommand

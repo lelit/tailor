@@ -5,6 +5,10 @@
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 #
 
+"""
+This module contains supporting classes for Subversion.
+"""
+
 __docformat__ = 'reStructuredText'
 
 from cvsync.shwrap import SystemCommand
