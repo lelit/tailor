@@ -116,13 +116,12 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
 
         changesets = []
         log = cvsps(output=True, update=True, branch=branch)
-        for cs in self.__enumerateChangesets(log):
-            if not startfrom_rev or (startfrom_rev<=int(cs.revision)):
-                changesets.append(cs)
+        for cs in self.__enumerateChangesets(log, startfrom_rev):
+            changesets.append(cs)
 
         return changesets
     
-    def __enumerateChangesets(self, log):
+    def __enumerateChangesets(self, log, startfrom_rev):
         """
         Parse CVSps log.
         """
@@ -178,37 +177,53 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             l = log.readline()
 
             while l.startswith('\t'):
-                file,revs = l[1:-1].split(':')
-                fromrev,torev = revs.split('->')
+                if not startfrom_rev or (startfrom_rev<=int(pset['revision'])):
+                    file,revs = l[1:-1].split(':')
+                    fromrev,torev = revs.split('->')
 
-                e = ChangesetEntry(file)
-                e.old_revision = fromrev
-                e.new_revision = torev
+                    e = ChangesetEntry(file)
+                    e.old_revision = fromrev
+                    e.new_revision = torev
 
-                if fromrev=='INITIAL':
-                    e.action_kind = e.ADDED
-                elif "(DEAD)" in torev:
-                    e.action_kind = e.DELETED
-                else:
-                    e.action_kind = e.UPDATED
+                    if fromrev=='INITIAL':
+                        e.action_kind = e.ADDED
+                    elif "(DEAD)" in torev:
+                        e.action_kind = e.DELETED
+                    else:
+                        e.action_kind = e.UPDATED
 
-                entries.append(e)
+                    entries.append(e)
+                    
                 l = log.readline()
 
-            cvsdate = pset['date']
-            y,m,d = map(int, cvsdate[:10].split('/'))
-            hh,mm,ss = map(int, cvsdate[11:19].split(':'))
-            timestamp = datetime(y, m, d, hh, mm, ss)
-            pset['date'] = timestamp
+            if not startfrom_rev or (startfrom_rev<=int(pset['revision'])):
+                cvsdate = pset['date']
+                y,m,d = map(int, cvsdate[:10].split('/'))
+                hh,mm,ss = map(int, cvsdate[11:19].split(':'))
+                timestamp = datetime(y, m, d, hh, mm, ss)
+                pset['date'] = timestamp
             
-            yield Changeset(**pset)
+                yield Changeset(**pset)
 
     def _applyChangeset(self, root, changeset):
+        from os.path import join, exists, dirname
+        from os import makedirs
+        
         cvsup = CvsUpdate(working_dir=root)
         for e in changeset.entries:
+            edir = dirname(join(root, e.name))
+            if e.action_kind != e.DELETED and not exists(edir)):
+                makedirs(edir)
+
             cvsup(entry=e.name, revision=e.new_revision)
+
+            if e.action_kind == e.DELETED:
+                # XXX: should drop edir if empty
+                pass
+                
         self.__setLastUpstreamRevision(root, changeset.revision)
-        
+
+
     ## SyncronizableTargetWorkingDir
 
     def _addEntry(self, root, entry):
@@ -237,6 +252,9 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         c(output=True, repository=repository, module=module, revision=revision)
 
         # update cvsps cache and get its last CVS "revision"
+
+        # XXX: this is wrong, as it assumes we extracted HEAD!
+        
         wdir = join(basedir, module)
         csets = self._getUpstreamChangesets(wdir)
         last = csets[-1]
