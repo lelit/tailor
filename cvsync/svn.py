@@ -100,7 +100,38 @@ class SvnPropSet(SystemCommand):
 
 
 class SvnLog(SystemCommand):
-    COMMAND = "svn log --quiet --revision %(startrev)s:HEAD %(source)s"
+    COMMAND = "svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(source)s"
+    
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        quiet = kwargs.get('quiet', True)
+        if quiet == True:
+            kwargs['quiet'] = '--quiet'
+        elif quiet == False:
+            kwargs['quiet'] = ''
+            
+        xml = kwargs.get('xml', False)
+        if xml:
+            kwargs['xml'] = '--xml'
+            output = True
+        else:
+            kwargs['xml'] = ''
+
+        startrev = kwargs.get('startrev')
+        if not startrev:
+            kwargs['startrev'] = 'BASE'
+
+        endrev = kwargs.get('endrev')
+        if not endrev:
+            kwargs['endrev'] = 'HEAD'
+
+        output = SystemCommand.__call__(self, output=output,
+                                        dry_run=dry_run, **kwargs)
+
+        if xml:
+            # parse the output and return the result
+            pass
+
+        return output
 
 
 class SvnDiff(SystemCommand):
@@ -109,6 +140,10 @@ class SvnDiff(SystemCommand):
     
 def getHeadRevision(source, baserev):
     """Using ``svn log`` determine the HEAD revision of a source."""
+
+    # XXX: this is, by any means, the worst of all the possible ways
+    #      of getting this kind of information from the svn server,
+    #      but I did not manage to get any of the others actually work.
     
     svnlog = SvnLog()
     out = svnlog(output=True, startrev=baserev, source=source)
@@ -117,6 +152,7 @@ def getHeadRevision(source, baserev):
         if line.startswith('r'):
             head = line[1:line.index(' ')]
     return head
+
 
 class SvnWorkingDir(object):
     """Represent a SVN working directory."""
@@ -136,6 +172,62 @@ class SvnWorkingDir(object):
             return join(self.root, mayberel)
         else:
             return mayberel
+
+    def log(self):
+        """Return an object representation of the ``svn log`` thru HEAD."""
+
+        svnlog = SvnLog(working_dir=self.root)
+        out = svnlog(quiet='--verbose', output=True, xml=True, source='.')
+
+        from xml.sax import parseString
+        from xml.sax.handler import ContentHandler
+
+        class SvnRevisionLogEntry(object):
+            def __init__(self):
+                self.revision = 0
+                self.author = ''
+                self.date = ''
+                self.msg = ''
+                self.paths = []
+
+        class SvnXMLLogHandler(ContentHandler):
+            def __init__(self):
+                self.revisions = []
+                self.current = None
+                self.current_field = []
+
+            def startElement(self, name, attributes):
+                if name == 'logentry':
+                    self.current = SvnRevisionLogEntry()
+                    self.current.revision = int(attributes['revision'])
+                elif name in ['author', 'date', 'msg']:
+                    self.current_field = []
+                elif name == 'path':
+                    self.current_field = []
+                    if attributes.has_key('copyfrom-path'):
+                        self.current_path_action = (attributes['action'],
+                                                    attributes['copyfrom-path'],
+                                                    attributes['copyfrom-rev'])
+                    else:
+                        self.current_path_action = attributes['action']
+                        
+
+            def endElement(self, name):
+                if name == 'logentry':
+                    self.revisions.append(self.current)
+                    self.current = None
+                elif name in ['author', 'date', 'msg']:
+                    setattr(self.current, name, ''.join(self.current_field))
+                elif name == 'path':
+                    self.current.paths.append( (''.join(self.current_field),
+                                                self.current_path_action) )
+
+            def characters(self, data):
+                self.current_field.append(data)
+
+        handler = SvnXMLLogHandler()
+        parseString(out.getvalue(), handler)
+        return handler.revisions
         
     def update(self):
         """Bring this directory up to its HEAD revision in the repository."""

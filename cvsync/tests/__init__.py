@@ -10,6 +10,7 @@
 from shwrap import *
 from cvs import *
 from bice import *
+from svn import *
 
 SystemCommand.VERBOSE = False
 
