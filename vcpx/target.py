@@ -26,6 +26,8 @@ as of revision %(revision)s
 """
 
 class TargetInitializationFailure(Exception):
+    "Failure initializing the target VCS"
+    
     pass
 
 class SyncronizableTargetWorkingDir(object):

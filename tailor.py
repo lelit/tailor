@@ -32,19 +32,9 @@ if __name__ == '__main__':
 
         try:
             main()
-        except ExistingProjectError, exc:
-            print exc
-        except ProjectNotTailored, exc:
-            print exc
-        except TargetInitializationFailure, exc:
-            print exc
-        except EmptyRepositoriesFoolsMe, exc:
-            print exc
-            print "Maybe wrong module/repository?"
-        except InvocationError, exc:
-            print exc
-            print "See '%s --help'" % sys.argv[0]
-        except GetUpstreamChangesetsFailure, exc:
-            print exc
+        except (ExistingProjectError, ProjectNotTailored,
+                TargetInitializationFailure, EmptyRepositoriesFoolsMe,
+                InvocationError, GetUpstreamChangesetsFailure), exc:
+            print "%s: %s" % (exc.__doc__, exc)
 
 

@@ -432,22 +432,13 @@ BOOTSTRAP_OPTIONS = [
 ]
 
 class ExistingProjectError(Exception):
-    """
-    Raised when, in bootstrap mode, the directory for the project is already
-    there.
-    """
+    "Project seems already tailored"
 
 class UnknownProjectError(Exception):
-    """
-    Raised when, in normal mode, the directory for the project does not
-    exist.
-    """
+    "Project does not exist"
 
 class ProjectNotTailored(Exception):
-    """
-    Raised when trying to do something on a project that has not been
-    tailored.
-    """
+    "Not a tailored project"
     
 def main():
     """

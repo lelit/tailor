@@ -25,23 +25,17 @@ with a Ctrl-Z and a few "svn resolved". What would you like to do?
 """
 
 class GetUpstreamChangesetsFailure(Exception):
-    """
-    Signals an underlying failure getting upstream changes.
-    """
+    "Failure getting upstream changes"
     
     pass
 
 class ChangesetApplicationFailure(Exception):
-    """
-    Signals something went wrong applying upstream changes.
-    """
+    "Failure applying upstream changes"
     
     pass
 
 class InvocationError(Exception):
-    """
-    Denotes some kind of trouble with the given parameters.
-    """
+    "Bad invocation, use --help for details"
     
     pass
 

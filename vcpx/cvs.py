@@ -15,11 +15,11 @@ from shwrap import SystemCommand
 from cvsps import CvspsWorkingDir
 
 class EmptyRepositoriesFoolsMe(Exception):
-    """
-    This is the exception raised when we try to tailor an empty CVS
-    repository. This is more a shortcoming of tailor, rather than a
-    real problem with those repositories.
-    """
+    "Cannot handle empty repositories. Maybe wrong module/repository?"
+    
+    # This is the exception raised when we try to tailor an empty CVS
+    # repository. This is more a shortcoming of tailor, rather than a
+    # real problem with those repositories.
     
     pass
 
