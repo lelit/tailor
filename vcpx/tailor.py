@@ -260,6 +260,11 @@ class TailorizedProject(object):
         The actual information on the project are stored in a text file.
         """
 
+        from os.path import split
+        
+        if not subdir:
+            subdir = split(module or repository)[1] or ''
+            
         self.logger.info("Bootstrapping '%s'" % (self.root,))
 
         dwd = DualWorkingDir(source_kind, target_kind)

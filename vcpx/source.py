@@ -170,8 +170,6 @@ class UpdatableSourceWorkingDir(object):
             raise InvocationError("Must specify a root directory")
         if not repository:
             raise InvocationError("Must specify an upstream repository")
-        if not module:
-            raise InvocationError("Must specify a module name")
         
         return self._checkoutUpstreamRevision(root, repository,
                                               module, revision,

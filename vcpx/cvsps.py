@@ -14,7 +14,8 @@ uses `cvsps` to fetch the changes from the upstream repository.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
+     InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
@@ -284,12 +285,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Return the effective cvsps revision.
         """
 
-        from os.path import join, exists, split
+        from os.path import join, exists
         from cvs import CvsEntries, compare_cvs_revs
 
-        if not subdir:
-            subdir = split(module)[1]
-            
+        if not module:
+            raise InvocationError("Must specify a module name")
+
         wdir = join(basedir, subdir)
         if not exists(join(wdir, 'CVS')):
             c = CvsCheckout(working_dir=basedir)

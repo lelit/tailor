@@ -199,11 +199,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Concretely do the checkout of the upstream revision.
         """
 
-        from os.path import join, exists, split
+        from os.path import join, exists
         
-        if not subdir:
-            subdir = split(module)[1]
-            
         wdir = join(basedir, subdir)
         if not exists(join(wdir, '_darcs')):
             dget = SystemCommand(working_dir=basedir,

@@ -229,10 +229,11 @@ class SyncronizableTargetWorkingDir(object):
         from os.path import split, join
         from os import walk
 
-        c = addentry(working_dir=root)
-        c(entry=repr(module))
+        if module:
+            c = addentry(working_dir=root)
+            c(entry=repr(module))
 
-        for dir, subdirs, files in walk(join(root, module)):
+        for dir, subdirs, files in walk(join(root, module or '')):
             for excd in ['.svn', '_darcs', 'CVS']:
                 if excd in subdirs:
                     subdirs.remove(excd)
