@@ -178,7 +178,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     changelog.append(l.strip())
                     l = output.readline()
 
-                changesets.append(Changeset(name,date,author,' '.join(changelog)))
+                changesets.append(Changeset(name, date, author, '\n'.join(changelog)))
 
                 while not l.strip():
                     l = output.readline()
