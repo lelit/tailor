@@ -286,7 +286,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
             tag = open(fname).read()
-            if tag.startswith('T'):
+            if tag[0] in 'NT':
                 branch=tag[1:-1]
 
         repository = open(join(root, 'CVS', 'Root')).read()[:-1]
