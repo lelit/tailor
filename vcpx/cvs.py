@@ -396,6 +396,10 @@ class CvsEntries(object):
 
         for d in self.directories.values():
             e = d.getAncientEntry()
+
+            # skip if there are no entries in the directory
+            if not e:
+                continue
             
             if not latest:
                 latest = e
