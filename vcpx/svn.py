@@ -131,7 +131,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if svnlog.exit_status:
             errmsg = log.getvalue()
             # XXX
-            if 'No such revision' in errmsg:
+            if 'No such revision' in errmsg or \
+                   'Reference to non-existent revision ' in errmsg:
                 return []
             else:
                 raise 'XXX: svn log error: %s' % errmsg
