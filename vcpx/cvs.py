@@ -46,6 +46,7 @@ class CvsLog(SystemCommand):
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
 
+
 def changesets_from_cvslog(log, sincerev=None):
     """
     Parse CVS log.
@@ -92,8 +93,8 @@ def changesets_from_cvslog(log, sincerev=None):
                 last = cs
                 collapsed.append(cs)
 
-    for cs in collapsed:
-        yield cs
+    return collapsed
+
         
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
