@@ -221,7 +221,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = SystemCommand(working_dir=root,
-                          command="darcs add --not-recursive"
+                          command="darcs add --case-ok --not-recursive"
                                   " --standard-verbosity %(entry)s")
         c(entry=entry)
 
@@ -273,7 +273,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 "'darcs initialize' returned status %s" % c.exit_status)
         else:
             c = SystemCommand(working_dir=root,
-                              command="darcs add --recursive"
+                              command="darcs add --case-ok --recursive"
                                       " --standard-verbosity %(entry)s")
             c(entry=module)
 
