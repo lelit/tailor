@@ -89,4 +89,3 @@ class SyncronizableTargetWorkingDir(object):
         """
         
         raise "%s should override this method" % self.__class__
-

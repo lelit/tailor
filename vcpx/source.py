@@ -42,12 +42,14 @@ class UpdatableSourceWorkingDir(object):
 
         return self._getUpstreamChangesets(self, root)
         
-    def applyUpstreamChangesets(self, root, changesets):
+    def applyUpstreamChangesets(self, root, changesets, replay=None):
         """
         Apply the collected upstream changes.
 
         Loop over the collected changesets, doing whatever is needed
-        to apply each one to the working dir.
+        to apply each one to the working dir and if the changes do
+        not raise conflicts call the `replay` function to mirror the
+        changes on the target.
 
         Return a sequence (potentially empty!) of conflicts.
         """
@@ -57,7 +59,10 @@ class UpdatableSourceWorkingDir(object):
             res = self._applyChangeset(root, c)
             if res:
                 conflicts.append((c, res))
-
+            else:
+                if replay:
+                    replay(root, c)
+                    
         return conflicts
         
     def checkoutUpstreamRevision(self, root, repository, revision):
