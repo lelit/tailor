@@ -244,7 +244,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     self.__maybeDeleteDirectory(root, split(e.name)[0],
                                                 changeset)
                     continue
-                    
+            elif e.action_kind == e.ADDED and e.new_revision is None:
+                # This is a new directory entry, there is no need to update it
+                continue
+            
             cvsup(output=True, entry=e.name, revision=e.new_revision)
             
             if cvsup.exit_status:
@@ -346,13 +349,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                                          applyable):
             for m in changeset.entries:
                 if m.action_kind == m.ADDED:
-                    self.__createParentCVSDirectories(m.name)
+                    self.__createParentCVSDirectories(changeset, root, m.name)
             
             return True
         else:
             return False
         
-    def __createParentCVSDirectories(self, path):
+    def __createParentCVSDirectories(self, changeset, root, entry):
         """
         Verify that the hierarchy down to the entry is under CVS.
 
@@ -364,13 +367,16 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import split, join, exists
         from os import mkdir
 
-        basedir = split(path)[0]
-        if not basedir:
-            return 'CVS'
+        path = split(entry)[0]
+        if path:
+            basedir = join(root, path)
+        else:
+            basedir = root            
+        cvsarea = join(basedir, 'CVS')
         
-        cvsarea = join(basedir, 'CVS') 
-        if basedir and not exists(cvsarea):
-            parentcvs = self.__createParentCVSDirectories(basedir)
+        if path and not exists(cvsarea):
+            parentcvs = self.__createParentCVSDirectories(changeset,
+                                                          root, path)
 
             assert exists(parentcvs), "Uhm, strange things happen"
             
@@ -400,21 +406,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             rootf.write(root)
             rootf.close()
 
+            # Add the "new" directory to the changeset, so that the
+            # replayer get its name
+
+            entry = changeset.addEntry(path, None)
+            entry.action_kind = entry.ADDED
+            
         return cvsarea
     
     ## SyncronizableTargetWorkingDir
 
     def _addEntry(self, root, entry):
         """
-        Add a new entry, maybe registering the directory as well.
+        Add a new entry.
         """
 
-        from os.path import split, join, exists
-
-        basedir = split(entry)[0]
-        if basedir and not exists(join(root, basedir, 'CVS')):
-            self._addEntry(root, basedir)
-        
         c = CvsAdd(working_dir=root)
         c(entry=entry)
 

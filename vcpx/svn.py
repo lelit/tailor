@@ -277,14 +277,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _addEntry(self, root, entry):
         """
-        Add a new entry, maybe registering the directory as well.
+        Add a new entry.
         """
-
-        from os.path import split, join, exists
-
-        basedir = split(entry)[0]
-        if basedir and not exists(join(basedir, '.svn')):
-            self._addEntry(root, basedir)
 
         c = SvnAdd(working_dir=root)
         c(entry=entry)

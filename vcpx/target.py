@@ -153,7 +153,7 @@ class SyncronizableTargetWorkingDir(object):
         
     def _addEntry(self, root, entry):
         """
-        Add a new entry, maybe registering the directory as well.
+        Add a new entry.
         """
 
         raise "%s should override this method" % self.__class__
