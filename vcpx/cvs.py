@@ -32,7 +32,7 @@ class CvsPsLog(SystemCommand):
 
     
 class CvsUpdate(SystemCommand):
-    COMMAND = 'cvs -q %(dry)supdate -d -r%(revision)s %(entry)s2>&1'
+    COMMAND = 'cvs -q %(dry)supdate -d -r%(revision)s %(entry)s 2>&1'
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         if dry_run:
@@ -58,6 +58,18 @@ class CvsRemove(SystemCommand):
 
 class CvsCheckout(SystemCommand):
     COMMAND = "cvs -q -d%(repository)s checkout -r %(revision)s %(module)s"
+
+
+def compare_cvs_revs(rev1, rev2):
+    """Compare two CVS revision numerically, not alphabetically."""
+
+    if not rev1: rev1 = '0'
+    if not rev2: rev2 = '0'
+
+    r1 = [int(n) for n in rev1.split('.')]
+    r2 = [int(n) for n in rev2.split('.')]
+    
+    return cmp(r1, r2)
 
 
 class CvsWorkingDir(UpdatableSourceWorkingDir,
@@ -154,7 +166,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             assert l.startswith('PatchSet '), "Parse error: %s"%l
 
             pset = {}
-            pset['revision'] = l[9:-1]
+            pset['revision'] = l[9:-1].strip()
             l = log.readline()
             while not l.startswith('Log:'):
                 field,value = l.split(':',1)
@@ -189,6 +201,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                         e.action_kind = e.ADDED
                     elif "(DEAD)" in torev:
                         e.action_kind = e.DELETED
+                        e.new_revision = torev[:torev.index('(DEAD)')]
                     else:
                         e.action_kind = e.UPDATED
 
@@ -215,7 +228,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             if e.action_kind != e.DELETED and not exists(edir):
                 makedirs(edir)
 
-            cvsup(entry=e.name, revision=e.new_revision)
+            cvsup(output=True, entry=e.name, revision=e.new_revision)
 
             if e.action_kind == e.DELETED:
                 # XXX: should drop edir if empty
@@ -244,22 +257,45 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get.
+
+        Return the effective cvsps revision.
         """
 
-        from os.path import join
-        
-        c = CvsCheckout(working_dir=basedir)
-        c(output=True, repository=repository, module=module, revision=revision)
-
-        # update cvsps cache and get its last CVS "revision"
-
-        # XXX: this is wrong, as it assumes we extracted HEAD!
+        from os.path import join, exists
         
         wdir = join(basedir, module)
-        csets = self._getUpstreamChangesets(wdir)
-        last = csets[-1]
-        self.__setLastUpstreamRevision(wdir, last.revision)
 
+        if not exists(wdir):
+            c = CvsCheckout(working_dir=basedir)
+            c(output=True,
+              repository=repository,
+              module=module,
+              revision=revision)
+            
+        entries = CvsEntries(wdir)
+        
+        # update cvsps cache, then loop over the changesets and find the
+        # last applied, to find out the actual cvsps revision
+
+        csets = self._getUpstreamChangesets(wdir)
+        csets.reverse()
+        found = False
+        for cset in csets:
+            for m in cset.entries:
+                info = entries.getFileInfo(m.name)
+                if info:
+                    actualversion = info.cvs_version
+                    found = compare_cvs_revs(actualversion,m.new_revision)>=0
+                    if not found:
+                        break
+                
+            if found:
+                last = cset
+                break
+        
+        self.__setLastUpstreamRevision(wdir, last.revision)
+        return last.revision
+    
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
@@ -300,3 +336,134 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, CvsAdd)
+
+
+class CvsEntry(object):
+    """Collect the info about a file in a CVS working dir."""
+    
+    __slots__ = ('filename', 'cvs_version', 'cvs_tag')
+
+    def __init__(self, entry):
+        """Initialize a CvsEntry."""
+        
+        dummy, fn, rev, date, dummy, tag = entry.split('/')
+        self.filename = fn
+        self.cvs_version = rev
+        self.cvs_tag = tag
+
+    def __str__(self):
+        return "CvsEntry('%s', '%s', '%s')" % (self.filename,
+                                               self.cvs_version,
+                                               self.cvs_tag)
+
+
+class CvsEntries(object):
+    """Collection of CvsEntry."""
+
+    __slots__ = ('files', 'directories', 'deleted')
+    
+    def __init__(self, root):
+        """Parse CVS/Entries file.
+
+           Walk down the working directory, collecting info from each
+           CVS/Entries found."""
+
+        from os.path import join, exists, isdir
+        from os import listdir
+        
+        self.files = {}
+        """Dict of `CvsEntry`, keyed on each file under revision control."""
+        
+        self.directories = {}
+        """Dict of `CvsEntries`, keyed on subdirectories under revision
+           control."""
+
+        self.deleted = False
+        """Flag to denote that this directory was removed."""
+        
+        entries = join(root, 'CVS/Entries')
+        if exists(entries):
+            for entry in open(entries).readlines():
+                entry = entry[:-1]
+
+                if entry.startswith('/'):
+                    e = CvsEntry(entry)
+                    if file and e.filename==file:
+                        return e
+                    else:
+                        self.files[e.filename] = e
+                elif entry.startswith('D/'):
+                    d = entry.split('/')[1]
+                    subdir = CvsEntries(join(root, d))
+                    self.directories[d] = subdir
+                elif entry == 'D':
+                    self.deleted = True 
+
+            # Sometimes the Entries file does not contain the directories:
+            # crawl the current directory looking for missing ones.
+
+            for entry in listdir(root):
+                if entry == '.svn':
+                    continue                
+                dir = join(root, entry)
+                if (isdir(dir) and exists(join(dir, 'CVS/Entries'))
+                    and not self.directories.has_key(entry)):
+                    self.directories[entry] = CvsEntries(dir)
+                    
+            if self.deleted:
+                self.deleted = not self.files and not self.directories
+            
+    def __str__(self):
+        return "CvsEntries(%d files, %d subdirectories)" % (
+            len(self.files), len(self.directories))
+
+    def getFileInfo(self, fpath):
+        """Fetch the info about a path, if known.  Otherwise return None."""
+
+        try:
+            if '/' in fpath:
+                dir,rest = fpath.split('/', 1)
+                return self.directories[dir].getFileInfo(rest)
+            else:
+                return self.files[fpath]
+        except KeyError:
+            return None
+
+    def removedDirectories(self, other, prefix=''):
+        from os.path import join
+        
+        result = []
+        for d in self.directories.keys():
+            a = self.directories.get(d)
+            b = other.directories.get(d)
+            dirpath = join(prefix, d)
+            if not b or b.deleted:
+                result.append(dirpath)
+            else:
+                result.extend(a.removedDirectories(b, prefix=dirpath))
+        return result
+
+    def addedDirectories(self, other, prefix=''):
+        from os.path import join
+        
+        result = []
+        for d in other.directories.keys():
+            a = self.directories.get(d)
+            b = other.directories.get(d)
+            dirpath = join(prefix, d)
+            if not a:
+                result.append(dirpath)
+            else:
+                result.extend(a.addedDirectories(b, prefix=dirpath))
+        return result
+    
+    def compareDirectories(self, other):
+        """Compare the directories with those of another instance and return
+           a tuple (added, removed)."""
+
+        added = self.addedDirectories(other)
+        removed = self.removedDirectories(other)
+
+        return (added, removed)
+
+

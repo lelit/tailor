@@ -224,9 +224,17 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Concretely do the checkout of the upstream revision.
         """
         
-        svnco = SvnCheckout(working_dir=basedir)
-        svnco(output=True, repository=repository, wc=module, revision=revision)
+        from os.path import join, exists
         
+        wdir = join(basedir, module)
+
+        if not exists(wdir):
+            svnco = SvnCheckout(working_dir=basedir)
+            svnco(output=True, repository=repository,
+                  wc=module, revision=revision)
+            
+        return SvnInfo(working_dir=wdir)(entry='.')['Revision']
+    
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

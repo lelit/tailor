@@ -247,7 +247,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from os.path import join, exists
         
         c = DarcsTag(working_dir=root)
-        c(tagname=tagname)
+        c(output=True, tagname=tagname)
         
         fname = join(root, '_darcs', 'last-sync-tag')
         f = open(fname, 'w')

@@ -57,6 +57,8 @@ class UpdatableSourceWorkingDir(object):
         changesets = self._getUpstreamChangesets(root)
         conflicts = []
         for c in changesets:
+            print "# Applying upstream changeset", c.revision
+            
             res = self._applyChangeset(root, c)
             if res:
                 conflicts.append((c, res))
@@ -68,7 +70,9 @@ class UpdatableSourceWorkingDir(object):
                 
             if replay:
                 replay(root, c)
-                    
+
+            print
+            
         return conflicts
         
     def _getUpstreamChangesets(self, root):
@@ -104,13 +108,16 @@ class UpdatableSourceWorkingDir(object):
                      the actual method used by the subclass)
 
         :revision: extract that revision/branch
+
+        Return the checked out revision.
         """
 
         from os.path import split
 
         basedir,module = split(root)
         
-        self._checkoutUpstreamRevision(basedir, repository, module, revision)
+        return self._checkoutUpstreamRevision(basedir, repository,
+                                              module, revision)
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
         """

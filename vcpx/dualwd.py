@@ -62,8 +62,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         directory and initialize a target repository with its content.
         """
         
-        self.checkoutUpstreamRevision(root, repository, revision)
-        self.initializeNewWorkingDir(root, repository, revision)
+        actual = self.checkoutUpstreamRevision(root, repository, revision)
+        self.initializeNewWorkingDir(root, repository, actual)
 
 if __name__ == '__main__':
 ##     dwd = DualWorkingDir('svn', 'darcs')
