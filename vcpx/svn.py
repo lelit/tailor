@@ -192,7 +192,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     
     def _applyChangeset(self, root, changeset):
         svnup = SvnUpdate(working_dir=root)
-        svnup(entry='.', revision=changeset.revision)       
+        out = svnup(output=True, entry='.', revision=changeset.revision)       
+        result = {}
+        for line in out:
+            if len(line)>2 and line[0] == 'C' and line[1] == ' ':
+                try: result[line[0]].append(line[2:-1])
+                except KeyError: result[line[0]] = [line[2:-1]]
+            
+        return result
         
     ## SyncronizableTargetWorkingDir
 
