@@ -18,7 +18,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import SystemCommand
 
 class SvnUpdate(SystemCommand):
-    COMMAND = "svn update %(entry)s"
+    COMMAND = "svn update --quiet --revision %(revision)s %(entry)s"
 
 
 class SvnCommit(SystemCommand):
@@ -246,11 +246,11 @@ class SvnWorkingDir(object):
         parseString(out.getvalue(), handler)
         return handler.revisions
         
-    def update(self):
+    def update(self, revision="HEAD"):
         """Bring this directory up to its HEAD revision in the repository."""
 
         svnup = SvnUpdate()
-        svnup(entry=self.root)
+        svnup(entry=self.root, revision=revision)
     
     def commit(self, logfile=None, message=None):
         """Commit the changes."""

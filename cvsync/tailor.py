@@ -22,6 +22,14 @@ The performed steps are:
    update, updating the `bice:upstream-rev` property.
 
 4. Do a final commit.
+
+When using darcs, there is no need neither for remembering the status
+in the properties, nor for a merge.
+
+At bootstrap time, a normal svn checkout is performed and the new
+working copy transformed in a darcs repository, re-registering
+everything under darcs.  Normal operation will perform a svn update
+for each revision, registering under darcs the renames and deletions.
 """
 
 __docformat__ = 'reStructuredText'
@@ -97,35 +105,97 @@ class Tailorizer(object):
             self.bootstrap(options)
             do_commit = True
         else:
-            ## TODO: handle the --darcs option, executing a svn log
-            ##       and replaying the changeset into darcs
-            
-            if options.svn_update and not options.dry_run:
-                self.wc.update()
-                
+            if options.darcs:
+                merge = self.__svn2darcsMergeAndRecord
+            else:
+                merge = self.__svn2svnMerge
+
             try:
-                do_commit = self.merge(options)
+                do_commit = merge(options)
             except ProjectNotTailored, e:
                 print e
                 return           
 
-        if not options.dry_run:
-            if do_commit:
-                if options.commit:
-                    if options.darcs:
-                        self.registerUnderDarcs(patchname, options.message)
-                    else:
-                        try:
-                            print
-                            raw_input(PRE_COMMIT_PROMPT)
+        if options.dry_run:
+            return
+        
+        if do_commit:
+            if options.commit and not options.darcs:
+                message = options.message or options.auto_message
+                try:
+                    print
+                    raw_input(PRE_COMMIT_PROMPT)
+                except KeyboardInterrupt:
+                    print "INTERRUPTED BY THE USER!"
+                else:
+                    self.wc.commit(message=message)
+        else:
+            print "No changes. Good!"
 
-                            message = options.message or options.auto_message
-                            status = self.wc.commit(message=message)
-                        except KeyboardInterrupt:
-                            print "INTERRUPTED BY THE USER!"
-            else:
-                print "No changes. Good!"
+    def __svn2svnMerge(self, options):
+        """
+        Do the needed svn merge.
+        """
+        
+        if options.svn_update and not options.dry_run:
+            self.wc.update()
+        return self.merge(options)
 
+    def __svn2darcsMergeAndRecord(self, options):
+        """
+        For each upstream svn revision, do an update and replay the
+        same changes under darcs, producing a patch for each of them.
+        """
+        
+        # Collect the upstream changelog
+        revisions = self.wc.log()
+
+        if len(revisions) == 1:
+            current = self.wc.info(self.project)['Revision']
+            if current == revisions[0].revision:
+                return False
+            
+        dwc = DarcsWorkingDir(self.project)
+        
+        # For each revision, update and replay under darcs
+        for r in revisions:
+            self.wc.update(revision=r.revision)
+
+            pathactions = {}
+            moves = []
+            other = []
+            for event in r.paths:
+                path,action = event
+                pathactions[path] = action
+
+                if type(action) == type(()):
+                    moves.append(event)
+                else:
+                    other.append(event)
+
+            done = {}
+            for event in moves:
+                # (u'/file_a.txt', (u'A', u'/FileA.txt', u'2')),
+                path,action = event
+                oldpath = action[1]
+                if pathactions.get(oldpath) == u'D':
+                    dwc.rename(oldpath, path)
+                    done[path] = done[oldpath] = True
+                else:
+                    dwc.add(path)
+                    
+            for event in other:
+                path,action = event
+
+                if done.get(path): continue
+                
+                if action == u'D':
+                    dwc.remove(path)
+
+            self.recordDarcsPatch("Upstream revision %s" % r.revision, r.msg)
+                    
+        return True
+    
     def showUpstreamInfo(self):
         """
         Show the ancestry information of this branch.
@@ -194,6 +264,7 @@ class Tailorizer(object):
             info = self.wc.checkout(self.uri)
             uri = info['URL']
             rev = info['Revision']
+            self.createDarcsRepo()            
         else:
             info = self.wc.copy(self.uri)
             uri = info['Copied From URL']
@@ -204,13 +275,24 @@ class Tailorizer(object):
             options.auto_message = "Tailorization of %s, " \
                                    "from revision %s" % (uri, rev)
 
-    def registerUnderDarcs(self, patchname, logmessage):
+        if options.darcs:
+            patchname = options.message or options.auto_message
+            self.recordDarcsPatch(patchname=patchname, logmessage=None)
+            
+    def createDarcsRepo(self):
         """
-        Register the checked out tree under darcs.
+        Create a darcs repository.
         """
 
         dwc = DarcsWorkingDir(self.project)
         dwc.initialize()
+
+    def recordDarcsPatch(self, patchname, logmessage):
+        """
+        Register the changes in a patch.
+        """
+        
+        dwc = DarcsWorkingDir(self.project)
         dwc.record(patchname, logmessage)
         
     def diff(self):
