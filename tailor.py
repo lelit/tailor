@@ -1,11 +1,8 @@
 #! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: Bice -- Sync SVN->SVN
-# :Sorgente: $HeadURL: http://svn.bice.dyndns.org/progetti/wip/tools/tailor.py $
+# :Progetto: vcpx -- Frontend
 # :Creato:   lun 03 mag 2004 01:39:00 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
-# :Modifica: $LastChangedDate: 2004-05-05 01:13:37 +0200 (mer, 05 mag 2004) $
-# :Fatta da: $LastChangedBy: lele $
 #
 
 """Keep in sync a tree with its "upstream" repository.
