@@ -410,6 +410,13 @@ UPDATE_OPTIONS = [
                 help="With --single-commit, concatenate each changeset "
                      "message log to the final changelog, instead of just "
                      "the name of the patch."),
+    make_option("-F", "--patch-name-format", metavar="FORMAT",
+                help="Specify the prototype that will be used "
+                     "to compute the patch name.  The prototype may contain "
+                     "%(keyword)s such as 'module', 'author', 'date', "
+                     "'revision' and 'firstlogline' for normal updates, "
+                     "otherwise 'module', 'authors', 'nchangesets', 'mindate' "
+                     "and 'maxdate' when using --single-commit."),
 ]
 
 BOOTSTRAP_OPTIONS = [
@@ -468,6 +475,7 @@ def main():
     from os import getcwd, chdir
     from os.path import abspath, exists, join
     from shwrap import SystemCommand
+    from target import SyncronizableTargetWorkingDir
     
     parser = OptionParser(usage='%prog [options] [project ...]',
                           option_list=GENERAL_OPTIONS)
@@ -483,8 +491,9 @@ def main():
     
     options, args = parser.parse_args()
     
-    SystemCommand.VERBOSE = options.debug
-
+    SystemCommand.VERBOSE = options.debug    
+    SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
+    
     if options.configfile:
         config = TailorConfig(options)
 

@@ -50,6 +50,11 @@ class SyncronizableTargetWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
+    PATCH_NAME_FORMAT = None
+    """
+    The format string used to compute the patch name, used by underlying VCS.
+    """
+    
     def replayChangeset(self, root, module, changeset,
                         delayed_commit=False, logger=None):
         """
@@ -74,7 +79,13 @@ class SyncronizableTargetWorkingDir(object):
         else:
             from os.path import split
 
-            remark = '%s: changeset %s' % (module, changeset.revision)
+            remark = (self.PATCH_NAME_FORMAT or
+                      '%(module)s: changeset %(revision)s') % {
+                'module': module,
+                'revision': changeset.revision,
+                'author': changeset.author,
+                'date': changeset.date,
+                'firstlogline': changeset.log.split('\n')[0]}
             changelog = changeset.log
             entries = [e.name for e in changeset.entries]
             self._commit(root, changeset.date, changeset.author,
@@ -120,8 +131,14 @@ class SyncronizableTargetWorkingDir(object):
                 combined_entries[e] = True
 
         authors = ', '.join(combined_authors.keys())
-        remark = 'Merged %d changesets from %s to %s' % (
-            len(self._registered_cs), mindate, maxdate)
+        remark = (self.PATCH_NAME_FORMAT or
+                  'Merged %(nchangesets) changesets '
+                  'from %(mindate)s to %(maxdate)s') % {
+            'module': module,
+            'nchangesets': len(self._registered_cs),
+            'authors': authors,
+            'mindate': mindate,
+            'maxdate': maxdate}
         changelog = '\n'.join(combined_log)
         entries = combined_entries.keys()
         self._commit(root, datetime.now(), authors,
