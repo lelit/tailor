@@ -255,7 +255,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --not-recursive"
-                                  " --standard-verbosity %(entry)s")
+                                  " --quiet %(entry)s")
         c(entry=' '.join([e.name for e in entries]))
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
@@ -281,8 +281,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = SystemCommand(working_dir=root,
-                          command="darcs remove --standard-verbosity"
-                                  " %(entry)s")
+                          command="darcs remove %(entry)s")
         c(entry=' '.join([e.name for e in entries]))
 
     def _renameEntry(self, root, oldentry, newentry):
@@ -291,8 +290,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = SystemCommand(working_dir=root,
-                          command="darcs mv --standard-verbosity"
-                                  " %(old)s %(new)s")
+                          command="darcs mv %(old)s %(new)s")
         c(old=oldentry, new=newentry)
 
     def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
@@ -319,6 +317,5 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --recursive"
-                          " --standard-verbosity %(entry)s")
+                          " --quiet %(entry)s")
         c(entry=subdir)
-
