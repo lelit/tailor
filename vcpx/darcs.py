@@ -21,7 +21,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --look-for-adds --pipe %(entries)s"
+    COMMAND = "darcs record --all --pipe %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
