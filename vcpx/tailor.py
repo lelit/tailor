@@ -215,8 +215,12 @@ def main():
         chdir(base)
         
         proj = args.pop(0)
-        root = abspath(proj)        
-        basedir, module = split(root)
+        root = abspath(proj)
+
+        if exists(join(root, STATUS_FILENAME)):
+            basedir = root
+        else:
+            basedir, module = split(root)
         
         if options.bootstrap:
             if exists(join(basedir, STATUS_FILENAME)):
