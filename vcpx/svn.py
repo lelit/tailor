@@ -110,6 +110,10 @@ class SvnMv(SystemCommand):
     COMMAND = "svn mv --quiet %(old)s %(new)s"
 
     
+class SvnCheckout(SystemCommand):
+    COMMAND = "svn co --quiet --revision %(revision)s %(repository)s %(wc)s"
+
+    
 class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
@@ -118,7 +122,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         svnlog = SvnLog(working_dir=root)
         log = svnlog(quiet='--verbose', output=True, xml=True, entry='.')
 
-        self.__parseSvnLog(log)
+        return self.__parseSvnLog(log)
 
     def __parseSvnLog(self, log):
         """Return an object representation of the ``svn log`` thru HEAD."""
@@ -127,8 +131,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from xml.sax.handler import ContentHandler
 
         class SvnXMLLogHandler(ContentHandler):
-            def __init__(self, changesets):
-                self.changesets = changesets
+            def __init__(self):
+                self.changesets = []
                 self.current = None
                 self.current_field = []
 
@@ -170,9 +174,11 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             def characters(self, data):
                 self.current_field.append(data)
 
-        handler = SvnXMLLogHandler(self.changesets)
+        
+        handler = SvnXMLLogHandler()
         parseString(log.getvalue(), handler)
-
+        return handler.changesets
+    
     def _applyChangeset(self, root, changeset):
         svnup = SvnUpdate(working_dir=root)
         svnup(entry='.', revision=changeset.revision)       
@@ -193,6 +199,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnAdd(working_dir=root)
         c(entry=entry)
 
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
+        """
+        Concretely do the checkout of the upstream revision.
+        """
+        
+        svnco = SvnCheckout(working_dir=basedir)
+        svnco(repository=repository, wc=module, revision=revision)
+        
     def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
@@ -227,3 +241,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnMv(working_dir=root)
         c(old=oldentry, new=newentry)
 
+    def _initializeWorkingDir(self, root):
+        """
+        Do whatever is needed to put the given directory under revision
+        control.
+        """
+        
+        raise "%s should override this method" % self.__class__

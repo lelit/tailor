@@ -36,11 +36,11 @@ class UpdatableSourceWorkingDir(object):
     def collectUpstreamChangesets(self, root):
         """
         Query the upstream repository about what happened on the
-        sources since last sync, collecting a sequence of Changesets
-        instances in the `changesets` slot.
+        sources since last sync, returning a sequence of Changesets
+        instances.
         """
 
-        self._getUpstreamChangesets(self, root)
+        return self._getUpstreamChangesets(self, root)
         
     def applyUpstreamChangesets(self, root, changesets):
         """
@@ -49,14 +49,31 @@ class UpdatableSourceWorkingDir(object):
         Loop over the collected changesets, doing whatever is needed
         to apply each one to the working dir.
 
-        Return a sequence (potentially emtpy!) of conflicts.
+        Return a sequence (potentially empty!) of conflicts.
         """
 
         conflicts = []
-        for c in self.changesets:
+        for c in changesets:
             res = self._applyChangeset(root, c)
             if res:
                 conflicts.append((c, res))
 
         return conflicts
         
+    def checkoutUpstreamRevision(self, root, repository, revision):
+        """
+        Extract a working copy from a repository.
+        """
+
+        from os.path import split
+
+        basedir,module = split(root)
+        
+        self._checkoutUpstreamRevision(basedir, repository, module, revision)
+        
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
+        """
+        Concretely do the checkout of the upstream revision.
+        """
+        
+        raise "%s should override this method" % self.__class__

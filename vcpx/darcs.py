@@ -50,31 +50,40 @@ class DarcsAdd(SystemCommand):
     COMMAND = "darcs add --non-recursive %(entry)s"
 
 
-class DarcsPull(SystemCommand):
-    COMMAND = "darcs pull --patches='%(patch)s'"
+class DarcsTag(SystemCommand):
+    COMMAND = "darcs tag --patch-name='%(tagname)s'"
 
 
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
-
+    """
+    A working directory under ``darcs``.
+    """
+    
     ## UpdatableSourceWorkingDir
     
     def _getUpstreamChangesets(self, root):
         """
         Do the actual work of fetching the upstream changeset.
         
-        This method must be overridden by subclasses.
+        This is different from the other mechanism: here we want register
+        with the target the changes we submitted to this repository to be
+        sent back to upstream.
+
+        So, here we actually list the changes after the last tag.
         """
 
-        # XXX
+        tagname = self._getLastTag(root)
+        # darcs changes --from-tag=tagname --xml-output
         
     def _applyChangeset(self, root, changeset):
         """
         Do the actual work of applying the changeset to the working copy.
+
+        The changeset is already applied, so this is a do nothing method.
         """
 
-        dpull = DarcsPull(working_dir=root)
-        dpull(patch=changeset.revision)
-
+        return
+    
     ## SyncronizableTargetWorkingDir
 
     def _addEntry(self, root, entry):
@@ -109,3 +118,51 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = DarcsMv(working_dir=root)
         c(old=oldentry, new=newentry)
 
+    def initializeNewWorkingDir(self, root, repository, revision):
+        """
+        Initialize the new repository and create a tag.
+        """
+        
+        UpdatableSourceWorkingDir.initializeNewWorkingDir(self,
+                                                          root,
+                                                          repository,
+                                                          revision)
+        self._createTag(root, 'Upstream revision %s' % revision)
+
+    def _initializeWorkingDir(self, root):
+        """
+        Execute `darcs initialize`.
+        """
+        
+        c = DarcsInitialize(working_dir=root)
+        c(output=True)
+
+    def _createTag(self, root, tagname):
+        """
+        Tag the current situation and remember this as the *last tag*.
+        """
+
+        from os.path import join, exists
+        
+        c = DarcsTag(working_dir=root)
+        c(tagname=tagname)
+        
+        fname = join(root, '_darcs', 'last-sync-tag')
+        f = open(fname, 'w')
+        f.write(tagname)
+        f.close()
+        
+    def _getLastTag(self, root):
+        """
+        Return the name of the last emitted tag, if any, otherwise None.
+        """
+        
+        from os.path import join, exists
+        
+        fname = join(root, '_darcs', 'last-sync-tag')
+        if exists(fname):
+            f = open(fname)
+            tagname = f.read()
+            f.close()
+            
+            return tagname

@@ -50,6 +50,10 @@ class CvsRemove(SystemCommand):
     COMMAND = "cvs remove %(entry)s"
 
 
+class CvsCheckout(SystemCommand):
+    COMMAND = "cvs -d%(repository)s checkout -r %(revision)s %(module)s"
+
+
 from textwrap import TextWrapper
 from re import compile, MULTILINE
     
@@ -81,13 +85,18 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         
         fname = join(root, 'CVS', 'last-synced-revision')
         if exists(fname):
-            return open(fname).read()
+            f = open(fname)
+            lastrev = f.read()
+            f.close()
+            return lastrev
 
     def __setLastUpstreamRevision(self, root, revision):
         from os.path import join, exists
         
         fname = join(root, 'CVS', 'last-synced-revision')
-        open(fname, 'w').write(revision)
+        f = open(fname, 'w')
+        f.write(revision)
+        f.close()
         
     def _getUpstreamChangesets(self, root):
         cvsps = CvsPsLog(update=True, working_dir=root)
@@ -104,11 +113,13 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         else:
             branch="HEAD"
 
+        changesets = []
         log = cvsps(output=True, branch=branch)
         for cs in self.__enumerateChangesets(log):
             if not startfrom_rev or (startfrom_rev<=cs.revision):
-                self.changesets.append(cs)
-                
+                changesets.append(cs)
+        return changesets
+    
     def __enumerateChangesets(self, log):
         """
         Parse CVSps log.
@@ -199,12 +210,21 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import split, join, exists
 
         basedir = split(entry)[0]
-        if basedir and not exists(join(basedir, 'CVS')):
+        if basedir and not exists(join(root, basedir, 'CVS')):
             self._addEntry(root, basedir)
         
         c = CvsAdd(working_dir=root)
         c(entry=entry)
 
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
+        """
+        Concretely do the checkout of the upstream sources. Use `revision` as
+        the name of the tag to get.
+        """
+
+        c = CvsCheckout(working_dir=basedir)
+        c(repository=repository, module=module, revision=revision)
+        
     def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

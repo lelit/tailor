@@ -12,6 +12,8 @@ working directory under two different version control systems.
 
 __docformat__ = 'reStructuredText'
 
+PATCH_AUTHOR = "tailor@localhost"
+
 class SyncronizableTargetWorkingDir(object):
     """
     This is an abstract working dir. Subclasses MUST override at least
@@ -20,8 +22,8 @@ class SyncronizableTargetWorkingDir(object):
 
     def replayChangeset(self, root, changeset):
         """
-        Do whatever needed to replay the changes under the target VC,
-        to register the already applied changeset.
+        Do whatever is needed to replay the changes under the target
+        VC, to register the already applied changeset.
         """
 
         for e in changeset.entries:
@@ -68,5 +70,23 @@ class SyncronizableTargetWorkingDir(object):
         Rename an entry.
         """
 
+        raise "%s should override this method" % self.__class__
+
+    def initializeNewWorkingDir(self, root, repository, revision):
+        """
+        Initialize a new working directory, just extracted under
+        some other VC system, add everything's there.
+        """
+
+        self._initializeWorkingDir(root)
+        self._commit(root, PATCH_AUTHOR,
+                     'Tailorization of %s@%s' % (repository, revision))
+
+    def _initializeWorkingDir(self, root):
+        """
+        Do whatever is needed to put the given directory under revision
+        control.
+        """
+        
         raise "%s should override this method" % self.__class__
 
