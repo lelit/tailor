@@ -113,8 +113,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     self.current['entries'] = []
                 elif name in ['name', 'comment',
                               'add_file', 'add_directory',
-                              'modify_file', 'remove_file',
-                              'rename_file']:
+                              'modify_file', 'remove_file']:
                     self.current_field = []
                 elif name == 'path':
                     self.current_field = []
@@ -125,7 +124,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                             attributes['copyfrom-rev'])
                     else:
                         self.current_path_action = attributes['action']
-
+                elif name == 'move':
+                    self.old_name = attributes['from']
+                    self.new_name = attributes['to']
+                    
             def endElement(self, name):
                 if name == 'patch':
                     # Sort the paths to make tests easier
@@ -138,9 +140,13 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     self.current = None
                 elif name in ['name', 'comment']:
                     self.current[name] = ''.join(self.current_field)
+                elif name == 'move':
+                    entry = ChangesetEntry(self.new_name)
+                    entry.action_kind = RENAMED
+                    entry.old_name = self.old_name
+                    self.current['entries'].append(entry)
                 elif name in ['add_file', 'add_directory',
-                              'modify_file', 'remove_file',
-                              'rename_file']:
+                              'modify_file', 'remove_file']:
                     entry = ChangesetEntry(''.join(self.current_field))
                     entry.action_kind = { 'add_file': entry.ADDED,
                                           'add_directory': entry.ADDED,
