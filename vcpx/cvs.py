@@ -197,12 +197,18 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists, dirname
         from os import makedirs
         
+        entries = CvsEntries(root)
+        
         cvsup = CvsUpdate(working_dir=root)
         for e in changeset.entries:
-            edir = dirname(join(root, e.name))
-            if e.action_kind != e.DELETED and not exists(edir):
-                makedirs(edir)
-
+            if e.action_kind == e.UPDATED:
+                info = entries.getFileInfo(e.name)
+                if info and info.cvs_version == e.new_revision:
+                    if logger: logger.debug("skipping '%s' since it's already "
+                                            "at revision %s", e.name,
+                                            e.new_revision)
+                    continue
+                
             cvsup(output=True, entry=e.name, revision=e.new_revision)
 
             if cvsup.exit_status:
