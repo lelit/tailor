@@ -81,7 +81,7 @@ class TailorConfig(object):
             
         try:
             for root in args:
-                if not self.options.bootstrap:                
+                if self.options.bootstrap:                
                     if not (fromconfig or self.options.repository):
                         raise OptionError('Need a repository to bootstrap %r' %
                                           root, '--bootstrap')
