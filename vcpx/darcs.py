@@ -97,6 +97,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from xml.sax import parseString
         from xml.sax.handler import ContentHandler
         from changes import ChangesetEntry, Changeset
+        from datetime import datetime
         
         class DarcsXMLChangesHandler(ContentHandler):
             def __init__(self):
@@ -108,7 +109,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 if name == 'patch':
                     self.current = {}
                     self.current['author'] = attributes['author']
-                    self.current['date'] = attributes['local_date']
+                    date = attributes['date']
+                    # 20040619130027
+                    y = int(date[:4])
+                    m = int(date[4:6])
+                    d = int(date[6:8])
+                    hh = int(date[8:10])
+                    mm = int(date[10:12])
+                    ss = int(date[12:14])
+                    timestamp = datetime(y, m, d, hh, mm, ss)
+                    self.current['date'] = timestamp
                     self.current['revision'] = attributes['revision']
                     self.current['entries'] = []
                 elif name in ['name', 'comment',

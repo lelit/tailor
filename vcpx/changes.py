@@ -91,7 +91,7 @@ class Changeset(object):
     def __str__(self):
         s = []
         s.append('Revision: %s' % self.revision)
-        s.append('Date: %s' % self.date)
+        s.append('Date: %s' % str(self.date))
         s.append('Author: %s' % self.author)
         for ak in ['Added', 'Modified', 'Removed', 'Renamed']:
             entries = getattr(self, ak.lower()+'Entries')()

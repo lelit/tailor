@@ -128,7 +128,8 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from changes import Changeset, ChangesetEntry
-
+        from datetime import datetime
+        
         # cvsps output sample:
         ## ---------------------
         ## PatchSet 1500
@@ -194,6 +195,12 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                 entries.append(e)
                 l = log.readline()
 
+            cvsdate = pset['date']
+            y,m,d = map(int, cvsdate[:10].split('/'))
+            hh,mm,ss = map(int, cvsdate[11:19].split(':'))
+            timestamp = datetime(y, m, d, hh, mm, ss)
+            pset['date'] = timestamp
+            
             yield Changeset(**pset)
 
     def _applyChangeset(self, root, changeset):

@@ -132,6 +132,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from xml.sax import parseString
         from xml.sax.handler import ContentHandler
         from changes import ChangesetEntry, Changeset
+        from datetime import datetime
         
         class SvnXMLLogHandler(ContentHandler):
             def __init__(self):
@@ -160,8 +161,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 if name == 'logentry':
                     # Sort the paths to make tests easier
                     self.current['entries'].sort()
+                    svndate = self.current['date']
+                    # 2004-04-16T17:12:48.000000Z
+                    y,m,d = map(int, svndate[:10].split('-'))
+                    hh,mm,ss = map(int, svndate[11:19].split(':'))
+                    ms = int(svndate[20:-1])
+                    timestamp = datetime(y, m, d, hh, mm, ss, ms)
                     self.changesets.append(Changeset(self.current['revision'],
-                                                     self.current['date'],
+                                                     timestamp,
                                                      self.current['author'],
                                                      self.current['msg'],
                                                      self.current['entries']))
