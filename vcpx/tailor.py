@@ -76,7 +76,7 @@ class TailorConfig(object):
                         raise ExistingProjectError(
                             "Project %r cannot be bootstrapped twice" % root)
 
-                    if not options.repository:
+                    if not self.options.repository:
                         raise OptionError('Need a repository to bootstrap %r' %
                                           root)
                 elif self.options.update:
