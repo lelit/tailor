@@ -165,8 +165,10 @@ class ChangeSetCollector(object):
         info = infoline.split(';')
 
         assert info[0][:6] == 'date: '
-        
-        day,time = info[0][6:].split(' ')
+        # 2004-04-19 14:45:42 +0000, the timezone may be missing
+        dateparts = info[0][6:].split(' ') 
+        day = dateparts[0]
+        time = dateparts[1]
         y,m,d = map(int, day.split(day[4]))
         hh,mm,ss = map(int, time.split(':'))
         date = datetime(y,m,d,hh,mm,ss)
