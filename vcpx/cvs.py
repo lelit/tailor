@@ -276,6 +276,7 @@ class CvsWorkingDir(CvspsWorkingDir):
                                command="cvs log -R %(entry)s")
 
         rcsfile = cvslog(output=True, entry=pivot.filename).readline()
+        rcsfile = rcsfile.replace('Attic/', '', 1)
         return rcsfile[:rcsfile.index(pivot.filename)]
 
 
