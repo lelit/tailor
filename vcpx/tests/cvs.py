@@ -8,7 +8,30 @@
 from unittest import TestCase, TestSuite
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.cvs import changesets_from_cvslog
+from vcpx.cvs import changesets_from_cvslog, CvsEntry
+
+class CvsEntryTest(TestCase):
+    """Tests for the CvsEntry class"""
+
+    def testBasicCapabilities(self):
+        """Verify CvsEntry parser"""
+
+        from datetime import datetime
+        
+        tagline = "/version.txt/1.16.2.1/Tue Jul 13 12:49:02 2004//T1.16.2.1"
+        e = CvsEntry(tagline)
+        self.assertEqual(e.filename, 'version.txt')
+        self.assertEqual(e.cvs_version, '1.16.2.1')
+        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 12, 49, 2))
+        self.assertEqual(e.cvs_tag, 'T1.16.2.1')
+        
+        tagline = "/Validator.py/1.31.2.5/Result of merge+Tue Jul 13 13:43:06 2004//T1.31.2.5"
+        e = CvsEntry(tagline)
+        self.assertEqual(e.filename, 'Validator.py')
+        self.assertEqual(e.cvs_version, '1.31.2.5')
+        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 13, 43, 6))
+        self.assertEqual(e.cvs_tag, 'T1.31.2.5')
+        
 
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""

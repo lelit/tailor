@@ -301,6 +301,10 @@ class CvsEntry(object):
         from time import strptime
         
         dummy, fn, rev, ts, dummy, tag = entry.split('/')
+
+        if ts.startswith('Result of merge+'):
+            ts = ts[16:]
+            
         self.filename = fn
         self.cvs_version = rev
         y,m,d,hh,mm,ss,d1,d2,d3 = strptime(ts, "%a %b %d %H:%M:%S %Y")
