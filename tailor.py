@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Frontend
 # :Creato:   lun 03 mag 2004 01:39:00 CEST
