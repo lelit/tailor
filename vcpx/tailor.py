@@ -42,7 +42,8 @@ class TailorConfig(object):
         from os.path import abspath, split
         
         self.options = options
-        self.basedir = split(abspath(options.configfile))[0]
+        self.configfile = abspath(options.configfile)
+        self.basedir = split(self.configfile)[0]
         
     def __call__(self, args):
         from os.path import abspath, join
@@ -74,7 +75,7 @@ class TailorConfig(object):
     def __save(self):
         from pprint import pprint
 
-        configfile = open(self.options.configfile, 'w')
+        configfile = open(self.configfile, 'w')
         pprint(self.config, configfile)
         configfile.close()
 
@@ -82,7 +83,7 @@ class TailorConfig(object):
         from os.path import exists
 
         if exists(self.options.configfile):
-            configfile = open(self.options.configfile)
+            configfile = open(self.configfile)
             self.config = eval(configfile.read())
             configfile.close()
         else:
