@@ -200,21 +200,32 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
+        from os import mkdir
         
         wdir = join(basedir, subdir)
         if not exists(join(wdir, '_darcs')):
-            dget = SystemCommand(working_dir=basedir,
-                                 command="darcs get --partial --verbose"
-                                         " %(tag)s '%(repository)s' %(subdir)s"
+            if not exists(wdir):
+                mkdir(wdir)
+
+            c = SystemCommand(working_dir=wdir, command="darcs initialize")
+            c(output=True)
+
+            if c.exit_status:
+                raise TargetInitializationFailure(
+                    "'darcs initialize' returned status %s" % c.exit_status)
+            
+            dpull = SystemCommand(working_dir=wdir,
+                                 command="darcs pull --all --verbose"
+                                         " %(tag)s '%(repository)s'"
                                          " 2>&1")
             
-            output = dget(output=True, repository=repository,
-                          tag=revision<>'HEAD' and '--tag=%s'%repr(revision) or '',
-                          subdir=subdir)
-            if dget.exit_status:
+            output = dpull(output=True, repository=repository,
+                           tag=(revision<>'HEAD' and '--tag=%s'%repr(revision)
+                                or ''))
+            if dpull.exit_status:
                 raise TargetInitializationFailure(
-                    "'darcs get' returned status %d saying \"%s\"" %
-                    (dget.exit_status, output.getvalue().strip()))
+                    "'darcs pull' returned status %d saying \"%s\"" %
+                    (dpull.exit_status, output.getvalue().strip()))
 
         c = SystemCommand(working_dir=wdir,
                           command="darcs changes --last=1 --xml-output 2>&1")
