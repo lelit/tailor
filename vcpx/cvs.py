@@ -184,6 +184,12 @@ class ChangeSetCollector(object):
         assert info[2].strip()[:7] == 'state: '
 
         state = info[2].strip()[7:]
+
+        # Fourth element, if present and like "lines +x -y", indicates
+        # this is a change to an existing file. Otherwise its a new
+        # one.
+
+        newentry = not info[3].strip().startswith('lines: ')
         
         # The next line may be either the first of the changelog or a
         # continuation (?) of the preceeding info line with the
@@ -206,7 +212,7 @@ class ChangeSetCollector(object):
         else:
             changelog = '\n'.join(mesg)
             
-        return (date, author, changelog, entry, rev, state)
+        return (date, author, changelog, entry, rev, state, newentry)
     
     def __parseCvsLog(self, log):
         """Parse a complete CVS log."""
@@ -231,29 +237,23 @@ class ChangeSetCollector(object):
             total = total.strip()
             selected = selected.strip()
 
-            # If the log shows all changes to the entry, than it's
-            # a new one
-            
-            newentry = total.split(':')[1] == selected.split(':')[1]
-            
             l = log.readline()
             while l and l <> '----------------------------\n':
                 l = log.readline()
                 
             cs = self.__parseRevision(entry, log)
             while cs:
-                date,author,changelog,e,rev,state = cs
+                date,author,changelog,e,rev,state,newentry = cs
 
                 last = self.__collect(date, author, changelog, e, rev)
                 if state == 'dead':
                     last.action_kind = last.DELETED
+                elif newentry:
+                    last.action_kind = last.ADDED
                 else:
                     last.action_kind = last.UPDATED
                 
                 cs = self.__parseRevision(entry, log)
-
-            if newentry:
-                last.action_kind = last.ADDED
         
 
 class CvsWorkingDir(CvspsWorkingDir):
