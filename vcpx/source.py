@@ -86,12 +86,12 @@ class UpdatableSourceWorkingDir(object):
                     if logger: logger.info("INTERRUPTED BY THE USER!")
                     return c, conflicts
 
-            if applied:
-                applied(root, c)
-                
             if replay:
                 replay(root, c)
             
+            if applied:
+                applied(root, c)
+                
         return c, conflicts
 
     def _willApplyChangeset(self, changeset):

@@ -59,13 +59,16 @@ class DarcsChanges(SystemCommand):
 
 
 class DarcsAnnotate(SystemCommand):
-    COMMAND = "darcs annotate --standard-verbosity %(entry)s"
+    COMMAND = "darcs annotate --standard-verbosity %(entry)s >/dev/null 2>&1"
     
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
     """
-    
+
+    def __init__(self):
+        self.__addedEntries = {}
+        
     ## UpdatableSourceWorkingDir
     
     def _getUpstreamChangesets(self, root, sincerev=None):
@@ -195,6 +198,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import split, join, exists
 
+        if self.__addedEntries.get(entry): return
+        
         # This is ugly, but I didn't find a better way to test whether
         # a particular directory is already version controlled by darcs.
         
@@ -203,13 +208,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         basedir = split(entry)[0]
 
         if basedir:
-            dannot(output=True, entry=basedir)
+            dannot(entry=basedir)
             if dannot.exit_status:
                 self._addEntry(root, basedir)
 
         c = DarcsAdd(working_dir=root)
         c(entry=entry)
 
+        self.__addedEntries[entry] = True
+        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

@@ -30,13 +30,13 @@ class TailorizedProject(object):
     def __init__(self, root):
         import logging
         from os import makedirs
-        from os.path import join, exists
+        from os.path import join, exists, split
 
         self.root = root
         if not exists(root):
             makedirs(root)
         
-        self.logger = logging.getLogger('tailor')
+        self.logger = logging.getLogger('tailor.%s' % split(root)[1])
         hdlr = logging.FileHandler(join(root, LOG_FILENAME))
         formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
         hdlr.setFormatter(formatter)
@@ -120,7 +120,8 @@ class TailorizedProject(object):
 
         self.upstream_revision = changeset.revision
         self.__saveStatus()
-        
+        print "# Applied upstream changeset %s" % changeset.revision
+
     def update(self):
         """
         Update an existing tailorized project.
@@ -136,7 +137,10 @@ class TailorizedProject(object):
 
         proj = join(self.root, self.module)
         self.logger.info("Updating '%s' from revision '%s'" % (
-            proj, self.upstream_revision))
+            self.module, self.upstream_revision))
+        
+        print "\nUpdating '%s' from revision '%s'" % (self.module,
+                                                      self.upstream_revision)
         
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         actual,conflicts = dwd.applyUpstreamChangesets(proj,
