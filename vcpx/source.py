@@ -34,9 +34,11 @@ class UpdatableSourceWorkingDir(object):
 
     It has two main functionalities:
 
+    getUpstreamChangesets
+        to query the upstream server about new changesets
+    
     applyUpstreamChangesets
-        to query the upstream server about new changesets and
-        apply them to the working directory
+        to apply them to the working directory
 
     checkoutUpstreamRevision
         to extract a new copy of the sources, actually initializing
@@ -45,7 +47,7 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, sincerev,
+    def applyUpstreamChangesets(self, root, changesets,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
         """
@@ -62,7 +64,6 @@ class UpdatableSourceWorkingDir(object):
         - the sequence (potentially empty!) of conflicts.
         """
 
-        changesets = self._getUpstreamChangesets(root, sincerev)
         c = None
         conflicts = []
         for c in changesets:
@@ -106,7 +107,7 @@ class UpdatableSourceWorkingDir(object):
 
         return True
 
-    def _getUpstreamChangesets(self, root, sincerev):
+    def getUpstreamChangesets(self, root, sincerev):
         """
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets

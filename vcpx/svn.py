@@ -118,7 +118,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def _getUpstreamChangesets(self, root, sincerev=None):
+    def getUpstreamChangesets(self, root, sincerev=None):
         if sincerev:
             sincerev = int(sincerev)
         else:

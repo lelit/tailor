@@ -27,7 +27,7 @@ class TailorizedProject(object):
     revision.
     """
     
-    def __init__(self, root):
+    def __init__(self, root, verbose=False):
         import logging
         from os import makedirs
         from os.path import join, exists, split
@@ -35,7 +35,8 @@ class TailorizedProject(object):
         self.root = root
         if not exists(root):
             makedirs(root)
-        
+
+        self.verbose = verbose
         self.logger = logging.getLogger('tailor.%s' % split(root)[1])
         hdlr = logging.FileHandler(join(root, LOG_FILENAME))
         formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
@@ -126,7 +127,9 @@ class TailorizedProject(object):
 
         self.upstream_revision = changeset.revision
         self.__saveStatus()
-        print "# Applied changeset %s" % changeset.revision
+        if self.verbose:
+            print "# Applied changeset %s" % changeset.revision
+            print changeset.log
 
     def update(self, single_commit, concatenate_logs):
         """
@@ -144,20 +147,29 @@ class TailorizedProject(object):
         proj = join(self.root, split(self.module)[1])
         self.logger.info("Updating '%s' from revision '%s'" % (
             self.module, self.upstream_revision))
-        
-        print "\nUpdating '%s' from revision '%s'" % (self.module,
-                                                      self.upstream_revision)
+
+        if self.verbose:
+            print "\nUpdating '%s' from revision '%s'" % (self.module,
+                                                          self.upstream_revision)
         
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        actual,conflicts = dwd.applyUpstreamChangesets(
-            proj, self.upstream_revision, applied=self.applied,
-            logger=self.logger, delayed_commit=single_commit)
-        if actual:
-            if single_commit:
-                dwd.commitDelayedChangesets(proj, concatenate_logs)
+        changesets = dwd.getUpstreamChangesets(proj, self.upstream_revision)
 
-            self.logger.info("Update completed, now at revision '%s'" % (
-                self.upstream_revision,))
+        nchanges = len(changesets)
+        if nchanges:
+            if self.verbose:
+                print "Applying %d upstream changesets" % nchanges
+                
+            l,c = dwd.applyUpstreamChangesets(proj, changesets,
+                                              applied=self.applied,
+                                              logger=self.logger,
+                                              delayed_commit=single_commit)
+            if l:
+                if single_commit:
+                    dwd.commitDelayedChangesets(proj, concatenate_logs)
+
+                self.logger.info("Update completed, now at revision '%s'" % (
+                    self.upstream_revision,))
         else:
             self.logger.info("Update completed with no upstream changes")
 
@@ -168,7 +180,10 @@ GENERAL_OPTIONS = [
     make_option("-D", "--debug", dest="debug",
                 action="store_true", default=False,
                 help="Print each executed command."),
-    
+    make_option("-v", "--verbose", dest="verbose",
+                action="store_true", default=False,
+                help="Be verbose, echoing the changelog of each applied "
+                     "changeset to stdout."),
 ]    
 
 UPDATE_OPTIONS = [
@@ -287,7 +302,7 @@ def main():
                 raise UnknownProjectError(
                     "%r is not a tailorized project" % proj)
             
-        tailored = TailorizedProject(root)
+        tailored = TailorizedProject(root, options.verbose)
 
         if options.bootstrap:
             tailored.bootstrap(options.source_kind, options.target_kind,

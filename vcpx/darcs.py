@@ -123,7 +123,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
     ## UpdatableSourceWorkingDir
     
-    def _getUpstreamChangesets(self, root, sincerev=None):
+    def getUpstreamChangesets(self, root, sincerev=None):
         """
         Do the actual work of fetching the upstream changeset.
         """

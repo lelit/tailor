@@ -181,7 +181,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     
     ## UpdatableSourceWorkingDir
     
-    def _getUpstreamChangesets(self, root, sincerev=None):
+    def getUpstreamChangesets(self, root, sincerev=None):
         from os.path import join, exists
          
         cvsps = CvsPsLog(working_dir=root)
@@ -298,7 +298,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # update cvsps cache, then loop over the changesets and find the
         # last applied, to find out the actual cvsps revision
 
-        csets = self._getUpstreamChangesets(wdir)
+        csets = self.getUpstreamChangesets(wdir)
         csets.reverse()
         found = False
         for cset in csets:
