@@ -19,17 +19,11 @@ Examples::
   # Bootstrap a new taylored project, starting at revision 10
   $ tailor.py --bootstrap ~/svnwc/MyProduct http://svn.example.com/Product@10
 
-  # Alternatively, use darcs for the tailorization
-  $ tailor.py --darcs --bootstrap ~/svnwc/MyProduct file:///repos/Product@10
+  # Bootstrap a new product, fetching from CVS and storing under SVN
+  $ tailor.py --source-kind cvs --target-kind svn -b ~/wc/prod :pserver:...
 
   # Merge upstream changes since last update/bootstrap
   $ tailor.py ~/svnwc/MyProduct
-
-  # Show what's changed in current working directory
-  $ tailor.py --diff
-
-  # Manually set ancestry information
-  $ tailor.py --set-ancestry ~/svnwc/Other http://svn.example.com/trunk@10
 """
 
 __docformat__ = 'reStructuredText'
@@ -37,10 +31,10 @@ __docformat__ = 'reStructuredText'
 if __name__ == '__main__':
     import sys
 
-    if sys.argv[1] == 'test':
+    if len(sys.argv)>1 and sys.argv[1] == 'test':
         del sys.argv[1]
         from unittest import main
-        main(module='cvsync.tests', argv=sys.argv)
+        main(module='vcpx.tests', argv=sys.argv)
     else:
-        from cvsync.tailor import main
+        from vcpx.tailor import main
         main()
