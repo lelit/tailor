@@ -12,7 +12,8 @@ This module contains supporting classes for the `darcs` versioning system.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
+     GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 MOTD = """\
