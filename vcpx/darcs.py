@@ -93,9 +93,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         changesets = self.__parseDarcsChanges(changes)
 
-        if changesets:
-            self._createTag(root,
-                            'Sent %d patchsets upstream' % len(changesets))
+        # sort changeset by date
+        changesets.sort(lambda x, y: cmp(x.date, y.date))
 
         return changesets
     
