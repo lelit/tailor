@@ -9,6 +9,10 @@ __docformat__ = 'reStructuredText'
 from StringIO import StringIO
 from sys import stderr
 
+def shrepr(str):
+    str = str.replace("'", "\\'")
+    return "'" + str + "'"
+
 class VerboseStringIO(StringIO):
 
     def write(self, data):        

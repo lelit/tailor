@@ -13,6 +13,7 @@ working directory under two different version control systems.
 __docformat__ = 'reStructuredText'
 
 import socket
+from shwrap import shrepr
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
@@ -268,7 +269,7 @@ class SyncronizableTargetWorkingDir(object):
 
         if subdir<>'.':
             c = addentry(working_dir=root)
-            c(entry=repr(subdir))
+            c(entry=shrepr(subdir))
 
         for dir, subdirs, files in walk(join(root, subdir)):
             for excd in ['.svn', '_darcs', 'CVS']:
@@ -282,5 +283,5 @@ class SyncronizableTargetWorkingDir(object):
 
             if subdirs or files:
                 c = addentry(working_dir=dir)
-                c(entry=' '.join([repr(e) for e in subdirs+files]))
+                c(entry=' '.join([shrepr(e) for e in subdirs+files]))
 

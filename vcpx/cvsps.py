@@ -13,7 +13,7 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand
+from shwrap import SystemCommand, shrepr
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
@@ -298,7 +298,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
               repository=repository,
               module=module,
               revision=revision,
-              workingdir=subdir)
+              workingdir=shrepr(subdir))
             if c.exit_status:
                 raise TargetInitializationFailure(
                     "'cvs checkout' returned status %s" % c.exit_status)
@@ -423,7 +423,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         c = CvsAdd(working_dir=root)
-        c(entry=entry)
+        c(entry=shrepr(entry))
 
     def __forceTagOnEachEntry(self, root):
         """
@@ -476,7 +476,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         c = CvsCommit(working_dir=root)
 
         if entries:
-            entries = ' '.join(entries)
+            entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
             
@@ -489,7 +489,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         c = CvsRemove(working_dir=root)
-        c(entry=entry)
+        c(entry=shrepr(entry))
 
     def _renameEntry(self, root, oldentry, newentry):
         """

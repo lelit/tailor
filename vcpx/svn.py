@@ -11,7 +11,7 @@ This module contains supporting classes for Subversion.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand
+from shwrap import SystemCommand, shrepr
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
@@ -309,7 +309,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if logger: logger.info("checking out a working copy")
             svnco = SvnCheckout(working_dir=basedir)
             svnco(output=True, repository=repository, module=module,
-                  wc=subdir, revision=revision)
+                  wc=shrepr(subdir), revision=revision)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
                     "'svn checkout' returned status %s" % svnco.exit_status)
@@ -338,7 +338,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         c = SvnAdd(working_dir=root)
-        c(entry=' '.join([e.name for e in entries]))
+        c(entry=' '.join([shrepr(e.name) for e in entries]))
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -353,7 +353,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             logmessage = logmessage + '\n\n' + changelog
             
         if entries:
-            entries = ' '.join(entries)
+            entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
             
@@ -365,7 +365,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         c = SvnRemove(working_dir=root)
-        c(entry=' '.join([e.name for e in entries]))
+        c(entry=' '.join([shrepr(e.name) for e in entries]))
 
     def _renameEntry(self, root, oldentry, newentry):
         """
@@ -373,7 +373,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         c = SvnMv(working_dir=root)
-        c(old=oldentry, new=newentry)
+        c(old=shrepr(oldentry), new=repr(newentry))
 
     def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """

@@ -11,7 +11,7 @@ This module contains supporting classes for the `darcs` versioning system.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand
+from shwrap import SystemCommand, shrepr
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
@@ -192,7 +192,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="darcs pull --all --patches=%(patch)s")
-        output = c(output=True, patch=repr(changeset.revision))
+        output = c(output=True, patch=shrepr(changeset.revision))
         if c.exit_status:
             raise ChangesetApplicationFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
 
@@ -228,7 +228,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                          " 2>&1")
             
             output = dpull(output=True, repository=repository,
-                           tag=(revision<>'HEAD' and '--tag=%s'%repr(revision)
+                           tag=(revision<>'HEAD' and
+                                '--tag=%s' % shrepr(revision)
                                 or ''))
             if dpull.exit_status:
                 raise TargetInitializationFailure(
@@ -256,7 +257,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --recursive"
                                   " --quiet %(entry)s")
-        c(entry=' '.join([e.name for e in entries]))
+        c(entry=' '.join([shrepr(e.name) for e in entries]))
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -266,7 +267,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = DarcsRecord(working_dir=root)
 
         if entries:
-            entries = ' '.join(entries)
+            entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
             
@@ -297,7 +298,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="darcs mv %(old)s %(new)s")
-        c(old=oldentry, new=newentry)
+        c(old=shrepr(oldentry), new=shrepr(newentry))
 
     def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
@@ -324,4 +325,4 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --recursive"
                           " --quiet %(entry)s")
-        c(entry=subdir)
+        c(entry=shrepr(subdir))
