@@ -48,8 +48,12 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         self._replayChangeset(root, changeset)
+
+        from os.path import split
+
+        module = split(root)[1]
         
-        remark = 'Upstream changeset %s' % changeset.revision
+        remark = '%s: Upstream changeset %s' % (module, changeset.revision)
         changelog = changeset.log
         entries = [e.name for e in changeset.entries]
         self._commit(root, changeset.date, changeset.author,

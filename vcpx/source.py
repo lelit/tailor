@@ -104,7 +104,7 @@ class UpdatableSourceWorkingDir(object):
         """
 
         return True
-    
+
     def _getUpstreamChangesets(self, root, sincerev):
         """
         Query the upstream repository about what happened on the

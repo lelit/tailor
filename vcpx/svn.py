@@ -242,7 +242,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         actual = SvnInfo(working_dir=wdir)(entry='.')['Revision']
 
         if logger: logger.info("working copy up to svn revision %s",
-                               last.revision)
+                               actual)
         
         return actual 
     

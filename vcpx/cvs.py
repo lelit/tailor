@@ -302,15 +302,17 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         
         from os.path import split, join, exists
         from os import mkdir
-        
-        basedir = split(path)[0]
 
-        assert basedir, "Uhm, going too far"
+        basedir = split(path)[0]
+        if not basedir:
+            return
         
         cvsarea = join(basedir, 'CVS') 
         if basedir and not exists(cvsarea):
             parentcvs = self.__createParentCVSDirectories(basedir)
 
+            assert parentcvs, "Uhm, strange things happen"
+            
             if not exists(basedir):
                 mkdir(basedir)
 
