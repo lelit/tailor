@@ -77,7 +77,7 @@ class Changeset(object):
     This is a container of each file affected by this revision of the tree.
     """
 
-    def __init__(self, revision, date, author, log, entries, **other):
+    def __init__(self, revision, date, author, log, entries=None, **other):
         """
         Initialize a new ChangeSet.
         """
@@ -86,8 +86,17 @@ class Changeset(object):
         self.date = date
         self.author = author
         self.log = refill(log)
-        self.entries = entries
+        self.entries = entries or []
 
+    def addEntry(self, entry, revision):
+        """
+        Facility to add an entry.
+        """
+
+        e = ChangesetEntry(entry)
+        e.new_revision = revision
+        self.entries.append(e)
+        
     def __str__(self):
         s = []
         s.append('Revision: %s' % self.revision)
