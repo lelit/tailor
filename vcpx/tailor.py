@@ -23,13 +23,18 @@ LOG_FILENAME = 'tailor.log'
 class TailorConfig(object):
     def __init__(self, options):
         self.options = options
-        self.__load()
         
     def __call__(self, args):
-        if len(args) == 0 and not self.options.bootstrap:
+        from os.path import abspath
+        
+        self.__load()
+
+        if len(args) == 0 and self.options.update:
             args = self.config.keys()
 
-        for root in args:
+        for a in args:
+            root = abspath(a)
+            
             tailored = TailorizedProject(root, self.options.verbose, self)
             
             if self.options.bootstrap:                
@@ -38,12 +43,14 @@ class TailorConfig(object):
                                    self.options.repository,
                                    self.options.module,
                                    self.options.revision)
-            elif options.update:
+            elif self.options.migrate:
+                tailored.migrateConfiguration()
+            elif self.options.update:
                 tailored.update(self.options.single_commit,
                                 self.options.concatenate_logs)
-            elif options.migrate:
-                tailored.migrateConfiguration()
-            
+
+        self.__save()
+        
     def __save(self):
         from pprint import pprint
 
@@ -52,10 +59,15 @@ class TailorConfig(object):
         configfile.close()
 
     def __load(self):
-        configfile = open(self.options.configfile)
-        self.config = eval(configfile.read())
-        configfile.close()
+        from os.path import exists
 
+        if exists(self.options.configfile):
+            configfile = open(self.options.configfile)
+            self.config = eval(configfile.read())
+            configfile.close()
+        else:
+            self.config = {}
+            
     def loadProject(self, project):
         info = self.config.get(project.root)
 
