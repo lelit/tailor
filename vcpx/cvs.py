@@ -306,7 +306,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
         for cs in changesets_from_cvslog(log, sincedate,
-                                         url=repository+module):
+                                         url=join(repository,module)):
             changesets.append(cs)
 
         return changesets
