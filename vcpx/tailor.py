@@ -20,17 +20,37 @@ from dualwd import DualWorkingDir
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
 
+def relpathto(source, dest):
+    from os.path import abspath, split, commonprefix
+    
+    source = abspath(source)
+    dest = abspath(dest)
+
+    if source.startswith(dest):
+        return source[len(dest)+1:]
+    
+    prefix = commonprefix([source, dest])
+
+    source = source[len(prefix):]
+    dest = dest[len(prefix):]
+
+    return '../' * len(dest.split('/')) + source
+
+
 class TailorConfig(object):
     def __init__(self, options):
+        from os.path import split
+        
         self.options = options
+        self.basedir = split(options.configfile)[0]
         
     def __call__(self, args):
-        from os.path import abspath
+        from os.path import abspath, join
         
         self.__load()
 
         if len(args) == 0 and self.options.update:
-            args = self.config.keys()
+            args = [join(self.basedir, r) for r in self.config.keys()]
 
         for a in args:
             root = abspath(a)
@@ -69,8 +89,9 @@ class TailorConfig(object):
             self.config = {}
             
     def loadProject(self, project):
-        info = self.config.get(project.root)
-
+        relpath = relpathto(project.root, self.basedir)
+        
+        info = self.config.get(relpath)
         if info:
             project.source_kind = info['source_kind']
             project.target_kind = info['target_kind']
@@ -81,7 +102,9 @@ class TailorConfig(object):
         return info
         
     def saveProject(self, project):
-        self.config[project.root] = { 
+        relpath = relpathto(project.root, self.basedir)
+        
+        self.config[relpath] = { 
             'source_kind': project.source_kind,
             'target_kind': project.target_kind,
             'module': project.module,
