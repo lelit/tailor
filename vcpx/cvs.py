@@ -28,7 +28,7 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "TZ=UTC cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s 2>/dev/null"
+    COMMAND = "TZ=UTC cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s 2>&1"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
@@ -47,14 +47,14 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log, reposprefix=None):
+def changesets_from_cvslog(log):
     """
     Parse CVS log.
     """
 
     from datetime import timedelta
 
-    collected = ChangeSetCollector(log, reposprefix)
+    collected = ChangeSetCollector(log)
     collapsed = []
 
     threshold = timedelta(seconds=180)
@@ -79,7 +79,7 @@ def changesets_from_cvslog(log, reposprefix=None):
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
     
-    def __init__(self, log, reposprefix):
+    def __init__(self, log):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -89,7 +89,7 @@ class ChangeSetCollector(object):
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
        
-        self.__parseCvsLog(log, reposprefix)
+        self.__parseCvsLog(log)
         
     def __iter__(self):
         keys = self.changesets.keys()
@@ -191,22 +191,37 @@ class ChangeSetCollector(object):
             
         return (date, author, changelog, entry, rev, state, newentry)
     
-    def __parseCvsLog(self, log, reposprefix):
+    def __parseCvsLog(self, log):
         """Parse a complete CVS log."""
 
-        def get_entry_from_rcsfile(path, prefixlen=len(reposprefix)):
-            path = path.replace('Attic/', '', 1)
-            return path[prefixlen:-2]
+        from os.path import split, join
 
+        currentdir = None
+        
         while 1:
             l = log.readline()
+            
+            while l and not (l.startswith('cvs rlog: Logging ') or
+                             l.startswith('RCS file: ')):
+                l = log.readline()
+
+            if l.startswith('cvs rlog: Logging '):
+                currentdir = l[18:-1]
+                # strip away first component, the name of the product
+                if '/' in currentdir:
+                    currentdir = currentdir[currentdir.index('/')+1:]
+                else:
+                    currentdir = ''
+                    
             while l and not l.startswith('RCS file: '):
                 l = log.readline()
             
             if not l.startswith('RCS file: '):
                 break
 
-            entry = get_entry_from_rcsfile(l[10:-1])
+            assert currentdir is not None, "Missed 'cvs rlog: Logging XX' line"
+            
+            entry = join(currentdir, split(l[10:-1])[1][:-2])
             
             l = log.readline()
             while l and l <> '----------------------------\n':
@@ -248,9 +263,6 @@ class CvsWorkingDir(CvspsWorkingDir):
             # Assume this is from __getGlobalRevision()
             since,author = sincerev.split(' by ')
 
-        pivot = entries.getPivotEntry()
-        reposprefix = self.__determineReposPrefix(root, pivot)
-        
         branch = ''
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
@@ -266,19 +278,11 @@ class CvsWorkingDir(CvspsWorkingDir):
         changesets = []
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
-        for cs in changesets_from_cvslog(log, reposprefix):
+        for cs in changesets_from_cvslog(log):
             changesets.append(cs)
 
         return changesets
     
-    def __determineReposPrefix(self, root, pivot):
-        cvslog = SystemCommand(working_dir=root,
-                               command="cvs log -R %(entry)s")
-
-        rcsfile = cvslog(output=True, entry=pivot.filename).readline()
-        rcsfile = rcsfile.replace('Attic/', '', 1)
-        return rcsfile[:rcsfile.index(pivot.filename)]
-
 
 class CvsEntry(object):
     """Collect the info about a file in a CVS working dir."""
@@ -405,15 +409,3 @@ class CvsEntries(object):
                 latest = e
 
         return latest
-    
-    def getPivotEntry(self):
-        """Find and return the first file entry."""
-
-        if self.files:
-            return self.files[self.files.keys()[0]]
-        else:
-            for d in self.directories.values():
-                e = d.getPivotEntry()
-
-                if e:
-                    return e

@@ -36,8 +36,9 @@ class CvsEntryTest(TestCase):
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""
 
-    SIMPLE_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     SIMPLE_TEST = """\
+cvs rlog: Logging docutils
+
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
 head: 1.2
 branch:
@@ -58,8 +59,9 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
-    DOUBLE_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     DOUBLE_TEST = """\
+cvs rlog: Logging docutils/docutils
+
 RCS file: /cvsroot/docutils/docutils/docutils/statemachine.py,v
 head: 1.16
 branch:
@@ -113,8 +115,9 @@ updated
 =============================================================================
 """
     
-    DELETED_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     DELETED_TEST = """\
+cvs rlog: Logging docutils
+
 RCS file: /cvsroot/docutils/docutils/Attic/THANKS.txt,v
 head: 1.2
 branch:
@@ -135,8 +138,9 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
-    COLLAPSE_TEST_PREFIX = "/usr/local/CVSROOT/PyObjC/"
     COLLAPSE_TEST = """\
+cvs rlog: Logging PyObjC/Doc
+    
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
 head: 1.4
 branch:
@@ -190,8 +194,9 @@ Fake changelog 4
 =============================================================================
 """
 
-    BRANCHES_TEST_PREFIX = "/cvsroot/archetypes/Archetypes/"
     BRANCHES_TEST = """\
+cvs rlog: Logging Archetypes/tests
+
 RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
 head: 1.18
 branch:
@@ -220,8 +225,7 @@ Fixed deepcopy problem in validations
         """Verify basic cvs log parser behaviour"""
 
         log = StringIO(self.SIMPLE_TEST)
-        csets = changesets_from_cvslog(log,
-                                       reposprefix=self.SIMPLE_TEST_PREFIX)
+        csets = changesets_from_cvslog(log)
 
         self.assertEqual(len(csets), 2)
         
@@ -248,8 +252,7 @@ Fixed deepcopy problem in validations
         """Verify cvs log parser grouping capability"""
 
         log = StringIO(self.DOUBLE_TEST)
-        csets = changesets_from_cvslog(log,
-                                       reposprefix=self.DOUBLE_TEST_PREFIX)
+        csets = changesets_from_cvslog(log)
 
         self.assertEqual(len(csets), 5)
 
@@ -287,8 +290,7 @@ Fixed deepcopy problem in validations
         """Verify recognition of deleted entries in the cvs log"""
 
         log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log,
-                                       reposprefix=self.DELETED_TEST_PREFIX)
+        csets = changesets_from_cvslog(log)
 
         self.assertEqual(len(csets), 2)
 
@@ -305,8 +307,7 @@ Fixed deepcopy problem in validations
         """Verify the mechanism used to collapse related changesets"""
 
         log = StringIO(self.COLLAPSE_TEST)
-        csets = changesets_from_cvslog(log,
-                                       reposprefix=self.COLLAPSE_TEST_PREFIX)
+        csets = changesets_from_cvslog(log)
 
         self.assertEqual(len(csets), 5)
 
@@ -334,11 +335,43 @@ Fixed deepcopy problem in validations
         """Verify the parser groks with the branches info on revision"""
 
         log = StringIO(self.BRANCHES_TEST)
-        csets = changesets_from_cvslog(log,
-                                       reposprefix=self.BRANCHES_TEST_PREFIX)
+        csets = changesets_from_cvslog(log)
 
         self.assertEqual(len(csets), 3)
 
         cset = csets[0]
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
+        
+    REPOSPATH_TEST = """\
+cvs rlog: Logging Zope/lib/python/DateTime
+cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/DateTime/Attic/DateTime.html,v'
+
+RCS file: /cvs-repository/Packages/DateTime/Attic/DateTime.py,v
+head: 1.100
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 170;   selected revisions: 1
+description:
+----------------------------
+revision 1.85.12.11
+date: 2004/08/02 09:49:18;  author: andreasjung;  state: Exp;  lines: +22 -2
+backported copy constructor from trunk
+=============================================================================
+"""
+
+    def testReposPath(self):
+        """Verify the parser is right in determine working copy file paths"""
+
+        log = StringIO(self.REPOSPATH_TEST)
+        csets = changesets_from_cvslog(log)
+
+        self.assertEqual(len(csets), 1)
+
+        cset = csets[0]
+        self.assertEqual(cset.log,"backported copy constructor from trunk\n")
+        self.assertEqual(len(cset.entries), 1)
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'lib/python/DateTime/DateTime.py')
         
