@@ -42,11 +42,13 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
 
     def applyUpstreamChangesets(self, root, sincerev,
-                                replay=None, applied=None, logger=None):
+                                replay=None, applied=None, logger=None,
+                                delayed_commit=False):
         return self.source.applyUpstreamChangesets(root, sincerev,
                                                    self.target.replayChangeset,
                                                    applied=applied,
-                                                   logger=logger)
+                                                   logger=logger,
+                                                   delayed_commit=delayed_commit)
         
     def checkoutUpstreamRevision(self, root, repository, module, revision,
                                  logger=None):
