@@ -69,7 +69,7 @@ def refill(msg):
     
     wrapper = TextWrapper()
     res = []
-    items = itemize_re.split(msg)
+    items = itemize_re.split(msg.strip())
     
     if len(items)>1:
         # Remove possible first empty split, when the message immediately
