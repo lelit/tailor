@@ -12,7 +12,7 @@ This module contains supporting classes for the `darcs` versioning system.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 MOTD = """\
@@ -142,7 +142,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = SystemCommand(working_dir=root,
                           command="TZ=UTC darcs pull --dry-run")
         output = c(output=True)
-
+        if c.exit_status:
+            raise GetUpstreamChangesetsFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
+        
         l = output.readline()
         while l and not l.startswith('Would pull the following changes:'):
             l = output.readline()
@@ -183,6 +185,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = SystemCommand(working_dir=root,
                           command="darcs pull --all --patches=%(patch)s")
         output = c(output=True, patch=repr(changeset.revision))
+        if c.exit_status:
+            raise ChangesetApplicationFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
 
         c = SystemCommand(working_dir=root,
                           command="darcs changes --last=1 --xml-output --summ")
@@ -204,18 +208,24 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if not exists(join(wdir, '_darcs')):
             dget = SystemCommand(working_dir=basedir,
                                  command="darcs get --partial --verbose"
-                                         " %(tag)s '%(repository)s' %(subdir)s")
+                                         " %(tag)s '%(repository)s' %(subdir)s"
+                                         " 2>&1")
             
-            dget(output=True, repository=repository,
-                 tag=revision<>'HEAD' and '--tag=%s' % repr(revision) or '',
-                 subdir=subdir)
+            output = dget(output=True, repository=repository,
+                          tag=revision<>'HEAD' and '--tag=%s'%repr(revision) or '',
+                          subdir=subdir)
             if dget.exit_status:
                 raise TargetInitializationFailure(
-                    "'darcs get' returned status %s" % dget.exit_status)
+                    "'darcs get' returned status %d saying \"%s\"" %
+                    (dget.exit_status, output.getvalue().strip()))
 
         c = SystemCommand(working_dir=wdir,
-                          command="darcs changes --last=1 --xml-output")
-        last = changesets_from_darcschanges(c(output=True))
+                          command="darcs changes --last=1 --xml-output 2>&1")
+        output = c(output=True)
+        if output.exit_status:
+            raise ChangesetApplicationFailure("'darcs changes' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
+        
+        last = changesets_from_darcschanges(output)
         
         return last[0].revision
 
@@ -231,7 +241,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                           command="darcs add --case-ok --not-recursive"
                                   " --standard-verbosity %(entry)s")
         c(entry=entry)
-
+        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
@@ -246,6 +256,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             
         c(output=True, date=date, patchname=remark,
           logmessage=changelog, author=author, entries=entries)
+        if c.exit_status:
+            raise ChangesetApplicationFailure("'darcs record' returned status %d" % c.exit_status)
         
     def _removeEntry(self, root, entry):
         """
