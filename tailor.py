@@ -5,10 +5,11 @@
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 #
 
-"""Keep a tree in sync with its "upstream" repository of a different format. 
+"""
+Keep a tree in sync with its "upstream" repository of a (possibly)
+different format.
 
 For more documentation, see the README file from the distribution.
-
 """
 
 __docformat__ = 'reStructuredText'

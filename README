@@ -1,15 +1,18 @@
-ABOUT
-----------------------------------------------------------------------
-tailor.py is tool to synchronize CVS, Subversion, and darcs repositories.
+About
+=====
+
+tailor.py is a tool to migrate changesets between CVS, Subversion, and
+darcs repositories.
 
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
 URI and revision in special properties on the branched directory.
 
 
-INSTALLATION
-----------------------------------------------------------------------
-tailor.py is written in python, and thus python must be installed on your
+Installation
+============
+
+tailor.py is written in Python, and thus Python must be installed on your
 system to use it.
 
 Make tailor.py executable:
@@ -20,33 +23,66 @@ You can either run tailor.py where it is currently located, or move it
 along with the vcpx directory to a location in your PATH.
 
 
-EXAMPLES
-----------------------------------------------------------------------
+Examples
+========
 
-  # Bootstrap a new taylored project, starting at upstream revision 10
+Bootstrap a new taylored project, starting at upstream revision 10::
+
   $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
 
-  # Bootstrap a new product, fetching from CVS and storing under SVN: this
-  # will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be already
-  # under SVN.
+Bootstrap a new product, fetching from CVS and storing under SVN: this
+will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be already
+under SVN::
+
   $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
               --repository :pserver:cvs.zope.org:/cvs-repository \
               --module CMF/CMFCore ~/svnwc/cmfcore
   
-  # Showing each command bootstrap a new DARCS repos in "~/darcs/cmftopic"
-  # under which the upstream module will be extracted as "CMFTopic" (ie, the
-  # last component of the module name).
+Showing each command bootstrap a new DARCS repos in "~/darcs/cmftopic"
+under which the upstream module will be extracted as "CMFTopic" (ie, the
+last component of the module name)::
+
   $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
               -m CMF/CMFTopic ~/darcs/cmftopic
               
-  # Merge upstream changes since last update/bootstrap
+Merge upstream changes since last update/bootstrap::
+
   $ tailor.py ~/svnwc/MyProduct
 
 
-CONFIG FILE FORMAT
-----------------------------------------------------------------------
+Tailor's metadata
+=================
 
-Here's an example config file entry:
+To do its work, tailor needs some information about your source tree,
+such as the upstream repository URL and the current revision of the
+sources on your harddisk.
+
+In the simpler case, tailor keeps this information in a file called
+`tailor.info`, one for each tailored project, that is a very simple
+text document, with the following information, one per line:
+
+1. Upstream repository kind (either "cvs", "darcs" or "svn)
+2. Target repository kind (the same as above)
+3. The name of the "module" that's been tailored
+4. The URL of the upstream repository (that may not be an URL, for cvs...)
+5. The current revision, from the upstream point of view, of the sources
+
+This is everything tailor needs, to be able to keep going from where it
+left last time.
+
+Config file format
+------------------
+
+When your project is composed by multiple upstream modules, it is
+easier to collect such information in a single file. This is done by
+specifying the `--configfile` option with a file name as argument. In
+this case, tailor will read/write the above information from a
+standard Python dictionary stored in the given file. 
+
+The dictionary is keyed on the relative position of each project, and
+each entry carries the same information described above.
+
+Here's an example config file entry::
 
  {'plone/atcontenttypes': {'module': 'ATContentTypes',
                            'source_kind': 'cvs',
@@ -55,44 +91,30 @@ Here's an example config file entry:
                            'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
                            'upstream_revision': '2004-11-24 19:42:06 by ctheune'}}
 
-The above represents one entry in a config file.  You can multiple entries,
-but be careful to make sure have an extra bracket on the first and last lines
-of the file. Here's an example with three entries to illustrate this:
-
- {'plone/atcontenttypes': {'module': 'ATContentTypes',
-                           'source_kind': 'cvs',
-                           'subdir': 'ATContentTypes',
-                           'target_kind': 'darcs',
-                           'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
-                           'upstream_revision': '2004-11-24 19:42:06 by ctheune'},
-  'plone/btreefolder2': {'module': 'Products/BTreeFolder2',
-                         'source_kind': 'cvs',
-                         'subdir': 'BTreeFolder2',
-                         'target_kind': 'darcs',
-                         'upstream_repos': ':pserver:anonymous@cvs.zope.org:/cvs-repository',
-                         'upstream_revision': '2004-06-16 23:45:45 by shane'},
-  'plone/cmfactionicons': {'module': 'CMF/CMFActionIcons',
-                           'source_kind': 'cvs',
-                           'subdir': 'CMFActionIcons',
-                           'target_kind': 'darcs',
-                           'upstream_repos': ':pserver:anonymous@cvs.zope.org:/cvs-repository',
-                           'upstream_revision': '2004-10-04 17:03:38 by tseaver'}}
-
 By convention, config files are named with the extension ".tailor", but this is
 not enforced.
 
-In the example above, 'plone/atcontenttypes' is a directory where the target source
-will be stored. The keys such 'module', 'source_kind', etc correspond to options
-of the same name. See the output of 'tailor.py' for more details. 
+In the example above, 'plone/atcontenttypes' is a directory where the
+target source will be stored. The keys such 'module', 'source_kind',
+etc correspond to options of the same name.
+
+When using a config file, tailor will perform its job on each project
+contained in the dictionary.
 
 
-FURTHER HELP
-----------------------------------------------------------------------
-See the output of tailor.py -h for some further tips. 
+Further help
+============
+
+See the output of tailor.py -h for some further tips. I will be more
+than happy to answer any doubt, question or suggestion you may have on
+it. I'm usually hanging as "lelit" on the IRC channel devoted to darcs
+on the freenode.net network. Do not hesitate to contact me either by
+email or chatting there.
 
 
-AUTHOR
-----------------------------------------------------------------------
+Author
+======
+
 Lele Gaifax <lele@nautilus.homeip.net>
 
 
