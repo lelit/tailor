@@ -89,7 +89,7 @@ class UpdatableSourceWorkingDir(object):
                     return c, conflicts
 
             if replay:
-                replay(root, c, delayed_commit)
+                replay(root, c, delayed_commit=delayed_commit, logger=logger)
             
             if applied:
                 applied(root, c)

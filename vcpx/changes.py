@@ -42,7 +42,15 @@ class ChangesetEntry(object):
         self.status = None
 
     def __str__(self):
-        return "%s %s->%s" % (self.name, self.old_revision, self.new_revision)
+        if self.action_kind == self.ADDED:
+            return '%s (new at %s)' % (self.name, self.new_revision)
+        elif self.action_kind == self.DELETED:
+            return '%s (deleted)' % self.name
+        elif self.action_kind == self.UPDATED:
+            return "%s (update to %s)" % (self.name,
+                                          self.new_revision)
+        else:
+            return '%s (rename from %s)' % (self.name, self.old_name)
 
 
 from textwrap import TextWrapper

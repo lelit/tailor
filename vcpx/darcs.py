@@ -244,7 +244,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                   " --standard-verbosity %(entry)s")
         c(entry=entry)
 
-        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

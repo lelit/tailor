@@ -48,7 +48,8 @@ class SyncronizableTargetWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def replayChangeset(self, root, changeset, delayed_commit=False):
+    def replayChangeset(self, root, changeset,
+                        delayed_commit=False, logger=None):
         """
         Do whatever is needed to replay the changes under the target
         VC, to register the already applied (under the other VC)
@@ -60,7 +61,7 @@ class SyncronizableTargetWorkingDir(object):
         by commitDelayedChangesets().
         """
 
-        self._replayChangeset(root, changeset)
+        self._replayChangeset(root, changeset, logger)
 
         if delayed_commit:
             self.__registerAppliedChangeset(changeset)
@@ -124,13 +125,14 @@ class SyncronizableTargetWorkingDir(object):
         self._commit(root, datetime.now(), authors,
                          remark, changelog, entries)
     
-    def _replayChangeset(self, root, changeset):
+    def _replayChangeset(self, root, changeset, logger):
         """
         Replicate the actions performed by the changeset on the tree of
         files.
         """
         
         for e in changeset.entries:
+            if logger: logger.info('Replaying %s' % str(e))           
             if e.action_kind == e.RENAMED:
                 self._renameEntry(root, e.old_name, e.name)
             elif e.action_kind == e.ADDED:
