@@ -8,6 +8,7 @@ from shwrap import *
 from cvsps import *
 from cvs import *
 from darcs import *
+from tailor import *
 
 SystemCommand.VERBOSE = False
 

@@ -15,12 +15,19 @@ unversioned file named `tailor.info` at the root.
 
 __docformat__ = 'reStructuredText'
 
+from optparse import OptionParser, OptionError, OptionGroup, make_option
 from dualwd import DualWorkingDir
 
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
 
 def relpathto(source, dest):
+    """
+    Compute the relative path needed to point `source` from `dest`.
+
+    Warning: `dest` is assumed to be a directory.
+    """
+    
     from os.path import abspath, split, commonprefix
     
     source = abspath(source)
@@ -38,6 +45,14 @@ def relpathto(source, dest):
 
 
 class TailorConfig(object):
+    """
+    Configuration of a set of tailorized projects.
+
+    The configuration is stored in a persistent dictionary keyed on the
+    relative path of each project. The information about a single project
+    is another dictionary.
+    """
+    
     def __init__(self, options):
         from os.path import abspath, split
         
@@ -46,31 +61,43 @@ class TailorConfig(object):
         self.basedir = split(self.configfile)[0]
         
     def __call__(self, args):
-        from os.path import abspath, join
+        from os.path import join
         
         self.__load()
 
         if len(args) == 0 and self.options.update:
             args = [join(self.basedir, r) for r in self.config.keys()]
-            
-        for a in args:
-            root = abspath(a)
-            
-            tailored = TailorizedProject(root, self.options.verbose, self)
-            
-            if self.options.bootstrap:                
-                tailored.bootstrap(self.options.source_kind,
-                                   self.options.target_kind,
-                                   self.options.repository,
-                                   self.options.module,
-                                   self.options.revision)
-            elif self.options.migrate:
-                tailored.migrateConfiguration()
-            elif self.options.update:
-                tailored.update(self.options.single_commit,
-                                self.options.concatenate_logs)
 
-        self.__save()
+        try:
+            for root in args:
+                if self.options.bootstrap:                
+                    if self.config.has_key(relpathto(root, self.basedir)):
+                        raise ExistingProjectError(
+                            "Project %r cannot be bootstrapped twice" % root)
+
+                    if not options.repository:
+                        raise OptionError('Need a repository to bootstrap %r' %
+                                          root)
+                elif self.options.update:
+                    if not exists(root):
+                        raise UnknownProjectError("Project %r does not exist" %
+                                                  root)
+                    
+                tailored = TailorizedProject(root, self.options.verbose, self)
+
+                if self.options.bootstrap:                
+                    tailored.bootstrap(self.options.source_kind,
+                                       self.options.target_kind,
+                                       self.options.repository,
+                                       self.options.module,
+                                       self.options.revision)
+                elif self.options.migrate:
+                    tailored.migrateConfiguration()
+                elif self.options.update:
+                    tailored.update(self.options.single_commit,
+                                    self.options.concatenate_logs)
+        finally:
+            self.__save()
         
     def __save(self):
         from pprint import pprint
@@ -283,8 +310,6 @@ class TailorizedProject(object):
             self.logger.info("Update completed with no upstream changes")
 
 
-from optparse import OptionParser, OptionError, OptionGroup, make_option
-
 GENERAL_OPTIONS = [
     make_option("-D", "--debug", dest="debug",
                 action="store_true", default=False,
@@ -392,16 +417,16 @@ def main():
     
     SystemCommand.VERBOSE = options.debug
 
-    base = getcwd()
-        
     if options.configfile:
         config = TailorConfig(options)
 
-        config(args)
+        config(map(abspath, args))
     else:
         # Good (?) old way
-
+        
         config = None
+        
+        base = getcwd()
         
         if len(args) == 0:
             args.append(base)
