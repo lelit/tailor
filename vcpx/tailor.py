@@ -432,8 +432,8 @@ BOOTSTRAP_OPTIONS = [
     make_option("-m", "--module", dest="module", metavar="MODULE",
                 help="Specify the module to checkout at bootstrap time. "
                      "It's mandatory only when dealing with CVS, and used but "
-                     "not required with SVN, but since it's used in"
-                     "the description of the target repository, you"
+                     "not required with SVN, but since it's used in "
+                     "the description of the target repository, you "
                      "are encouraged to give it a value with darcs too."),
     make_option("-r", "--revision", dest="revision", metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
