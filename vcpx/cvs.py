@@ -91,12 +91,13 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         cvsps = CvsPsLog(working_dir=root)
         
         from os.path import join, exists
-        
+         
+        branch="HEAD"
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
-            branch=open(fname).read()[1:-1]
-        else:
-            branch="HEAD"
+            tag = open(fname).read()
+            if tag.startswith('T'):
+                branch=tag[1:-1]
 
         if sincerev:
             sincerev = int(sincerev)
