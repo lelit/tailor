@@ -45,6 +45,31 @@ class ChangesetEntry(object):
         return "%s %s->%s" % (self.name, self.old_revision, self.new_revision)
 
 
+from textwrap import TextWrapper
+from re import compile, MULTILINE
+    
+itemize_re = compile('^[ ]*[-*] ', MULTILINE)
+
+def refill(msg):
+    wrapper = TextWrapper()
+    s = []
+    items = itemize_re.split(msg)
+    if len(items)>1:
+        if len(items)>2:
+            if items[0]:
+                wrapper.initial_indent = ' - '
+                wrapper.subsequent_indent = ' '*3
+            else:
+                del items[0]
+                
+    for m in items:
+        if m:
+            s.append(wrapper.fill(' '.join(filter(None, m.split(' ')))))
+            s.append('')
+
+    return '\n'.join(s)
+
+
 class Changeset(object):
     """
     Represent a single upstream Changeset.
@@ -60,7 +85,7 @@ class Changeset(object):
         self.revision = revision
         self.date = date
         self.author = author
-        self.log = log
+        self.log = refill(log)
         self.entries = entries
 
     def __str__(self):

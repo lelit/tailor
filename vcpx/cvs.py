@@ -60,27 +60,6 @@ class CvsCheckout(SystemCommand):
     COMMAND = "cvs -q -d%(repository)s checkout -r %(revision)s %(module)s"
 
 
-from textwrap import TextWrapper
-from re import compile, MULTILINE
-    
-itemize_re = compile('^[ ]*[-*] ', MULTILINE)
-
-def refill(msg):
-    wrapper = TextWrapper()
-    s = []
-    items = itemize_re.split(msg)
-    if len(items)>1:
-        wrapper.initial_indent = ' - '
-        wrapper.subsequent_indent = ' '*3
-                
-    for m in items:
-        if m:
-            s.append(wrapper.fill(m))
-            s.append('')
-
-    return '\n'.join(s)
-
-
 class CvsWorkingDir(UpdatableSourceWorkingDir,
                     SyncronizableTargetWorkingDir):
 
@@ -190,7 +169,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                 msg.append(l)
                 l = log.readline()
 
-            pset['log'] = refill(''.join(msg))
+            pset['log'] = ''.join(msg)
 
             assert l.startswith('Members:'), "Parse error: %s" % l
 
