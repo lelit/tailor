@@ -5,6 +5,7 @@
 # 
 
 from shwrap import *
+from cvs import *
 
 SystemCommand.VERBOSE = False
 
