@@ -71,7 +71,7 @@ This is everything tailor needs, to be able to keep going from where it
 left last time.
 
 Config file format
-------------------
+==================
 
 When your project is composed by multiple upstream modules, it is
 easier to collect such information in a single file. This is done by
