@@ -281,6 +281,17 @@ class TailorizedProject(object):
 
         self.logger.info("Bootstrap completed")
 
+    def applyable(self, root, changeset):
+        """
+        Print the changeset being applied.
+        """
+
+        if self.verbose:
+            print "Changeset %s:" % changeset.revision
+            print changeset.log
+
+        return True
+    
     def applied(self, root, changeset):
         """
         Save current status.
@@ -289,8 +300,7 @@ class TailorizedProject(object):
         self.upstream_revision = changeset.revision
         self.__saveStatus()
         if self.verbose:
-            print "# Applied changeset %s" % changeset.revision
-            print changeset.log
+            print
 
     def update(self, single_commit, concatenate_logs):
         """
@@ -322,6 +332,7 @@ class TailorizedProject(object):
                 print "Applying %d upstream changesets" % nchanges
                 
             l,c = dwd.applyUpstreamChangesets(proj, changesets,
+                                              applyable=self.applyable,
                                               applied=self.applied,
                                               logger=self.logger,
                                               delayed_commit=single_commit)

@@ -47,7 +47,7 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, changesets,
+    def applyUpstreamChangesets(self, root, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
         """
@@ -67,7 +67,7 @@ class UpdatableSourceWorkingDir(object):
         c = None
         conflicts = []
         for c in changesets:
-            if not self._willApplyChangeset(c):
+            if not self._willApplyChangeset(root, c, applyable):
                 continue
             
             if logger:
@@ -96,7 +96,7 @@ class UpdatableSourceWorkingDir(object):
                 
         return c, conflicts
 
-    def _willApplyChangeset(self, changeset):
+    def _willApplyChangeset(self, root, changeset, applyable=None):
         """
         This gets called just before applying each changeset.  The action
         won't be carried out if this returns False.
@@ -105,7 +105,10 @@ class UpdatableSourceWorkingDir(object):
         before application.
         """
 
-        return True
+        if applyable:
+            return applyable(root, changeset)
+        else:
+            return True
 
     def getUpstreamChangesets(self, root, sincerev):
         """

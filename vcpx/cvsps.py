@@ -241,7 +241,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     continue
                     
             cvsup(output=True, entry=e.name, revision=e.new_revision)
-
+            
             if cvsup.exit_status:
                 if logger: logger.warning("'cvs update' on %s exited "
                                           "with status %d, retrying once..." %
@@ -259,6 +259,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             if cvsup.exit_status:
                 raise ChangesetApplicationFailure(
                     "'cvs update' returned status %s" % cvsup.exit_status)
+            
+            if logger: logger.info("%s updated to %s" % (e.name,
+                                                         e.new_revision))
             
             if e.action_kind == e.DELETED:
                 self.__maybeDeleteDirectory(root, split(e.name)[0],
@@ -326,7 +329,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             
         return last.revision
     
-    def _willApplyChangeset(self, changeset):
+    def _willApplyChangeset(self, root, changeset, applyable):
         """
         This gets called just before applying each changeset.
         
@@ -334,12 +337,16 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         of new directories, creating empty-but-reasonable CVS dirs.
         """
 
-        for m in changeset.entries:
-            if m.action_kind == m.ADDED:
-                self.__createParentCVSDirectories(m.name)
+        if UpdatableSourceWorkingDir._willApplyChangeset(self, root, changeset,
+                                                         applyable):
+            for m in changeset.entries:
+                if m.action_kind == m.ADDED:
+                    self.__createParentCVSDirectories(m.name)
             
-        return True
-
+            return True
+        else:
+            return False
+        
     def __createParentCVSDirectories(self, path):
         """
         Verify that the hierarchy down to the entry is under CVS.

@@ -223,11 +223,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _applyChangeset(self, root, changeset, logger=None):
         svnup = SvnUpdate(working_dir=root)
         out = svnup(output=True, entry='.', revision=changeset.revision)
-        
+
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
                 "'svn update' returned status %s" % svnup.exit_status)
             
+        if logger: logger.info("%s updated to %s" % (
+            ','.join([e.name for e in changeset.entries]),
+            changeset.revision))
+        
         result = []
         for line in out:
             if len(line)>2 and line[0] == 'C' and line[1] == ' ':

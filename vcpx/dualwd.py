@@ -44,11 +44,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def getUpstreamChangesets(self, root, sincerev):
         return self.source.getUpstreamChangesets(root, sincerev)
     
-    def applyUpstreamChangesets(self, root, changesets,
+    def applyUpstreamChangesets(self, root, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
         return self.source.applyUpstreamChangesets(root, changesets,
-                                                   self.target.replayChangeset,
+                                                   replay=self.target.replayChangeset,
+                                                   applyable=applyable,
                                                    applied=applied,
                                                    logger=logger,
                                                    delayed_commit=delayed_commit)
