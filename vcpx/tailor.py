@@ -19,6 +19,64 @@ from dualwd import DualWorkingDir
 
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
+
+class TailorConfig(object):
+    def __init__(self, options):
+        self.options = options
+        self.__load()
+        
+    def __call__(self, args):
+        if len(args) == 0 and not self.options.bootstrap:
+            args = self.config.keys()
+
+        for root in args:
+            tailored = TailorizedProject(root, self.options.verbose, self)
+            
+            if self.options.bootstrap:                
+                tailored.bootstrap(self.options.source_kind,
+                                   self.options.target_kind,
+                                   self.options.repository,
+                                   self.options.module,
+                                   self.options.revision)
+            elif options.update:
+                tailored.update(self.options.single_commit,
+                                self.options.concatenate_logs)
+            elif options.migrate:
+                tailored.migrateConfiguration()
+            
+    def __save(self):
+        from pprint import pprint
+
+        configfile = open(self.options.configfile, 'w')
+        pprint(self.config, configfile)
+        configfile.close()
+
+    def __load(self):
+        configfile = open(self.options.configfile)
+        self.config = eval(configfile.read())
+        configfile.close()
+
+    def loadProject(self, project):
+        info = self.config.get(project.root)
+
+        if info:
+            project.source_kind = info['source_kind']
+            project.target_kind = info['target_kind']
+            project.module = info['module']
+            project.upstream_repos = info['upstream_repos']
+            project.upstream_revision = info['upstream_revision']
+
+        return info
+        
+    def saveProject(self, project):
+        self.config[project.root] = { 
+            'source_kind': project.source_kind,
+            'target_kind': project.target_kind,
+            'module': project.module,
+            'upstream_repos': project.upstream_repos,
+            'upstream_revision': project.upstream_revision,
+            }
+
     
 class TailorizedProject(object):
     """
@@ -27,7 +85,7 @@ class TailorizedProject(object):
     revision.
     """
     
-    def __init__(self, root, verbose=False):
+    def __init__(self, root, verbose=False, config=None):
         import logging
         from os import makedirs
         from os.path import join, exists, split
@@ -45,13 +103,15 @@ class TailorizedProject(object):
         self.logger.setLevel(logging.INFO)
 
         self.source_kind = self.target_kind = None
-                
-    def __saveStatus(self):
-        """
-        Save relevant project information in a persistent way.
-        """
+
+        self.config = config
+
+    def migrateConfiguration(self):
+        self.__loadOldStatus()
+        self.__saveStatus()
         
-        from os.path import join, exists
+    def __saveOldStatus(self):
+        from os.path import join
 
         statusfilename = join(self.root, STATUS_FILENAME)
         f = open(statusfilename, 'w')
@@ -61,13 +121,19 @@ class TailorizedProject(object):
         print >>f, self.upstream_repos
         print >>f, self.upstream_revision
         f.close()
-        
-    def __loadStatus(self):
+
+    def __saveStatus(self):
         """
-        Load relevant project information.
+        Save relevant project information in a persistent way.
         """
-        
-        from os.path import join, exists
+
+        if self.config:
+            self.config.saveProject(self)
+        else:
+            self.__saveOldStatus()
+
+    def __loadOldStatus(self):
+        from os.path import join
 
         statusfilename = join(self.root, STATUS_FILENAME)
         f = open(statusfilename)
@@ -80,8 +146,17 @@ class TailorizedProject(object):
         self.upstream_revision = upstream_revision[:-1]
         f.close()
 
-    def bootstrap(self, source_kind, target_kind,
-                  repository, module, revision):
+    def __loadStatus(self):
+        """
+        Load relevant project information.
+        """
+
+        if self.config:
+            self.config.loadProject(self)
+        else:
+            self.__loadOldStatus()
+            
+    def bootstrap(self, source_kind, target_kind, repository, module,revision):
         """
         Bootstrap a new tailorized module.
 
@@ -102,8 +177,6 @@ class TailorizedProject(object):
                                               module, revision,
                                               logger=self.logger)
 
-        self.logger.info("initializing %s shadow" % target_kind)
-        
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
@@ -184,6 +257,13 @@ GENERAL_OPTIONS = [
                 action="store_true", default=False,
                 help="Be verbose, echoing the changelog of each applied "
                      "changeset to stdout."),
+    make_option("--configfile", metavar="CONFNAME",
+                help="Centralized storage of projects info.  With this "
+                     "option and no other arguments tailor will update "
+                     "every project found in the config file."),
+    make_option("--migrate-config", dest="migrate",
+                action="store_true", default=False,
+                help="Migrate old configuration to new centralized storage."),
 ]    
 
 UPDATE_OPTIONS = [
@@ -275,40 +355,50 @@ def main():
     options, args = parser.parse_args()
     
     SystemCommand.VERBOSE = options.debug
-    
+
     base = getcwd()
-    
-    if len(args) == 0:
-        args.append(base)
-       
-    while args:
-        chdir(base)
         
-        proj = args.pop(0)
-        root = abspath(proj)
+    if options.configfile:
+        config = TailorConfig(options)
 
-        if options.bootstrap:
-            if exists(join(root, STATUS_FILENAME)):
-                raise ExistingProjectError(
-                    "Project %r cannot be bootstrapped twice" % proj)
-            
-            if not options.repository:
-                raise OptionError('Need a repository to bootstrap %r' % proj)
-        else:
-            if not exists(proj):
-                raise UnknownProjectError("Project %r does not exist" % proj)
-            
-            if not exists(join(root, STATUS_FILENAME)):
-                raise UnknownProjectError(
-                    "%r is not a tailorized project" % proj)
-            
-        tailored = TailorizedProject(root, options.verbose)
+        config(args)
+    else:
+        # Good (?) old way
+        
+        if len(args) == 0:
+            args.append(base)
 
-        if options.bootstrap:
-            tailored.bootstrap(options.source_kind, options.target_kind,
-                               options.repository,
-                               options.module,
-                               options.revision)
-        elif options.update:
-            tailored.update(options.single_commit, options.concatenate_logs)
+        while args:
+            chdir(base)
+
+            proj = args.pop(0)
+            root = abspath(proj)
+
+            if options.bootstrap:
+                if exists(join(root, STATUS_FILENAME)):
+                    raise ExistingProjectError(
+                        "Project %r cannot be bootstrapped twice" % proj)
+
+                if not options.repository:
+                    raise OptionError('Need a repository to bootstrap %r' %
+                                      proj)
+            else:
+                if not exists(proj):
+                    raise UnknownProjectError("Project %r does not exist" %
+                                              proj)
+
+                if not exists(join(root, STATUS_FILENAME)):
+                    raise UnknownProjectError(
+                        "%r is not a tailorized project" % proj)
+
+            tailored = TailorizedProject(root, options.verbose, config)
+
+            if options.bootstrap:
+                tailored.bootstrap(options.source_kind, options.target_kind,
+                                   options.repository,
+                                   options.module,
+                                   options.revision)
+            elif options.update:
+                tailored.update(options.single_commit,
+                                options.concatenate_logs)
 
