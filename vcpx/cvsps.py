@@ -291,7 +291,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             subdir = split(module)[1]
             
         wdir = join(basedir, subdir)
-        if not exists(wdir):
+        if not exists(join(wdir, 'CVS')):
             c = CvsCheckout(working_dir=basedir)
             c(output=True,
               repository=repository,

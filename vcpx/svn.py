@@ -281,13 +281,16 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             
         wdir = join(basedir, subdir)
 
-        if not exists(wdir):
+        if not exists(join(wdir, '.svn')):
+            if logger: logger.info("checking out a working copy")
             svnco = SvnCheckout(working_dir=basedir)
             svnco(output=True, repository=repository, module=module,
                   wc=subdir, revision=revision)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
                     "'svn checkout' returned status %s" % svnco.exit_status)
+        else:
+            if logger: logger.info("%s already exists, assuming it's a svn working dir" % wdir)
 
         svninfo = SvnInfo(working_dir=wdir)
         info = svninfo(entry='.')

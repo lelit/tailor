@@ -186,22 +186,25 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         changeset.entries.extend(last[0].entries)
 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  logger=None):
+                                  subdir=None, logger=None):
         """
         Concretely do the checkout of the upstream revision.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, split
         
-        wdir = join(basedir, module)
-
-        if not exists(wdir):
+        if not subdir:
+            subdir = split(module)[1]
+            
+        wdir = join(basedir, subdir)
+        if not exists(join(wdir, '_darcs')):
             dget = SystemCommand(working_dir=basedir,
                                  command="darcs get --partial --verbose"
-                                         " %(tag)s '%(repository)s'")
+                                         " %(tag)s '%(repository)s' %(subdir)s")
             
             dget(output=True, repository=repository,
-                 tag=revision<>'HEAD' and '--tag=%s' % repr(revision) or '')
+                 tag=revision<>'HEAD' and '--tag=%s' % repr(revision) or '',
+                 subdir=subdir)
             if dget.exit_status:
                 raise TargetInitializationFailure(
                     "'darcs get' returned status %s" % dget.exit_status)
