@@ -59,6 +59,34 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
+
+    def testBasicBehaviour(self):
+        """Verify basic cvs log parser behaviour"""
+
+        log = StringIO(self.SIMPLE_TEST)
+        csets = changesets_from_cvslog(log, 'docutils')
+
+        self.assertEqual(len(csets), 2)
+        
+        cset = csets[0]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
+        self.assertEqual(cset.log, "Added to project (exctracted from "
+                                   "HISTORY.txt)\n")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        cset = csets[1]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
+        self.assertEqual(cset.log, "") 
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
+        self.assertEqual(entry.new_revision, '1.2')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+       
     DOUBLE_TEST = """\
 cvs rlog: Logging docutils/docutils
 
@@ -114,7 +142,45 @@ date: 2004/04/27 19:51:07;  author: goodger;  state: Exp;  lines: +5 -3
 updated
 =============================================================================
 """
-    
+
+    def testGroupingCapability(self):
+        """Verify cvs log parser grouping capability"""
+
+        log = StringIO(self.DOUBLE_TEST)
+        csets = changesets_from_cvslog(log, 'docutils')
+
+        self.assertEqual(len(csets), 5)
+
+        cset = csets[0]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07))
+
+        cset = csets[1]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48))
+
+        cset = csets[2]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31))
+
+        cset = csets[3]
+        self.assertEqual(cset.author, "goodger")
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
+        self.assertEqual(cset.log,"support for CSV directive implementation\n")
+        self.assertEqual(len(cset.entries), 2)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'docutils/statemachine.py')
+        self.assertEqual(entry.new_revision, '1.16')
+        
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'docutils/utils.py')
+        self.assertEqual(entry.new_revision, '1.34')
+        
+        cset = csets[4]
+        self.assertEqual(cset.author, "felixwiemann")
+        self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
+
     DELETED_TEST = """\
 cvs rlog: Logging docutils
 
@@ -137,6 +203,23 @@ date: 2004/06/03 13:50:58;  author: goodger;  state: Exp;
 Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
+
+    def testDeletedEntry(self):
+        """Verify recognition of deleted entries in the cvs log"""
+
+        log = StringIO(self.DELETED_TEST)
+        csets = changesets_from_cvslog(log, 'docutils')
+
+        self.assertEqual(len(csets), 2)
+
+        cset = csets[0]
+        entry = cset.entries[0]
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        cset = csets[1]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
+        self.assertEqual(entry.action_kind, entry.DELETED)
 
     COLLAPSE_TEST = """\
 cvs rlog: Logging PyObjC/Doc
@@ -194,6 +277,34 @@ Fake changelog 4
 =============================================================================
 """
 
+    def testCollapsedChangeset(self):
+        """Verify the mechanism used to collapse related changesets"""
+
+        log = StringIO(self.COLLAPSE_TEST)
+        csets = changesets_from_cvslog(log, 'PyObjC')
+
+        self.assertEqual(len(csets), 5)
+
+        cset = csets[0]
+        self.assertEqual(len(cset.entries), 2)
+        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 11))
+        
+        cset = csets[1]
+        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')       
+        
+        cset = csets[2]
+        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'Doc/libPyObjC.tex')       
+        
+        cset = csets[3]
+        self.assertEqual(len(cset.entries), 2)
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
+        
     BRANCHES_TEST = """\
 cvs rlog: Logging Archetypes/tests
 
@@ -221,121 +332,11 @@ Fixed deepcopy problem in validations
 =============================================================================
 """
     
-    def testBasicBehaviour(self):
-        """Verify basic cvs log parser behaviour"""
-
-        log = StringIO(self.SIMPLE_TEST)
-        csets = changesets_from_cvslog(log)
-
-        self.assertEqual(len(csets), 2)
-        
-        cset = csets[0]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
-        self.assertEqual(cset.log, "Added to project (exctracted from "
-                                   "HISTORY.txt)\n")
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'THANKS.txt')
-        self.assertEqual(entry.new_revision, '1.1')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-        
-        cset = csets[1]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
-        self.assertEqual(cset.log, "") 
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'THANKS.txt')
-        self.assertEqual(entry.new_revision, '1.2')
-        self.assertEqual(entry.action_kind, entry.UPDATED)
-       
-    def testGroupingCapability(self):
-        """Verify cvs log parser grouping capability"""
-
-        log = StringIO(self.DOUBLE_TEST)
-        csets = changesets_from_cvslog(log)
-
-        self.assertEqual(len(csets), 5)
-
-        cset = csets[0]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07))
-
-        cset = csets[1]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48))
-
-        cset = csets[2]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31))
-
-        cset = csets[3]
-        self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
-        self.assertEqual(cset.log,"support for CSV directive implementation\n")
-        self.assertEqual(len(cset.entries), 2)
-
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'docutils/statemachine.py')
-        self.assertEqual(entry.new_revision, '1.16')
-        
-        entry = cset.entries[1]
-        self.assertEqual(entry.name, 'docutils/utils.py')
-        self.assertEqual(entry.new_revision, '1.34')
-        
-        cset = csets[4]
-        self.assertEqual(cset.author, "felixwiemann")
-        self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
-
-    def testDeletedEntry(self):
-        """Verify recognition of deleted entries in the cvs log"""
-
-        log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log)
-
-        self.assertEqual(len(csets), 2)
-
-        cset = csets[0]
-        entry = cset.entries[0]
-        self.assertEqual(entry.action_kind, entry.ADDED)
-        
-        cset = csets[1]
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'THANKS.txt')
-        self.assertEqual(entry.action_kind, entry.DELETED)
-
-    def testCollapsedChangeset(self):
-        """Verify the mechanism used to collapse related changesets"""
-
-        log = StringIO(self.COLLAPSE_TEST)
-        csets = changesets_from_cvslog(log)
-
-        self.assertEqual(len(csets), 5)
-
-        cset = csets[0]
-        self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 11))
-        
-        cset = csets[1]
-        self.assertEqual(len(cset.entries), 1)
-        self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')       
-        
-        cset = csets[2]
-        self.assertEqual(len(cset.entries), 1)
-        self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'Doc/libPyObjC.tex')       
-        
-        cset = csets[3]
-        self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
-        
     def testBranchesInLog(self):
         """Verify the parser groks with the branches info on revision"""
 
         log = StringIO(self.BRANCHES_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, 'Archetypes')
 
         self.assertEqual(len(csets), 3)
 
@@ -343,6 +344,7 @@ Fixed deepcopy problem in validations
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
         
     REPOSPATH_TEST = """\
+cvs rlog: Logging Zope/spurious/dummy/dir
 cvs rlog: Logging Zope/lib/python/DateTime
 cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/DateTime/Attic/DateTime.html,v'
 
@@ -365,7 +367,7 @@ backported copy constructor from trunk
         """Verify the parser is right in determine working copy file paths"""
 
         log = StringIO(self.REPOSPATH_TEST)
-        csets = changesets_from_cvslog(log)
+        csets = changesets_from_cvslog(log, 'Zope')
 
         self.assertEqual(len(csets), 1)
 
