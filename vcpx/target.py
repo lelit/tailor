@@ -208,7 +208,8 @@ class SyncronizableTargetWorkingDir(object):
                      BOOTSTRAP_CHANGELOG % locals(),
                      entries=[subdir])
 
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir,
+                              addentry=None):
         """
         Assuming the `root` directory contains a working copy `module`
         extracted from some VC repository, add it and all its content
@@ -229,11 +230,11 @@ class SyncronizableTargetWorkingDir(object):
         from os.path import split, join
         from os import walk
 
-        if module:
+        if subdir<>'.':
             c = addentry(working_dir=root)
-            c(entry=repr(module))
+            c(entry=repr(subdir))
 
-        for dir, subdirs, files in walk(join(root, module or '')):
+        for dir, subdirs, files in walk(join(root, subdir)):
             for excd in ['.svn', '_darcs', 'CVS']:
                 if excd in subdirs:
                     subdirs.remove(excd)
