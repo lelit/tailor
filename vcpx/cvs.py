@@ -47,7 +47,7 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log, sincerev=None):
+def changesets_from_cvslog(log, sincedate=None):
     """
     Parse CVS log.
     """
@@ -81,6 +81,9 @@ def changesets_from_cvslog(log, sincerev=None):
     last = None
     
     for cs in collected:
+        if sincedate and cs.date <= sincedate:
+            continue
+        
         if not last:
             last = cs
             collapsed.append(cs)
@@ -260,10 +263,11 @@ class CvsWorkingDir(CvspsWorkingDir):
     """
     
     def _getUpstreamChangesets(self, root, sincerev=None):
+        from os.path import join, exists
+        from time import strptime
+
         cvslog = CvsLog(working_dir=root)
         
-        from os.path import join, exists
-
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
@@ -271,9 +275,12 @@ class CvsWorkingDir(CvspsWorkingDir):
             entries = CvsEntries(root)
             ancient = entries.getAncientEntry()
             since = ancient.timestamp.isoformat(sep=' ')
+            sincedate = None
         else:
             # Assume this is from __getGlobalRevision()
             since = sincerev
+            y,m,d,hh,mm,ss,d1,d2,d3=strptime(sincerev, "%a %b %d %H:%M:%S %Y")
+            sincedate = datetime(y,m,d,hh,mm,ss)
             
         branch = ''
         fname = join(root, 'CVS', 'Tag')
@@ -284,7 +291,7 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         changesets = []
         log = cvslog(output=True, since=since, branch=branch)
-        for cs in changesets_from_cvslog(log, sincerev):
+        for cs in changesets_from_cvslog(log, sincedate):
             changesets.append(cs)
 
         return changesets

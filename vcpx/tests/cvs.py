@@ -224,7 +224,9 @@ Fixed deepcopy problem in validations
         log = StringIO(self.SIMPLE_TEST)
         csets = changesets_from_cvslog(log)
 
-        cset = csets.next()
+        self.assertEqual(len(csets), 2)
+        
+        cset = csets[0]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
         self.assertEqual(cset.log, "Added to project (exctracted from "
@@ -234,7 +236,7 @@ Fixed deepcopy problem in validations
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
         
-        cset = csets.next()
+        cset = csets[1]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
         self.assertEqual(cset.log, "") 
@@ -249,19 +251,21 @@ Fixed deepcopy problem in validations
         log = StringIO(self.DOUBLE_TEST)
         csets = changesets_from_cvslog(log)
 
-        cset = csets.next()
+        self.assertEqual(len(csets), 5)
+
+        cset = csets[0]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07))
 
-        cset = csets.next()
+        cset = csets[1]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48))
 
-        cset = csets.next()
+        cset = csets[2]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31))
 
-        cset = csets.next()
+        cset = csets[3]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
         self.assertEqual(cset.log,"support for CSV directive implementation\n")
@@ -275,7 +279,7 @@ Fixed deepcopy problem in validations
         self.assertEqual(entry.name, 'docutils/utils.py')
         self.assertEqual(entry.new_revision, '1.34')
         
-        cset = csets.next()
+        cset = csets[4]
         self.assertEqual(cset.author, "felixwiemann")
         self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
 
@@ -285,11 +289,13 @@ Fixed deepcopy problem in validations
         log = StringIO(self.DELETED_TEST)
         csets = changesets_from_cvslog(log)
 
-        cset = csets.next()
+        self.assertEqual(len(csets), 2)
+
+        cset = csets[0]
         entry = cset.entries[0]
         self.assertEqual(entry.action_kind, entry.ADDED)
         
-        cset = csets.next()
+        cset = csets[1]
         entry = cset.entries[0]
         self.assertEqual(entry.action_kind, entry.DELETED)
 
@@ -299,23 +305,25 @@ Fixed deepcopy problem in validations
         log = StringIO(self.COLLAPSE_TEST)
         csets = changesets_from_cvslog(log)
 
-        cset = csets.next()
+        self.assertEqual(len(csets), 5)
+
+        cset = csets[0]
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 11))
         
-        cset = csets.next()
+        cset = csets[1]
         self.assertEqual(len(cset.entries), 1)
         self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')       
         
-        cset = csets.next()
+        cset = csets[2]
         self.assertEqual(len(cset.entries), 1)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Doc/libPyObjC.tex')       
         
-        cset = csets.next()
+        cset = csets[3]
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
         
@@ -325,6 +333,16 @@ Fixed deepcopy problem in validations
         log = StringIO(self.BRANCHES_TEST)
         csets = changesets_from_cvslog(log)
 
-        cset = csets.next()
+        self.assertEqual(len(csets), 3)
+
+        cset = csets[0]
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
         
+    def testChangesetsSinceDate(self): 
+        """Verify the parser omits already seen changesets"""
+
+        log = StringIO(self.DELETED_TEST)
+        csets = changesets_from_cvslog(log, datetime(2004, 6, 10, 2, 17, 20))
+
+        self.assertEqual(len(csets), 0)
+       
