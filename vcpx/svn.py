@@ -136,14 +136,16 @@ def changesets_from_svnlog(log, url):
 
             prefix = split(prefix)[0]
 
-        return path
+        # The path is outside our tracked tree...
+        return None
 
     class SvnXMLLogHandler(ContentHandler):
         def __init__(self):
             self.changesets = []
             self.current = None
             self.current_field = []
-
+            self.renamed = {}
+            
         def startElement(self, name, attributes):
             if name == 'logentry':
                 self.current = {}
@@ -164,32 +166,48 @@ def changesets_from_svnlog(log, url):
         def endElement(self, name):
             if name == 'logentry':
                 # Sort the paths to make tests easier
-                self.current['entries'].sort()
+                self.current['entries'].sort(lambda a,b: cmp(a.name, b.name))
+
+                # Eliminate renamed entries
+                entries = [e for e in self.current['entries']
+                           if e.name not in self.renamed]
+                
                 svndate = self.current['date']
                 # 2004-04-16T17:12:48.000000Z
                 y,m,d = map(int, svndate[:10].split('-'))
                 hh,mm,ss = map(int, svndate[11:19].split(':'))
                 ms = int(svndate[20:-1])
                 timestamp = datetime(y, m, d, hh, mm, ss, ms)
-                self.changesets.append(Changeset(self.current['revision'],
-                                                 timestamp,
-                                                 self.current['author'],
-                                                 self.current['msg'],
-                                                 self.current['entries']))
+                
+                changeset = Changeset(self.current['revision'],
+                                      timestamp,
+                                      self.current['author'],
+                                      self.current['msg'],
+                                      entries)
+                self.changesets.append(changeset)
                 self.current = None
             elif name in ['author', 'date', 'msg']:
                 self.current[name] = ''.join(self.current_field)
             elif name == 'path':
                 path = ''.join(self.current_field)[1:]
-                entry = ChangesetEntry(get_entry_from_path(path))
-                if type(self.current_path_action) == type( () ):
-                    entry.action_kind = entry.RENAMED
-                    entry.old_name = get_entry_from_path(self.current_path_action[1])
-                else:
-                    entry.action_kind = self.current_path_action
+                entrypath = get_entry_from_path(path)
+                if entrypath:
+                    entry = ChangesetEntry(entrypath)
 
-                self.current['entries'].append(entry)
+                    if type(self.current_path_action) == type( () ):
+                        old = get_entry_from_path(self.current_path_action[1])
+                        if old:
+                            entry.action_kind = entry.RENAMED
+                            entry.old_name = old
+                            self.renamed[entry.old_name] = True
+                        else:
+                            entry.action_kind = entry.ADDED
+                    else:
+                        entry.action_kind = self.current_path_action
 
+                    self.current['entries'].append(entry)
+
+                    
         def characters(self, data):
             self.current_field.append(data)
 
