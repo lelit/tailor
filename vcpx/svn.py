@@ -129,13 +129,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                      startrev=sincerev+1, entry='.')
         
         if svnlog.exit_status:
-            errmsg = log.getvalue()
-            # XXX
-            if 'No such revision' in errmsg or \
-                   'Reference to non-existent revision ' in errmsg:
-                return []
-            else:
-                raise 'XXX: svn log error: %s' % errmsg
+            return []
         
         url = SvnInfo(working_dir=root)(entry='.')['URL']
         
