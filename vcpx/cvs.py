@@ -37,7 +37,7 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "TZ=UTC cvs -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > /tmp/tailor.last.cvslog 2>&1"
+    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > /tmp/tailor.last.cvslog 2>&1"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
