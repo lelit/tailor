@@ -100,7 +100,7 @@ def changesets_from_darcschanges(changes):
                 self.current['entries'].append(entry)
             elif name in ['add_file', 'add_directory',
                           'modify_file', 'remove_file']:
-                entry = ChangesetEntry(''.join(self.current_field))
+                entry = ChangesetEntry(''.join(self.current_field).strip())
                 entry.action_kind = { 'add_file': entry.ADDED,
                                       'add_directory': entry.ADDED,
                                       'modify_file': entry.UPDATED,
