@@ -39,10 +39,10 @@ def relpathto(source, dest):
 
 class TailorConfig(object):
     def __init__(self, options):
-        from os.path import split
+        from os.path import abspath, split
         
         self.options = options
-        self.basedir = split(options.configfile)[0]
+        self.basedir = split(abspath(options.configfile))[0]
         
     def __call__(self, args):
         from os.path import abspath, join
@@ -51,7 +51,7 @@ class TailorConfig(object):
 
         if len(args) == 0 and self.options.update:
             args = [join(self.basedir, r) for r in self.config.keys()]
-
+            
         for a in args:
             root = abspath(a)
             
