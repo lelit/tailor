@@ -201,19 +201,15 @@ class ChangeSetCollector(object):
         while 1:
             l = log.readline()
             
-            while l and not (l.startswith('cvs rlog: Logging ') or
-                             l.startswith('RCS file: ')):
-                l = log.readline()
-
-            if l.startswith('cvs rlog: Logging '):
-                currentdir = l[18:-1]
-                # strip away first component, the name of the product
-                if '/' in currentdir:
-                    currentdir = currentdir[currentdir.index('/')+1:]
-                else:
-                    currentdir = ''
-                    
             while l and not l.startswith('RCS file: '):
+                if l.startswith('cvs rlog: Logging '):
+                    currentdir = l[18:-1]
+                    # strip away first component, the name of the product
+                    if '/' in currentdir:
+                        currentdir = currentdir[currentdir.index('/')+1:]
+                    else:
+                        currentdir = ''
+
                 l = log.readline()
             
             if not l.startswith('RCS file: '):
