@@ -218,14 +218,18 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
    
-    def _addEntry(self, root, entry):
+    def _addEntry(self, root, entry, check=False):
         """
         Add a new entry, maybe registering the directory as well.
+
+        This is called recursively on the parent dirs of the entry,
+        with `check` set to True, so that the first known directory
+        will stop the recursion.
         """
 
         from os.path import split
 
-        if not self.__exists.has_key(entry):
+        if check and not self.__exists.has_key(entry):
             # This is ugly, but I didn't find a better way to test
             # whether a particular entry is already versioned or not.
             # David Roundy suggested ``changes``, way faster than
@@ -240,13 +244,13 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             dannot(entry=entry)
             self.__exists[entry] = dannot.exit_status == 0
 
-        if self.__exists[entry]:
+        if self.__exists.get(entry):
             return
         
         basedir = split(entry)[0]
 
         if basedir:
-            self._addEntry(root, basedir)
+            self._addEntry(root, basedir, True)
 
         c = SystemCommand(working_dir=root,
                           command="darcs add --not-recursive"
