@@ -90,7 +90,7 @@ class TailorizedProject(object):
         The actual information on the project are stored in a text file.
         """
 
-        from os.path import join
+        from os.path import split
         
         self.logger.info("Bootstrapping '%s'" % (self.root,))
 
@@ -100,8 +100,14 @@ class TailorizedProject(object):
         actual = dwd.checkoutUpstreamRevision(self.root, repository,
                                               module, revision,
                                               logger=self.logger)
+
         self.logger.info("initializing %s shadow" % target_kind)
-        dwd.initializeNewWorkingDir(self.root, repository, module, actual)
+        
+        # the above machinery checked out a copy under of the wc
+        # in the directory named as the last component of the module's name
+
+        dwd.initializeNewWorkingDir(self.root, repository,
+                                    split(module)[1], actual)
 
         self.source_kind = source_kind
         self.target_kind = target_kind
@@ -131,11 +137,11 @@ class TailorizedProject(object):
         the new changeset since last bootstrap/synchronization.
         """
         
-        from os.path import join
+        from os.path import join, split
         
         self.__loadStatus()
 
-        proj = join(self.root, self.module)
+        proj = join(self.root, split(self.module)[1])
         self.logger.info("Updating '%s' from revision '%s'" % (
             self.module, self.upstream_revision))
         
