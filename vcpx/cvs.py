@@ -37,11 +37,8 @@ class CvsLog(SystemCommand):
         else:
             kwargs['since'] = ''
 
-        branch = kwargs.get('branch')
-        if branch:
-            kwargs['branch'] = "-r%s" % branch
-        else:
-            kwargs['branch'] = ''
+        branch = kwargs.get('branch') or 'HEAD'
+        kwargs['branch'] = "-r%s" % branch
             
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
