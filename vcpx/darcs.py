@@ -58,6 +58,9 @@ class DarcsChanges(SystemCommand):
     COMMAND = "darcs changes --from-tag=tagname --xml-output --summary"
 
 
+class DarcsAnnotate(SystemCommand):
+    COMMAND = "darcs annotate --standard-verbosity %(entry)s"
+    
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
@@ -189,6 +192,20 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
         Add a new entry, maybe registering the directory as well.
         """
+
+        from os.path import split, join, exists
+
+        # This is ugly, but I didn't find a better way to test whether
+        # a particular directory is already version controlled by darcs.
+        
+        dannot = DarcsAnnotate(working_dir=root)
+        
+        basedir = split(entry)[0]
+
+        if basedir:
+            dannot(output=True, entry=basedir)
+            if dannot.exit_status:
+                self._addEntry(root, basedir)
 
         c = DarcsAdd(working_dir=root)
         c(entry=entry)
