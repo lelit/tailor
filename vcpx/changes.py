@@ -97,6 +97,9 @@ class Changeset(object):
     This is a container of each file affected by this revision of the tree.
     """
 
+    REFILL_MESSAGE = True
+    """Refill changelogs"""
+    
     def __init__(self, revision, date, author, log, entries=None, **other):
         """
         Initialize a new ChangeSet.
@@ -105,7 +108,10 @@ class Changeset(object):
         self.revision = revision
         self.date = date
         self.author = author
-        self.log = refill(log)
+        if self.REFILL_MESSAGE:
+            self.log = refill(log)
+        else:
+            self.log = log
         self.entries = entries or []
 
     def addEntry(self, entry, revision):

@@ -417,6 +417,12 @@ UPDATE_OPTIONS = [
                      "'revision' and 'firstlogline' for normal updates, "
                      "otherwise 'module', 'authors', 'nchangesets', 'mindate' "
                      "and 'maxdate' when using --single-commit."),
+    make_option("-N", "--dont-refill-changelogs", action="store_true",
+                default=False,
+                help="Do not refill every changelog, but keep them as is. "
+                     "This is usefull when using --patch-name-format, or "
+                     "when upstream developers are already formatting their "
+                     "notes with a consistent layout."),
 ]
 
 BOOTSTRAP_OPTIONS = [
@@ -476,6 +482,7 @@ def main():
     from os.path import abspath, exists, join
     from shwrap import SystemCommand
     from target import SyncronizableTargetWorkingDir
+    from changes import Changeset
     
     parser = OptionParser(usage='%prog [options] [project ...]',
                           option_list=GENERAL_OPTIONS)
@@ -493,6 +500,7 @@ def main():
     
     SystemCommand.VERBOSE = options.debug    
     SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
+    Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
     
     if options.configfile:
         config = TailorConfig(options)
