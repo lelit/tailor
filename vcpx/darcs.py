@@ -35,6 +35,12 @@ class DarcsRecord(SystemCommand):
 
 
 def changesets_from_darcschanges(changes):
+    """
+    Parse XML output of ``darcs changes``.
+
+    Return a list of `Changeset`s.
+    """
+    
     from xml.sax import parseString
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
@@ -119,7 +125,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
 
     def __init__(self):
-        self.__visitedDirs = {}
+        self.__exists = {}
         
     ## UpdatableSourceWorkingDir
     
@@ -211,7 +217,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
     
     ## SyncronizableTargetWorkingDir
-
+   
     def _addEntry(self, root, entry):
         """
         Add a new entry, maybe registering the directory as well.
@@ -219,28 +225,35 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import split
 
+        if not self.__exists.has_key(entry):
+            # This is ugly, but I didn't find a better way to test
+            # whether a particular entry is already versioned or not.
+            # David Roundy suggested ``changes``, way faster than
+            # annotate, but that does not fit since a) it does not
+            # exit with a usable status and b) it does not seem to
+            # work on directories...
+            
+            dannot = SystemCommand(working_dir=root,
+                                   command=("darcs annotate --standard-verb"
+                                            " %(entry)s >/dev/null 2>&1"))
+
+            dannot(entry=entry)
+            self.__exists[entry] = dannot.exit_status == 0
+
+        if self.__exists[entry]:
+            return
+        
         basedir = split(entry)[0]
 
         if basedir:
-            if not self.__visitedDirs.get(basedir):
-                # This is ugly, but I didn't find a better way to test
-                # whether a particular directory is already version
-                # controlled by darcs.
-        
-                dannot = SystemCommand(working_dir=root,
-                                       command="darcs annotate --standard-verb"
-                                               " %(entry)s >/dev/null 2>&1")
-        
-                dannot(entry=basedir)
-                if dannot.exit_status:
-                    self._addEntry(root, basedir)
+            self._addEntry(root, basedir)
 
-                self.__visitedDirs[basedir] = True
-                
         c = SystemCommand(working_dir=root,
                           command="darcs add --not-recursive"
                                   " --standard-verbosity %(entry)s")
         c(entry=entry)
+
+        self.__exists[entry] = True
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
