@@ -1,11 +1,16 @@
 #! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- 
+# :Progetto: vcpx -- Frontend capabilities
 # :Creato:   dom 04 lug 2004 00:40:54 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
 
 """
+Implement the basic capabilities of the frontend.
+
+This implementation stores the relevant project information, needed to
+keep the whole thing going on, such as the last synced revision, in a
+unversioned file named `tailor.info` at the root.
 """
 
 __docformat__ = 'reStructuredText'
@@ -16,7 +21,12 @@ STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
     
 class TailorizedProject(object):
-
+    """
+    A TailorizedProject has two main capabilities: it may be bootstrapped
+    from an upstream repository or brought in sync with current upstream
+    revision.
+    """
+    
     def __init__(self, root):
         import logging
         from os import makedirs
@@ -36,6 +46,10 @@ class TailorizedProject(object):
         self.source_kind = self.target_kind = None
                 
     def __saveStatus(self):
+        """
+        Save relevant project information in a persistent way.
+        """
+        
         from os.path import join, exists
 
         statusfilename = join(self.root, STATUS_FILENAME)
@@ -48,6 +62,10 @@ class TailorizedProject(object):
         f.close()
         
     def __loadStatus(self):
+        """
+        Load relevant project information.
+        """
+        
         from os.path import join, exists
 
         statusfilename = join(self.root, STATUS_FILENAME)
@@ -68,6 +86,8 @@ class TailorizedProject(object):
 
         Extract a copy of the `repository` at given `revision` in the `root`
         directory and initialize a target repository with its content.
+
+        The actual information on the project are stored in a text file.
         """
 
         from os.path import join
@@ -93,6 +113,14 @@ class TailorizedProject(object):
         self.logger.info("Bootstrap completed")
 
     def update(self):
+        """
+        Update an existing tailorized project.
+
+        Fetch the upstream changesets and apply them to the working copy.
+        Use the information stored in the `tailor.info` file to ask just
+        the new changeset since last bootstrap/synchronization.
+        """
+        
         from os.path import join
         
         self.__loadStatus()
