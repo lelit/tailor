@@ -15,7 +15,7 @@ Installation
 tailor.py is written in Python, and thus Python must be installed on your
 system to use it.
 
-Make tailor.py executable:
+Make tailor.py executable::
 
  $ chmod +x tailor.py
 
@@ -91,8 +91,8 @@ Here's an example config file entry::
                            'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
                            'upstream_revision': '2004-11-24 19:42:06 by ctheune'}}
 
-By convention, config files are named with the extension ".tailor", but this is
-not enforced.
+By convention, config files are named with the extension ".tailor",
+but this is not enforced.
 
 In the example above, 'plone/atcontenttypes' is a directory where the
 target source will be stored. The keys such 'module', 'source_kind',
@@ -118,3 +118,6 @@ Author
 Lele Gaifax <lele@nautilus.homeip.net>
 
 
+.. Local Variables:
+.. mode: rst
+.. End:
