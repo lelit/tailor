@@ -265,6 +265,7 @@ class CvsWorkingDir(CvspsWorkingDir):
     def _getUpstreamChangesets(self, root, sincerev=None):
         from os.path import join, exists
         from time import strptime
+        from datetime import datetime
 
         cvslog = CvsLog(working_dir=root)
         
@@ -279,7 +280,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         else:
             # Assume this is from __getGlobalRevision()
             since = sincerev
-            y,m,d,hh,mm,ss,d1,d2,d3=strptime(sincerev, "%a %b %d %H:%M:%S %Y")
+            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(sincerev, "%Y-%m-%d %H:%M:%S")
             sincedate = datetime(y,m,d,hh,mm,ss)
             
         branch = ''
