@@ -43,9 +43,18 @@ if __name__ == '__main__':
         from unittest import main
         main(module='vcpx.tests', argv=sys.argv)
     else:
-        from vcpx.tailor import main
-
+        from vcpx.tailor import main, ExistingProjectError, ProjectNotTailored
+        from vcpx.target import TargetInitializationFailure
+        
         if len(sys.argv) == 1:
             sys.argv.append('--help')
+
+        try:
+            main()
+        except ExistingProjectError, exc:
+            print exc
+        except UnknownProjectError, exc:
+            print exc
+        except TargetInitializationFailure, exc:
+            print exc
             
-        main()

@@ -329,8 +329,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         if not found:
             raise TargetInitializationFailure(
-                "Something went wrong, did not find the right cvsps "
-                "revision in '%s'" % wdir)
+                "Something went wrong: unable to determine the exact upstream "
+                "revision of the checked out tree in '%s'" % wdir)
         else:
             if logger: logger.info("working copy up to cvsps revision %s",
                                    last.revision)
