@@ -39,11 +39,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.target = globs[target_kind.capitalize() + 'WorkingDir']()
 
     ## UpdatableSourceWorkingDir
-        
+
     def applyUpstreamChangesets(self, root, sincerev,
-                                replay=None, logger=None):
+                                replay=None, applied=None, logger=None):
         return self.source.applyUpstreamChangesets(root, sincerev,
                                                    self.target.replayChangeset,
+                                                   applied=applied,
                                                    logger=logger)
         
     def checkoutUpstreamRevision(self, root, repository, module, revision,

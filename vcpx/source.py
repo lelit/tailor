@@ -46,7 +46,7 @@ class UpdatableSourceWorkingDir(object):
     """
 
     def applyUpstreamChangesets(self, root, sincerev,
-                                replay=None, logger=None):
+                                replay=None, applied=None, logger=None):
         """
         Apply the collected upstream changes.
 
@@ -85,6 +85,9 @@ class UpdatableSourceWorkingDir(object):
                 except KeyboardInterrupt:
                     if logger: logger.info("INTERRUPTED BY THE USER!")
                     return c, conflicts
+
+            if applied:
+                applied(root, c)
                 
             if replay:
                 replay(root, c)

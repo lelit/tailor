@@ -113,6 +113,14 @@ class TailorizedProject(object):
 
         self.logger.info("Bootstrap completed")
 
+    def applied(self, root, changeset):
+        """
+        Save current status.
+        """
+
+        self.upstream_revision = changeset.revision
+        self.__saveStatus()
+        
     def update(self):
         """
         Update an existing tailorized project.
@@ -133,10 +141,9 @@ class TailorizedProject(object):
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         actual,conflicts = dwd.applyUpstreamChangesets(proj,
                                                        self.upstream_revision,
+                                                       applied=self.applied,
                                                        logger=self.logger)
         if actual:
-            self.upstream_revision = actual.revision
-            self.__saveStatus()
             self.logger.info("Update completed, now at revision '%s'" % (
                 self.upstream_revision,))
         else:
