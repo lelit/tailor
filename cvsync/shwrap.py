@@ -61,7 +61,7 @@ class SystemCommand(object):
 
         if dry_run:
             if self.VERBOSE:
-                stderr.write(" dry run!\n")
+                stderr.write(" [dry run]\n")
             return
         
         if output:
@@ -76,14 +76,13 @@ class SystemCommand(object):
             output.seek(0)
 
             self.exit_status = out.close()
-
-            if self.VERBOSE:
-                if not self.exit_status:
-                    stderr.write(" Ok!\n")
-                else:
-                    stderr.write(" -> Error %s\n" % self.exit_status)
-                    
-            return output
         else:
-            self.exit_status = system(command)
-
+            self.exit_status = system(command)            
+                    
+        if self.VERBOSE:
+            if not self.exit_status:
+                stderr.write(" [Ok]\n")
+            else:
+                stderr.write(" [Error %s]\n" % self.exit_status)
+                
+        return output
