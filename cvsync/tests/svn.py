@@ -25,7 +25,7 @@ class TestRepository(object):
     """A simple wrapper to a svn repository."""
 
     def __init__(self, path):
-        from os.path import abspath, join, exists
+        from os.path import abspath, exists
 
         self.repospath = path
         self.reposurl = "file://" + abspath(path)
@@ -50,32 +50,64 @@ class SvnBasicTest(TestCase):
     def __init__(self, methodName):
         TestCase.__init__(self, methodName)
 
-        repos = '/tmp/cvsync.test'
+        repos = '/tmp/basic.rep'
         self.repos = TestRepository(repos)
-        wc = '/tmp/cvsync.wc'
+        wc = '/tmp/basic.wc'
         self.wc = SvnWorkingDir(wc)
 
+    def __del__(self):
+        from shutil import rmtree
+        from os.path import exists
+        
+        if exists(self.repos.repospath): rmtree(self.repos.repospath)
+        if exists(self.wc.root): rmtree(self.wc.root)
+        
     def testCheckout(self):
         """Verify that svn checkout returns right info"""
 
         info = self.wc.checkout(self.repos.reposurl+'@0')
         self.assertEqual(info['URL'], self.repos.reposurl)
         self.assertEqual(info['Revision'], '0')
-    
+
+    def testInfoA_update(self):
+        """Verify update return right info"""
+
+        changes = self.wc.update(revision='1')
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(len(changes['A']), 6)
+        
+    def testInfoB_merge(self):
+        """Verify merge return right info"""
+
+        changes = self.wc.merge(self.repos.reposurl, '1', '2', self.wc.root)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(len(changes['U']), 3)
+
+    def testInfoC_update(self):
+        """Verify update after merge return right info"""
+
+        changes = self.wc.update(revision='2')
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(len(changes['G']), 3)
+        
 class SvnLogTest(TestCase):
     """Test `svn log` parse functionality."""
 
     def __init__(self, methodName):
-        from os.path import exists
-        
         TestCase.__init__(self, methodName)
 
-        repos = '/tmp/cvsync.test'
+        repos = '/tmp/log.rep'
         self.repos = TestRepository(repos)
-        wc = '/tmp/cvsync.wc'
+        wc = '/tmp/log.wc'
         self.wc = SvnWorkingDir(wc)
-        if not exists(wc):
-            self.wc.checkout(self.repos.reposurl + '@0')
+        self.wc.checkout(self.repos.reposurl + '@0')
+
+    def __del__(self):
+        from shutil import rmtree
+        from os.path import exists
+        
+        if exists(self.repos.repospath): rmtree(self.repos.repospath)
+        if exists(self.wc.root): rmtree(self.wc.root)
         
     def testLogParser(self):
         """Verify the `svn log` parser"""

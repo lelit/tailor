@@ -18,7 +18,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import SystemCommand
 
 class SvnUpdate(SystemCommand):
-    COMMAND = "svn update --quiet --revision %(revision)s %(entry)s"
+    COMMAND = "svn update --revision %(revision)s %(entry)s"
 
 
 class SvnCommit(SystemCommand):
@@ -247,10 +247,22 @@ class SvnWorkingDir(object):
         return handler.revisions
         
     def update(self, revision="HEAD"):
-        """Bring this directory up to its HEAD revision in the repository."""
+        """
+        Bring this directory up to its HEAD revision in the
+        repository.  Return a dictionary of changed items, grouped by
+        kind of change.
+        """
 
         svnup = SvnUpdate()
-        svnup(entry=self.root, revision=revision)
+        out = svnup(output=True, entry=self.root, revision=revision)
+        
+        result = {}
+        for line in out:
+            if len(line)>2 and line[0] in 'ADUCG' and line[1] == ' ':
+                try: result[line[0]].append(line[2:-1])
+                except KeyError: result[line[0]] = [line[2:-1]]
+            
+        return result
     
     def commit(self, logfile=None, message=None):
         """Commit the changes."""
@@ -341,20 +353,22 @@ class SvnWorkingDir(object):
         svnps(property=prop, entry=self._makeabs(entry), value=repr(value))
 
     def merge(self, uri, startrev, endrev, dest, dry_run=False):
-        """Perform the merge."""
+        """
+        Perform the merge and return a dictionary of changed items,
+        grouped by kind of change."""
 
         svnm = SvnMerge()
         out = svnm(output=True, startrev=startrev, endrev=endrev,
                    source=uri, dest=dest, dry_run=dry_run)
 
-        merged = False
+        result = {}
         if not dry_run:
             for line in out:
-                if line.startswith('C '):
-                    print "CONFLICT:", line
-                merged = True
+                if len(line)>2 and line[0] in 'ADUCG' and line[1] == ' ':
+                    try: result[line[0]].append(line[2:-1])
+                    except KeyError: result[line[0]] = [line[2:-1]]
             
-        return merged
+        return result
 
     def diff(self, uri, rev):
         """Perform a diff against another tree."""

@@ -139,6 +139,7 @@ class Tailorizer(object):
         
         if options.svn_update and not options.dry_run:
             self.wc.update()
+            
         return self.merge(options)
 
     def __svn2darcsMergeAndRecord(self, options):
@@ -178,7 +179,7 @@ class Tailorizer(object):
                 # (u'/file_a.txt', (u'A', u'/FileA.txt', u'2')),
                 path,action = event
                 oldpath = action[1]
-                if pathactions.get(oldpath) == u'D':
+                if pathactions.get(oldpath) == 'D':
                     dwc.rename(oldpath, path)
                     done[path] = done[oldpath] = True
                 else:
@@ -189,7 +190,7 @@ class Tailorizer(object):
 
                 if done.get(path): continue
                 
-                if action == u'D':
+                if action == 'D':
                     dwc.remove(path)
 
             self.recordDarcsPatch("Upstream revision %s" % r.revision, r.msg)
@@ -307,6 +308,8 @@ class Tailorizer(object):
         """
         Fetch the upstream info and perform a merge of the eventual changes,
         then update the properties.
+
+        Return True if there something to commit, False otherwise.
         """
 
         from os import chdir
@@ -316,8 +319,14 @@ class Tailorizer(object):
         chdir(self.project)
         head = getHeadRevision(uri, rev)
         if rev <> head:
-            merged = self.wc.merge(uri, rev, head,
-                                   self.project, dry_run=options.dry_run)
+            changes = self.wc.merge(uri, rev, head,
+                                    self.project, dry_run=options.dry_run)
+
+            conflicts = changes.get('C')
+            if conflicts:
+                print "CONFLICT:", conflicts
+
+            merged = len(changes)<>0
             if merged:
                 self.updateUpstreamInfo(rev=head)
 
