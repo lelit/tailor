@@ -1,5 +1,5 @@
 #  -*- Python -*- -*- coding: iso-8859-1 -*-
-# :Progetto: Bice -- Sync CVS->SVN
+# :Progetto: vcpx -- Tiny wrapper around external command
 # :Creato:   sab 10 apr 2004 16:43:48 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
@@ -79,7 +79,7 @@ class SystemCommand(object):
             if input:
                 self.exit_status = wait()[1]
             else:
-                self.exit_status = out.close()
+                self.exit_status = out.close() or 0
         else:
             if input:
                 inp, out = popen2(command)
