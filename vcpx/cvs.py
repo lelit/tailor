@@ -132,7 +132,7 @@ class ChangeSetCollector(object):
 
         # NB: the _getUpstreamChangesets() below depends on this format
 
-        return str(timestamp)
+        return "%s by %s" % (timestamp, author)
 
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
@@ -279,8 +279,8 @@ class CvsWorkingDir(CvspsWorkingDir):
             sincedate = None
         else:
             # Assume this is from __getGlobalRevision()
-            since = sincerev
-            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(sincerev, "%Y-%m-%d %H:%M:%S")
+            since,author = sincerev.split(' by ')
+            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(since, "%Y-%m-%d %H:%M:%S")
             sincedate = datetime(y,m,d,hh,mm,ss)
             
         branch = ''
