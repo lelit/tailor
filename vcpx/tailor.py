@@ -62,6 +62,7 @@ class TailorConfig(object):
         
     def __call__(self, args):
         from os.path import join
+        from source import ChangesetApplicationFailure
         
         self.__load()
 
@@ -94,8 +95,11 @@ class TailorConfig(object):
                 elif self.options.migrate:
                     tailored.migrateConfiguration()
                 elif self.options.update:
-                    tailored.update(self.options.single_commit,
-                                    self.options.concatenate_logs)
+                    try:
+                        tailored.update(self.options.single_commit,
+                                        self.options.concatenate_logs)
+                    except ChangesetApplicationFailure, e:
+                        print "Skipping '%s' because of errors:" % root, e
         finally:
             self.__save()
         
