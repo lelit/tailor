@@ -136,16 +136,35 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             else:
                 raise 'XXX: svn log error: %s' % errmsg
         
-        return self.__parseSvnLog(log)
+        url = SvnInfo(working_dir=root)(entry='.')['URL']
+        
+        return self.__parseSvnLog(log, url)
 
-    def __parseSvnLog(self, log):
+    def __parseSvnLog(self, log, url):
         """Return an object representation of the ``svn log`` thru HEAD."""
 
         from xml.sax import parseString
         from xml.sax.handler import ContentHandler
         from changes import ChangesetEntry, Changeset
         from datetime import datetime
-        
+
+        def get_entry_from_path(path, url=url):
+            # Given the repository url of this wc, say
+            #   "http://server/plone/CMFPlone/branches/Plone-2_0-branch"
+            # extract the "entry" portion (a relative path) from what
+            # svn log --xml says, ie
+            #   "/CMFPlone/branches/Plone-2_0-branch/tests/PloneTestCase.py"
+            # that is to say "tests/PloneTestCase.py"
+
+            from os.path import split
+
+            prefix = split(path)[0]
+            while prefix:
+                if url.endswith(prefix):
+                    return path[len(prefix)+1:]
+
+                prefix = split(prefix)[0]
+            
         class SvnXMLLogHandler(ContentHandler):
             def __init__(self):
                 self.changesets = []
@@ -188,7 +207,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 elif name in ['author', 'date', 'msg']:
                     self.current[name] = ''.join(self.current_field)
                 elif name == 'path':
-                    entry = ChangesetEntry(''.join(self.current_field)[1:])
+                    path = ''.join(self.current_field)[1:]
+                    entry = ChangesetEntry(get_entry_from_path(path))
                     if type(self.current_path_action) == type( () ):
                         entry.action_kind = entry.RENAMED
                         entry.old_name = self.current_path_action[1]
