@@ -212,7 +212,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         cvsup = CvsUpdate(working_dir=root)
         for e in changeset.entries:
             edir = dirname(join(root, e.name))
-            if e.action_kind != e.DELETED and not exists(edir)):
+            if e.action_kind != e.DELETED and not exists(edir):
                 makedirs(edir)
 
             cvsup(entry=e.name, revision=e.new_revision)
