@@ -79,12 +79,8 @@ class SvnLog(SystemCommand):
         return output
 
 
-class SvnCheckout(SystemCommand):
-    COMMAND = "svn co --quiet --revision %(revision)s %(repository)s %(wc)s"
-
-    
 class SvnCommit(SystemCommand):
-    COMMAND = "svn commit --quiet --file %(logfile)s %(entries)s"
+    COMMAND = "svn commit --file %(logfile)s %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logfile = kwargs.get('logfile')
@@ -115,7 +111,7 @@ class SvnMv(SystemCommand):
 
     
 class SvnCheckout(SystemCommand):
-    COMMAND = "svn co --quiet --revision %(revision)s %(repository)s %(wc)s"
+    COMMAND = "svn co --revision %(revision)s %(repository)s %(wc)s"
 
     
 class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
@@ -222,7 +218,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         
         svnco = SvnCheckout(working_dir=basedir)
-        svnco(repository=repository, wc=module, revision=revision)
+        svnco(output=True, repository=repository, wc=module, revision=revision)
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
