@@ -21,23 +21,19 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
+    COMMAND = "darcs record --all --look-for-adds --pipe"
 
-    def __call__(self, output=None, dry_run=False, patchname=None, **kwargs):
-        logfile = kwargs.get('logfile')
-        if not logfile:
-            from tempfile import NamedTemporaryFile
-
-            log = NamedTemporaryFile(bufsize=0)
-            print >>log, patchname
-
-            logmessage = kwargs.get('logmessage')
-            if logmessage:
-                print >>log, logmessage
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
+        author = kwargs.get('author')
+        patchname = kwargs.get('patchname')
+        logmessage = kwargs.get('logmessage')
+        if not logmessage:
+            logmessage = ''
             
-            kwargs['logfile'] = log.name
-            
-        return SystemCommand.__call__(self, output=output,
+        input = "%s\n%s\n%s\n%s\n" % (date, author, patchname, logmessage)
+        
+        return SystemCommand.__call__(self, output=output, input=input,
                                       dry_run=dry_run, 
                                       **kwargs)
 
