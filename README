@@ -12,8 +12,10 @@ URI and revision in special properties on the branched directory.
 Installation
 ============
 
-tailor.py is written in Python, and thus Python must be installed on your
-system to use it.
+tailor.py is written in Python, and thus Python must be installed on
+your system to use it. Since it relays on external tools to do the
+real work such as `cvs`, `darcs` and `svn`, they need to be installed
+as well.
 
 Make tailor.py executable::
 
@@ -26,26 +28,27 @@ along with the vcpx directory to a location in your PATH.
 Examples
 ========
 
-Bootstrap a new taylored project, starting at upstream revision 10::
+1. Bootstrap a new taylored project, starting at upstream revision 10::
 
   $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
 
-Bootstrap a new product, fetching from CVS and storing under SVN: this
-will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be already
-under SVN::
+2. Bootstrap a new product, fetching from CVS and storing under SVN:
+   this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
+   already under SVN::
 
   $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
               --repository :pserver:cvs.zope.org:/cvs-repository \
               --module CMF/CMFCore ~/svnwc/cmfcore
   
-Showing each command bootstrap a new DARCS repos in "~/darcs/cmftopic"
-under which the upstream module will be extracted as "CMFTopic" (ie, the
-last component of the module name)::
+3. Showing each command bootstrap a new DARCS repos in
+   "~/darcs/cmftopic" under which the upstream module will be
+   extracted as "CMFTopic" (ie, the last component of the module
+   name)::
 
   $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
               -m CMF/CMFTopic ~/darcs/cmftopic
               
-Merge upstream changes since last update/bootstrap::
+4. Merge upstream changes since last update/bootstrap::
 
   $ tailor.py ~/svnwc/MyProduct
 
@@ -70,8 +73,9 @@ text document, with the following information, one per line:
 This is everything tailor needs, to be able to keep going from where it
 left last time.
 
+
 Config file format
-==================
+------------------
 
 When your project is composed by multiple upstream modules, it is
 easier to collect such information in a single file. This is done by
@@ -105,11 +109,16 @@ contained in the dictionary.
 Further help
 ============
 
-See the output of tailor.py -h for some further tips. I will be more
-than happy to answer any doubt, question or suggestion you may have on
-it. I'm usually hanging as "lelit" on the IRC channel devoted to darcs
-on the freenode.net network. Do not hesitate to contact me either by
-email or chatting there.
+See the output of tailor.py -h for some further tips.  There's also a
+`wiki page`_ that may give you some other hints.
+
+.. _wiki page:
+   http://www.scannedinavian.org/DarcsWiki/ConvertingFromSubversion
+
+I will be more than happy to answer any doubt, question or suggestion
+you may have on it. I'm usually hanging as "lelit" on the IRC channel
+devoted to darcs on the `freenode.net` network. Do not hesitate to
+contact me either by email or chatting there.
 
 
 Author
@@ -117,13 +126,15 @@ Author
 
 Lele Gaifax <lele@nautilus.homeip.net>
 
+
 About this document
 ===================
 
-This document uses the reStructuredText format so that it can be easily
-converted into other formats, such as HTML. For more information about this,
-please see:
-http://docutils.sourceforge.net/rst.html
+This document and most of the internal documention use the
+reStructuredText format so that it can be easily converted into other
+formats, such as HTML.  For more information about this, please see:
+
+  http://docutils.sourceforge.net/rst.html
 
 
 .. vim:ft=rest
