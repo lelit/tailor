@@ -209,6 +209,7 @@ class TailorizedProject(object):
         print >>f, self.module        
         print >>f, self.upstream_repos
         print >>f, self.upstream_revision
+        print >>f, self.subdir
         f.close()
 
     def __saveStatus(self):
@@ -226,14 +227,16 @@ class TailorizedProject(object):
 
         statusfilename = join(self.root, STATUS_FILENAME)
         f = open(statusfilename)
-        (srck, dstk,
-         module, upstream_repos, upstream_revision) = f.readlines()
-        self.source_kind = srck[:-1]
-        self.target_kind = dstk[:-1]
-        self.module = module[:-1]
-        self.subdir = split(self.module)[1]
-        self.upstream_repos = upstream_repos[:-1]
-        self.upstream_revision = upstream_revision[:-1]
+        self.source_kind = f.readline()[:-1]
+        self.target_kind = f.readline()[:-1]
+        self.module = f.readline()[:-1]
+        self.upstream_repos = f.readline()[:-1]
+        self.upstream_revision = f.readline()[:-1]
+        subdir = f.readline()
+        if subdir:
+            self.subdir = subdir[:-1]
+        else:
+            self.subdir = split(self.module)[1]            
         f.close()
 
     def __loadStatus(self):

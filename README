@@ -85,6 +85,9 @@ text document, with the following information, one per line:
 3. The name of the "module" that's been tailored
 4. The URL of the upstream repository (that may not be an URL, for cvs...)
 5. The current revision, from the upstream point of view, of the sources
+6. The subdirectory that contains the checked out upstream tree,
+   either that given with with the `--subdir` option or computed
+   taking the last part of the module name. 
 
 This is everything tailor needs, to be able to keep going from where it
 left last time.
