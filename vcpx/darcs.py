@@ -222,7 +222,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = SystemCommand(working_dir=wdir,
                           command="darcs changes --last=1 --xml-output 2>&1")
         output = c(output=True)
-        if output.exit_status:
+        if c.exit_status:
             raise ChangesetApplicationFailure("'darcs changes' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
         
         last = changesets_from_darcschanges(output)
