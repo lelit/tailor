@@ -150,7 +150,7 @@ def changesets_from_svnlog(log, url):
 
         # The path is outside our tracked tree...
         return None
-
+        
     class SvnXMLLogHandler(ContentHandler):
         def __init__(self):
             self.changesets = []
@@ -180,9 +180,25 @@ def changesets_from_svnlog(log, url):
                 # Sort the paths to make tests easier
                 self.current['entries'].sort(lambda a,b: cmp(a.name, b.name))
 
-                # Eliminate renamed entries
-                entries = [e for e in self.current['entries']
-                           if e.name not in self.renamed]
+                # Eliminate "useless" entries: SVN does not have atomic
+                # renames, but rather uses a ADD+RM duo.
+                #
+                # So cycle over all entries of this patch, discarding
+                # the deletion of files that were actually renamed, and
+                # at the same time change related entry from ADDED to
+                # RENAMED.
+
+                mv_or_cp = {}
+                for e in self.current['entries']:
+                    if e.action_kind == e.ADDED and e.old_name is not None:
+                        mv_or_cp[e.old_name] = e
+                
+                entries = []
+                for e in self.current['entries']:
+                    if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
+                        mv_or_cp[e.name].action_kind = e.RENAMED
+                    else:
+                        entries.append(e)                        
                 
                 svndate = self.current['date']
                 # 2004-04-16T17:12:48.000000Z
@@ -209,7 +225,7 @@ def changesets_from_svnlog(log, url):
                     if type(self.current_path_action) == type( () ):
                         old = get_entry_from_path(self.current_path_action[1])
                         if old:
-                            entry.action_kind = entry.RENAMED
+                            entry.action_kind = self.current_path_action[0]
                             entry.old_name = old
                             self.renamed[entry.old_name] = True
                         else:
