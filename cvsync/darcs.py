@@ -14,11 +14,14 @@
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
+from target import SyncronizableTargetWorkingDir
 
 AUTHOR = "tailor@localhost"
 
+
 class DarcsInitialize(SystemCommand):
     COMMAND = "darcs initialize"
+
 
 class DarcsRecord(SystemCommand):
     COMMAND = "darcs record -v --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
@@ -41,25 +44,21 @@ class DarcsRecord(SystemCommand):
                                       dry_run=dry_run, author=AUTHOR,
                                       **kwargs)
 
+
 class DarcsMv(SystemCommand):
     COMMAND = "darcs mv %(old)s %(new)s"
+
 
 class DarcsRemove(SystemCommand):
     COMMAND = "darcs remove %(entry)s"
 
+
 class DarcsAdd(SystemCommand):
     COMMAND = "darcs add %(entry)s"
-    
-class DarcsWorkingDir(object):
+
+
+class DarcsWorkingDir(SyncronizableTargetWorkingDir):
     """Represent a Darcs working directory."""
-
-    __slots__ = ('root',)
-
-    def __init__(self, root):
-        """Initialize a DarcsWorkingDir instance."""
-        
-        self.root = root
-        """The directory in question."""
 
     def initialize(self):
         """Execute `darcs initialize`."""
@@ -67,18 +66,14 @@ class DarcsWorkingDir(object):
         di = DarcsInitialize(working_dir=self.root)
         di(output=True)
         
-    def record(self, patchname, logmessage=None):
+    def commit(self, remark, changelog):
         """Record current changes in a darcs patch."""
 
         drec = DarcsRecord(working_dir=self.root)
-        drec(output=True, patchname=patchname, logmessage=logmessage)
+        drec(output=True, patchname=remark, logmessage=changelog)
 
     def rename(self, old, new):
         """Rename something named old to new."""
-        
-        # strip initial '/'
-        old = old[1:]
-        new = new[1:]
         
         dvm = DarcsMv(working_dir=self.root)
         dvm(old=old, new=new)
@@ -86,18 +81,17 @@ class DarcsWorkingDir(object):
     def remove(self, entry):
         """Remove an entry from the darcs repos."""
         
-        # strip initial '/'
-        entry = entry[1:]
-
         drm = DarcsRemove(working_dir=self.root)
         drm(entry=entry)
 
     def add(self, entry):
         """Add a new entry to the darcs repos."""
         
-        # strip initial '/'
-        entry = entry[1:]
-
         dadd = DarcsAdd(working_dir=self.root)
         dadd(entry=entry)
         
+    def update(self, revision):
+        """No op for darcs."""
+
+        pass
+    

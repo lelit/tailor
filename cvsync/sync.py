@@ -28,7 +28,6 @@ __docformat__ = 'reStructuredText'
 
 from optparse import OptionParser, make_option
 from cvsync.cvs import CvsWorkingDir, CvsUpdateError, CvsLogError
-from cvsync.svn import SvnWorkingDir
 
 LOG_MESSAGE_FILE_NAME = 'cvsync.log.message'
 """The filename where the complessive changelog will be written."""
@@ -41,15 +40,14 @@ CHANGESET_CACHE = 'cvsync.cache'
 
 PRE_COMMIT_PROMPT = """\
 I'm about to commit. You can suspend (Ctrl-Z) the session
-to inspect the working copy status and edit the log message
-in "%s", or cancel (Ctrl-C) it."""
+to inspect the working copy status or abort (Ctrl-C) it."""
 
 CONFIRM_REPLAY_PROMPT = """\
 Replaying a previous CVS update log found in "%s", maybe left
 after some kind of error.  I will NOT rerun ``svn update``.
 Hit Ctrl-C now if that is not what you intended, and remove the file."""
 
-class Syncronizer(object):
+class AbstractSyncronizer(object):
     """Perform the needed steps to syncronize CVS world with SVN."""
     
     def __init__(self, root):
@@ -58,11 +56,18 @@ class Syncronizer(object):
         self.root = root
         """The directory under both CVS and SVN version control."""
         
-        self.cvs_wc = CvsWorkingDir(self.root)
+        self.source_wc = CvsWorkingDir(self.root)
         """The CVS point-of-view."""
+
+        self.target_wc = None
+        """The target VC engine."""
         
-        self.svn_wc = SvnWorkingDir(self.root)
-        """The SVN point-of-view."""
+        self.setTargetWC()
+
+    def setTargetWC(self):
+        """The target VC engine."""
+
+        raise "This MUST be overridden by subclasses."        
 
     def __call__(self, options):
         """Do the mentioned steps :).
@@ -87,12 +92,12 @@ class Syncronizer(object):
                 
             # Bring the svnwc up-to-date
             if options.svn_update:
-                self.svn_wc.update()
+                self.target_wc.update()
             
         # Do a cvs update and collect the changes
         try:
-            changes = self.cvs_wc.update(options=options,
-                                         prevlog=prevlog)
+            changes = self.source_wc.update(options=options,
+                                            prevlog=prevlog)
         except CvsUpdateError, e:
             print "Gasp!  Underlying CVS update command failed: ", e
             return
@@ -127,62 +132,59 @@ class Syncronizer(object):
             else:
                 print "I left the logs and the cache, for debug."
                 
-        if options.changelog:
-            logname = LOG_MESSAGE_FILE_NAME
-            changelog = open(logname, 'w')
-            changelog.write(str(changes))
-            changelog.close()
-        else:
-            logname = None
-            
-        if self.cvs_wc.conflicts or options.dry_run:
-            if self.cvs_wc.conflicts:
+        if self.source_wc.conflicts or options.dry_run:
+            if self.source_wc.conflicts:
                 print "CAUTION: the CVS update reported a few conflicts:"
-                print ' -', '\n - '.join(self.cvs_wc.conflicts)
+                print ' -', '\n - '.join(self.source_wc.conflicts)
                 print
                 
-            if self.cvs_wc.obstructing:
+            if self.source_wc.obstructing:
                 print "Some of the conflicts are due to files that are already"
                 print "there, but are not under revision control, yet:"
 
-                print ' -', '\n -'.join(self.cvs_wc.obstructing)
+                print ' -', '\n -'.join(self.source_wc.obstructing)
                 print
                 
                 print "You should remove them, otherwise CVS will refuse to update them.\n"
                 
-            if self.cvs_wc.added:
+            if self.source_wc.added:
                 print "Some files were added and need to be registered with:"
-                print "  svn add %s" % ' '.join(self.cvs_wc.added)
-            if self.cvs_wc.removed:
+                print "  svn add %s" % ' '.join(self.source_wc.added)
+            if self.source_wc.removed:
                 print "You should unregister removed files with:"
-                print "  svn remove %s" % ' '.join(self.cvs_wc.removed)
+                print "  svn remove %s" % ' '.join(self.source_wc.removed)
 
             if options.changelog:
                 if not options.dry_run:
+                    logname = LOG_MESSAGE_FILE_NAME
+                    changelog = open(logname, 'w')
+                    changelog.write(str(changes))
+                    changelog.close()
+
                     print "I left the ChangeLog in %s." % logname
                     print "Once solved the conflicts, issue:"
                     print "  svn ci --file %s" % logname
                 else:
                     print changes
         else:
-            added, removed = self.cvs_wc.compareDirectories()
+            added, removed = self.source_wc.compareDirectories()
             print
             
-            added.extend(self.cvs_wc.added)
-            removed.extend(self.cvs_wc.removed)
+            added.extend(self.source_wc.added)
+            removed.extend(self.source_wc.removed)
             
             for a in added:
-                self.svn_wc.add(a)
+                self.target_wc.add(a)
 
             for r in removed:
-                self.svn_wc.remove(r)
+                self.target_wc.remove(r)
 
             if options.commit:
                 try:
-                    raw_input(PRE_COMMIT_PROMPT % logname)
+                    raw_input(PRE_COMMIT_PROMPT)
 
-                    status = self.svn_wc.commit(logfile=logname,
-                                                message=options.message)
+                    status = self.target_wc.commit(
+                        options.message or "Upstream changes", changes)
 
                     if not status:
                         if not options.debug:
@@ -199,6 +201,25 @@ class Syncronizer(object):
             elif options.changelog:
                 print "Later, you may use the ChangeLog I wrote with:"
                 print "  svn ci --file %s" % logname
+
+
+class SyncronizerForSubversion(AbstractSyncronizer):
+    """Specialize the syncronizer for Subversion."""
+
+    def setTargetWC(self):
+        from cvsync.svn import SvnWorkingDir
+        
+        self.target_wc = SvnWorkingDir(self.root)
+
+
+class SyncronizerForDarcs(AbstractSyncronizer):
+    """Specialize the syncronizer for Darcs."""
+    
+    def setTargetWC(self):
+        from cvsync.darcs import DarcsWorkingDir
+        
+        self.target_wc = DarcsWorkingDir(self.root)
+
 
 OPTIONS = [
     make_option("-d", "--dry-run", dest="dry_run",
@@ -219,6 +240,8 @@ OPTIONS = [
     make_option("-m", "--message",
                 default="",
                 help="Commit message, when using --no-changelog."),
+    make_option("--darcs", action="store_true", default=False,
+                help="Target is darcs instead of subversion."),
     make_option("-u", "--no-svn-update", dest="svn_update",
                 action="store_false", default=True,
                 help="Do not perform the initial ``svn update``."),
@@ -255,6 +278,11 @@ def main():
     if options.use_ssh:
         print "export CVS_RSH=ssh"
         environ['CVS_RSH'] = 'ssh'
+
+    if options.darcs:
+        Syncronizer = SyncronizerForDarcs
+    else:
+        Syncronizer = SyncronizerForSubversion
         
     base = getcwd()
     for wc in args:

@@ -16,26 +16,26 @@
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
+from target import SyncronizableTargetWorkingDir
 
 class SvnUpdate(SystemCommand):
     COMMAND = "svn update --revision %(revision)s %(entry)s"
 
 
 class SvnCommit(SystemCommand):
-    COMMAND = "svn commit --quiet %(message)s %(logfile)s %(entry)s"
+    COMMAND = "svn commit --quiet %(logfile)s %(entry)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logfile = kwargs.get('logfile')
-        if logfile:
-            kwargs['logfile'] = '--file %s' % logfile
-        else:
-            kwargs['logfile'] = ''
+        if not logfile:
+            from tempfile import NamedTemporaryFile
 
-            message = kwargs.get('message')
-            if message:
-                kwargs['message'] = '--message %s' % repr(message)
-            else:
-                kwargs['message'] = ''
+            log = NamedTemporaryFile(bufsize=0)
+            logmessage = kwargs.get('logmessage')
+            if logmessage:
+                print >>log, logmessage
+            
+            kwargs['logfile'] = log.name
         
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
@@ -158,16 +158,8 @@ def getHeadRevision(source, baserev):
     return head
 
 
-class SvnWorkingDir(object):
+class SvnWorkingDir(SyncronizableTargetWorkingDir):
     """Represent a SVN working directory."""
-
-    __slots__ = ('root',)
-
-    def __init__(self, root):
-        """Initialize a SvnWorkingDir instance."""
-        
-        self.root = root
-        """The directory in question."""
 
     def _makeabs(self, mayberel):
         from os.path import join, isabs
@@ -226,7 +218,6 @@ class SvnWorkingDir(object):
                             attributes['copyfrom-rev'])
                     else:
                         self.current_path_action = attributes['action']
-                        
 
             def endElement(self, name):
                 if name == 'logentry':
@@ -266,11 +257,12 @@ class SvnWorkingDir(object):
             
         return result
     
-    def commit(self, logfile=None, message=None):
+    def commit(self, remark, changelog):
         """Commit the changes."""
 
         svnci = SvnCommit()
-        svnci(logfile=logfile, message=message, entry=repr(self.root))
+        svnci(logmessage='\n\n'.join([remark,changelog]),
+              entry=repr(self.root))
         return svnci.exit_status
 
     def add(self, entry):
