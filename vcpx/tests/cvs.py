@@ -113,6 +113,62 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
+    COLLAPSE_TEST = """\
+RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
+Working file: Doc/libObjCStreams.tex
+head: 1.4
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 4;     selected revisions: 4
+description:
+----------------------------
+revision 1.4
+date: 1997-12-21 23:01:28;  author: lele;  state: Exp;  lines: +2 -8
+Fake changelog 1
+----------------------------
+revision 1.3
+date: 1996-10-18 13:48:36;  author: lele;  state: Exp;  lines: +10 -3
+Fake changelog 2
+----------------------------
+revision 1.2
+date: 1996-10-14 13:56:50;  author: lele;  state: Exp;  lines: +11 -19
+Fake changelog 3
+----------------------------
+revision 1.1
+date: 1996-10-07 18:32:11;  author: lele;  state: Exp;
+Fake changelog 4
+=============================================================================
+
+RCS file: /usr/local/CVSROOT/PyObjC/Doc/libPyObjC.tex,v
+Working file: Doc/libPyObjC.tex
+head: 1.4
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 4;     selected revisions: 4
+description:
+----------------------------
+revision 1.4
+date: 1997-12-21 23:01:29;  author: lele;  state: Exp;  lines: +2 -8
+Fake changelog 1
+----------------------------
+revision 1.3
+date: 1996-10-18 13:48:45;  author: lele;  state: Exp;  lines: +7 -2
+Fake changelog 2
+----------------------------
+revision 1.2
+date: 1996-10-18 12:36:04;  author: lele;  state: Exp;  lines: +7 -3
+Fake changelog 3
+----------------------------
+revision 1.1
+date: 1996-10-07 18:32:12;  author: lele;  state: Exp;
+Fake changelog 4
+=============================================================================
+"""
+
     def testBasicBehaviour(self):
         """Verify basic cvs log parser behaviour"""
 
@@ -187,3 +243,30 @@ Added to project (exctracted from HISTORY.txt)
         cset = csets.next()
         entry = cset.entries[0]
         self.assertEqual(entry.action_kind, entry.DELETED)
+
+    def testCollapsedChangeset(self):
+        """Verify the mechanism used to collapse related changesets"""
+
+        log = StringIO(self.COLLAPSE_TEST)
+        csets = changesets_from_cvslog(log)
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 2)
+        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 11))
+        
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')       
+        
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'Doc/libPyObjC.tex')       
+        
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 2)
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
+        

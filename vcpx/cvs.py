@@ -71,8 +71,28 @@ def changesets_from_cvslog(log, sincerev=None):
     ## Added to project (exctracted from HISTORY.txt)
     ## =====================================================================...
 
-    coll = ChangeSetCollector(log)
-    for cs in coll:
+    from datetime import timedelta
+
+    collected = ChangeSetCollector(log)
+    collapsed = []
+
+    threshold = timedelta(seconds=180)
+    last = None
+    
+    for cs in collected:
+        if not last:
+            last = cs
+            collapsed.append(cs)
+        else:
+            if last.author == cs.author and \
+               last.log == cs.log and \
+               abs(last.date - cs.date) < threshold:
+                last.entries.extend(cs.entries)
+            else:
+                last = cs
+                collapsed.append(cs)
+
+    for cs in collapsed:
         yield cs
         
 class ChangeSetCollector(object):
@@ -95,6 +115,26 @@ class ChangeSetCollector(object):
         keys.sort()
         return iter([self.changesets[k] for k in keys])
     
+    def __getGlobalRevision(self, timestamp, author, changelog):
+        """
+        CVS does not have the notion of a repository-wide revision number,
+        since it tracks just single files.
+
+        Here we could "count" the grouped changesets ala `cvsps`,
+        but that's tricky because of branches.  Since right now there
+        is nothing that depends on this being a number, not to mention
+        a *serial* number, simply emit a (hopefully) unique signature...
+        """
+
+        # NB: the _getUpstreamChangesets() below depends on this format
+
+        if len(changelog)>33:
+            msg = changelog[:30] + '...'
+        else:
+            msg = changelog
+        msg = msg.replace('\n', '')
+        return '%s; %s, "%s"' % (timestamp, author, msg)
+
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
 
@@ -104,7 +144,10 @@ class ChangeSetCollector(object):
         if self.changesets.has_key(key):
             return self.changesets[key].addEntry(entry, revision)
         else:
-            cs = Changeset(revision, timestamp, author, changelog)
+            cs = Changeset(self.__getGlobalRevision(timestamp,
+                                                    author,
+                                                    changelog),
+                           timestamp, author, changelog)
             self.changesets[key] = cs
             return cs.addEntry(entry, revision)
 
@@ -127,7 +170,7 @@ class ChangeSetCollector(object):
         assert info[0][:6] == 'date: '
         
         day,time = info[0][6:].split(' ')
-        y,m,d = map(int, day.split('/'))
+        y,m,d = map(int, day.split(day[4]))
         hh,mm,ss = map(int, time.split(':'))
         date = datetime(y,m,d,hh,mm,ss)
 
