@@ -15,11 +15,13 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
 
+AUTHOR = "tailor@localhost"
+
 class DarcsInitialize(SystemCommand):
     COMMAND = "darcs initialize"
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --standard-verbosity --all --look-for-adds --logfile=%(logfile)s"
+    COMMAND = "darcs record -v --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
 
     def __call__(self, output=None, dry_run=False, patchname=None, **kwargs):
         logfile = kwargs.get('logfile')
@@ -36,7 +38,8 @@ class DarcsRecord(SystemCommand):
             kwargs['logfile'] = log.name
             
         return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
+                                      dry_run=dry_run, author=AUTHOR,
+                                      **kwargs)
 
 class DarcsMv(SystemCommand):
     COMMAND = "darcs mv %(old)s %(new)s"
@@ -62,13 +65,13 @@ class DarcsWorkingDir(object):
         """Execute `darcs initialize`."""
 
         di = DarcsInitialize(working_dir=self.root)
-        di()
+        di(output=True)
         
     def record(self, patchname, logmessage=None):
         """Record current changes in a darcs patch."""
 
         drec = DarcsRecord(working_dir=self.root)
-        drec(patchname=patchname, logmessage=logmessage)
+        drec(output=True, patchname=patchname, logmessage=logmessage)
 
     def rename(self, old, new):
         """Rename something named old to new."""
