@@ -254,7 +254,9 @@ def main():
         
         if options.bootstrap:
             if uri and '@' in uri:
-                uri, rev = uri.split('@')
+                last = uri.rindex('@')
+                rev = uri[last+1:]
+                uri = uri[:last]
             else:
                 rev = 'HEAD'
             tailored.bootstrap(options.source_kind, options.target_kind,
