@@ -37,4 +37,8 @@ if __name__ == '__main__':
         main(module='vcpx.tests', argv=sys.argv)
     else:
         from vcpx.tailor import main
+
+        if len(sys.argv) == 1:
+            sys.argv.append('--help')
+            
         main()
