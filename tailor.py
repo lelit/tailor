@@ -32,7 +32,7 @@ if __name__ == '__main__':
             main()
         except ExistingProjectError, exc:
             print exc
-        except UnknownProjectError, exc:
+        except ProjectNotTailored, exc:
             print exc
         except TargetInitializationFailure, exc:
             print exc
