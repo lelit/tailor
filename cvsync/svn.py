@@ -220,9 +220,10 @@ class SvnWorkingDir(object):
                 elif name == 'path':
                     self.current_field = []
                     if attributes.has_key('copyfrom-path'):
-                        self.current_path_action = (attributes['action'],
-                                                    attributes['copyfrom-path'],
-                                                    attributes['copyfrom-rev'])
+                        self.current_path_action = (
+                            attributes['action'],
+                            attributes['copyfrom-path'][1:], # make it relative
+                            attributes['copyfrom-rev'])
                     else:
                         self.current_path_action = attributes['action']
                         
@@ -236,8 +237,9 @@ class SvnWorkingDir(object):
                 elif name in ['author', 'date', 'msg']:
                     setattr(self.current, name, ''.join(self.current_field))
                 elif name == 'path':
-                    self.current.paths.append( (''.join(self.current_field),
-                                                self.current_path_action) )
+                    self.current.paths.append(
+                        (''.join(self.current_field)[1:], # make it relative
+                         self.current_path_action))
 
             def characters(self, data):
                 self.current_field.append(data)
