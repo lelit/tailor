@@ -205,7 +205,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     def __maybeDeleteDirectory(self, root, entrydir, changeset):
         from os.path import join, exists
-
+        from os import listdir
+        
         if not entrydir:
             return
         
