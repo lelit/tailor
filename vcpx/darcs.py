@@ -205,8 +205,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=wdir,
                           command="darcs changes --last=1 --xml-output")
-        
-        changes = c(output=True)
         last = changesets_from_darcschanges(c(output=True))
         
         return last[0].revision
