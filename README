@@ -8,6 +8,22 @@ This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
 URI and revision in special properties on the branched directory.
 
+The following ascii-art illustrates the usual scenario::
+
+                           +------------+            +------------+
+  +--------------+         | Immutable  |            | Working    |
+  | Upstream CVS |-------->| darcs      |----------->| darcs      |
+  | repository   | tailor  | repository | darcs pull | repository |
+  +--------------+         +------------+            +------------+
+                                                           |^         
+                                                           ||
+                                                           ||
+                                                           v|
+                                                          User
+
+Ideally you should be able to swap and replace "CVS server" and "darcs
+repository" with any combination of `CVS`, `Subversion` and `darcs`.
+
 
 Installation
 ============
