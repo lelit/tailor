@@ -72,6 +72,111 @@ def compare_cvs_revs(rev1, rev2):
     return cmp(r1, r2)
 
 
+def changesets_from_cvsps(log, sincerev=None):
+    """
+    Parse CVSps log.
+    """
+
+    from changes import Changeset, ChangesetEntry
+    from datetime import datetime
+
+    # cvsps output sample:
+    ## ---------------------
+    ## PatchSet 1500
+    ## Date: 2004/05/09 17:54:22
+    ## Author: grubert
+    ## Branch: HEAD
+    ## Tag: (none)
+    ## Log:
+    ## Tell the reason for using mbox (not wrapping long lines).
+    ##
+    ## Members:
+    ##         docutils/writers/latex2e.py:1.78->1.79
+
+    log.seek(0)
+
+    l = None
+    while 1:
+        l = log.readline()
+        if l <> '---------------------\n':
+            break
+
+        l = log.readline()
+        assert l.startswith('PatchSet '), "Parse error: %s"%l
+
+        pset = {}
+        pset['revision'] = l[9:-1].strip()
+        l = log.readline()
+        while not l.startswith('Log:'):
+            field,value = l.split(':',1)
+            pset[field.lower()] = value.strip()
+            l = log.readline()
+
+        msg = []
+        l = log.readline()
+        msg.append(l)
+        l = log.readline()
+        while l <> 'Members: \n':
+            msg.append(l)
+            l = log.readline()
+
+        pset['log'] = ''.join(msg)
+
+        assert l.startswith('Members:'), "Parse error: %s" % l
+
+        pset['entries'] = entries = []
+        l = log.readline()
+        seen = {}
+        while l.startswith('\t'):
+            if not sincerev or (sincerev<int(pset['revision'])):
+                file,revs = l[1:-1].split(':')
+                fromrev,torev = revs.split('->')
+
+                # Due to the fuzzy mechanism, cvsps may group
+                # together two commits on a single entry, thus
+                # giving something like:
+                #
+                #   Normalizer.py:1.12->1.13
+                #   Registry.py:1.22->1.23
+                #   Registry.py:1.21->1.22
+                #   Stopwords.py:1.9->1.10
+                #
+                # Collapse those into a single one.
+
+                e = seen.get(file)
+                if not e:
+                    e = ChangesetEntry(file)
+                    e.old_revision = fromrev
+                    e.new_revision = torev
+                    seen[file] = e
+                    entries.append(e)
+                else:
+                    if compare_cvs_revs(e.old_revision, fromrev)>0:
+                        e.old_revision = fromrev
+
+                    if compare_cvs_revs(e.new_revision, torev)<0:
+                        e.new_revision = torev
+
+                if fromrev=='INITIAL':
+                    e.action_kind = e.ADDED
+                elif "(DEAD)" in torev:
+                    e.action_kind = e.DELETED
+                    e.new_revision = torev[:torev.index('(DEAD)')]
+                else:
+                    e.action_kind = e.UPDATED
+
+            l = log.readline()
+
+        if not sincerev or (sincerev<int(pset['revision'])):
+            cvsdate = pset['date']
+            y,m,d = map(int, cvsdate[:10].split('/'))
+            hh,mm,ss = map(int, cvsdate[11:19].split(':'))
+            timestamp = datetime(y, m, d, hh, mm, ss)
+            pset['date'] = timestamp
+
+            yield Changeset(**pset)
+
+
 class CvsWorkingDir(UpdatableSourceWorkingDir,
                     SyncronizableTargetWorkingDir):
 
@@ -104,96 +209,11 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             
         changesets = []
         log = cvsps(output=True, update=True, branch=branch)
-        for cs in self.__enumerateChangesets(log, sincerev):
+        for cs in changesets_from_cvsps(log, sincerev):
             changesets.append(cs)
 
         return changesets
     
-    def __enumerateChangesets(self, log, sincerev=None):
-        """
-        Parse CVSps log.
-        """
-
-        from changes import Changeset, ChangesetEntry
-        from datetime import datetime
-        
-        # cvsps output sample:
-        ## ---------------------
-        ## PatchSet 1500
-        ## Date: 2004/05/09 17:54:22
-        ## Author: grubert
-        ## Branch: HEAD
-        ## Tag: (none)
-        ## Log:
-        ## Tell the reason for using mbox (not wrapping long lines).
-        ##
-        ## Members:
-        ##         docutils/writers/latex2e.py:1.78->1.79
-        
-        log.seek(0)
-
-        l = None
-        while 1:
-            l = log.readline()
-            if l <> '---------------------\n':
-                break
-
-            l = log.readline()
-            assert l.startswith('PatchSet '), "Parse error: %s"%l
-
-            pset = {}
-            pset['revision'] = l[9:-1].strip()
-            l = log.readline()
-            while not l.startswith('Log:'):
-                field,value = l.split(':',1)
-                pset[field.lower()] = value.strip()
-                l = log.readline()
-
-            msg = []
-            l = log.readline()
-            msg.append(l)
-            l = log.readline()
-            while l <> 'Members: \n':
-                msg.append(l)
-                l = log.readline()
-
-            pset['log'] = ''.join(msg)
-
-            assert l.startswith('Members:'), "Parse error: %s" % l
-
-            pset['entries'] = entries = []
-            l = log.readline()
-
-            while l.startswith('\t'):
-                if not sincerev or (sincerev<int(pset['revision'])):
-                    file,revs = l[1:-1].split(':')
-                    fromrev,torev = revs.split('->')
-
-                    e = ChangesetEntry(file)
-                    e.old_revision = fromrev
-                    e.new_revision = torev
-
-                    if fromrev=='INITIAL':
-                        e.action_kind = e.ADDED
-                    elif "(DEAD)" in torev:
-                        e.action_kind = e.DELETED
-                        e.new_revision = torev[:torev.index('(DEAD)')]
-                    else:
-                        e.action_kind = e.UPDATED
-
-                    entries.append(e)
-                    
-                l = log.readline()
-
-            if not sincerev or (sincerev<int(pset['revision'])):
-                cvsdate = pset['date']
-                y,m,d = map(int, cvsdate[:10].split('/'))
-                hh,mm,ss = map(int, cvsdate[11:19].split(':'))
-                timestamp = datetime(y, m, d, hh, mm, ss)
-                pset['date'] = timestamp
-            
-                yield Changeset(**pset)
-
     def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname
         from os import makedirs
