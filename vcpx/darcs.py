@@ -71,9 +71,11 @@ class DarcsGet(SystemCommand):
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         tag = kwargs.get('tag')
-        if tag:
+        if tag and tag <> 'HEAD':
             kwargs['tag'] = '--tag=%s' % tag
-
+        else:
+            kwargs['tag'] = ''
+            
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
 
@@ -139,7 +141,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     ss = int(date[12:14])
                     timestamp = datetime(y, m, d, hh, mm, ss)
                     self.current['date'] = timestamp
-                    self.current['revision'] = attributes['revision']
+                    self.current['comment'] = ''
                     self.current['entries'] = []
                 elif name in ['name', 'comment',
                               'add_file', 'add_directory',
@@ -209,7 +211,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Concretely do the checkout of the upstream revision.
         """
 
-        from os.path import join, isdir, abspath
+        from os.path import join, isdir, abspath, exists
         
         wdir = join(basedir, module)
 
