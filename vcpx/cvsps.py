@@ -207,6 +207,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists, dirname
         from os import makedirs
         from cvs import CvsEntries
+        from time import sleep
         
         entries = CvsEntries(root)
         
@@ -226,12 +227,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 if logger: logger.warning("'cvs update' on %s exited "
                                           "with status %d, retrying once..." %
                                           (e.name, cvsup.exit_status))
+                sleep(2)
                 cvsup(output=True, entry=e.name, revision=e.new_revision)
                 if cvsup.exit_status:
                     if logger: logger.warning("'cvs update' on %s exited "
                                               "with status %d, retrying "
                                               "one last time..." %
                                               (e.name, cvsup.exit_status))
+                    sleep(8)
                     cvsup(output=True, entry=e.name, revision=e.new_revision)
                     
             if cvsup.exit_status:
