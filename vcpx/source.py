@@ -12,6 +12,17 @@ directory under some kind of version control system.
 
 __docformat__ = 'reStructuredText'
 
+CONFLICTS_PROMPT = """
+The changeset
+
+%s
+caused conflicts on the following files:
+
+ * %s
+
+Either abort the session with Ctrl-C, or manually correct the situation
+with a Ctrl-Z and a few "svn resolved". What would you like to do?
+"""
 
 class UpdatableSourceWorkingDir(object):
     """
@@ -49,9 +60,14 @@ class UpdatableSourceWorkingDir(object):
             res = self._applyChangeset(root, c)
             if res:
                 conflicts.append((c, res))
-            else:
-                if replay:
-                    replay(root, c)
+                try:
+                    raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
+                except KeyboardInterrupt:
+                    print "INTERRUPTED BY THE USER!"
+                    return conflicts
+                
+            if replay:
+                replay(root, c)
                     
         return conflicts
         
