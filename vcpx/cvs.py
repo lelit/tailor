@@ -47,14 +47,14 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log):
+def changesets_from_cvslog(log, module):
     """
     Parse CVS log.
     """
 
     from datetime import timedelta
 
-    collected = ChangeSetCollector(log)
+    collected = ChangeSetCollector(log, module)
     collapsed = []
 
     threshold = timedelta(seconds=180)
@@ -79,7 +79,7 @@ def changesets_from_cvslog(log):
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
     
-    def __init__(self, log):
+    def __init__(self, log, module):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -89,7 +89,7 @@ class ChangeSetCollector(object):
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
        
-        self.__parseCvsLog(log)
+        self.__parseCvsLog(log, module)
         
     def __iter__(self):
         keys = self.changesets.keys()
@@ -191,7 +191,7 @@ class ChangeSetCollector(object):
             
         return (date, author, changelog, entry, rev, state, newentry)
     
-    def __parseCvsLog(self, log):
+    def __parseCvsLog(self, log, module):
         """Parse a complete CVS log."""
 
         from os.path import split, join
@@ -206,7 +206,8 @@ class ChangeSetCollector(object):
                     currentdir = l[18:-1]
                     # strip away first component, the name of the product
                     if '/' in currentdir:
-                        currentdir = currentdir[currentdir.index('/')+1:]
+                        assert currentdir.startswith(module)
+                        currentdir = currentdir[len(module)+1:]
                     else:
                         currentdir = ''
 
@@ -274,7 +275,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         changesets = []
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
-        for cs in changesets_from_cvslog(log):
+        for cs in changesets_from_cvslog(log, module):
             changesets.append(cs)
 
         return changesets
