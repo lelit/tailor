@@ -57,7 +57,7 @@ class CvsRemove(SystemCommand):
 
 
 class CvsCheckout(SystemCommand):
-    COMMAND = "cvs -q -d%(repository)s checkout -r %(revision)s %(module)s"
+    COMMAND = "cvs -q -d%(repository)s checkout -r%(revision)s -d%(workingdir)s %(module)s"
 
 
 def changesets_from_cvsps(log, sincerev=None):
@@ -254,16 +254,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Return the effective cvsps revision.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, split
         from cvs import CvsEntries, compare_cvs_revs
-        
-        wdir = join(basedir, module)
+
+        lastcomponent = split(module)[1]
+        wdir = join(basedir, lastcomponent)
         if not exists(wdir):
             c = CvsCheckout(working_dir=basedir)
             c(output=True,
               repository=repository,
               module=module,
-              revision=revision)
+              revision=revision,
+              workingdir=lastcomponent)
             if c.exit_status:
                 raise TargetInitializationFailure(
                     "'cvs checkout' returned status %s" % c.exit_status)

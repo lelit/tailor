@@ -166,7 +166,20 @@ OPTIONS = [
     make_option("-t", "--target-kind", dest="target_kind", metavar="VC-KIND",
                 help="Select VC-KIND as backend for the shadow repository, "
                      "with 'darcs' as default.",
-                default="darcs"),    
+                default="darcs"),
+    make_option("-R", "--repository", dest="repository", metavar="REPOS",
+                help="Specify the upstream repository, from where bootstrap "
+                     "will checkout the module.  REPOS syntax depends on "
+                     "the source version control kind."),
+    make_option("-m", "--module", dest="module", metavar="MODULE",
+                help="Specify the module to checkout at bootstrap time."),
+    make_option("-r", "--revision", dest="revision", metavar="REV",
+                help="Specify the revision bootstrap should checkout.  REV "
+                     "must be a valid 'name' for a revision in the upstream "
+                     "version control kind.  For CVS it may be a tag/branch. "
+                     "'HEAD', the default, means the latest version in all "
+                     "backends.",
+                default="HEAD"),
 ]    
 
 ACTIONS = [
@@ -209,7 +222,7 @@ def main():
     from os.path import abspath, exists, join, split
     from shwrap import SystemCommand
     
-    parser = OptionParser(usage='%prog [options] [proj [URI[@revision]]]...',
+    parser = OptionParser(usage='%prog [options] [project ...]',
                           option_list=OPTIONS)
     actions = OptionGroup(parser, "Other actions")
     actions.add_options(ACTIONS)
@@ -230,37 +243,28 @@ def main():
         proj = args.pop(0)
         root = abspath(proj)
 
-        if exists(join(root, STATUS_FILENAME)):
-            basedir = root
-        else:
-            basedir, module = split(root)
-        
         if options.bootstrap:
-            if exists(join(basedir, STATUS_FILENAME)):
+            if exists(join(root, STATUS_FILENAME)):
                 raise ExistingProjectError(
                     "Project %r cannot be bootstrapped twice" % proj)
             
-            if not args:
-                raise OptionError('expected the source URI for %r' % proj,
-                                  '--bootstrap')
-            uri = args.pop(0)
-        else:                
-            uri = None
+            if not options.repository:
+                raise OptionError('Need a repository to bootstrap %r' % proj)
+        else:
+            if not exists(proj):
+                raise UnknownProjectError("Project %r does not exist" % proj)
             
-        if not options.bootstrap and not exists(proj):
-            raise UnknownProjectError("Project %r does not exist" % proj)
+            if not exists(join(root, STATUS_FILENAME)):
+                raise UnknownProjectError(
+                    "%r is not a tailorized project" % proj)
             
-        tailored = TailorizedProject(basedir)
+        tailored = TailorizedProject(root)
         
         if options.bootstrap:
-            if uri and '@' in uri:
-                last = uri.rindex('@')
-                rev = uri[last+1:]
-                uri = uri[:last]
-            else:
-                rev = 'HEAD'
             tailored.bootstrap(options.source_kind, options.target_kind,
-                               uri, module, rev)
+                               options.repository,
+                               options.module,
+                               options.revision)
         elif options.info:
             pass
         else:

@@ -13,12 +13,22 @@ URI and revision in special properties on the branched directory.
 
 Examples::
 
-  # Bootstrap a new taylored project, starting at revision 10
-  $ tailor.py --bootstrap ~/svnwc/MyProduct http://svn.example.com/Product@10
+  # Bootstrap a new taylored project, starting at upstream revision 10
+  $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
 
-  # Bootstrap a new product, fetching from CVS and storing under SVN
-  $ tailor.py --source-kind cvs --target-kind svn -b ~/wc/prod :pserver:...
-
+  # Bootstrap a new product, fetching from CVS and storing under SVN: this
+  # will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be already
+  # under SVN.
+  $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
+              --repository :pserver:cvs.zope.org:/cvs-repository \
+              --module CMF/CMFCore ~/svnwc/cmfcore
+  
+  # Showing each command bootstrap a new DARCS repos in "~/darcs/cmftopic"
+  # under which the upstream module will be extracted as "CMFTopic" (ie, the
+  # last component of the module name).
+  $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
+              -m CMF/CMFTopic ~/darcs/cmftopic
+              
   # Merge upstream changes since last update/bootstrap
   $ tailor.py ~/svnwc/MyProduct
 """
