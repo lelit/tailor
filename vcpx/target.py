@@ -154,6 +154,5 @@ class SyncronizableTargetWorkingDir(object):
                     subdirs.remove(excd)
 
             c = addentry(working_dir=dir)
-            for d in subdirs+files:
-                c(entry=repr(d))
+            c(entry=' '.join([repr(e) for e in subdirs+files]))
 
