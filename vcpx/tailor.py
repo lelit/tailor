@@ -122,7 +122,7 @@ class TailorizedProject(object):
         self.__saveStatus()
         print "# Applied changeset %s" % changeset.revision
 
-    def update(self):
+    def update(self, single_commit, concatenate_logs):
         """
         Update an existing tailorized project.
 
@@ -143,11 +143,13 @@ class TailorizedProject(object):
                                                       self.upstream_revision)
         
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        actual,conflicts = dwd.applyUpstreamChangesets(proj,
-                                                       self.upstream_revision,
-                                                       applied=self.applied,
-                                                       logger=self.logger)
+        actual,conflicts = dwd.applyUpstreamChangesets(
+            proj, self.upstream_revision, applied=self.applied,
+            logger=self.logger, delayed_commit=single_commit)
         if actual:
+            if single_commit:
+                dwd.commitDelayedChangesets(proj, concatenate_logs)
+
             self.logger.info("Update completed, now at revision '%s'" % (
                 self.upstream_revision,))
         else:
@@ -156,9 +158,33 @@ class TailorizedProject(object):
 
 from optparse import OptionParser, OptionError, OptionGroup, make_option
 
-OPTIONS = [
+GENERAL_OPTIONS = [
     make_option("-D", "--debug", dest="debug",
-                action="store_true", default=False),
+                action="store_true", default=False,
+                help="Print each executed command."),
+    
+]    
+
+UPDATE_OPTIONS = [
+    make_option("--update", action="store_true", default=True,
+                help="Update the given repositories, fetching upstream "
+                     "changesets, applying and re-registering each one. "
+                     "This is the default behaviour."),
+    make_option("-S", "--single-commit", action="store_true", default=False,
+                help="Do a single, final commit on the target VC, effectively "
+                     "grouping together all upstream changeset into a single "
+                     "one, from the target VC point of view."),
+    make_option("-C", "--concatenate-logs", action="store_true", default=False,
+                help="With --single-commit, concatenate each changeset "
+                     "message log to the final changelog, instead of just "
+                     "the name of the patch."),
+]
+
+BOOTSTRAP_OPTIONS = [
+    make_option("-b", "--bootstrap", action="store_true", default=False,
+                help="Bootstrap mode, that is the initial copy of the "
+                     "upstream tree, given as an URI (see -R) and maybe "
+                     "a revision (-r).  This overrides --update."),
     make_option("-s", "--source-kind", dest="source_kind", metavar="VC-KIND",
                 help="Select the backend for the upstream source "
                      "version control VC-KIND. Default is 'cvs'.",
@@ -180,15 +206,6 @@ OPTIONS = [
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),
-]    
-
-ACTIONS = [
-    make_option("-b", "--bootstrap", action="store_true", default=False,
-                help="Bootstrap mode, that is the initial copy of the "
-                     "upstream tree, given as an URI possibly followed "
-                     "by a revision."),
-    make_option("-i", "--info", action="store_true", default=False,
-                help="Just show ancestry information."),
 ]
 
 class ExistingProjectError(Exception):
@@ -223,10 +240,16 @@ def main():
     from shwrap import SystemCommand
     
     parser = OptionParser(usage='%prog [options] [project ...]',
-                          option_list=OPTIONS)
-    actions = OptionGroup(parser, "Other actions")
-    actions.add_options(ACTIONS)
-    parser.add_option_group(actions)
+                          option_list=GENERAL_OPTIONS)
+    
+    bsoptions = OptionGroup(parser, "Bootstrap options")
+    bsoptions.add_options(BOOTSTRAP_OPTIONS)
+
+    upoptions = OptionGroup(parser, "Update options")
+    upoptions.add_options(UPDATE_OPTIONS)
+    
+    parser.add_option_group(bsoptions)
+    parser.add_option_group(upoptions)
     
     options, args = parser.parse_args()
     
@@ -259,14 +282,12 @@ def main():
                     "%r is not a tailorized project" % proj)
             
         tailored = TailorizedProject(root)
-        
+
         if options.bootstrap:
             tailored.bootstrap(options.source_kind, options.target_kind,
                                options.repository,
                                options.module,
                                options.revision)
-        elif options.info:
-            pass
-        else:
-            tailored.update()
+        elif options.update:
+            tailored.update(options.single_commit, options.concatenate_logs)
 

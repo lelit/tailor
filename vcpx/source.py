@@ -46,7 +46,8 @@ class UpdatableSourceWorkingDir(object):
     """
 
     def applyUpstreamChangesets(self, root, sincerev,
-                                replay=None, applied=None, logger=None):
+                                replay=None, applied=None, logger=None,
+                                delayed_commit=False):
         """
         Apply the collected upstream changes.
 
@@ -87,7 +88,7 @@ class UpdatableSourceWorkingDir(object):
                     return c, conflicts
 
             if replay:
-                replay(root, c)
+                replay(root, c, delayed_commit)
             
             if applied:
                 applied(root, c)

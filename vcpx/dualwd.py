@@ -59,3 +59,6 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     
     def initializeNewWorkingDir(self, root, repository, module, revision):
         self.target.initializeNewWorkingDir(root, repository, module, revision)
+
+    def commitDelayedChangesets(self, root, concatenate_logs):
+        self.target.commitDelayedChangesets(root, concatenate_logs)

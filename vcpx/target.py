@@ -48,25 +48,82 @@ class SyncronizableTargetWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def replayChangeset(self, root, changeset):
+    def replayChangeset(self, root, changeset, delayed_commit=False):
         """
         Do whatever is needed to replay the changes under the target
         VC, to register the already applied (under the other VC)
         changeset.
+
+        If `delayed_commit` is not True, the changeset is committed
+        to the target VC right after a successful application; otherwise
+        the various information get registered and will be reused later,
+        by commitDelayedChangesets().
         """
 
         self._replayChangeset(root, changeset)
 
-        from os.path import split
+        if delayed_commit:
+            self.__registerAppliedChangeset(changeset)
+        else:
+            from os.path import split
 
-        module = split(root)[1]
+            module = split(root)[1]
+
+            remark = '%s: changeset %s' % (module, changeset.revision)
+            changelog = changeset.log
+            entries = [e.name for e in changeset.entries]
+
+            self._commit(root, changeset.date, changeset.author,
+                         remark, changelog, entries)
+
+    def commitDelayedChangesets(self, root, concatenate_logs=True):
+        """
+        If there are changesets pending to be committed, do a single
+        commit of all changed entries.
+
+        With `concatenate_logs` there's control over the folded
+        changesets message log: if True every changelog is appended in
+        order of application, otherwise it will contain just the name
+        of the patches.
+        """
+
+        from datetime import datetime
         
-        remark = '%s: changeset %s' % (module, changeset.revision)
-        changelog = changeset.log
-        entries = [e.name for e in changeset.entries]
-        self._commit(root, changeset.date, changeset.author,
-                     remark, changelog, entries)
+        if not hasattr(self, '_registered_cs'):
+            return
 
+        mindate = maxdate = None
+        combined_entries = {}
+        combined_log = []
+        combined_authors = {}
+        for cs in self._registered_cs:
+            if not mindate or mindate>cs.date:
+                mindate = cs.date
+            if not maxdate or maxdate<cs.date:
+                maxdate = cs.date
+
+            if concatenate_logs:
+                msg = 'changeset %s by %s' % (cs.revision, cs.author)
+                combined_log.append(msg)
+                combined_log.append('=' * len(msg))
+                combined_log.append(cs.log)
+            else:
+                combined_log.append('* changeset %s by %s' % (cs.revision,
+                                                              cs.author))
+            combined_authors[cs.author] = True
+            
+            for e in [e.name for e in cs.entries]:
+                combined_entries[e] = True
+
+        authors = ', '.join(combined_authors.keys())
+        remark = 'Merged %d changesets from %s to %s' % (
+            len(self._registered_cs), mindate, maxdate)
+        changelog = '\n'.join(combined_log)
+        entries = combined_entries.keys()
+        
+        self._commit(root, datetime.now(), authors,
+                         remark, changelog, entries)
+    
     def _replayChangeset(self, root, changeset):
         """
         Replicate the actions performed by the changeset on the tree of
@@ -80,6 +137,17 @@ class SyncronizableTargetWorkingDir(object):
                 self._addEntry(root, e.name)
             elif e.action_kind == e.DELETED:
                 self._removeEntry(root, e.name)
+
+    def __registerAppliedChangeset(self, changeset):
+        """
+        Remember about an already applied but not committed changeset,
+        to be done later.
+        """
+        
+        if not hasattr(self, '_registered_cs'):
+            self._registered_cs = []
+
+        self._registered_cs.append(changeset)
         
     def _addEntry(self, root, entry):
         """
@@ -88,7 +156,8 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def _commit(self,root, date, author, remark, changelog=None, entries=None):
+    def _commit(self, root, date, author, remark,
+                changelog=None, entries=None):
         """
         Commit the changeset.
         """
