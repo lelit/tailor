@@ -356,7 +356,8 @@ class TailorizedProject(object):
                                                   delayed_commit=single_commit)
             except:
                 self.logger.exception('Upstream change application failed')
-                
+                raise
+            
             if l:
                 if single_commit:
                     dwd.commitDelayedChangesets(proj, concatenate_logs)
