@@ -107,13 +107,19 @@ updated
         self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
         self.assertEqual(cset.log, "Added to project (exctracted from "
                                    "HISTORY.txt)\n")
-        self.assertEqual(cset.entries[0].name, 'THANKS.txt')
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.ADDED)
         
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
         self.assertEqual(cset.log, "updated\n") 
-        self.assertEqual(cset.entries[0].name, 'THANKS.txt')
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'THANKS.txt')
+        self.assertEqual(entry.new_revision, '1.2')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
        
     def testDoubleBehaviour(self):
         """Verify cvs log parser behaviour"""

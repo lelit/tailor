@@ -96,11 +96,11 @@ class ChangeSetCollector(object):
         
         key = (timestamp, author, changelog)
         if self.changesets.has_key(key):
-            self.changesets[key].addEntry(entry, revision)
+            return self.changesets[key].addEntry(entry, revision)
         else:
             cs = Changeset(revision, timestamp, author, changelog)
-            cs.addEntry(entry, revision)
             self.changesets[key] = cs
+            return cs.addEntry(entry, revision)
 
     def __parseRevision(self, entry, log):
         """Parse a single revision log, extracting the needed information
@@ -146,6 +146,21 @@ class ChangeSetCollector(object):
             entry = l[14:-1]
             
             l = log.readline()
+            while l and not l.startswith('total revisions: '):
+                l = log.readline()
+
+            assert l.startswith('total revisions: ')
+
+            total, selected = l.split(';')
+            total = total.strip()
+            selected = selected.strip()
+
+            # If the log shows all changes to the entry, than it's
+            # a new one
+            
+            newentry = total.split(':')[1] == selected.split(':')[1]
+            
+            l = log.readline()
             while l and l <> '----------------------------\n':
                 l = log.readline()
                 
@@ -153,11 +168,13 @@ class ChangeSetCollector(object):
             while cs:
                 date,author,changelog,e,rev = cs
 
-                self.__collect(date, author, changelog, e, rev)
-
+                last = self.__collect(date, author, changelog, e, rev)
+                last.action_kind = last.UPDATED
+                
                 cs = self.__parseRevision(entry, log)
 
-
+            if newentry:
+                last.action_kind = last.ADDED
 
 class CvsWorkingDir(CvspsWorkingDir):
     """

@@ -96,7 +96,8 @@ class Changeset(object):
         e = ChangesetEntry(entry)
         e.new_revision = revision
         self.entries.append(e)
-        
+        return e
+    
     def __str__(self):
         s = []
         s.append('Revision: %s' % self.revision)
