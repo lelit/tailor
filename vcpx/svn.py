@@ -84,7 +84,7 @@ class SvnCheckout(SystemCommand):
 
     
 class SvnCommit(SystemCommand):
-    COMMAND = "svn commit --quiet %(logfile)s %(entries)s"
+    COMMAND = "svn commit --quiet --file %(logfile)s %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logfile = kwargs.get('logfile')
