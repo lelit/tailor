@@ -68,11 +68,15 @@ Examples
 
   $ tailor.py ~/svnwc/MyProduct
 
-Resolving Conflicts
+
+Resolving conflicts
 ===================
 
-If any conflicts are found, tailor.py will flag them and prompt the user to
-correct them.
+Should one of the replayed changes generate any conflict, tailor.py
+will prompt the user to correct them. This is done after the upstream
+patch has been applied and before the final commit on the target
+system, so that manually tweaking the conflict can produce a clean
+patch.
 
 
 Tailor's metadata
