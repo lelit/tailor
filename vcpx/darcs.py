@@ -58,9 +58,26 @@ class DarcsChanges(SystemCommand):
     COMMAND = "darcs changes --from-patch='%(patch)s' --xml-output --summary"
 
 
+class DarcsLastChange(SystemCommand):
+    COMMAND = "darcs changes --last=1 --xml-output"
+
+
 class DarcsAnnotate(SystemCommand):
     COMMAND = "darcs annotate --standard-verbosity %(entry)s >/dev/null 2>&1"
+
     
+class DarcsGet(SystemCommand):
+    COMMAND = "darcs get --standard-verbosity %(tag)s '%(repository)s'"
+
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        tag = kwargs.get('tag')
+        if tag:
+            kwargs['tag'] = '--tag=%s' % tag
+
+        return SystemCommand.__call__(self, output=output,
+                                      dry_run=dry_run, **kwargs)
+
+
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
@@ -185,6 +202,30 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         return
+
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
+                                  logger=None):
+        """
+        Concretely do the checkout of the upstream revision.
+        """
+
+        from os.path import join, isdir, abspath
+        
+        wdir = join(basedir, module)
+
+        if not exists(wdir):
+            dget = DarcsGet(working_dir=basedir)
+            dget(output=True, repository=repository, tag=revision)
+            if dget.exit_status:
+                raise TargetInitializationFailure(
+                    "'darcs get' returned status %s" % dget.exit_status)
+
+        c = DarcsLastChange(working_dir=wdir)
+        changes = c(output=True)
+        last = self.__parseDarcsChanges(c(output=True))
+        
+        return last[0].revision
+
     
     ## SyncronizableTargetWorkingDir
 
