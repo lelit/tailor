@@ -99,6 +99,7 @@ class Changeset(object):
                 s.append('%s: %s' % (ak, ','.join([e.name
                                                    for e in self.entries])))
         s.append('Log: %s' % self.log)
+        return '\n'.join(s)
 
     def addedEntries(self):
         """
@@ -112,7 +113,7 @@ class Changeset(object):
         Filter the changesets and extract the modified entries.
         """
 
-        return [e for e in self.entries if e.action_kind == e.UPDATE]
+        return [e for e in self.entries if e.action_kind == e.UPDATED]
 
     def removedEntries(self):
         """
