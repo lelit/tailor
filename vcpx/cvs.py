@@ -14,6 +14,14 @@ __docformat__ = 'reStructuredText'
 from shwrap import SystemCommand
 from cvsps import CvspsWorkingDir
 
+class EmptyRepositoriesFoolsMe(Exception):
+    """
+    This is the exception raised when we try to tailor an empty CVS
+    repository. This is more a shortcoming of tailor, rather than a
+    real problem with those repositories.
+    """
+    
+    pass
 
 def compare_cvs_revs(rev1, rev2):
     """Compare two CVS revision numerically, not alphabetically."""
@@ -271,13 +279,16 @@ class CvsWorkingDir(CvspsWorkingDir):
         from datetime import timedelta
         
         entries = CvsEntries(root)
+        youngest_entry = entries.getYoungestEntry()
+        if youngest_entry is None:
+            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
         
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
-            youngest = entries.getYoungestEntry().timestamp
-            youngest -= timedelta(days=15)
-            since = youngest.isoformat(sep=' ')
+            youngest_ts = youngest_entry.timestamp
+            youngest_ts -= timedelta(days=15)
+            since = youngest_ts.isoformat(sep=' ')
         else:
             # Assume this is from __getGlobalRevision()
             since,author = sincerev.split(' by ')
