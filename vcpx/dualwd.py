@@ -66,13 +66,23 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.initializeNewWorkingDir(root, repository, revision)
 
 if __name__ == '__main__':
-    dwd = DualWorkingDir('svn', 'darcs')
-    dwd.bootstrap('/tmp/prove/provapyde',
-                  'svn+ssh://caia/ND/svn/tests/provapyde',
-                  '1')
-    dwd.applyUpstreamChangesets('/tmp/prove/provapyde')
+##     dwd = DualWorkingDir('svn', 'darcs')
+##     dwd.bootstrap('/tmp/prove/provapyde',
+##                   'svn+ssh://caia/ND/svn/tests/provapyde',
+##                   '1')
+##     dwd.applyUpstreamChangesets('/tmp/prove/provapyde')
 
-    dwd = DualWorkingDir('cvs', 'darcs')
-    dwd.bootstrap('/tmp/prove/PyApache', '/usr/local/CVSROOT/', 'HEAD')
-    dwd.applyUpstreamChangesets('/tmp/prove/PyApache')
+##     dwd = DualWorkingDir('cvs', 'darcs')
+##     dwd.bootstrap('/tmp/prove/PyApache', '/usr/local/CVSROOT/', 'HEAD')
+##     dwd.applyUpstreamChangesets('/tmp/prove/PyApache')
+    
+    dwd = DualWorkingDir('cvs', 'svn')
+    dwd.bootstrap('/tmp/prove/reportman', ':pserver:anonymous@cvs.sourceforge.net:/cvsroot/reportman', 'HEAD')
+    dwd.applyUpstreamChangesets('/tmp/prove/reportman')
+
+##     dwd = DualWorkingDir('svn', 'darcs')
+##     dwd.bootstrap('/tmp/prove/CMFPlone',
+##                   'http://svn.plone.org/plone/CMFPlone/branches/Plone-2_0-branch',
+##                   '4818')
+##     dwd.applyUpstreamChangesets('/tmp/prove/CMFPlone')
     
