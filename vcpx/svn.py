@@ -290,10 +290,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         c = SvnCommit(working_dir=root)
         
-        logmessage = "%s\nOriginal author: %s\nDate: %s\n" % (remark, author,
-                                                              date)
+        logmessage = "%s\nOriginal author: %s\nDate: %s" % (remark, author,
+                                                            date)
         if changelog:
-            logmessage = logmessage + '\n' + changelog + '\n'
+            logmessage = logmessage + '\n\n' + changelog
             
         if entries:
             entries = ' '.join(entries)
