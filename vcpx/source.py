@@ -27,6 +27,9 @@ with a Ctrl-Z and a few "svn resolved". What would you like to do?
 class ChangesetApplicationFailure(Exception):
     pass
 
+class InvocationError(Exception):
+    pass
+
 class UpdatableSourceWorkingDir(object):
     """
     This is an abstract working dir able to follow an upstream
@@ -153,6 +156,13 @@ class UpdatableSourceWorkingDir(object):
         Return the checked out revision.
         """
 
+        if not root:
+            raise InvocationError("Must specify a root directory")
+        if not repository:
+            raise InvocationError("Must specify an upstream repository")
+        if not module:
+            raise InvocationError("Must specify a module name")
+        
         return self._checkoutUpstreamRevision(root, repository,
                                               module, revision,
                                               **kwargs)
