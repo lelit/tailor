@@ -24,7 +24,8 @@ if __name__ == '__main__':
     else:
         from vcpx.tailor import main, ExistingProjectError, ProjectNotTailored
         from vcpx.target import TargetInitializationFailure
-        from vcpx.source import InvocationError, GetUpstreamChangesetsFailure
+        from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
+             ChangesetApplicationFailure
         from vcpx.cvs import EmptyRepositoriesFoolsMe
         
         if len(sys.argv) == 1:
@@ -34,7 +35,8 @@ if __name__ == '__main__':
             main()
         except (ExistingProjectError, ProjectNotTailored,
                 TargetInitializationFailure, EmptyRepositoriesFoolsMe,
-                InvocationError, GetUpstreamChangesetsFailure), exc:
+                InvocationError, GetUpstreamChangesetsFailure,
+                ChangesetApplicationFailure), exc:
             print "%s: %s" % (exc.__doc__, exc)
 
 
