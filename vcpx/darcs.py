@@ -67,7 +67,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
 
     def __init__(self):
-        self.__addedEntries = {}
+        self.__visitedDirs = {}
         
     ## UpdatableSourceWorkingDir
     
@@ -198,24 +198,25 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import split, join, exists
 
-        if self.__addedEntries.get(entry): return
-        
-        # This is ugly, but I didn't find a better way to test whether
-        # a particular directory is already version controlled by darcs.
-        
-        dannot = DarcsAnnotate(working_dir=root)
-        
         basedir = split(entry)[0]
 
         if basedir:
-            dannot(entry=basedir)
-            if dannot.exit_status:
-                self._addEntry(root, basedir)
+            if not self.__visitedDirs.get(basedir):
+                # This is ugly, but I didn't find a better way to test
+                # whether a particular directory is already version
+                # controlled by darcs.
+        
+                dannot = DarcsAnnotate(working_dir=root)
+        
+                dannot(entry=basedir)
+                if dannot.exit_status:
+                    self._addEntry(root, basedir)
 
+                self.__visitedDirs[basedir] = True
+                
         c = DarcsAdd(working_dir=root)
         c(entry=entry)
 
-        self.__addedEntries[entry] = True
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
