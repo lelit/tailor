@@ -282,7 +282,7 @@ class TailorizedProject(object):
             subdir = module
 
         try:
-            dwd.initializeNewWorkingDir(self.root, repository, subdir, actual)
+            dwd.initializeNewWorkingDir(self.root, repository, module, subdir, actual)
         except:
             self.logger.exception('Working copy initialization failed!')
             raise
@@ -349,7 +349,7 @@ class TailorizedProject(object):
                 print "Applying %d upstream changesets" % nchanges
 
             try:
-                l,c = dwd.applyUpstreamChangesets(proj, changesets,
+                l,c = dwd.applyUpstreamChangesets(proj,self.module, changesets,
                                                   applyable=self.applyable,
                                                   applied=self.applied,
                                                   logger=self.logger,

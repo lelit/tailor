@@ -263,7 +263,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                   " %(old)s %(new)s")
         c(old=oldentry, new=newentry)
 
-    def _initializeWorkingDir(self, root, module):
+    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
         Execute `darcs initialize`.
         """

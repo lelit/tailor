@@ -351,7 +351,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnMv(working_dir=root)
         c(old=oldentry, new=newentry)
 
-    def _initializeWorkingDir(self, root, module, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
         Add the given directory to an already existing svn working tree.
         """
@@ -361,5 +361,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not exists(join(root, '.svn')):
             raise TargetInitializationFailure("'%s' needs to be an SVN working copy already be under SVN" % root)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, module,
-                                                            SvnAdd)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
+                                                            repository, module,
+                                                            subdir, SvnAdd)

@@ -48,7 +48,7 @@ class SyncronizableTargetWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def replayChangeset(self, root, changeset,
+    def replayChangeset(self, root, module, changeset,
                         delayed_commit=False, logger=None):
         """
         Do whatever is needed to replay the changes under the target
@@ -71,8 +71,6 @@ class SyncronizableTargetWorkingDir(object):
             self.__registerAppliedChangeset(changeset)
         else:
             from os.path import split
-
-            module = split(root)[1]
 
             remark = '%s: changeset %s' % (module, changeset.revision)
             changelog = changeset.log
@@ -193,7 +191,7 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def initializeNewWorkingDir(self, root, repository, module, revision):
+    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
@@ -202,13 +200,13 @@ class SyncronizableTargetWorkingDir(object):
         from datetime import datetime
 
         now = datetime.now()
-        self._initializeWorkingDir(root, module)
+        self._initializeWorkingDir(root, repository, module, subdir)
         self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
                      BOOTSTRAP_PATCHNAME % module,
                      BOOTSTRAP_CHANGELOG % locals(),
-                     entries=[module])
+                     entries=[subdir])
 
-    def _initializeWorkingDir(self, root, module, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
         Assuming the `root` directory contains a working copy `module`
         extracted from some VC repository, add it and all its content

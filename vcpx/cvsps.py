@@ -498,11 +498,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         self._removeEntry(root, oldentry)
         self._addEntry(root, newentry)
 
-    def _initializeWorkingDir(self, root, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
         Add the given directory to an already existing CVS working tree.
         """
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, CvsAdd)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
+                                                            repository, module,
+                                                            subdir, CvsAdd)
 
 

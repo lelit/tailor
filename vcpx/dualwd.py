@@ -52,10 +52,10 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def getUpstreamChangesets(self, root, sincerev):
         return self.source.getUpstreamChangesets(root, sincerev)
     
-    def applyUpstreamChangesets(self, root, changesets, applyable=None,
+    def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
-        return self.source.applyUpstreamChangesets(root, changesets,
+        return self.source.applyUpstreamChangesets(root, module, changesets,
                                                    replay=self.target.replayChangeset,
                                                    applyable=applyable,
                                                    applied=applied,
@@ -70,8 +70,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
     
-    def initializeNewWorkingDir(self, root, repository, module, revision):
-        self.target.initializeNewWorkingDir(root, repository, module, revision)
+    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
+        self.target.initializeNewWorkingDir(root, repository, module, subdir, revision)
 
     def commitDelayedChangesets(self, root, concatenate_logs):
         self.target.commitDelayedChangesets(root, concatenate_logs)

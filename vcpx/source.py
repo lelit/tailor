@@ -65,7 +65,7 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, changesets, applyable=None,
+    def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
         """
@@ -109,7 +109,8 @@ class UpdatableSourceWorkingDir(object):
                     return c, conflicts
 
             if replay:
-                replay(root, c, delayed_commit=delayed_commit, logger=logger)
+                replay(root, module, c, delayed_commit=delayed_commit,
+                       logger=logger)
             
             if applied:
                 applied(root, c)
