@@ -15,6 +15,10 @@ from shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
+MOTD = """\
+This is the Darcs equivalent of
+%s/%s
+"""
 
 class DarcsRecord(SystemCommand):
     COMMAND = "darcs record --all --pipe %(entries)s"
@@ -267,6 +271,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
         Execute `darcs initialize`.
         """
+
+        from os.path import join
         
         c = SystemCommand(working_dir=root, command="darcs initialize")
         c(output=True)
@@ -274,9 +280,17 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if c.exit_status:
             raise TargetInitializationFailure(
                 "'darcs initialize' returned status %s" % c.exit_status)
-        else:
-            c = SystemCommand(working_dir=root,
-                              command="darcs add --case-ok --recursive"
-                                      " --standard-verbosity %(entry)s")
-            c(entry=module)
+
+        motd = open(join(root, '_darcs/prefs/motd'), 'w')
+        motd.write(MOTD % (repository, module))
+        motd.close()
+
+        boring = open(join(root, '_darcs/prefs/boring'), 'a')
+        boring.write('tailor.log\ntailor.info\n')
+        boring.close()
+        
+        c = SystemCommand(working_dir=root,
+                          command="darcs add --case-ok --recursive"
+                          " --standard-verbosity %(entry)s")
+        c(entry=subdir)
 
