@@ -90,7 +90,7 @@ class SvnCommit(SystemCommand):
             log = NamedTemporaryFile(bufsize=0)
             logmessage = kwargs.get('logmessage')
             if logmessage:
-                print >>log, logmessage
+                log.write(logmessage)
             
             kwargs['logfile'] = log.name
         
