@@ -45,7 +45,7 @@ class SvnPropSet(SystemCommand):
 
 
 class SvnLog(SystemCommand):
-    COMMAND = "svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s 2>&1"
+    COMMAND = "TZ=UTC svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s 2>&1"
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         quiet = kwargs.get('quiet', True)

@@ -27,7 +27,7 @@ class DarcsRecord(SystemCommand):
         if not logmessage:
             logmessage = ''
 
-        input = "%s\n%s\n%s\n%s\n" % (date, author, patchname, logmessage)
+        input = "%s UTC\n%s\n%s\n%s\n" % (date, author, patchname, logmessage)
         
         return SystemCommand.__call__(self, output=output, input=input,
                                       dry_run=dry_run, 
@@ -132,7 +132,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from time import strptime
         from changes import Changeset
         
-        c = SystemCommand(working_dir=root, command="darcs pull --dry-run")
+        c = SystemCommand(working_dir=root,
+                          command="TZ=UTC darcs pull --dry-run")
         output = c(output=True)
 
         l = output.readline()
