@@ -14,8 +14,8 @@ __docformat__ = 'reStructuredText'
 
 class SyncronizableTargetWorkingDir(object):
     """
-    This is an abstract working dir. Subclasses MUST override ALL
-    these methods.
+    This is an abstract working dir. Subclasses MUST override at least
+    the _underscoredMethods.
     """
 
     def replayChangeset(self, root, changeset):
@@ -40,7 +40,7 @@ class SyncronizableTargetWorkingDir(object):
         remark = 'Upstream changeset %s' % changeset.revision
         changelog = changeset.log
         entries = [e.name for e in changeset.entries]
-        self._commit(root, remark, changelog, entries)
+        self._commit(root, changeset.author, remark, changelog, entries)
 
     def _addEntry(self, root, entry):
         """
@@ -49,7 +49,7 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def _commit(self, root, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog, entries):
         """
         Commit the changeset.
         """

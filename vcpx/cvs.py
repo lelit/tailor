@@ -11,9 +11,20 @@ from cvsync.shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir
 
-class CvsPsLog(SystemCommand):
-    COMMAND = "cvsps -u -b%(branch)s"
 
+class CvsPsLog(SystemCommand):
+    COMMAND = "cvsps %(update)s-b%(branch)s"
+
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        update = kwargs.get('update', '')
+        if update:
+            update = '-u '
+        kwargs['update'] = update
+        
+        return SystemCommand.__call__(self, output=output,
+                                      dry_run=dry_run, **kwargs)
+
+    
 class CvsUpdate(SystemCommand):
     COMMAND = 'cvs %(dry)supdate -d -r%(revision)s %(entry)s2>&1'
     
@@ -25,7 +36,20 @@ class CvsUpdate(SystemCommand):
 
         return SystemCommand.__call__(self, output=output,
                                       dry_run=False, **kwargs)
+
+
+class CvsAdd(SystemCommand):
+    COMMAND = "cvs add %(entry)s"
+
+
+class CvsCommit(SystemCommand):
+    COMMAND = "cvs ci -F %(logfile)s %(entries)s"
     
+
+class CvsRemove(SystemCommand):
+    COMMAND = "cvs remove %(entry)s"
+
+
 from textwrap import TextWrapper
 from re import compile, MULTILINE
     
@@ -47,23 +71,28 @@ def refill(msg):
     return '\n'.join(s)
 
 
-class CvsSourceWorkingDir(UpdatableSourceWorkingDir):
-    def _getLastSyncedRevision(self):
+class CvsWorkingDir(UpdatableSourceWorkingDir,
+                    SyncronizableTargetWorkingDir):
+
+    ## UpdatableSourceWorkingDir
+    
+    def __getLastUpstreamRevision(self, root):
         from os.path import join, exists
         
-        fname = join(self.root, 'CVS', 'last-synced-revision')
+        fname = join(root, 'CVS', 'last-synced-revision')
         if exists(fname):
             return open(fname).read()
 
-    def _setLastSyncedRevision(self, revision):
+    def __setLastUpstreamRevision(self, root, revision):
         from os.path import join, exists
         
-        fname = join(self.root, 'CVS', 'last-synced-revision')
+        fname = join(root, 'CVS', 'last-synced-revision')
         open(fname, 'w').write(revision)
         
-    def _getUpstreamChangesets(self, startfrom_rev=None):
-        cvsps = CvsPsLog(working_dir=self.root)
+    def _getUpstreamChangesets(self, root):
+        cvsps = CvsPsLog(update=True, working_dir=root)
 
+        startfrom_rev = self.__getLastUpstreamRevision(root)
         if startfrom_rev:
             startfrom_rev = int(startfrom_rev)
             
@@ -74,8 +103,9 @@ class CvsSourceWorkingDir(UpdatableSourceWorkingDir):
             branch=open(fname).read()[1:-1]
         else:
             branch="HEAD"
-            
-        for cs in self.__enumerateChangesets(cvsps(output=True,branch=branch)):
+
+        log = cvsps(output=True, branch=branch)
+        for cs in self.__enumerateChangesets(log):
             if not startfrom_rev or (startfrom_rev<=cs.revision):
                 self.changesets.append(cs)
                 
@@ -152,33 +182,29 @@ class CvsSourceWorkingDir(UpdatableSourceWorkingDir):
 
             yield Changeset(**pset)
 
-    def _applyChangeset(self, changeset):
-        cvsup = CvsUpdate(working_dir=self.root)
+    def _applyChangeset(self, root, changeset):
+        cvsup = CvsUpdate(working_dir=root)
         for e in cs.entries:
             cvsup(entry=e.name, revision=e.new_revision)
+        self.__setLastUpstreamRevision(root, revision)
+        
+    ## SyncronizableTargetWorkingDir
 
-class CvsAdd(SystemCommand):
-    COMMAND = "cvs add %(entry)s"
-
-
-class CvsCommit(SystemCommand):
-    COMMAND = "cvs ci -F %(logfile)s %(entries)s"
-    
-
-class CvsRemove(SystemCommand):
-    COMMAND = "cvs remove %(entry)s"
-
-
-class CvsTargetWorkingDir(SyncronizableTargetWorkingDir):
     def _addEntry(self, root, entry):
         """
         Add a new entry, maybe registering the directory as well.
         """
 
+        from os.path import split, join, exists
+
+        basedir = split(entry)[0]
+        if basedir and not exists(join(basedir, 'CVS')):
+            self._addEntry(root, basedir)
+        
         c = CvsAdd(working_dir=root)
         c(entry=entry)
 
-    def _commit(self, root, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog, entries):
         """
         Commit the changeset.
         """

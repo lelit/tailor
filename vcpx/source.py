@@ -14,46 +14,24 @@ __docformat__ = 'reStructuredText'
 
 
 class UpdatableSourceWorkingDir(object):
-    """This is an abstract working dir. Subclasses MUST override ALL
-       these methods."""
+    """This is an abstract working dir. Subclasses MUST override at least
+       the _underscoredMethods."""
 
-    def _getLastSyncedRevision(self, root):
-        """
-        Return the last synced revision.
-
-        Since this info must be stored somewhere, it's up to the target
-        storage how/where it best fits; as such, this method must be
-        overridden by subclasses.
-        """
-
-        raise "SubclassResponsibility"
-
-    def _setLastSyncedRevision(self, root, revision):
-        """
-        Record the last synced revision.
-
-        Since this info must be stored somewhere, it's up to the target
-        storage how/where it best fits; as such, this method must be
-        overridden by subclasses.
-        """
-
-        raise "SubclassResponsibility"
-
-    def _getUpstreamChangesets(self, root, startfrom_rev=None):
+    def _getUpstreamChangesets(self, root):
         """
         Do the actual work of fetching the upstream changeset.
         
         This method must be overridden by subclasses.
         """
 
-        raise "SubclassResponsibility"
+        raise "%s should override this method" % self.__class__
         
     def _applyChangeset(self, root, changeset):
         """
-        Do the actual work of applying the changeset to the workink copy.
+        Do the actual work of applying the changeset to the working copy.
         """
 
-        raise "SubclassResponsibility"
+        raise "%s should override this method" % self.__class__
 
     def collectUpstreamChangesets(self, root):
         """
@@ -62,8 +40,7 @@ class UpdatableSourceWorkingDir(object):
         instances in the `changesets` slot.
         """
 
-        lastrev = self._getLastSyncedRevision(root)
-        return self._getUpstreamChangesets(self, root, startfrom_rev=lastrev)
+        self._getUpstreamChangesets(self, root)
         
     def applyUpstreamChangesets(self, root, changesets):
         """
