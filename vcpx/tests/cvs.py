@@ -27,7 +27,7 @@ description:
 ----------------------------
 revision 1.2
 date: 2004/06/10 02:17:20;  author: goodger;  state: Exp;  lines: +3 -2
-updated
+*** empty log message ***
 ----------------------------
 revision 1.1
 date: 2004/06/03 13:50:58;  author: goodger;  state: Exp;
@@ -132,7 +132,7 @@ Added to project (exctracted from HISTORY.txt)
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
-        self.assertEqual(cset.log, "updated\n") 
+        self.assertEqual(cset.log, "") 
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.new_revision, '1.2')

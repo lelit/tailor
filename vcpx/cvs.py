@@ -140,7 +140,12 @@ class ChangeSetCollector(object):
             mesg.append(l[:-1])
             l = log.readline()
 
-        return (date, author, '\n'.join(mesg), entry, rev)
+        if len(mesg)==1 and mesg[0] == '*** empty log message ***':
+            changelog = ''
+        else:
+            changelog = '\n'.join(mesg)
+            
+        return (date, author, changelog, entry, rev, state)
     
     def __parseCvsLog(self, log):
         """Parse a complete CVS log."""
