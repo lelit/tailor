@@ -116,6 +116,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
 
         from changes import Changeset, ChangesetEntry
 
+        # cvsps output sample:
         ## ---------------------
         ## PatchSet 1500
         ## Date: 2004/05/09 17:54:22
@@ -204,7 +205,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         c = CvsAdd(working_dir=root)
         c(entry=entry)
 
-    def _commit(self, root, author, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -214,10 +215,13 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         log = NamedTemporaryFile(bufsize=0)
         log.write(remark)
         log.write('\n')
-        log.write(changelog)
+        if changelog:
+            log.write(changelog)
+            log.write('\n')
         
         c = CvsCommit(working_dir=root)
         c(entries=entries, logfile=log.name)
+        log.close()
         
     def _removeEntry(self, root, entry):
         """

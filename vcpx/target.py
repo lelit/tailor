@@ -49,7 +49,7 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def _commit(self, root, author, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """

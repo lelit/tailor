@@ -193,14 +193,23 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnAdd(working_dir=root)
         c(entry=entry)
 
-    def _commit(self, root, author, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
         c = SvnCommit(working_dir=root)
-        c(logmessage='%s\n\n%s' % (remark,changelog),
-          entries=' '.join(entries))
+        
+        logmessage = remark + '\n'
+        if changelog:
+            logmessage = logmessage + changelog + '\n'
+            
+        if entries:
+            entries = ' '.join(entries)
+        else:
+            entries = '.'
+            
+        c(logmessage=logmessage, entries=entries)
         
     def _removeEntry(self, root, entry):
         """

@@ -85,7 +85,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = DarcsAdd(working_dir=root)
         c(entry=entry)
 
-    def _commit(self, root, author, remark, changelog, entries):
+    def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
