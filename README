@@ -44,7 +44,7 @@ along with the vcpx directory to a location in your PATH.
 Examples
 ========
 
-1. Bootstrap a new taylored project, starting at upstream revision 10::
+1. Bootstrap a new tailored project, starting at upstream revision 10::
 
   $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
 
