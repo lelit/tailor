@@ -1,0 +1,98 @@
+ABOUT
+----------------------------------------------------------------------
+tailor.py is tool to synchronize CVS, Subversion, and darcs repositories.
+
+This script makes it easier to keep the upstream changes merged in
+a branch of a product, storing needed information such as the upstream
+URI and revision in special properties on the branched directory.
+
+
+INSTALLATION
+----------------------------------------------------------------------
+tailor.py is written in python, and thus python must be installed on your
+system to use it.
+
+Make tailor.py executable:
+
+ $ chmod +x tailor.py
+
+You can either run tailor.py where it is currently located, or move it
+along with the vcpx directory to a location in your PATH.
+
+
+EXAMPLES
+----------------------------------------------------------------------
+
+  # Bootstrap a new taylored project, starting at upstream revision 10
+  $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
+
+  # Bootstrap a new product, fetching from CVS and storing under SVN: this
+  # will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be already
+  # under SVN.
+  $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
+              --repository :pserver:cvs.zope.org:/cvs-repository \
+              --module CMF/CMFCore ~/svnwc/cmfcore
+  
+  # Showing each command bootstrap a new DARCS repos in "~/darcs/cmftopic"
+  # under which the upstream module will be extracted as "CMFTopic" (ie, the
+  # last component of the module name).
+  $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
+              -m CMF/CMFTopic ~/darcs/cmftopic
+              
+  # Merge upstream changes since last update/bootstrap
+  $ tailor.py ~/svnwc/MyProduct
+
+
+CONFIG FILE FORMAT
+----------------------------------------------------------------------
+
+Here's an example config file entry:
+
+ {'plone/atcontenttypes': {'module': 'ATContentTypes',
+                           'source_kind': 'cvs',
+                           'subdir': 'ATContentTypes',
+                           'target_kind': 'darcs',
+                           'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
+                           'upstream_revision': '2004-11-24 19:42:06 by ctheune'}}
+
+The above represents one entry in a config file.  You can multiple entries,
+but be careful to make sure have an extra bracket on the first and last lines
+of the file. Here's an example with three entries to illustrate this:
+
+ {'plone/atcontenttypes': {'module': 'ATContentTypes',
+                           'source_kind': 'cvs',
+                           'subdir': 'ATContentTypes',
+                           'target_kind': 'darcs',
+                           'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
+                           'upstream_revision': '2004-11-24 19:42:06 by ctheune'},
+  'plone/btreefolder2': {'module': 'Products/BTreeFolder2',
+                         'source_kind': 'cvs',
+                         'subdir': 'BTreeFolder2',
+                         'target_kind': 'darcs',
+                         'upstream_repos': ':pserver:anonymous@cvs.zope.org:/cvs-repository',
+                         'upstream_revision': '2004-06-16 23:45:45 by shane'},
+  'plone/cmfactionicons': {'module': 'CMF/CMFActionIcons',
+                           'source_kind': 'cvs',
+                           'subdir': 'CMFActionIcons',
+                           'target_kind': 'darcs',
+                           'upstream_repos': ':pserver:anonymous@cvs.zope.org:/cvs-repository',
+                           'upstream_revision': '2004-10-04 17:03:38 by tseaver'}}
+
+By convention, config files are named with the extension ".tailor", but this is
+not enforced.
+
+In the example above, 'plone/atcontenttypes' is a directory where the target source
+will be stored. The keys such 'module', 'source_kind', etc correspond to options
+of the same name. See the output of 'tailor.py' for more details. 
+
+
+FURTHER HELP
+----------------------------------------------------------------------
+See the output of tailor.py -h for some further tips. 
+
+
+AUTHOR
+----------------------------------------------------------------------
+Lele Gaifax <lele@nautilus.homeip.net>
+
+
