@@ -244,6 +244,8 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
               module=module,
               revision=revision)
             
+        self.__forceTagOnEachEntry(wdir)
+        
         entries = CvsEntries(wdir)
         
         # update cvsps cache, then loop over the changesets and find the
@@ -268,6 +270,40 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         assert found, "Something went wrong, did not find the right cvsps revision in '%s'" % wdir
         
         return last.revision
+
+    def __forceTagOnEachEntry(self, root):
+        """
+        Massage each CVS/Entries file, locking (ie, tagging) each
+        entry to its current CVS version.
+
+        This is to prevent silly errors such those that could arise
+        after a manual `cvs update` in the working directory.
+        """
+        
+        from os import walk, rename
+        from os.path import join
+
+        for dir, subdirs, files in walk(root):
+            if dir[-3:] == 'CVS':
+                efn = join(dir, 'Entries')
+                f = open(efn)
+                entries = f.readlines()
+                f.close()
+                rename(efn, efn+'.old')
+                
+                newentries = []
+                for e in entries:
+                    if e.startswith('/'):
+                        fields = e.split('/')
+                        fields[-1] = "T%s\n" % fields[2]
+                        newe = '/'.join(fields)
+                        newentries.append(newe)
+                    else:
+                        newentries.append(e)
+
+                f = open(efn, 'w')
+                f.writelines(newentries)
+                f.close()
     
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
