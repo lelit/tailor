@@ -55,7 +55,7 @@ Examples
   $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
               --repository :pserver:cvs.zope.org:/cvs-repository \
               --module CMF/CMFCore ~/svnwc/cmfcore
-  
+
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
    extracted as "CMFTopic" (ie, the last component of the module
@@ -77,6 +77,22 @@ will prompt the user to correct them. This is done after the upstream
 patch has been applied and before the final commit on the target
 system, so that manually tweaking the conflict can produce a clean
 patch.
+
+
+Shortcomings
+============
+
+Tailor currently suffers of the following reported problems:
+
+a) It does not handle "empty" CVS checkouts, in other words you cannot
+   bootstrap a project that has nothing in its CVS upstream
+   repository, or from a point in time where this condition was true.
+
+b) There is a bug related to the understanding of ``svn log --xml``
+   output that dirupt ``svn move`` upstream operation.
+
+This list will always be incomplete, but I'll do my best to keep it
+short :-)
 
 
 Tailor's metadata
