@@ -332,13 +332,13 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
 
-    def _addEntry(self, root, entry):
+    def _addEntries(self, root, entries):
         """
-        Add a new entry.
+        Add a sequence of entries.
         """
 
         c = SvnAdd(working_dir=root)
-        c(entry=entry)
+        c(entry=' '.join([e.name for e in entries]))
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -359,13 +359,13 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             
         c(logmessage=logmessage, entries=entries)
         
-    def _removeEntry(self, root, entry):
+    def _removeEntries(self, root, entries):
         """
-        Remove an entry.
+        Remove a sequence of entries.
         """
 
         c = SvnRemove(working_dir=root)
-        c(entry=entry)
+        c(entry=' '.join([e.name for e in entries]))
 
     def _renameEntry(self, root, oldentry, newentry):
         """

@@ -248,15 +248,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
    
-    def _addEntry(self, root, entry):
+    def _addEntries(self, root, entries):
         """
-        Add a new entry.
+        Add a sequence of entries.
         """
 
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --not-recursive"
                                   " --standard-verbosity %(entry)s")
-        c(entry=entry)
+        c(entry=' '.join([e.name for e in entries]))
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -275,15 +275,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if c.exit_status:
             raise ChangesetApplicationFailure("'darcs record' returned status %d" % c.exit_status)
         
-    def _removeEntry(self, root, entry):
+    def _removeEntries(self, root, entries):
         """
-        Remove an entry.
+        Remove a sequence of entries.
         """
 
         c = SystemCommand(working_dir=root,
                           command="darcs remove --standard-verbosity"
                                   " %(entry)s")
-        c(entry=entry)
+        c(entry=' '.join([e.name for e in entries]))
 
     def _renameEntry(self, root, oldentry, newentry):
         """

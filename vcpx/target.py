@@ -144,14 +144,9 @@ class SyncronizableTargetWorkingDir(object):
         # Likewise, sort removed one, but in reverse order
         removed.sort(lambda x,y: cmp(y.name, x.name))
                 
-        for e in added:
-            self._addEntry(root, e.name)
-
-        for e in renamed:
-            self._renameEntry(root, e.old_name, e.name)
-
-        for e in removed:
-            self._removeEntry(root, e.name)
+        self._addEntries(root, added)
+        self._renameEntries(root, renamed)
+        self._removeEntries(root, removed)
             
     def __registerAppliedChangeset(self, changeset):
         """
@@ -163,6 +158,14 @@ class SyncronizableTargetWorkingDir(object):
             self._registered_cs = []
 
         self._registered_cs.append(changeset)
+
+    def _addEntries(self, root, entries):
+        """
+        Add a sequence of entries
+        """
+
+        for e in entries:
+            self._addEntry(root, e.name)
         
     def _addEntry(self, root, entry):
         """
@@ -178,7 +181,15 @@ class SyncronizableTargetWorkingDir(object):
         """
         
         raise "%s should override this method" % self.__class__
+
+    def _removeEntries(self, root, entries):
+        """
+        Remove a sequence of entries.
+        """
         
+        for e in entries:
+            self._removeEntry(root, e.name)
+            
     def _removeEntry(self, root, entry):
         """
         Remove an entry.
@@ -186,6 +197,14 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
+    def _renameEntries(self, root, entries):
+        """
+        Rename a sequence of entries."
+        """
+        
+        for e in entries:
+            self._renameEntry(root, e.old_name, e.name)
+        
     def _renameEntry(self, root, oldentry, newentry):
         """
         Rename an entry.
