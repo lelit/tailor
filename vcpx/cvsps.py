@@ -223,6 +223,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             cvsup(output=True, entry=e.name, revision=e.new_revision)
 
             if cvsup.exit_status:
+                if logger: logger.warning("'cvs update' on %s exited "
+                                          "with status %d, retrying once..." %
+                                          (e.name, cvsup.exit_status))
+                cvsup(output=True, entry=e.name, revision=e.new_revision)
+                if cvsup.exit_status:
+                    if logger: logger.warning("'cvs update' on %s exited "
+                                              "with status %d, retrying "
+                                              "one last time..." %
+                                              (e.name, cvsup.exit_status))
+                    cvsup(output=True, entry=e.name, revision=e.new_revision)
+                    
+            if cvsup.exit_status:
                 raise ChangesetApplicationFailure(
                     "'cvs update' returned status %s" % cvsup.exit_status)
             
