@@ -280,10 +280,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Remove a sequence of entries.
         """
 
-        c = SystemCommand(working_dir=root,
-                          command="darcs remove %(entry)s")
-        c(entry=' '.join([e.name for e in entries]))
+        # Since the source VCS already deleted the entry, and given that
+        # darcs will do the right thing with it, do nothing here, instead
+        # of 
+        #         c = SystemCommand(working_dir=root,
+        #                           command="darcs remove %(entry)s")
+        #         c(entry=' '.join([e.name for e in entries]))
+        # that raises status 512 on darcs not finding the entry.
 
+        pass
+    
     def _renameEntry(self, root, oldentry, newentry):
         """
         Rename an entry.
