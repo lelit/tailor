@@ -235,7 +235,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         last = csets[-1]
         self.__setLastUpstreamRevision(wdir, last.revision)
 
-    def _commit(self, root, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """

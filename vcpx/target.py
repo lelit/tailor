@@ -47,7 +47,8 @@ class SyncronizableTargetWorkingDir(object):
                                                  changeset.date)
         changelog = changeset.log
         entries = [e.name for e in changeset.entries]
-        self._commit(root, changeset.author, remark, changelog, entries)
+        self._commit(root, changeset.date, changeset.author,
+                     remark, changelog, entries)
 
     def _replayChangeset(self, root, changeset):
         """
@@ -70,7 +71,7 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def _commit(self, root, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -97,8 +98,11 @@ class SyncronizableTargetWorkingDir(object):
         some other VC system, importing everything's there.
         """
 
+        from datetime import datetime
+
+        now = datetime.now()
         self._initializeWorkingDir(root)
-        self._commit(root, PATCH_AUTHOR,
+        self._commit(root, now, PATCH_AUTHOR,
                      'Tailorization of %s@%s' % (repository, revision))
 
     def _initializeWorkingDir(self, root, addentry=None):

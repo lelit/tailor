@@ -224,7 +224,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         svnco = SvnCheckout(working_dir=basedir)
         svnco(repository=repository, wc=module, revision=revision)
         
-    def _commit(self, root, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """

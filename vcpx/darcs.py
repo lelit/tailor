@@ -191,13 +191,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         c = DarcsAdd(working_dir=root)
         c(entry=entry)
 
-    def _commit(self, root, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
         c = DarcsRecord(working_dir=root)
-        c(output=True, patchname=remark, logmessage=changelog, author=author)
+        c(output=True, date=date, patchname=remark,
+          logmessage=changelog, author=author)
         
     def _removeEntry(self, root, entry):
         """
