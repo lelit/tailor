@@ -21,7 +21,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --pipe %(entries)s"
+    COMMAND = "darcs record --all --pipe --look-for-adds %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
@@ -30,7 +30,7 @@ class DarcsRecord(SystemCommand):
         logmessage = kwargs.get('logmessage')
         if not logmessage:
             logmessage = ''
-            
+
         input = "%s\n%s\n%s\n%s\n" % (date, author, patchname, logmessage)
         
         return SystemCommand.__call__(self, output=output, input=input,
