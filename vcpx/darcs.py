@@ -21,7 +21,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --pipe --look-for-adds %(entries)s"
+    COMMAND = "darcs record --all --pipe %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
@@ -48,6 +48,10 @@ class DarcsRemove(SystemCommand):
 
 class DarcsAdd(SystemCommand):
     COMMAND = "darcs add --not-recursive --standard-verbosity %(entry)s"
+
+
+class DarcsAddAll(SystemCommand):
+    COMMAND = "darcs add --recursive --standard-verbosity %(entry)s"
 
 
 class DarcsTag(SystemCommand):
@@ -325,4 +329,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if c.exit_status:
             raise TargetInitializationFailure(
                 "'darcs initialize' returned status %s" % c.exit_status)
+        else:
+            c = DarcsAddAll(working_dir=root)
+            c(entry=module)
 
