@@ -47,34 +47,14 @@ class CvsLog(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_cvslog(log, sincedate=None, url=None):
+def changesets_from_cvslog(log, sincedate=None, reposprefix=None):
     """
     Parse CVS log.
     """
 
-    ## RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
-    ## Working file: THANKS.txt
-    ## head: 1.2
-    ## branch:
-    ## locks: strict
-    ## access list:
-    ## symbolic names:
-    ## keyword substitution: kv
-    ## total revisions: 2;      selected revisions: 2
-    ## description:
-    ## ----------------------------
-    ## revision 1.2
-    ## date: 2004/06/10 02:17:20;  author: goodger;  state: Exp;  lines: +3 -2
-    ## updated
-    ## ----------------------------
-    ## revision 1.1
-    ## date: 2004/06/03 13:50:58;  author: goodger;  state: Exp;
-    ## Added to project (exctracted from HISTORY.txt)
-    ## =====================================================================...
-
     from datetime import timedelta
 
-    collected = ChangeSetCollector(log, url)
+    collected = ChangeSetCollector(log, reposprefix)
     collapsed = []
 
     threshold = timedelta(seconds=180)
@@ -102,7 +82,7 @@ def changesets_from_cvslog(log, sincedate=None, url=None):
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
     
-    def __init__(self, log, url):
+    def __init__(self, log, reposprefix):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -112,7 +92,7 @@ class ChangeSetCollector(object):
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
        
-        self.__parseCvsLog(log, url)
+        self.__parseCvsLog(log, reposprefix)
         
     def __iter__(self):
         keys = self.changesets.keys()
@@ -214,28 +194,13 @@ class ChangeSetCollector(object):
             
         return (date, author, changelog, entry, rev, state, newentry)
     
-    def __parseCvsLog(self, log, url):
+    def __parseCvsLog(self, log, reposprefix):
         """Parse a complete CVS log."""
 
-        def get_entry_from_path(path, url=url):
-            # Given the CVSROOT of this wc, say
-            #   ":ext:caia:/tmp/reps/modulo"
-            # extract the "entry" portion (a relative path) from what
-            # cvs rlog says, ie
-            #   "/tmp/reps/modulo/dirb/c.txt,v"
-            # that is to say "dirb/c.txt"
-
-            from os.path import split
-
+        def get_entry_from_rcsfile(path, prefixlen=len(reposprefix)):
             path = path.replace('Attic/', '', 1)
-            
-            prefix = split(path)[0]
-            while prefix:
-                if url.endswith(prefix):
-                    return path[len(prefix)+1:-2]
+            return path[prefixlen:-2]
 
-                prefix = split(prefix)[0]
-            
         while 1:
             l = log.readline()
             while l and not l.startswith('RCS file: '):
@@ -244,7 +209,7 @@ class ChangeSetCollector(object):
             if not l.startswith('RCS file: '):
                 break
 
-            entry = get_entry_from_path(l[10:-1])
+            entry = get_entry_from_rcsfile(l[10:-1])
             
             l = log.readline()
             while l and l <> '----------------------------\n':
@@ -276,11 +241,12 @@ class CvsWorkingDir(CvspsWorkingDir):
         from time import strptime
         from datetime import datetime
 
+        entries = CvsEntries(root)
+        
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
             # Start from the ancient entry timestamp.
-            entries = CvsEntries(root)
             ancient = entries.getAncientEntry()
             since = ancient.timestamp.isoformat(sep=' ')
             sincedate = None
@@ -289,7 +255,10 @@ class CvsWorkingDir(CvspsWorkingDir):
             since,author = sincerev.split(' by ')
             y,m,d,hh,mm,ss,d1,d2,d3 = strptime(since, "%Y-%m-%d %H:%M:%S")
             sincedate = datetime(y,m,d,hh,mm,ss)
-            
+
+        pivot = entries.getPivotEntry()
+        reposprefix = self.__determineReposPrefix(root, pivot)
+        
         branch = ''
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
@@ -305,12 +274,18 @@ class CvsWorkingDir(CvspsWorkingDir):
         changesets = []
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
-        for cs in changesets_from_cvslog(log, sincedate,
-                                         url=join(repository,module)):
+        for cs in changesets_from_cvslog(log, sincedate, reposprefix):
             changesets.append(cs)
 
         return changesets
     
+    def __determineReposPrefix(self, root, pivot):
+        cvslog = SystemCommand(working_dir=root,
+                               command="cvs log -R %(entry)s")
+
+        rcsfile = cvslog(output=True, entry=pivot.filename).readline()
+        return rcsfile[:rcsfile.index(pivot.filename)]
+
 
 class CvsEntry(object):
     """Collect the info about a file in a CVS working dir."""
@@ -413,6 +388,8 @@ class CvsEntries(object):
             return None
 
     def getAncientEntry(self):
+        """Find and return the older entry."""
+        
         latest = None
         for e in self.files.values():
             if not latest:
@@ -436,3 +413,14 @@ class CvsEntries(object):
 
         return latest
     
+    def getPivotEntry(self):
+        """Find and return the first file entry."""
+
+        if self.files:
+            return self.files[self.files.keys()[0]]
+        else:
+            for d in self.directories.values():
+                e = d.getPivotEntry()
+
+                if e:
+                    return e

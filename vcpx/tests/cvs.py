@@ -36,7 +36,7 @@ class CvsEntryTest(TestCase):
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""
 
-    SIMPLE_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
+    SIMPLE_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     SIMPLE_TEST = """\
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
 head: 1.2
@@ -58,7 +58,7 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
-    DOUBLE_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
+    DOUBLE_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     DOUBLE_TEST = """\
 RCS file: /cvsroot/docutils/docutils/docutils/statemachine.py,v
 head: 1.16
@@ -113,7 +113,7 @@ updated
 =============================================================================
 """
     
-    DELETED_TEST_URL = ":ext:usr@cvs.sourceforge.net:/cvsroot/docutils/docutils"
+    DELETED_TEST_PREFIX = "/cvsroot/docutils/docutils/"
     DELETED_TEST = """\
 RCS file: /cvsroot/docutils/docutils/Attic/THANKS.txt,v
 head: 1.2
@@ -135,7 +135,7 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
-    COLLAPSE_TEST_URL = "/usr/local/CVSROOT/PyObjC"
+    COLLAPSE_TEST_PREFIX = "/usr/local/CVSROOT/PyObjC/"
     COLLAPSE_TEST = """\
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
 head: 1.4
@@ -190,7 +190,7 @@ Fake changelog 4
 =============================================================================
 """
 
-    BRANCHES_TEST_URL = "cvs.sourceforge.net:/cvsroot/archetypes/Archetypes"
+    BRANCHES_TEST_PREFIX = "/cvsroot/archetypes/Archetypes/"
     BRANCHES_TEST = """\
 RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
 head: 1.18
@@ -220,7 +220,8 @@ Fixed deepcopy problem in validations
         """Verify basic cvs log parser behaviour"""
 
         log = StringIO(self.SIMPLE_TEST)
-        csets = changesets_from_cvslog(log, url=self.SIMPLE_TEST_URL)
+        csets = changesets_from_cvslog(log,
+                                       reposprefix=self.SIMPLE_TEST_PREFIX)
 
         self.assertEqual(len(csets), 2)
         
@@ -247,7 +248,8 @@ Fixed deepcopy problem in validations
         """Verify cvs log parser grouping capability"""
 
         log = StringIO(self.DOUBLE_TEST)
-        csets = changesets_from_cvslog(log, url=self.DOUBLE_TEST_URL)
+        csets = changesets_from_cvslog(log,
+                                       reposprefix=self.DOUBLE_TEST_PREFIX)
 
         self.assertEqual(len(csets), 5)
 
@@ -285,7 +287,8 @@ Fixed deepcopy problem in validations
         """Verify recognition of deleted entries in the cvs log"""
 
         log = StringIO(self.DELETED_TEST)
-        csets = changesets_from_cvslog(log, url=self.DELETED_TEST_URL)
+        csets = changesets_from_cvslog(log,
+                                       reposprefix=self.DELETED_TEST_PREFIX)
 
         self.assertEqual(len(csets), 2)
 
@@ -302,7 +305,8 @@ Fixed deepcopy problem in validations
         """Verify the mechanism used to collapse related changesets"""
 
         log = StringIO(self.COLLAPSE_TEST)
-        csets = changesets_from_cvslog(log, url=self.COLLAPSE_TEST_URL)
+        csets = changesets_from_cvslog(log,
+                                       reposprefix=self.COLLAPSE_TEST_PREFIX)
 
         self.assertEqual(len(csets), 5)
 
@@ -330,7 +334,8 @@ Fixed deepcopy problem in validations
         """Verify the parser groks with the branches info on revision"""
 
         log = StringIO(self.BRANCHES_TEST)
-        csets = changesets_from_cvslog(log, url=self.BRANCHES_TEST_URL)
+        csets = changesets_from_cvslog(log,
+                                       reposprefix=self.BRANCHES_TEST_PREFIX)
 
         self.assertEqual(len(csets), 3)
 
@@ -342,7 +347,6 @@ Fixed deepcopy problem in validations
 
         log = StringIO(self.DELETED_TEST)
         csets = changesets_from_cvslog(log, datetime(2004, 6, 10, 2, 17, 20),
-                                       url=self.DELETED_TEST_URL)
+                                       reposprefix=self.DELETED_TEST_PREFIX)
 
         self.assertEqual(len(csets), 0)
-       
