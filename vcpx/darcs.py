@@ -255,7 +255,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = SystemCommand(working_dir=root,
-                          command="darcs add --case-ok --recursive"
+                          command="darcs add --case-ok --not-recursive"
                                   " --quiet %(entry)s")
         c(entry=' '.join([shrepr(e.name) for e in entries]))
         
