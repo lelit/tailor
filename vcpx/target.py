@@ -16,6 +16,14 @@ import socket
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
+BOOTSTRAP_PATCHNAME = 'Tailorization of %s'
+BOOTSTRAP_CHANGELOG = """\
+Import of the upstream sources from the repository
+
+ %(repository)s
+
+as of revision %(revision)s
+"""
 
 class TargetInitializationFailure(Exception):
     pass
@@ -112,9 +120,8 @@ class SyncronizableTargetWorkingDir(object):
         now = datetime.now()
         self._initializeWorkingDir(root, module)
         self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
-                     'Tailorization of %s' % module,
-                     'Upstream sources from %s at revision %s' % (repository,
-                                                                  revision),
+                     BOOTSTRAP_PATCHNAME % module,
+                     BOOTSTRAP_CHANGELOG % locals(),
                      entries=[module])
 
     def _initializeWorkingDir(self, root, module, addentry=None):

@@ -128,12 +128,7 @@ class ChangeSetCollector(object):
 
         # NB: the _getUpstreamChangesets() below depends on this format
 
-        if len(changelog)>33:
-            msg = changelog[:30] + '...'
-        else:
-            msg = changelog
-        msg = msg.replace('\n', '')
-        return '%s; %s, "%s"' % (timestamp, author, msg)
+        return str(timestamp)
 
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
@@ -267,12 +262,15 @@ class CvsWorkingDir(CvspsWorkingDir):
         from os.path import join, exists
 
         if not sincerev:
+            # We are bootstrapping, trying to collimate the
+            # actual revision on disk with the changesets.
+            # Start from the ancient entry timestamp.
             entries = CvsEntries(root)
-            latest = entries.getMostRecentEntry()
-            since = latest.timestamp.isoformat(sep=' ')
+            ancient = entries.getAncientEntry()
+            since = ancient.timestamp.isoformat(sep=' ')
         else:
             # Assume this is from __getGlobalRevision()
-            since = sincerev.split(';')[0]
+            since = sincerev
             
         branch = ''
         fname = join(root, 'CVS', 'Tag')
@@ -385,7 +383,7 @@ class CvsEntries(object):
         except KeyError:
             return None
 
-    def getMostRecentEntry(self):
+    def getAncientEntry(self):
         latest = None
         for e in self.files.values():
             if not latest:
@@ -395,7 +393,7 @@ class CvsEntries(object):
                 latest = e
 
         for d in self.directories.values():
-            e = d.getMostRecentEntry()
+            e = d.getAncientEntry()
             
             if not latest:
                 latest = e
