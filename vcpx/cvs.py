@@ -244,15 +244,16 @@ class CvsWorkingDir(CvspsWorkingDir):
     
     def getUpstreamChangesets(self, root, sincerev=None):
         from os.path import join, exists
-
+        from datetime import timedelta
+        
         entries = CvsEntries(root)
         
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
-            # Start from the ancient entry timestamp.
-            ancient = entries.getAncientEntry()
-            since = ancient.timestamp.isoformat(sep=' ')
+            youngest = entries.getYoungestEntry().timestamp
+            youngest -= timedelta(days=15)
+            since = youngest.isoformat(sep=' ')
         else:
             # Assume this is from __getGlobalRevision()
             since,author = sincerev.split(' by ')
@@ -378,28 +379,23 @@ class CvsEntries(object):
         except KeyError:
             return None
 
-    def getAncientEntry(self):
-        """Find and return the older entry."""
+    def getYoungestEntry(self):
+        """Find and return the most recently changed entry."""
         
         latest = None
+        
         for e in self.files.values():
-            if not latest:
-                latest = e
-
-            if e.timestamp < latest.timestamp:
+            if not latest or e.timestamp > latest.timestamp:
                 latest = e
 
         for d in self.directories.values():
-            e = d.getAncientEntry()
+            e = d.getYoungestEntry()
 
             # skip if there are no entries in the directory
             if not e:
                 continue
             
-            if not latest:
-                latest = e
-
-            if e.timestamp < latest.timestamp:
+            if not latest or e.timestamp > latest.timestamp:
                 latest = e
 
         return latest
