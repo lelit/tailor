@@ -76,8 +76,10 @@ class UpdatableSourceWorkingDir(object):
             try:
                 res = self._applyChangeset(root, c, logger=logger)
             except:
-                if logger: logger.critical("Couldn't apply changeset %s",
-                                           c.revision, exc_info=True)
+                if logger:
+                    logger.critical("Couldn't apply changeset %s",
+                                    c.revision, exc_info=True)
+                    logger.debug(str(c))
                 raise
             
             if res:

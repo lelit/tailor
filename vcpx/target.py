@@ -61,8 +61,12 @@ class SyncronizableTargetWorkingDir(object):
         by commitDelayedChangesets().
         """
 
-        self._replayChangeset(root, changeset, logger)
-
+        try:
+            self._replayChangeset(root, changeset, logger)
+        except:
+            if logger: logger.critical(str(changeset))
+            raise
+        
         if delayed_commit:
             self.__registerAppliedChangeset(changeset)
         else:
@@ -73,7 +77,6 @@ class SyncronizableTargetWorkingDir(object):
             remark = '%s: changeset %s' % (module, changeset.revision)
             changelog = changeset.log
             entries = [e.name for e in changeset.entries]
-
             self._commit(root, changeset.date, changeset.author,
                          remark, changelog, entries)
 
@@ -121,7 +124,6 @@ class SyncronizableTargetWorkingDir(object):
             len(self._registered_cs), mindate, maxdate)
         changelog = '\n'.join(combined_log)
         entries = combined_entries.keys()
-        
         self._commit(root, datetime.now(), authors,
                          remark, changelog, entries)
     
