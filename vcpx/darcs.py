@@ -143,14 +143,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                                               revision)
         self._createTag(root, 'Upstream revision %s' % revision)
 
-    def _initializeWorkingDir(self, root):
-        """
-        Execute `darcs initialize`.
-        """
-        
-        c = DarcsInitialize(working_dir=root)
-        c(output=True)
-
     def _createTag(self, root, tagname):
         """
         Tag the current situation and remember this as the *last tag*.
@@ -180,3 +172,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             f.close()
             
             return tagname
+
+    def _initializeWorkingDir(self, root):
+        """
+        Execute `darcs initialize`.
+        """
+        
+        c = DarcsInitialize(working_dir=root)
+        c(output=True)
+

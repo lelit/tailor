@@ -252,23 +252,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnMv(working_dir=root)
         c(old=oldentry, new=newentry)
 
-    def _initializeWorkingDir(self, root):
+    def _initializeWorkingDir(self, root, addentry=None):
         """
         Add the given directory to an already existing svn working tree.
         """
         
-        from os.path import split, walk
-
-        basedir,wdir = split(root)
-        c = SvnAdd(working_dir=basedir)
-        c(entry=wdir)
-
-        for dir, subdirs, files in walk(root):
-            if 'CVS' in subdirs:
-                subdirs.remove('CVS')
-            if '_darcs' in subdirs:
-                subdirs.remove('_darcs')
-            c = SvnAdd(working_dir=dir)
-            for d in subdirs+files:
-                c(entry=d)
-
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, SvnAdd)

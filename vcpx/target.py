@@ -86,11 +86,27 @@ class SyncronizableTargetWorkingDir(object):
         self._commit(root, PATCH_AUTHOR,
                      'Tailorization of %s@%s' % (repository, revision))
 
-    def _initializeWorkingDir(self, root):
+    def _initializeWorkingDir(self, root, addentry=None):
         """
         Assuming the `root` directory is a new working copy extracted
         from some VC repository, add it and all its content to the
         target repository.
         """
+
+        assert addentry, "Subclass should have specified something as addentry"
         
-        raise "%s should override this method" % self.__class__
+        from os.path import split, walk
+
+        basedir,wdir = split(root)
+        c = addentry(working_dir=basedir)
+        c(entry=wdir)
+
+        for dir, subdirs, files in walk(root):
+            for excd in ['.svn', '_darcs', 'CVS']:
+                if excd in subdirs:
+                    subdirs.remove(excd)
+
+            c = addentry(working_dir=dir)
+            for d in subdirs+files:
+                c(entry=d)
+

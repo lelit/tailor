@@ -290,22 +290,9 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         self._removeEntry(root, oldentry)
         self._addEntry(root, newentry)
 
-    def _initializeWorkingDir(self, root):
+    def _initializeWorkingDir(self, root, addentry=None):
         """
         Add the given directory to an already existing CVS working tree.
         """
-        
-        from os.path import split, walk
 
-        basedir,wdir = split(root)
-        c = CvsAdd(working_dir=basedir)
-        c(entry=wdir)
-
-        for dir, subdirs, files in walk(root):
-            if '.svn' in subdirs:
-                subdirs.remove('.svn')
-            if '_darcs' in subdirs:
-                subdirs.remove('_darcs')
-            c = CvsAdd(working_dir=dir)
-            for d in subdirs+files:
-                c(entry=d)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, CvsAdd)
