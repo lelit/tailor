@@ -127,7 +127,7 @@ class Changeset(object):
             entries = getattr(self, ak.lower()+'Entries')()
             if entries:
                 s.append('%s: %s' % (ak, ','.join([e.name
-                                                   for e in self.entries])))
+                                                   for e in entries])))
         s.append('Log: %s' % self.log)
         return '\n'.join(s)
 
