@@ -17,7 +17,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --standard-verbosity --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
+    COMMAND = "darcs record --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
 
     def __call__(self, output=None, dry_run=False, patchname=None, **kwargs):
         logfile = kwargs.get('logfile')
@@ -110,7 +110,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = DarcsRecord(working_dir=root)
-        c(patchname=remark, logmessage=changelog, author=author)
+        c(output=True, patchname=remark, logmessage=changelog, author=author)
         
     def _removeEntry(self, root, entry):
         """

@@ -72,3 +72,7 @@ if __name__ == '__main__':
                   '1')
     dwd.applyUpstreamChangesets('/tmp/prove/provapyde')
 
+    dwd = DualWorkingDir('cvs', 'darcs')
+    dwd.bootstrap('/tmp/prove/PyApache', '/usr/local/CVSROOT/', 'HEAD')
+    dwd.applyUpstreamChangesets('/tmp/prove/PyApache')
+    

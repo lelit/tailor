@@ -13,7 +13,7 @@ from target import SyncronizableTargetWorkingDir
 
 
 class CvsPsLog(SystemCommand):
-    COMMAND = "cvsps %(update)s-b%(branch)s"
+    COMMAND = "cvsps %(update)s-b %(branch)s 2>/dev/null"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         update = kwargs.get('update', '')
@@ -26,7 +26,7 @@ class CvsPsLog(SystemCommand):
 
     
 class CvsUpdate(SystemCommand):
-    COMMAND = 'cvs %(dry)supdate -d -r%(revision)s %(entry)s2>&1'
+    COMMAND = 'cvs -q %(dry)supdate -d -r%(revision)s %(entry)s2>&1'
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         if dry_run:
@@ -39,19 +39,19 @@ class CvsUpdate(SystemCommand):
 
 
 class CvsAdd(SystemCommand):
-    COMMAND = "cvs add %(entry)s"
+    COMMAND = "cvs -q add %(entry)s"
 
 
 class CvsCommit(SystemCommand):
-    COMMAND = "cvs ci -F %(logfile)s %(entries)s"
+    COMMAND = "cvs -q ci -F %(logfile)s %(entries)s"
     
 
 class CvsRemove(SystemCommand):
-    COMMAND = "cvs remove %(entry)s"
+    COMMAND = "cvs -q remove %(entry)s"
 
 
 class CvsCheckout(SystemCommand):
-    COMMAND = "cvs -d%(repository)s checkout -r %(revision)s %(module)s"
+    COMMAND = "cvs -q -d%(repository)s checkout -r %(revision)s %(module)s"
 
 
 from textwrap import TextWrapper
@@ -97,27 +97,28 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         f = open(fname, 'w')
         f.write(revision)
         f.close()
-        
+
     def _getUpstreamChangesets(self, root):
-        cvsps = CvsPsLog(update=True, working_dir=root)
+        cvsps = CvsPsLog(working_dir=root)
 
         startfrom_rev = self.__getLastUpstreamRevision(root)
         if startfrom_rev:
-            startfrom_rev = int(startfrom_rev)
+            startfrom_rev = int(startfrom_rev)+1
             
         from os.path import join, exists
         
-        fname = join(self.root, 'CVS', 'Tag')
+        fname = join(root, 'CVS', 'Tag')
         if exists(fname):
             branch=open(fname).read()[1:-1]
         else:
             branch="HEAD"
 
         changesets = []
-        log = cvsps(output=True, branch=branch)
+        log = cvsps(output=True, update=True, branch=branch)
         for cs in self.__enumerateChangesets(log):
-            if not startfrom_rev or (startfrom_rev<=cs.revision):
+            if not startfrom_rev or (startfrom_rev<=int(cs.revision)):
                 changesets.append(cs)
+
         return changesets
     
     def __enumerateChangesets(self, log):
@@ -196,9 +197,9 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
 
     def _applyChangeset(self, root, changeset):
         cvsup = CvsUpdate(working_dir=root)
-        for e in cs.entries:
+        for e in changeset.entries:
             cvsup(entry=e.name, revision=e.new_revision)
-        self.__setLastUpstreamRevision(root, revision)
+        self.__setLastUpstreamRevision(root, changeset.revision)
         
     ## SyncronizableTargetWorkingDir
 
@@ -222,9 +223,17 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
         the name of the tag to get.
         """
 
-        c = CvsCheckout(working_dir=basedir)
-        c(repository=repository, module=module, revision=revision)
+        from os.path import join
         
+        c = CvsCheckout(working_dir=basedir)
+        c(output=True, repository=repository, module=module, revision=revision)
+
+        # update cvsps cache and get its last CVS "revision"
+        wdir = join(basedir, module)
+        csets = self._getUpstreamChangesets(wdir)
+        last = csets[-1]
+        self.__setLastUpstreamRevision(wdir, last.revision)
+
     def _commit(self, root, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
