@@ -119,11 +119,12 @@ class SyncronizableTargetWorkingDir(object):
 
         assert addentry, "Subclass should have specified something as addentry"
         
-        from os.path import split, walk
+        from os.path import split
+        from os import walk
 
         basedir,wdir = split(root)
         c = addentry(working_dir=basedir)
-        c(entry=wdir)
+        c(entry=repr(wdir))
 
         for dir, subdirs, files in walk(root):
             for excd in ['.svn', '_darcs', 'CVS']:
@@ -132,5 +133,5 @@ class SyncronizableTargetWorkingDir(object):
 
             c = addentry(working_dir=dir)
             for d in subdirs+files:
-                c(entry=d)
+                c(entry=repr(d))
 
