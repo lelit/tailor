@@ -354,16 +354,15 @@ class TailorizedProject(object):
                 print "Applying %d upstream changesets" % nchanges
 
             try:
-                l,c = dwd.applyUpstreamChangesets(proj,self.module, changesets,
-                                                  applyable=self.applyable,
-                                                  applied=self.applied,
-                                                  logger=self.logger,
-                                                  delayed_commit=single_commit)
+                last, conflicts = dwd.applyUpstreamChangesets(
+                    proj, self.module, changesets, applyable=self.applyable,
+                    applied=self.applied, logger=self.logger,
+                    delayed_commit=single_commit)
             except:
                 self.logger.exception('Upstream change application failed')
                 raise
             
-            if l:
+            if last:
                 if single_commit:
                     dwd.commitDelayedChangesets(proj, concatenate_logs)
 
