@@ -24,7 +24,7 @@ if __name__ == '__main__':
     else:
         from vcpx.tailor import main, ExistingProjectError, ProjectNotTailored
         from vcpx.target import TargetInitializationFailure
-        from vcpx.source import InvocationError
+        from vcpx.source import InvocationError, GetUpstreamChangesetsFailure
         from vcpx.cvs import EmptyRepositoriesFoolsMe
         
         if len(sys.argv) == 1:
@@ -39,8 +39,12 @@ if __name__ == '__main__':
         except TargetInitializationFailure, exc:
             print exc
         except EmptyRepositoriesFoolsMe, exc:
-            print exc, "Maybe wrong module?"
+            print exc
+            print "Maybe wrong module/repository?"
         except InvocationError, exc:
+            print exc
+            print "See '%s --help'" % sys.argv[0]
+        except GetUpstreamChangesetsFailure, exc:
             print exc
 
 

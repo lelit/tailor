@@ -265,19 +265,28 @@ class TailorizedProject(object):
         dwd = DualWorkingDir(source_kind, target_kind)
         self.logger.info("getting %s revision '%s' of '%s' from '%s'" % (
             source_kind, revision, module, repository))
-        actual = dwd.checkoutUpstreamRevision(self.root, repository,
-                                              module, revision,
-                                              subdir=subdir,
-                                              logger=self.logger)
 
+        try:
+            actual = dwd.checkoutUpstreamRevision(self.root, repository,
+                                                  module, revision,
+                                                  subdir=subdir,
+                                                  logger=self.logger)
+        except:
+            self.logger.exception('Checkout failed!')
+            raise
+        
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
         if not subdir:
             subdir = module
-            
-        dwd.initializeNewWorkingDir(self.root, repository, subdir, actual)
 
+        try:
+            dwd.initializeNewWorkingDir(self.root, repository, subdir, actual)
+        except:
+            self.logger.exception('Working copy initialization failed!')
+            raise
+        
         self.source_kind = source_kind
         self.target_kind = target_kind
         self.upstream_repos = repository
@@ -338,12 +347,16 @@ class TailorizedProject(object):
         if nchanges:
             if self.verbose:
                 print "Applying %d upstream changesets" % nchanges
+
+            try:
+                l,c = dwd.applyUpstreamChangesets(proj, changesets,
+                                                  applyable=self.applyable,
+                                                  applied=self.applied,
+                                                  logger=self.logger,
+                                                  delayed_commit=single_commit)
+            except:
+                self.logger.exception('Upstream change application failed')
                 
-            l,c = dwd.applyUpstreamChangesets(proj, changesets,
-                                              applyable=self.applyable,
-                                              applied=self.applied,
-                                              logger=self.logger,
-                                              delayed_commit=single_commit)
             if l:
                 if single_commit:
                     dwd.commitDelayedChangesets(proj, concatenate_logs)

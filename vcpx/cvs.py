@@ -308,6 +308,10 @@ class CvsWorkingDir(CvspsWorkingDir):
         changesets = []
         log = cvslog(output=True, since=since, branch=branch,
                      repository=repository, module=module)
+
+        if cvslog.exit_status:
+            raise GetUpstreamChangesetsFailure("'cvs log' on %r returned status %d" % (root, cvslog.exit_status))
+                
         for cs in changesets_from_cvslog(log, module):
             for e in cs.entries:
                 # If the entry is not already there, and, for whatever

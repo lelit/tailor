@@ -12,7 +12,8 @@ This module contains supporting classes for Subversion.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from source import UpdatableSourceWorkingDir, \
+     ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
@@ -233,10 +234,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         
         if svnlog.exit_status:
             return []
+
+        svninfo = SvnInfo(working_dir=root)
+        info = svninfo(entry='.')
+
+        if svninfo.exit_status:
+            raise GetUpstreamChangesetsFailure('svn info on %r exited with status %d' % (root, svninfo.exit_status))
         
-        url = SvnInfo(working_dir=root)(entry='.')['URL']
-        
-        return self.__parseSvnLog(log, url)
+        return self.__parseSvnLog(log, info['URL'])
 
     def __parseSvnLog(self, log, url):
         """Return an object representation of the ``svn log`` thru HEAD."""
@@ -284,8 +289,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 raise TargetInitializationFailure(
                     "'svn checkout' returned status %s" % svnco.exit_status)
 
-        actual = SvnInfo(working_dir=wdir)(entry='.')['Revision']
+        svninfo = SvnInfo(working_dir=wdir)
+        info = svninfo(entry='.')
+        if svninfo.exit_status:
+            raise GetUpstreamChangesetsFailure(
+                'svn info on %r exited with status %d' %
+                (wdir, svninfo.exit_status))        
 
+        actual = info['Revision']
+        
         if logger: logger.info("working copy up to svn revision %s",
                                actual)
         
@@ -344,7 +356,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from os.path import exists, join
 
         if not exists(join(root, '.svn')):
-            raise TargetInitializationFailure("'%s' should already be under SVN" % root)
+            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already be under SVN" % root)
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, module,
                                                             SvnAdd)

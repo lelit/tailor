@@ -24,10 +24,25 @@ Either abort the session with Ctrl-C, or manually correct the situation
 with a Ctrl-Z and a few "svn resolved". What would you like to do?
 """
 
+class GetUpstreamChangesetsFailure(Exception):
+    """
+    Signals an underlying failure getting upstream changes.
+    """
+    
+    pass
+
 class ChangesetApplicationFailure(Exception):
+    """
+    Signals something went wrong applying upstream changes.
+    """
+    
     pass
 
 class InvocationError(Exception):
+    """
+    Denotes some kind of trouble with the given parameters.
+    """
+    
     pass
 
 class UpdatableSourceWorkingDir(object):
