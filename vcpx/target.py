@@ -53,7 +53,7 @@ class SyncronizableTargetWorkingDir(object):
 
         module = split(root)[1]
         
-        remark = '%s: Upstream changeset %s' % (module, changeset.revision)
+        remark = '%s: changeset %s' % (module, changeset.revision)
         changelog = changeset.log
         entries = [e.name for e in changeset.entries]
         self._commit(root, changeset.date, changeset.author,

@@ -120,7 +120,7 @@ class TailorizedProject(object):
 
         self.upstream_revision = changeset.revision
         self.__saveStatus()
-        print "# Applied upstream changeset %s" % changeset.revision
+        print "# Applied changeset %s" % changeset.revision
 
     def update(self):
         """

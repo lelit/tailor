@@ -69,7 +69,7 @@ class UpdatableSourceWorkingDir(object):
                 continue
             
             if logger:
-                logger.info("Applying upstream changeset %s", c.revision)
+                logger.info("Applying changeset %s", c.revision)
 
             try:
                 res = self._applyChangeset(root, c, logger=logger)
