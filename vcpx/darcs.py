@@ -73,7 +73,7 @@ def changesets_from_darcschanges(changes):
         def endElement(self, name):
             if name == 'patch':
                 # Sort the paths to make tests easier
-                self.current['entries'].sort()
+                self.current['entries'].sort(lambda x,y: cmp(x.name, y.name))
                 self.changesets.append(Changeset(self.current['name'],
                                                  self.current['date'],
                                                  self.current['author'],
