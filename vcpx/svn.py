@@ -12,7 +12,7 @@ This module contains supporting classes for Subversion.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
@@ -205,16 +205,47 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         parseString(log.getvalue(), handler)
         return handler.changesets
     
-    def _applyChangeset(self, root, changeset):
+    def _applyChangeset(self, root, changeset, logger=None):
         svnup = SvnUpdate(working_dir=root)
-        out = svnup(output=True, entry='.', revision=changeset.revision)       
+        out = svnup(output=True, entry='.', revision=changeset.revision)
+        
+        if svnup.exit_status:
+            raise ChangesetApplicationFailure(
+                "'svn update' returned status %s" % cvsup.exit_status)
+            
         result = []
         for line in out:
             if len(line)>2 and line[0] == 'C' and line[1] == ' ':
+                logger.warn("Conflict after 'svn update': '%s'" % line)
                 result.append(line[2:-1])
             
         return result
         
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
+                                  logger=None):
+        """
+        Concretely do the checkout of the upstream revision.
+        """
+        
+        from os.path import join, exists
+        
+        wdir = join(basedir, module)
+
+        if not exists(wdir):
+            svnco = SvnCheckout(working_dir=basedir)
+            svnco(output=True, repository=repository,
+                  wc=module, revision=revision)
+            if svnco.exit_status:
+                raise TargetInitializationFailure(
+                    "'svn checkout' returned status %s" % svnco.exit_status)
+
+        actual = SvnInfo(working_dir=wdir)(entry='.')['Revision']
+
+        if logger: logger.info("working copy up to svn revision %s",
+                               last.revision)
+        
+        return actual 
+    
     ## SyncronizableTargetWorkingDir
 
     def _addEntry(self, root, entry):
@@ -231,22 +262,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnAdd(working_dir=root)
         c(entry=entry)
 
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
-        """
-        Concretely do the checkout of the upstream revision.
-        """
-        
-        from os.path import join, exists
-        
-        wdir = join(basedir, module)
-
-        if not exists(wdir):
-            svnco = SvnCheckout(working_dir=basedir)
-            svnco(output=True, repository=repository,
-                  wc=module, revision=revision)
-            
-        return SvnInfo(working_dir=wdir)(entry='.')['Revision']
-    
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

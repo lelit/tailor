@@ -40,14 +40,18 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
         
-    def applyUpstreamChangesets(self, root, sincerev, replay=None):
+    def applyUpstreamChangesets(self, root, sincerev,
+                                replay=None, logger=None):
         return self.source.applyUpstreamChangesets(root, sincerev,
-                                                   self.target.replayChangeset)
+                                                   self.target.replayChangeset,
+                                                   logger=logger)
         
-    def checkoutUpstreamRevision(self, root, repository, module, revision):
+    def checkoutUpstreamRevision(self, root, repository, module, revision,
+                                 logger=None):
         return self.source.checkoutUpstreamRevision(root,
                                                     repository, module,
-                                                    revision)
+                                                    revision,
+                                                    logger=logger)
 
     ## SyncronizableTargetWorkingDir
     

@@ -14,8 +14,8 @@ uses `cvsps` to fetch the changes from the upstream repository.
 __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
-from source import UpdatableSourceWorkingDir
-from target import SyncronizableTargetWorkingDir
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
 class CvsPsLog(SystemCommand):
@@ -193,7 +193,7 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             
                 yield Changeset(**pset)
 
-    def _applyChangeset(self, root, changeset):
+    def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname
         from os import makedirs
         
@@ -205,28 +205,16 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
 
             cvsup(output=True, entry=e.name, revision=e.new_revision)
 
+            if cvsup.exit_status:
+                raise ChangesetApplicationFailure(
+                    "'cvs update' returned status %s" % cvsup.exit_status)
+            
             if e.action_kind == e.DELETED:
                 # XXX: should drop edir if empty
                 pass
                 
-
-    ## SyncronizableTargetWorkingDir
-
-    def _addEntry(self, root, entry):
-        """
-        Add a new entry, maybe registering the directory as well.
-        """
-
-        from os.path import split, join, exists
-
-        basedir = split(entry)[0]
-        if basedir and not exists(join(root, basedir, 'CVS')):
-            self._addEntry(root, basedir)
-        
-        c = CvsAdd(working_dir=root)
-        c(entry=entry)
-
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
+                                  logger=None):
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get.
@@ -243,6 +231,11 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
               repository=repository,
               module=module,
               revision=revision)
+            if c.exit_status:
+                raise TargetInitializationFailure(
+                    "'cvs checkout' returned status %s" % c.exit_status)
+        else:
+            if logger: logger.info("Using existing %s", wdir)
             
         self.__forceTagOnEachEntry(wdir)
         
@@ -267,9 +260,32 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
                 last = cset
                 break
 
-        assert found, "Something went wrong, did not find the right cvsps revision in '%s'" % wdir
-        
+        if not found:
+            raise TargetInitializationFailure(
+                "Something went wrong, did not find the right cvsps "
+                "revision in '%s'" % wdir)
+        else:
+            if logger: logger.info("working copy up to cvsps revision %s",
+                                   last.revision)
+            
         return last.revision
+    
+
+    ## SyncronizableTargetWorkingDir
+
+    def _addEntry(self, root, entry):
+        """
+        Add a new entry, maybe registering the directory as well.
+        """
+
+        from os.path import split, join, exists
+
+        basedir = split(entry)[0]
+        if basedir and not exists(join(root, basedir, 'CVS')):
+            self._addEntry(root, basedir)
+        
+        c = CvsAdd(working_dir=root)
+        c(entry=entry)
 
     def __forceTagOnEachEntry(self, root):
         """

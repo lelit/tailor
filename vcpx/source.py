@@ -24,6 +24,9 @@ Either abort the session with Ctrl-C, or manually correct the situation
 with a Ctrl-Z and a few "svn resolved". What would you like to do?
 """
 
+class ChangesetApplicationFailure(Exception):
+    pass
+
 class UpdatableSourceWorkingDir(object):
     """
     This is an abstract working dir able to follow an upstream
@@ -42,7 +45,8 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, sincerev, replay=None):
+    def applyUpstreamChangesets(self, root, sincerev,
+                                replay=None, logger=None):
         """
         Apply the collected upstream changes.
 
@@ -61,21 +65,26 @@ class UpdatableSourceWorkingDir(object):
         c = None
         conflicts = []
         for c in changesets:
-            print "# Applying upstream changeset", c.revision
+            if logger:
+                logger.info("Applying upstream changeset %s", c.revision)
+
+            try:
+                res = self._applyChangeset(root, c, logger=logger)
+            except:
+                if logger: logger.critical("Couldn't apply changeset %s",
+                                           c.revision, exc_info=True)
+                raise
             
-            res = self._applyChangeset(root, c)
             if res:
                 conflicts.append((c, res))
                 try:
                     raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
                 except KeyboardInterrupt:
-                    print "INTERRUPTED BY THE USER!"
+                    if logger: logger.info("INTERRUPTED BY THE USER!")
                     return c, conflicts
                 
             if replay:
                 replay(root, c)
-
-            print
             
         return c, conflicts
         
@@ -90,7 +99,7 @@ class UpdatableSourceWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
         
-    def _applyChangeset(self, root, changeset):
+    def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
 
@@ -101,7 +110,8 @@ class UpdatableSourceWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def checkoutUpstreamRevision(self, root, repository, module, revision):
+    def checkoutUpstreamRevision(self, root, repository, module, revision,
+                                 logger=None):
         """
         Extract a working copy from a repository.
 
@@ -120,9 +130,11 @@ class UpdatableSourceWorkingDir(object):
         """
 
         return self._checkoutUpstreamRevision(root, repository,
-                                              module, revision)
+                                              module, revision,
+                                              logger=logger)
         
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision):
+    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
+                                  logger=None):
         """
         Concretely do the checkout of the upstream revision.
         """

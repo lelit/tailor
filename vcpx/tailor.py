@@ -98,7 +98,8 @@ class TailorizedProject(object):
         self.logger.info("getting %s revision '%s' of '%s' from '%s'" % (
             source_kind, revision, module, repository))
         actual = dwd.checkoutUpstreamRevision(self.root, repository,
-                                              module, revision)
+                                              module, revision,
+                                              logger=self.logger)
         self.logger.info("initializing %s shadow" % target_kind)
         dwd.initializeNewWorkingDir(self.root, repository, module, actual)
 
@@ -130,8 +131,9 @@ class TailorizedProject(object):
             proj, self.upstream_revision))
         
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        actual,conflics = dwd.applyUpstreamChangesets(proj,
-                                                      self.upstream_revision)
+        actual,conflicts = dwd.applyUpstreamChangesets(proj,
+                                                       self.upstream_revision,
+                                                       logger=self.logger)
         if actual:
             self.upstream_revision = actual.revision
             self.__saveStatus()
@@ -250,4 +252,4 @@ def main():
             pass
         else:
             tailored.update()
-            print
+

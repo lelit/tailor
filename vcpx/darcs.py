@@ -13,7 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
-from target import SyncronizableTargetWorkingDir
+from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
 class DarcsInitialize(SystemCommand):
@@ -174,7 +174,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         parseString(changes.getvalue(), handler)
         return handler.changesets
         
-    def _applyChangeset(self, root, changeset):
+    def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
 
@@ -261,4 +261,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
         c = DarcsInitialize(working_dir=root)
         c(output=True)
+
+        if c.exit_status:
+            raise TargetInitializationFailure(
+                "'darcs initialize' returned status %s" % c.exit_status)
 
