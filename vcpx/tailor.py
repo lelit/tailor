@@ -376,6 +376,8 @@ def main():
         config(args)
     else:
         # Good (?) old way
+
+        config = None
         
         if len(args) == 0:
             args.append(base)
