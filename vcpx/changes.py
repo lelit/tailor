@@ -51,23 +51,35 @@ from re import compile, MULTILINE
 itemize_re = compile('^[ ]*[-*] ', MULTILINE)
 
 def refill(msg):
-    wrapper = TextWrapper()
-    s = []
-    items = itemize_re.split(msg)
-    if len(items)>1:
-        if len(items)>2:
-            if items[0]:
-                wrapper.initial_indent = ' - '
-                wrapper.subsequent_indent = ' '*3
-            else:
-                del items[0]
-                
-    for m in items:
-        if m:
-            s.append(wrapper.fill(' '.join(filter(None, m.split(' ')))))
-            s.append('')
+    """
+    Refill a changelog message.
 
-    return '\n'.join(s)
+    Normalize the message reducing multiple spaces and newlines to single
+    spaces, recognizing common form of `bullet lists`, that is paragraphs
+    starting with either a dash "-" or an asterisk "*".
+    """
+    
+    wrapper = TextWrapper()
+    res = []
+    items = itemize_re.split(msg)
+    
+    if len(items)>1:
+        # Remove possible first empty split, when the message immediately
+        # starts with a bullet
+        if not items[0]:
+            del items[0]
+            
+        if len(items)>1:
+            wrapper.initial_indent = '- '
+            wrapper.subsequent_indent = ' '*2
+                
+    for item in items:
+        if item:
+            words = filter(None, item.strip().replace('\n', ' ').split(' '))
+            normalized = ' '.join(words)
+            res.append(wrapper.fill(normalized))
+
+    return '\n\n'.join(res)
 
 
 class Changeset(object):
