@@ -169,6 +169,32 @@ Fake changelog 4
 =============================================================================
 """
 
+    BRANCHES_TEST = """\
+RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
+Working file: tests/test_classgen.py
+head: 1.18
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 34;    selected revisions: 3
+description:
+----------------------------
+revision 1.18.14.5
+date: 2004/06/17 19:08:43;  author: tiran;  state: Exp;  lines: +1 -0
+new test for setFormat/setContentType, content_type as computed attribute
+----------------------------
+revision 1.18.14.4
+date: 2004/05/24 11:20:57;  author: tiran;  state: Exp;  lines: +11 -1
+Merge from tiran-seperate_mtr-branch
+----------------------------
+revision 1.18.14.3
+date: 2004/05/21 18:08:46;  author: tiran;  state: Exp;  lines: +1 -3
+branches:  1.18.14.3.2;
+Fixed deepcopy problem in validations
+=============================================================================
+"""
+    
     def testBasicBehaviour(self):
         """Verify basic cvs log parser behaviour"""
 
@@ -269,4 +295,13 @@ Fake changelog 4
         cset = csets.next()
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
+        
+    def testBranchesInLog(self):
+        """Verify the parser groks with the branches info on revision"""
+
+        log = StringIO(self.BRANCHES_TEST)
+        csets = changesets_from_cvslog(log)
+
+        cset = csets.next()
+        self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
         

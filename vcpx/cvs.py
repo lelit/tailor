@@ -165,7 +165,9 @@ class ChangeSetCollector(object):
             return None
         rev = revision[9:-1]
 
-        info = log.readline().split(';')
+        infoline = log.readline()
+
+        info = infoline.split(';')
 
         assert info[0][:6] == 'date: '
         
@@ -182,8 +184,17 @@ class ChangeSetCollector(object):
 
         state = info[2].strip()[7:]
         
-        mesg = []
+        # The next line may be either the first of the changelog or a
+        # continuation (?) of the preceeding info line with the
+        # "branches"
+
         l = log.readline()
+        if l.startswith('branches: ') and l.endswith(';\n'):
+            infoline = infoline[:-1] + ';' + l
+            # read the effective first line of log
+            l = log.readline()
+            
+        mesg = []
         while (l <> '----------------------------\n' and
                l <> '=============================================================================\n'):
             mesg.append(l[:-1])
