@@ -68,6 +68,12 @@ Examples
 
   $ tailor.py ~/svnwc/MyProduct
 
+Resolving Conflicts
+===================
+
+If any conflicts are found, tailor.py will flag them and prompt the user to
+correct them.
+
 
 Tailor's metadata
 =================
