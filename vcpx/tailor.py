@@ -334,20 +334,25 @@ class TailorizedProject(object):
         """
         
         from os.path import join
+
+        try:
+            self.__loadStatus()
+
+            proj = join(self.root, self.subdir)
+            self.logger.info("Updating '%s' from revision '%s'" % (
+                self.module, self.upstream_revision))
+
+            if self.verbose:
+                print "\nUpdating '%s' from revision '%s'" % (self.module,
+                                                              self.upstream_revision)
+
+            dwd = DualWorkingDir(self.source_kind, self.target_kind)
+            changesets = dwd.getUpstreamChangesets(proj, self.upstream_revision)
+        except KeyboardInterrupt:
+            print "Leaving '%s' unchanged" % proj
+            self.logger.info("Leaving '%s' unchanged, stopped by user" % proj)
+            return
         
-        self.__loadStatus()
-
-        proj = join(self.root, self.subdir)
-        self.logger.info("Updating '%s' from revision '%s'" % (
-            self.module, self.upstream_revision))
-
-        if self.verbose:
-            print "\nUpdating '%s' from revision '%s'" % (self.module,
-                                                          self.upstream_revision)
-        
-        dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        changesets = dwd.getUpstreamChangesets(proj, self.upstream_revision)
-
         nchanges = len(changesets)
         if nchanges:
             if self.verbose:
