@@ -65,6 +65,9 @@ class UpdatableSourceWorkingDir(object):
         c = None
         conflicts = []
         for c in changesets:
+            if not self._willApplyChangeset(c):
+                continue
+            
             if logger:
                 logger.info("Applying upstream changeset %s", c.revision)
 
@@ -87,7 +90,18 @@ class UpdatableSourceWorkingDir(object):
                 replay(root, c)
             
         return c, conflicts
-        
+
+    def _willApplyChangeset(self, changeset):
+        """
+        This gets called just before applying each changeset.  The action
+        won't be carried out if this returns False.
+
+        Subclasses may use this to skip some changeset, or to do whatever
+        before application.
+        """
+
+        return True
+    
     def _getUpstreamChangesets(self, root, sincerev):
         """
         Query the upstream repository about what happened on the

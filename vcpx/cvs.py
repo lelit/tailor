@@ -270,7 +270,68 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             
         return last.revision
     
+    def _willApplyChangeset(self, changeset):
+        """
+        This gets called just before applying each changeset.
+        
+        Since CVS has no "createdir" event, we have to take care
+        of new directories, creating empty-but-reasonable CVS dirs.
+        """
 
+        for m in changeset.entries:
+            if m.action_kind == m.ADDED:
+                self.__createParentCVSDirectories(m.name)
+            
+        return True
+
+    def __createParentCVSDirectories(self, path):
+        """
+        Verify that the hierarchy down to the entry is under CVS.
+
+        If the directory containing the entry does not exists,
+        create it and make it appear as under CVS so that succeding
+        'cvs update' will work.
+        """
+        
+        from os.path import split, join, exists
+        from os import mkdir
+        
+        basedir = split(path)[0]
+
+        assert basedir, "Uhm, going too far"
+        
+        cvsarea = join(basedir, 'CVS') 
+        if basedir and not exists(cvsarea):
+            parentcvs = self.__createParentCVSDirectories(basedir)
+
+            if not exists(basedir):
+                mkdir(basedir)
+
+            # Create fake CVS area
+            mkdir(cvsarea)
+
+            # Create an empty "Entries" file
+            entries = open(join(cvsarea, 'Entries'), 'w')
+            entries.close()
+
+            reposf = open(join(parentcvs, 'Repository'))
+            rep = reposf.readline()[:-1]
+            reposf.close()
+
+            reposf = open(join(cvsarea, 'Repository'), 'w')
+            reposf.write("%s/%s\n" % (rep, split(basedir)[1]))
+            reposf.close()
+
+            rootf = open(join(parentcvs, 'Root'))
+            root = rootf.readline()
+            rootf.close()
+
+            rootf = open(join(cvsarea, 'Root'), 'w')
+            rootf.write(root)
+            rootf.close()
+
+        return cvsarea
+    
     ## SyncronizableTargetWorkingDir
 
     def _addEntry(self, root, entry):
