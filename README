@@ -88,11 +88,14 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
    bootstrap a project that has nothing in its CVS upstream
    repository, or from a point in time where this condition was true.
 
-b) There is a bug related to the understanding of ``svn log --xml``
-   output that dirupt ``svn move`` upstream operation.
+b) It does not work under Windows (no, that's not a feature :-). Maybe
+   replacing the shwrap machinery with something built on top of
+   subprocess_ that seems able to hide Windows crazyness...
 
 This list will always be incomplete, but I'll do my best to keep it
 short :-)
+
+.. _subprocess: http://www.lysator.liu.se/~astrand/popen5/
 
 
 Tailor's metadata
