@@ -77,6 +77,7 @@ class UpdatableSourceWorkingDir(object):
         """
 
         c = None
+        last = None
         conflicts = []
         for c in changesets:
             if not self._willApplyChangeset(root, c, applyable):
@@ -100,7 +101,7 @@ class UpdatableSourceWorkingDir(object):
                     raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
                 except KeyboardInterrupt:
                     if logger: logger.info("INTERRUPTED BY THE USER!")
-                    return c, conflicts
+                    return last, conflicts
 
             if replay:
                 replay(root, module, c, delayed_commit=delayed_commit,
@@ -108,8 +109,10 @@ class UpdatableSourceWorkingDir(object):
             
             if applied:
                 applied(root, c)
-                
-        return c, conflicts
+
+            last = c
+            
+        return last, conflicts
 
     def _willApplyChangeset(self, root, changeset, applyable=None):
         """
