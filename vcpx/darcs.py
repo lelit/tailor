@@ -147,39 +147,41 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             raise GetUpstreamChangesetsFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
         
         l = output.readline()
-        while l and not l.startswith('Would pull the following changes:'):
+        while l and not (l.startswith('Would pull the following changes:') or
+                         l == 'No remote changes to pull in!\n'):
             l = output.readline()
 
         changesets = []
-        
-        ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
-        ##   * Refix _getUpstreamChangesets for darcs
 
-        l = output.readline()
-        while not l.startswith('Making no changes:  this is a dry run.'):
-            # Assume it's a line like
-            #    Sun Jan  2 00:24:04 UTC 2005  lele@nautilus.homeip.net
-            # we used to split on the double space before the email,
-            # but in this case this is wrong. Waiting for xml output,
-            # is it really sane asserting date's length to 28 chars?
-            date = l[:28]
-            author = l[30:-1]
-            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
-            date = datetime(y,m,d,hh,mm,ss)
-            l = output.readline()
-            assert l.startswith('  * ')
-            name = l[4:-1]
-            
-            changelog = []
-            l = output.readline()
-            while l.startswith(' '):
-                changelog.append(l.strip())
-                l = output.readline()
+        if l <> 'No remote changes to pull in!\n':
+            ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
+            ##   * Refix _getUpstreamChangesets for darcs
 
-            changesets.append(Changeset(name,date,author,' '.join(changelog)))
-            
-            while not l.strip():
+            l = output.readline()
+            while not l.startswith('Making no changes:  this is a dry run.'):
+                # Assume it's a line like
+                #    Sun Jan  2 00:24:04 UTC 2005  lele@nautilus.homeip.net
+                # we used to split on the double space before the email,
+                # but in this case this is wrong. Waiting for xml output,
+                # is it really sane asserting date's length to 28 chars?
+                date = l[:28]
+                author = l[30:-1]
+                y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
+                date = datetime(y,m,d,hh,mm,ss)
                 l = output.readline()
+                assert l.startswith('  * ')
+                name = l[4:-1]
+
+                changelog = []
+                l = output.readline()
+                while l.startswith(' '):
+                    changelog.append(l.strip())
+                    l = output.readline()
+
+                changesets.append(Changeset(name,date,author,' '.join(changelog)))
+
+                while not l.strip():
+                    l = output.readline()
 
         return changesets
     
