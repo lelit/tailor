@@ -54,11 +54,10 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                                    delayed_commit=delayed_commit)
         
     def checkoutUpstreamRevision(self, root, repository, module, revision,
-                                 logger=None):
+                                 **kwargs):
         return self.source.checkoutUpstreamRevision(root,
                                                     repository, module,
-                                                    revision,
-                                                    logger=logger)
+                                                    revision, **kwargs)
 
     ## SyncronizableTargetWorkingDir
     

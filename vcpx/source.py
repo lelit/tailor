@@ -130,7 +130,7 @@ class UpdatableSourceWorkingDir(object):
         raise "%s should override this method" % self.__class__
 
     def checkoutUpstreamRevision(self, root, repository, module, revision,
-                                 logger=None):
+                                 **kwargs):
         """
         Extract a working copy from a repository.
 
@@ -150,7 +150,7 @@ class UpdatableSourceWorkingDir(object):
 
         return self._checkoutUpstreamRevision(root, repository,
                                               module, revision,
-                                              logger=logger)
+                                              **kwargs)
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   logger=None):

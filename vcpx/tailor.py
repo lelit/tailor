@@ -91,7 +91,8 @@ class TailorConfig(object):
                                        self.options.target_kind,
                                        self.options.repository,
                                        self.options.module,
-                                       self.options.revision)
+                                       self.options.revision,
+                                       self.options.subdir)
                 elif self.options.migrate:
                     tailored.migrateConfiguration()
                 elif self.options.update:
@@ -120,14 +121,17 @@ class TailorConfig(object):
         else:
             self.config = {}
             
-    def loadProject(self, project):
-        relpath = relpathto(project.root, self.basedir)
+    def loadProject(self, project=None, root=None):
+        from os.path import split
+        
+        relpath = relpathto(project and project.root or root, self.basedir)
         
         info = self.config.get(relpath)
-        if info:
+        if info and project:
             project.source_kind = info['source_kind']
             project.target_kind = info['target_kind']
             project.module = info['module']
+            project.subdir = info.get('subdir', split(project.module)[1])
             project.upstream_repos = info['upstream_repos']
             project.upstream_revision = info['upstream_revision']
 
@@ -140,6 +144,7 @@ class TailorConfig(object):
             'source_kind': project.source_kind,
             'target_kind': project.target_kind,
             'module': project.module,
+            'subdir': project.subdir,
             'upstream_repos': project.upstream_repos,
             'upstream_revision': project.upstream_revision,
             }
@@ -223,7 +228,8 @@ class TailorizedProject(object):
         else:
             self.__loadOldStatus()
             
-    def bootstrap(self, source_kind, target_kind, repository, module,revision):
+    def bootstrap(self, source_kind, target_kind,
+                  repository, module, revision, subdir):
         """
         Bootstrap a new tailorized module.
 
@@ -233,8 +239,6 @@ class TailorizedProject(object):
         The actual information on the project are stored in a text file.
         """
 
-        from os.path import split
-        
         self.logger.info("Bootstrapping '%s'" % (self.root,))
 
         dwd = DualWorkingDir(source_kind, target_kind)
@@ -242,18 +246,19 @@ class TailorizedProject(object):
             source_kind, revision, module, repository))
         actual = dwd.checkoutUpstreamRevision(self.root, repository,
                                               module, revision,
+                                              subdir=subdir,
                                               logger=self.logger)
 
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
-        dwd.initializeNewWorkingDir(self.root, repository,
-                                    split(module)[1], actual)
+        dwd.initializeNewWorkingDir(self.root, repository, subdir, actual)
 
         self.source_kind = source_kind
         self.target_kind = target_kind
         self.upstream_repos = repository
-        self.module = module        
+        self.module = module
+        self.subdir = subdir
         self.upstream_revision = actual
 
         self.__saveStatus()
@@ -280,11 +285,11 @@ class TailorizedProject(object):
         the new changeset since last bootstrap/synchronization.
         """
         
-        from os.path import join, split
+        from os.path import join
         
         self.__loadStatus()
 
-        proj = join(self.root, split(self.module)[1])
+        proj = join(self.root, self.subdir)
         self.logger.info("Updating '%s' from revision '%s'" % (
             self.module, self.upstream_revision))
 
@@ -372,6 +377,9 @@ BOOTSTRAP_OPTIONS = [
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),
+    make_option("--subdir", metavar="DIR",
+                help="Force the subdirectory where the checkout will happen, "
+                     "by default it's the tail part of the module name."),
 ]
 
 class ExistingProjectError(Exception):
@@ -402,7 +410,7 @@ def main():
     """
     
     from os import getcwd, chdir
-    from os.path import abspath, exists, join, split
+    from os.path import abspath, exists, join
     from shwrap import SystemCommand
     
     parser = OptionParser(usage='%prog [options] [project ...]',

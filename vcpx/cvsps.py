@@ -265,7 +265,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                             changeset)
                 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  logger=None):
+                                  subdir=None, logger=None):
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get.
@@ -276,15 +276,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists, split
         from cvs import CvsEntries, compare_cvs_revs
 
-        lastcomponent = split(module)[1]
-        wdir = join(basedir, lastcomponent)
+        if not subdir:
+            subdir = split(module)[1]
+            
+        wdir = join(basedir, subdir)
         if not exists(wdir):
             c = CvsCheckout(working_dir=basedir)
             c(output=True,
               repository=repository,
               module=module,
               revision=revision,
-              workingdir=lastcomponent)
+              workingdir=subdir)
             if c.exit_status:
                 raise TargetInitializationFailure(
                     "'cvs checkout' returned status %s" % c.exit_status)
