@@ -17,12 +17,12 @@ class SvnUpdate(SystemCommand):
 
 
 class SvnInfo(SystemCommand):
-    COMMAND = "svn info %(entry)s"
+    COMMAND = "LANG= svn info %(entry)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         output = SystemCommand.__call__(self, output=True,
                                         dry_run=dry_run,
-                                        entry=entry)
+                                        **kwargs)
         res = {}
         for l in output:
             l = l[:-1]
@@ -99,9 +99,9 @@ class SvnCommit(SystemCommand):
 
 
 class SvnAdd(SystemCommand):
-    COMMAND = "svn add --quiet --non-recursive --no-auto-props %(entry)s"
+    COMMAND = "svn add --quiet --no-auto-props --non-recursive %(entry)s"
 
-
+        
 class SvnRemove(SystemCommand):
     COMMAND = "svn remove --quiet --force %(entry)s"
 
@@ -119,8 +119,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
 
     def _getUpstreamChangesets(self, root, startfrom_rev=None):
+        actualrev = SvnInfo(working_dir=root)(entry='.')['Revision']
         svnlog = SvnLog(working_dir=root)
-        log = svnlog(quiet='--verbose', output=True, xml=True, entry='.')
+        log = svnlog(quiet='--verbose', output=True, xml=True,
+                     startrev=int(actualrev)+1, entry='.')
 
         return self.__parseSvnLog(log)
 
@@ -129,7 +131,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         from xml.sax import parseString
         from xml.sax.handler import ContentHandler
-
+        from changes import ChangesetEntry, Changeset
+        
         class SvnXMLLogHandler(ContentHandler):
             def __init__(self):
                 self.changesets = []
@@ -157,17 +160,21 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 if name == 'logentry':
                     # Sort the paths to make tests easier
                     self.current['entries'].sort()
-                    self.changesets.append(ChangeSet(**self.current))
+                    self.changesets.append(Changeset(self.current['revision'],
+                                                     self.current['date'],
+                                                     self.current['author'],
+                                                     self.current['msg'],
+                                                     self.current['entries']))
                     self.current = None
                 elif name in ['author', 'date', 'msg']:
-                    self.current[name] = ''.join(self.current_field))
+                    self.current[name] = ''.join(self.current_field)
                 elif name == 'path':
                     entry = ChangesetEntry(''.join(self.current_field)[1:])
-                    if type(self.current_path_action) == type(''):
-                        entry.action_kind = self.current_path_action
-                    else:
+                    if type(self.current_path_action) == type( () ):
                         entry.action_kind = entry.RENAMED
                         entry.old_name = self.current_path_action[1]
+                    else:
+                        entry.action_kind = self.current_path_action
 
                     self.current['entries'].append(entry)
 
@@ -243,8 +250,21 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self, root):
         """
-        Do whatever is needed to put the given directory under revision
-        control.
+        Add the given directory to an already existing svn working tree.
         """
         
-        raise "%s should override this method" % self.__class__
+        from os.path import split, walk
+
+        basedir,wdir = split(root)
+        c = SvnAdd(working_dir=basedir)
+        c(entry=wdir)
+
+        for dir, subdirs, files in walk(root):
+            if 'CVS' in subdirs:
+                subdirs.remove('CVS')
+            if '_darcs' in subdirs:
+                subdirs.remove('_darcs')
+            c = SvnAdd(working_dir=dir)
+            for d in subdirs+files:
+                c(entry=d)
+

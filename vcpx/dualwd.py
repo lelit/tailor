@@ -17,6 +17,12 @@ the job.
 
 __docformat__ = 'reStructuredText'
 
+from source import UpdatableSourceWorkingDir
+from target import SyncronizableTargetWorkingDir
+from svn import SvnWorkingDir
+from cvs import CvsWorkingDir
+from darcs import DarcsWorkingDir
+
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """
     Dual working directory, one that is under two different VC systems at
@@ -27,22 +33,16 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """
 
     def __init__(self, source_kind, target_kind):
-        self.source_kind = source_kind
-        self.target_kind = target_kind
-
-        ## XXX these need class registering machinery!
+        globs = globals()
         
-        self.source = source.get(source_kind.capitalize() + 'WorkingDir')()
-        self.target = target.get(source_kind.capitalize() + 'WorkingDir')()
+        self.source = globs[source_kind.capitalize() + 'WorkingDir']()
+        self.target = globs[target_kind.capitalize() + 'WorkingDir']()
 
     ## UpdatableSourceWorkingDir
         
-    def collectUpstreamChangesets(self, root):
-        return self.source._getUpstreamChangesets(self, root)
-
-    def applyUpstreamChangesets(self, root, changesets, replay=None):
-        return self.source.applyUpstreamChangesets(root, changesets,
-                                                   self.replayChangeset)
+    def applyUpstreamChangesets(self, root, replay=None):
+        return self.source.applyUpstreamChangesets(root,
+                                                   self.target.replayChangeset)
         
     def checkoutUpstreamRevision(self, root, repository, revision):
         return self.source.checkoutUpstreamRevision(root, repository, revision)
@@ -51,11 +51,24 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     
     def initializeNewWorkingDir(self, root, repository, revision):
         self.target.initializeNewWorkingDir(root, repository, revision)
+
+    ## Facilities
         
-    def commitChangeset(self, root, changeset):
-        self.target.commitChangeset(root, changeset)
+    def bootstrap(self, root, repository, revision):
+        """
+        Bootstrap a new tailorized module.
+
+        Extract a copy of the `repository` at given `revision` in the `root`
+        directory and initialize a target repository with its content.
+        """
         
-    def replayChangeset(self, root, changeset):
-        self.target.replayChangeset(root, changeset)
-        self.target.commitChangeset(root, changeset)
-        
+        self.checkoutUpstreamRevision(root, repository, revision)
+        self.initializeNewWorkingDir(root, repository, revision)
+
+if __name__ == '__main__':
+    dwd = DualWorkingDir('svn', 'darcs')
+    dwd.bootstrap('/tmp/prove/provapyde',
+                  'svn+ssh://caia/ND/svn/tests/provapyde',
+                  '1')
+    dwd.applyUpstreamChangesets('/tmp/prove/provapyde')
+

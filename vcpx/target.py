@@ -23,9 +23,23 @@ class SyncronizableTargetWorkingDir(object):
     def replayChangeset(self, root, changeset):
         """
         Do whatever is needed to replay the changes under the target
-        VC, to register the already applied changeset.
+        VC, to register the already applied (under the other VC)
+        changeset.
         """
 
+        self._replayChangeset(root, changeset)
+        
+        remark = 'Upstream changeset %s' % changeset.revision
+        changelog = changeset.log
+        entries = [e.name for e in changeset.entries]
+        self._commit(root, changeset.author, remark, changelog, entries)
+
+    def _replayChangeset(self, root, changeset):
+        """
+        Replicate the actions performed by the changeset on the tree of
+        files.
+        """
+        
         for e in changeset.entries:
             if e.action_kind == e.RENAMED:
                 self._renameEntry(root, e.old_name, e.name)
@@ -33,17 +47,7 @@ class SyncronizableTargetWorkingDir(object):
                 self._addEntry(root, e.name)
             elif e.action_kind == e.DELETED:
                 self._removeEntry(root, e.name)
-
-    def commitChangeset(self, root, changeset):
-        """
-        Commit the changeset.
-        """
-
-        remark = 'Upstream changeset %s' % changeset.revision
-        changelog = changeset.log
-        entries = [e.name for e in changeset.entries]
-        self._commit(root, changeset.author, remark, changelog, entries)
-
+        
     def _addEntry(self, root, entry):
         """
         Add a new entry, maybe registering the directory as well.
@@ -75,7 +79,7 @@ class SyncronizableTargetWorkingDir(object):
     def initializeNewWorkingDir(self, root, repository, revision):
         """
         Initialize a new working directory, just extracted under
-        some other VC system, add everything's there.
+        some other VC system, importing everything's there.
         """
 
         self._initializeWorkingDir(root)
@@ -84,8 +88,9 @@ class SyncronizableTargetWorkingDir(object):
 
     def _initializeWorkingDir(self, root):
         """
-        Do whatever is needed to put the given directory under revision
-        control.
+        Assuming the `root` directory is a new working copy extracted
+        from some VC repository, add it and all its content to the
+        target repository.
         """
         
         raise "%s should override this method" % self.__class__

@@ -17,7 +17,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record -v --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
+    COMMAND = "darcs record --standard-verbosity --all --look-for-adds --author=%(author)s --logfile=%(logfile)s"
 
     def __call__(self, output=None, dry_run=False, patchname=None, **kwargs):
         logfile = kwargs.get('logfile')
@@ -39,19 +39,19 @@ class DarcsRecord(SystemCommand):
 
 
 class DarcsMv(SystemCommand):
-    COMMAND = "darcs mv %(old)s %(new)s"
+    COMMAND = "darcs mv --standard-verbosity %(old)s %(new)s"
 
 
 class DarcsRemove(SystemCommand):
-    COMMAND = "darcs remove %(entry)s"
+    COMMAND = "darcs remove --standard-verbosity %(entry)s"
 
 
 class DarcsAdd(SystemCommand):
-    COMMAND = "darcs add --non-recursive %(entry)s"
+    COMMAND = "darcs add --not-recursive --standard-verbosity %(entry)s"
 
 
 class DarcsTag(SystemCommand):
-    COMMAND = "darcs tag --patch-name='%(tagname)s'"
+    COMMAND = "darcs tag --standard-verbosity --patch-name='%(tagname)s'"
 
 
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
@@ -86,6 +86,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
 
+    def _replayChangeset(self, root, changeset):
+        """
+        Do nothing except for renames, as darcs will do the right
+        thing on disappeared and added files.
+        """
+
+        for e in changeset.entries:
+            if e.action_kind == e.RENAMED:
+                self._renameEntry(root, e.old_name, e.name)
+    
     def _addEntry(self, root, entry):
         """
         Add a new entry, maybe registering the directory as well.
@@ -123,10 +133,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Initialize the new repository and create a tag.
         """
         
-        UpdatableSourceWorkingDir.initializeNewWorkingDir(self,
-                                                          root,
-                                                          repository,
-                                                          revision)
+        SyncronizableTargetWorkingDir.initializeNewWorkingDir(self,
+                                                              root,
+                                                              repository,
+                                                              revision)
         self._createTag(root, 'Upstream revision %s' % revision)
 
     def _initializeWorkingDir(self, root):
