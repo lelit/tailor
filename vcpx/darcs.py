@@ -157,10 +157,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         l = output.readline()
         while not l.startswith('Making no changes:  this is a dry run.'):
-            date,author = l.split('  ')
+            # Assume it's a line like
+            #    Sun Jan  2 00:24:04 UTC 2005  lele@nautilus.homeip.net
+            # we used to split on the double space before the email,
+            # but in this case this is wrong. Waiting for xml output,
+            # is it really sane asserting date's length to 28 chars?
+            date = l[:28]
+            author = l[30:-1]
             y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
             date = datetime(y,m,d,hh,mm,ss)
-            author = author[:-1]
             l = output.readline()
             assert l.startswith('  * ')
             name = l[4:-1]
