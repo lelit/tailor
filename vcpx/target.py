@@ -17,6 +17,9 @@ import socket
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
 
+class TargetInitializationFailure(Exception):
+    pass
+
 class SyncronizableTargetWorkingDir(object):
     """
     This is an abstract working dir usable as a *shadow* of another
@@ -94,24 +97,27 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def initializeNewWorkingDir(self, root, repository, revision):
+    def initializeNewWorkingDir(self, root, repository, module, revision):
         """
-        Initialize a new working directory, just extracted under
+        Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
         """
 
         from datetime import datetime
 
         now = datetime.now()
-        self._initializeWorkingDir(root)
+        self._initializeWorkingDir(root, module)
         self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
-                     'Tailorization of %s@%s' % (repository, revision))
+                     'Tailorization of %s' % module,
+                     'Upstream sources from %s at revision %s' % (repository,
+                                                                  revision),
+                     entries=[module])
 
-    def _initializeWorkingDir(self, root, addentry=None):
+    def _initializeWorkingDir(self, root, module, addentry=None):
         """
-        Assuming the `root` directory is a working copy extracted
-        from some VC repository, add it and all its content to the
-        target repository.
+        Assuming the `root` directory contains a working copy `module`
+        extracted from some VC repository, add it and all its content
+        to the target repository.
 
         This implementation first runs the given `addentry`
         *SystemCommand* on the `root` directory, then it walks down
@@ -125,14 +131,13 @@ class SyncronizableTargetWorkingDir(object):
 
         assert addentry, "Subclass should have specified something as addentry"
         
-        from os.path import split
+        from os.path import split, join
         from os import walk
 
-        basedir,wdir = split(root)
-        c = addentry(working_dir=basedir)
-        c(entry=repr(wdir))
+        c = addentry(working_dir=root)
+        c(entry=repr(module))
 
-        for dir, subdirs, files in walk(root):
+        for dir, subdirs, files in walk(join(root, module)):
             for excd in ['.svn', '_darcs', 'CVS']:
                 if excd in subdirs:
                     subdirs.remove(excd)

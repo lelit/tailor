@@ -21,7 +21,7 @@ class DarcsInitialize(SystemCommand):
 
 
 class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --look-for-adds --pipe"
+    COMMAND = "darcs record --all --look-for-adds --pipe %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
@@ -209,8 +209,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         c = DarcsRecord(working_dir=root)
+
+        if entries:
+            entries = ' '.join(entries)
+        else:
+            entries = '.'
+            
         c(output=True, date=date, patchname=remark,
-          logmessage=changelog, author=author)
+          logmessage=changelog, author=author, entries=entries)
         
     def _removeEntry(self, root, entry):
         """
@@ -227,17 +233,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = DarcsMv(working_dir=root)
         c(old=oldentry, new=newentry)
-
-    def initializeNewWorkingDir(self, root, repository, revision):
-        """
-        Initialize the new repository and create a tag.
-        """
-        
-        SyncronizableTargetWorkingDir.initializeNewWorkingDir(self,
-                                                              root,
-                                                              repository,
-                                                              revision)
-        #self._createTag(root, 'Upstream revision %s' % revision)
 
     def _createTag(self, root, tagname):
         """
@@ -269,7 +264,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             
             return tagname
 
-    def _initializeWorkingDir(self, root):
+    def _initializeWorkingDir(self, root, module):
         """
         Execute `darcs initialize`.
         """

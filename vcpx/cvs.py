@@ -284,6 +284,12 @@ class CvsWorkingDir(UpdatableSourceWorkingDir,
             log.write('\n')
         
         c = CvsCommit(working_dir=root)
+
+        if entries:
+            entries = ' '.join(entries)
+        else:
+            entries = '.'
+            
         c(entries=entries, logfile=log.name)
         log.close()
         

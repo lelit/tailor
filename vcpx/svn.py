@@ -13,7 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
-from target import SyncronizableTargetWorkingDir
+from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 
 class SvnUpdate(SystemCommand):
@@ -80,7 +80,7 @@ class SvnLog(SystemCommand):
 
 
 class SvnCommit(SystemCommand):
-    COMMAND = "svn commit --file %(logfile)s %(entries)s"
+    COMMAND = "svn commit --quiet --file %(logfile)s %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logfile = kwargs.get('logfile')
@@ -281,9 +281,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnMv(working_dir=root)
         c(old=oldentry, new=newentry)
 
-    def _initializeWorkingDir(self, root, addentry=None):
+    def _initializeWorkingDir(self, root, module, addentry=None):
         """
         Add the given directory to an already existing svn working tree.
         """
-        
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, SvnAdd)
+
+        from os.path import exists, join
+
+        if not exists(join(root, '.svn')):
+            raise TargetInitializationFailure("'%s' should already be under SVN" % root)
+
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root, module,
+                                                            SvnAdd)

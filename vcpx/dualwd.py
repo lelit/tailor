@@ -51,5 +51,5 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
     
-    def initializeNewWorkingDir(self, root, repository, revision):
-        self.target.initializeNewWorkingDir(root, repository, revision)
+    def initializeNewWorkingDir(self, root, repository, module, revision):
+        self.target.initializeNewWorkingDir(root, repository, module, revision)

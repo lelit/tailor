@@ -100,7 +100,7 @@ class TailorizedProject(object):
         actual = dwd.checkoutUpstreamRevision(self.root, repository,
                                               module, revision)
         self.logger.info("initializing %s shadow" % target_kind)
-        dwd.initializeNewWorkingDir(self.root, repository, actual)
+        dwd.initializeNewWorkingDir(self.root, repository, module, actual)
 
         self.source_kind = source_kind
         self.target_kind = target_kind
