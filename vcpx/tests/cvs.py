@@ -376,4 +376,346 @@ backported copy constructor from trunk
         self.assertEqual(len(cset.entries), 1)
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'lib/python/DateTime/DateTime.py')
+
+    LONGLOG_TEST = """\
+cvs rlog: Logging ATContentTypes
+
+RCS file: /cvsroot/collective/ATContentTypes/Attic/ConstrainTypesMixin.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 5;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:09:46;  author: rochael;  state: dead;
+branches:  1.1.2;
+file ConstrainTypesMixin.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/customconfig.py.example,v
+head: 1.7
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;	selected revisions: 1
+description:
+----------------------------
+revision 1.7
+date: 2004/08/13 13:59:55;  author: rochael;  state: Exp;  lines: +1 -5
+removed duplicated ENABLE_TEMPLATE_MIXIN
+=============================================================================
+cvs rlog: Logging ATContentTypes/Extensions
+
+RCS file: /cvsroot/collective/ATContentTypes/Extensions/batchCreate.py,v
+head: 1.2
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;	selected revisions: 1
+description:
+----------------------------
+revision 1.2
+date: 2004/08/09 07:44:05;  author: tiran;  state: Exp;  lines: +4 -1
+branches:  1.2.2;
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/Extensions/findStaledObjects.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/09 07:44:05;  author: tiran;  state: Exp;
+branches:  1.1.2;
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/debian
+cvs rlog: Logging ATContentTypes/docs
+
+RCS file: /cvsroot/collective/ATContentTypes/docs/ExtendingType.txt,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/06 20:13:30;  author: tiran;  state: Exp;
+branches:  1.1.2;
+Added ExtendingType
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/docs/HISTORY.txt,v
+head: 1.42
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 44;	selected revisions: 1
+description:
+----------------------------
+revision 1.42
+date: 2004/08/09 07:44:07;  author: tiran;  state: Exp;  lines: +12 -0
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/i18n
+cvs rlog: Logging ATContentTypes/interfaces
+
+RCS file: /cvsroot/collective/ATContentTypes/interfaces/Attic/IConstrainTypes.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:09:47;  author: rochael;  state: dead;
+branches:  1.1.2;
+file IConstrainTypes.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+cvs rlog: Logging ATContentTypes/migration
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/ATCTMigrator.py,v
+head: 1.12
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 14;	selected revisions: 1
+description:
+----------------------------
+revision 1.12
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +42 -32
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/CPTMigrator.py,v
+head: 1.8
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;	selected revisions: 1
+description:
+----------------------------
+revision 1.8
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +38 -31
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/Walker.py,v
+head: 1.15
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 17;	selected revisions: 1
+description:
+----------------------------
+revision 1.15
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +76 -30
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/skins
+cvs rlog: Logging ATContentTypes/skins/ATContentTypes
+
+RCS file: /cvsroot/collective/ATContentTypes/skins/ATContentTypes/atct_history.pt,v
+head: 1.5
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 7;	selected revisions: 1
+description:
+----------------------------
+revision 1.5
+date: 2004/08/13 13:21:53;  author: tiran;  state: Exp;  lines: +1 -2
+Somehow I mixed up two sentences
+=============================================================================
+cvs rlog: Logging ATContentTypes/tests
+
+RCS file: /cvsroot/collective/ATContentTypes/tests/Attic/testContrainTypes.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 4;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:13:43;  author: rochael;  state: dead;
+branches:  1.1.2;
+file testContrainTypes.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+cvs rlog: Logging ATContentTypes/types
+
+RCS file: /cvsroot/collective/ATContentTypes/types/ATContentType.py,v
+head: 1.36
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 38;	selected revisions: 1
+description:
+----------------------------
+revision 1.36
+date: 2004/08/13 13:15:46;  author: tiran;  state: Exp;  lines: +2 -2
+Fixed typo
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/types/schemata.py,v
+head: 1.45
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 49;	selected revisions: 1
+description:
+----------------------------
+revision 1.45
+date: 2004/08/13 13:21:24;  author: tiran;  state: Exp;  lines: +24 -24
+Something went wrong ...
+=============================================================================
+cvs rlog: Logging ATContentTypes/types/criteria
+"""
+    
+    def testLongLog(self):
+        """Stress the parser with a very long changelog"""
+
+        log = StringIO(self.LONGLOG_TEST)
+        csets = changesets_from_cvslog(log, 'ATContentTypes')
+
+        self.assertEqual(len(csets), 9)
         
+        cset = csets[0]
+        self.assertEqual(cset.author, "tiran")
+        self.assertEqual(cset.date, datetime(2004, 8, 6, 20, 13, 30))
+        self.assertEqual(cset.log, "Added ExtendingType")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'docs/ExtendingType.txt')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        cset = csets[1]
+        self.assertEqual(cset.author, "tiran")
+        self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 5))
+        self.assertEqual(cset.log, """\
+Recoded migration walkers to use a generator instead returning a list
+to make them much more memory efficient. Rewritten folder migration to
+use the depth inside the folder structur instead of recursing into the
+full side. Added a findStaledObjects external method to ATCT to find
+staled objects. It is very useful to clean up a site before running
+the migration.""") 
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'Extensions/batchCreate.py')
+        self.assertEqual(entry.new_revision, '1.2')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        cset = csets[2]
+        self.assertEqual(cset.author, "rochael")
+        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 9, 46))
+        self.assertEqual(cset.log, """\
+file ConstrainTypesMixin.py was initially added on branch jensens-
+restrain_mixin-branch.""")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'ConstrainTypesMixin.py')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+
+        cset = csets[3]
+        self.assertEqual(cset.author, "rochael")
+        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 9, 47))
+        self.assertEqual(cset.log, """\
+file IConstrainTypes.py was initially added on branch jensens-
+restrain_mixin-branch.""")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'interfaces/IConstrainTypes.py')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+
+        cset = csets[4]
+        self.assertEqual(cset.author, "rochael")
+        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 13, 43))
+        self.assertEqual(cset.log, """\
+file testContrainTypes.py was initially added on branch jensens-
+restrain_mixin-branch.""")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'tests/testContrainTypes.py')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+
+        cset = csets[5]
+        self.assertEqual(cset.author, "tiran")
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 15, 46))
+        self.assertEqual(cset.log, "Fixed typo")
+
+        cset = csets[6]
+        self.assertEqual(cset.author, "tiran")
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 24))
+        self.assertEqual(cset.log, "Something went wrong ...")
+
+        cset = csets[7]
+        self.assertEqual(cset.author, "tiran")
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 53))
+        self.assertEqual(cset.log, "Somehow I mixed up two sentences")
+
+        cset = csets[8]
+        self.assertEqual(cset.author, "rochael")
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 59, 55))
+        self.assertEqual(cset.log, "removed duplicated ENABLE_TEMPLATE_MIXIN")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'customconfig.py.example')
+        self.assertEqual(entry.new_revision, '1.7')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+        
+    SILLY_TEST = """\
+RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
+head: 1.2
+"""
+    
+    def testDirectoryMissing(self):
+        """Verify how parser reacts on bad input"""
+
+        log = StringIO(self.SILLY_TEST)
+        self.assertRaises(AssertionError,
+                          changesets_from_cvslog, log, 'docutils')
+

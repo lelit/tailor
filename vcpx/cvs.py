@@ -85,9 +85,15 @@ class ChangeSetCollector(object):
 
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
-       
-        self.__parseCvsLog(log, module)
+
+        self.log = log
+        """The log to be parsed."""
         
+        self.module = module
+        """The CVS module name."""
+        
+        self.__parseCvsLog()
+
     def __iter__(self):
         keys = self.changesets.keys()
         keys.sort()
@@ -124,41 +130,68 @@ class ChangeSetCollector(object):
             self.changesets[key] = cs
             return cs.addEntry(entry, revision)
 
-    def __parseRevision(self, entry, log):
-        """Parse a single revision log, extracting the needed information
-           and register it.
+    def __readline(self):
+        """
+        Read a line from the log, intercepting the directory being listed.
 
-           Return None when there are no more logs to be parsed,
-           otherwise the revision number."""
+        This is used to determine the pathname of each entry, relative to
+        the root of the working copy.
+        """
+
+        l = self.log.readline()
+        while l.startswith('cvs rlog: Logging '):
+            currentdir = l[18:-1]
+            # strip away first component, the name of the product
+            if '/' in currentdir:
+                assert currentdir.startswith(self.module), \
+                       "Directory %s does not start with %s" % (currentdir,
+                                                                self.module)
+                self.__currentdir = currentdir[len(self.module)+1:]
+            else:
+                self.__currentdir = ''
+            l = self.log.readline()
+
+        return l
+    
+    def __parseRevision(self, entry):
+        """
+        Parse a single revision log, extracting the needed information.
+
+        Return None when there are no more logs to be parsed,
+        otherwise a tuple with the relevant data.
+        """
 
         from datetime import datetime
         
-        revision = log.readline()
+        revision = self.__readline()
         if not revision or not revision.startswith('revision '):
             return None
         rev = revision[9:-1]
 
-        infoline = log.readline()
+        infoline = self.__readline()
 
         info = infoline.split(';')
 
-        assert info[0][:6] == 'date: '
+        assert info[0][:6] == 'date: ', infoline
+
         # 2004-04-19 14:45:42 +0000, the timezone may be missing
-        dateparts = info[0][6:].split(' ') 
+        dateparts = info[0][6:].split(' ')
+        assert len(dateparts) >= 2, `dateparts`
+        
         day = dateparts[0]
         time = dateparts[1]
         y,m,d = map(int, day.split(day[4]))
         hh,mm,ss = map(int, time.split(':'))
         date = datetime(y,m,d,hh,mm,ss)
 
-        assert info[1].strip()[:8] == 'author: '
+        assert info[1].strip()[:8] == 'author: ', infoline
 
         author = info[1].strip()[8:]
 
-        assert info[2].strip()[:7] == 'state: '
+        assert info[2].strip()[:7] == 'state: ', infoline
 
         state = info[2].strip()[7:]
-
+        
         # Fourth element, if present and like "lines +x -y", indicates
         # this is a change to an existing file. Otherwise its a new
         # one.
@@ -169,17 +202,17 @@ class ChangeSetCollector(object):
         # continuation (?) of the preceeding info line with the
         # "branches"
 
-        l = log.readline()
+        l = self.__readline()
         if l.startswith('branches: ') and l.endswith(';\n'):
             infoline = infoline[:-1] + ';' + l
             # read the effective first line of log
-            l = log.readline()
+            l = self.__readline()
             
         mesg = []
         while (l <> '----------------------------\n' and
                l <> '=============================================================================\n'):
             mesg.append(l[:-1])
-            l = log.readline()
+            l = self.__readline()
 
         if len(mesg)==1 and mesg[0] == '*** empty log message ***':
             changelog = ''
@@ -188,40 +221,31 @@ class ChangeSetCollector(object):
             
         return (date, author, changelog, entry, rev, state, newentry)
     
-    def __parseCvsLog(self, log, module):
+    def __parseCvsLog(self):
         """Parse a complete CVS log."""
 
         from os.path import split, join
 
-        currentdir = None
+        self.__currentdir = None
         
         while 1:
-            l = log.readline()
-            
+            l = self.__readline()
             while l and not l.startswith('RCS file: '):
-                if l.startswith('cvs rlog: Logging '):
-                    currentdir = l[18:-1]
-                    # strip away first component, the name of the product
-                    if '/' in currentdir:
-                        assert currentdir.startswith(module)
-                        currentdir = currentdir[len(module)+1:]
-                    else:
-                        currentdir = ''
-
-                l = log.readline()
+                l = self.__readline()
             
             if not l.startswith('RCS file: '):
                 break
 
-            assert currentdir is not None, "Missed 'cvs rlog: Logging XX' line"
+            assert self.__currentdir is not None, \
+                   "Missed 'cvs rlog: Logging XX' line"
             
-            entry = join(currentdir, split(l[10:-1])[1][:-2])
+            entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
             
-            l = log.readline()
+            l = self.__readline()
             while l and l <> '----------------------------\n':
-                l = log.readline()
+                l = self.__readline()
                 
-            cs = self.__parseRevision(entry, log)
+            cs = self.__parseRevision(entry)
             while cs:
                 date,author,changelog,e,rev,state,newentry = cs
 
@@ -233,7 +257,7 @@ class ChangeSetCollector(object):
                 else:
                     last.action_kind = last.UPDATED
                 
-                cs = self.__parseRevision(entry, log)
+                cs = self.__parseRevision(entry)
         
 
 class CvsWorkingDir(CvspsWorkingDir):
