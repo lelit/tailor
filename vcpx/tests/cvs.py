@@ -59,7 +59,6 @@ Added to project (exctracted from HISTORY.txt)
 =============================================================================
 """
 
-
     def testBasicBehaviour(self):
         """Verify basic cvs log parser behaviour"""
 
@@ -72,7 +71,7 @@ Added to project (exctracted from HISTORY.txt)
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
         self.assertEqual(cset.log, "Added to project (exctracted from "
-                                   "HISTORY.txt)\n")
+                                   "HISTORY.txt)")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.new_revision, '1.1')
@@ -166,7 +165,7 @@ updated
         cset = csets[3]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
-        self.assertEqual(cset.log,"support for CSV directive implementation\n")
+        self.assertEqual(cset.log,"support for CSV directive implementation")
         self.assertEqual(len(cset.entries), 2)
 
         entry = cset.entries[0]
@@ -341,7 +340,7 @@ Fixed deepcopy problem in validations
         self.assertEqual(len(csets), 3)
 
         cset = csets[0]
-        self.assertEqual(cset.log,"Fixed deepcopy problem in validations\n")
+        self.assertEqual(cset.log,"Fixed deepcopy problem in validations")
         
     REPOSPATH_TEST = """\
 cvs rlog: Logging Zope/spurious/dummy/dir
@@ -372,7 +371,7 @@ backported copy constructor from trunk
         self.assertEqual(len(csets), 1)
 
         cset = csets[0]
-        self.assertEqual(cset.log,"backported copy constructor from trunk\n")
+        self.assertEqual(cset.log,"backported copy constructor from trunk")
         self.assertEqual(len(cset.entries), 1)
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'lib/python/DateTime/DateTime.py')
