@@ -12,7 +12,10 @@ working directory under two different version control systems.
 
 __docformat__ = 'reStructuredText'
 
-PATCH_AUTHOR = "tailor@localhost"
+import socket
+
+HOST = socket.getfqdn()
+AUTHOR = "tailor"
 
 class SyncronizableTargetWorkingDir(object):
     """
@@ -101,7 +104,7 @@ class SyncronizableTargetWorkingDir(object):
 
         now = datetime.now()
         self._initializeWorkingDir(root)
-        self._commit(root, now, PATCH_AUTHOR,
+        self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
                      'Tailorization of %s@%s' % (repository, revision))
 
     def _initializeWorkingDir(self, root, addentry=None):
