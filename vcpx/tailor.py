@@ -79,7 +79,7 @@ class TailorConfig(object):
                         raise OptionError('Need a repository to bootstrap %r' %
                                           root)
                 elif self.options.update:
-                    if not exists(root):
+                    if not self.config.has_key(relpathto(root, self.basedir)):
                         raise UnknownProjectError("Project %r does not exist" %
                                                   root)
                     
