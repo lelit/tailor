@@ -28,14 +28,20 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "cvs log -N -S %(since)s"
+    COMMAND = "cvs log -N -S %(branch)s %(since)s"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
         if since:
-            kwargs['since'] = "-d '%s<'" % str(since)
+            kwargs['since'] = "-d'%s<'" % since.isoformat(sep=' ')
         else:
             kwargs['since'] = ''
+
+        branch = kwargs.get('branch')
+        if branch:
+            kwargs['branch'] = "-r%s" % branch
+        else:
+            kwargs['branch'] = ''
             
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
@@ -193,6 +199,7 @@ class ChangeSetCollector(object):
 
             if newentry:
                 last.action_kind = last.ADDED
+        
 
 class CvsWorkingDir(CvspsWorkingDir):
     """
@@ -204,17 +211,20 @@ class CvsWorkingDir(CvspsWorkingDir):
         cvslog = CvsLog(working_dir=root)
         
         from os.path import join, exists
-         
-        if sincerev:
-            sincerev = int(sincerev)
 
-            # XXX: derive the date from the revision
-            since = dosomethingsmart(sincerev)
-        else:
-            since = None
-            
+        entries = CvsEntries(root)
+        latest = entries.getMostRecentEntry()
+        since = latest.timestamp
+
+        branch = ''
+        fname = join(root, 'CVS', 'Tag')
+        if exists(fname):
+            tag = open(fname).read()
+            if tag.startswith('T'):
+                branch=tag[1:-1]
+
         changesets = []
-        log = cvslog(output=True, since=since)
+        log = cvslog(output=True, since=since, branch=branch)
         for cs in changesets_from_cvslog(log, sincerev):
             changesets.append(cs)
 
@@ -224,14 +234,19 @@ class CvsWorkingDir(CvspsWorkingDir):
 class CvsEntry(object):
     """Collect the info about a file in a CVS working dir."""
     
-    __slots__ = ('filename', 'cvs_version', 'cvs_tag')
+    __slots__ = ('filename', 'cvs_version', 'timestamp', 'cvs_tag')
 
     def __init__(self, entry):
         """Initialize a CvsEntry."""
+
+        from datetime import datetime
+        from time import strptime
         
-        dummy, fn, rev, date, dummy, tag = entry.split('/')
+        dummy, fn, rev, ts, dummy, tag = entry.split('/')
         self.filename = fn
         self.cvs_version = rev
+        y,m,d,hh,mm,ss,d1,d2,d3 = strptime(ts, "%a %b %d %H:%M:%S %Y")
+        self.timestamp = datetime(y,m,d,hh,mm,ss)
         self.cvs_tag = tag
 
     def __str__(self):
@@ -312,4 +327,23 @@ class CvsEntries(object):
         except KeyError:
             return None
 
+    def getMostRecentEntry(self):
+        latest = None
+        for e in self.files.values():
+            if not latest:
+                latest = e
 
+            if e.timestamp < latest.timestamp:
+                latest = e
+
+        for d in self.directories.values():
+            e = d.getMostRecentEntry()
+            
+            if not latest:
+                latest = e
+
+            if e.timestamp < latest.timestamp:
+                latest = e
+
+        return latest
+    
