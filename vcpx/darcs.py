@@ -158,7 +158,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     self.current[name] = ''.join(self.current_field)
                 elif name == 'move':
                     entry = ChangesetEntry(self.new_name)
-                    entry.action_kind = RENAMED
+                    entry.action_kind = entry.RENAMED
                     entry.old_name = self.old_name
                     self.current['entries'].append(entry)
                 elif name in ['add_file', 'add_directory',
@@ -166,8 +166,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     entry = ChangesetEntry(''.join(self.current_field))
                     entry.action_kind = { 'add_file': entry.ADDED,
                                           'add_directory': entry.ADDED,
-                                          'modify_file': entry.MODIFIED,
-                                          'remove_file': entry.REMOVED,
+                                          'modify_file': entry.UPDATED,
+                                          'remove_file': entry.DELETED,
                                           'rename_file': entry.RENAMED
                                         }[name]
 
