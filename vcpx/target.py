@@ -243,7 +243,8 @@ class SyncronizableTargetWorkingDir(object):
             for excf in ['tailor.info', 'tailor.log']:
                 if excf in files:
                     files.remove(excf)
-                    
-            c = addentry(working_dir=dir)
-            c(entry=' '.join([repr(e) for e in subdirs+files]))
+
+            if subdirs or files:
+                c = addentry(working_dir=dir)
+                c(entry=' '.join([repr(e) for e in subdirs+files]))
 
