@@ -283,8 +283,8 @@ class TailorizedProject(object):
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
-        if not subdir:
-            subdir = module
+        if not module:
+            module = split(repository)[1]
 
         try:
             dwd.initializeNewWorkingDir(self.root, repository, module, subdir, actual)
@@ -423,7 +423,11 @@ BOOTSTRAP_OPTIONS = [
                      "will checkout the module.  REPOS syntax depends on "
                      "the source version control kind."),
     make_option("-m", "--module", dest="module", metavar="MODULE",
-                help="Specify the module to checkout at bootstrap time."),
+                help="Specify the module to checkout at bootstrap time. "
+                     "It's mandatory only when dealing with CVS, and used but "
+                     "not required with SVN, but since it's used in"
+                     "the description of the target repository, you"
+                     "are encouraged to give it a value with darcs too."),
     make_option("-r", "--revision", dest="revision", metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "

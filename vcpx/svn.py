@@ -112,7 +112,18 @@ class SvnMv(SystemCommand):
 
     
 class SvnCheckout(SystemCommand):
-    COMMAND = "svn co --revision %(revision)s %(repository)s/%(module)s %(wc)s"
+    COMMAND = "svn co --revision %(revision)s %(repository)s%(module)s %(wc)s"
+
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        module = kwargs.get('module')
+        if module:
+            module = '/%s' % module
+        else:
+            module = ''
+        kwargs['module'] = module
+        return SystemCommand.__call__(self, output=output,
+                                      dry_run=dry_run, **kwargs)
+
 
 def changesets_from_svnlog(log, url):
     from xml.sax import parseString
