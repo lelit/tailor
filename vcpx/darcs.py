@@ -124,9 +124,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     A working directory under ``darcs``.
     """
 
-    def __init__(self):
-        self.__exists = {}
-        
     ## UpdatableSourceWorkingDir
     
     def getUpstreamChangesets(self, root, sincerev=None):
@@ -227,8 +224,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                           command="darcs add --not-recursive"
                                   " --standard-verbosity %(entry)s")
         c(entry=entry)
-
-        self.__exists[entry] = True
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
