@@ -11,7 +11,7 @@ This module contains supporting classes for the `darcs` versioning system.
 
 __docformat__ = 'reStructuredText'
 
-from cvsync.shwrap import SystemCommand
+from shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir
 

@@ -13,7 +13,7 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
-from cvsync.shwrap import SystemCommand
+from shwrap import SystemCommand
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir
 
