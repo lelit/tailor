@@ -113,7 +113,92 @@ class SvnMv(SystemCommand):
 class SvnCheckout(SystemCommand):
     COMMAND = "svn co --revision %(revision)s %(repository)s %(wc)s"
 
-    
+def changesets_from_svnlog(log, url):
+    from xml.sax import parseString
+    from xml.sax.handler import ContentHandler
+    from changes import ChangesetEntry, Changeset
+    from datetime import datetime
+
+    def get_entry_from_path(path, url=url):
+        # Given the repository url of this wc, say
+        #   "http://server/plone/CMFPlone/branches/Plone-2_0-branch"
+        # extract the "entry" portion (a relative path) from what
+        # svn log --xml says, ie
+        #   "/CMFPlone/branches/Plone-2_0-branch/tests/PloneTestCase.py"
+        # that is to say "tests/PloneTestCase.py"
+
+        from os.path import split
+
+        prefix = split(path)[0]
+        while prefix:
+            if url.endswith(prefix):
+                return path[len(prefix)+1:]
+
+            prefix = split(prefix)[0]
+
+        return path
+
+    class SvnXMLLogHandler(ContentHandler):
+        def __init__(self):
+            self.changesets = []
+            self.current = None
+            self.current_field = []
+
+        def startElement(self, name, attributes):
+            if name == 'logentry':
+                self.current = {}
+                self.current['revision'] = attributes['revision']
+                self.current['entries'] = []
+            elif name in ['author', 'date', 'msg']:
+                self.current_field = []
+            elif name == 'path':
+                self.current_field = []
+                if attributes.has_key('copyfrom-path'):
+                    self.current_path_action = (
+                        attributes['action'],
+                        attributes['copyfrom-path'][1:], # make it relative
+                        attributes['copyfrom-rev'])
+                else:
+                    self.current_path_action = attributes['action']
+
+        def endElement(self, name):
+            if name == 'logentry':
+                # Sort the paths to make tests easier
+                self.current['entries'].sort()
+                svndate = self.current['date']
+                # 2004-04-16T17:12:48.000000Z
+                y,m,d = map(int, svndate[:10].split('-'))
+                hh,mm,ss = map(int, svndate[11:19].split(':'))
+                ms = int(svndate[20:-1])
+                timestamp = datetime(y, m, d, hh, mm, ss, ms)
+                self.changesets.append(Changeset(self.current['revision'],
+                                                 timestamp,
+                                                 self.current['author'],
+                                                 self.current['msg'],
+                                                 self.current['entries']))
+                self.current = None
+            elif name in ['author', 'date', 'msg']:
+                self.current[name] = ''.join(self.current_field)
+            elif name == 'path':
+                path = ''.join(self.current_field)[1:]
+                entry = ChangesetEntry(get_entry_from_path(path))
+                if type(self.current_path_action) == type( () ):
+                    entry.action_kind = entry.RENAMED
+                    entry.old_name = get_entry_from_path(self.current_path_action[1])
+                else:
+                    entry.action_kind = self.current_path_action
+
+                self.current['entries'].append(entry)
+
+        def characters(self, data):
+            self.current_field.append(data)
+
+
+    handler = SvnXMLLogHandler()
+    parseString(log.getvalue(), handler)
+    return handler.changesets
+
+
 class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
@@ -138,87 +223,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def __parseSvnLog(self, log, url):
         """Return an object representation of the ``svn log`` thru HEAD."""
 
-        from xml.sax import parseString
-        from xml.sax.handler import ContentHandler
-        from changes import ChangesetEntry, Changeset
-        from datetime import datetime
-
-        def get_entry_from_path(path, url=url):
-            # Given the repository url of this wc, say
-            #   "http://server/plone/CMFPlone/branches/Plone-2_0-branch"
-            # extract the "entry" portion (a relative path) from what
-            # svn log --xml says, ie
-            #   "/CMFPlone/branches/Plone-2_0-branch/tests/PloneTestCase.py"
-            # that is to say "tests/PloneTestCase.py"
-
-            from os.path import split
-
-            prefix = split(path)[0]
-            while prefix:
-                if url.endswith(prefix):
-                    return path[len(prefix)+1:]
-
-                prefix = split(prefix)[0]
-            
-        class SvnXMLLogHandler(ContentHandler):
-            def __init__(self):
-                self.changesets = []
-                self.current = None
-                self.current_field = []
-
-            def startElement(self, name, attributes):
-                if name == 'logentry':
-                    self.current = {}
-                    self.current['revision'] = attributes['revision']
-                    self.current['entries'] = []
-                elif name in ['author', 'date', 'msg']:
-                    self.current_field = []
-                elif name == 'path':
-                    self.current_field = []
-                    if attributes.has_key('copyfrom-path'):
-                        self.current_path_action = (
-                            attributes['action'],
-                            attributes['copyfrom-path'][1:], # make it relative
-                            attributes['copyfrom-rev'])
-                    else:
-                        self.current_path_action = attributes['action']
-
-            def endElement(self, name):
-                if name == 'logentry':
-                    # Sort the paths to make tests easier
-                    self.current['entries'].sort()
-                    svndate = self.current['date']
-                    # 2004-04-16T17:12:48.000000Z
-                    y,m,d = map(int, svndate[:10].split('-'))
-                    hh,mm,ss = map(int, svndate[11:19].split(':'))
-                    ms = int(svndate[20:-1])
-                    timestamp = datetime(y, m, d, hh, mm, ss, ms)
-                    self.changesets.append(Changeset(self.current['revision'],
-                                                     timestamp,
-                                                     self.current['author'],
-                                                     self.current['msg'],
-                                                     self.current['entries']))
-                    self.current = None
-                elif name in ['author', 'date', 'msg']:
-                    self.current[name] = ''.join(self.current_field)
-                elif name == 'path':
-                    path = ''.join(self.current_field)[1:]
-                    entry = ChangesetEntry(get_entry_from_path(path))
-                    if type(self.current_path_action) == type( () ):
-                        entry.action_kind = entry.RENAMED
-                        entry.old_name = self.current_path_action[1]
-                    else:
-                        entry.action_kind = self.current_path_action
-
-                    self.current['entries'].append(entry)
-
-            def characters(self, data):
-                self.current_field.append(data)
-
-        
-        handler = SvnXMLLogHandler()
-        parseString(log.getvalue(), handler)
-        return handler.changesets
+        return changesets_from_svnlog(log, url)
     
     def _applyChangeset(self, root, changeset, logger=None):
         svnup = SvnUpdate(working_dir=root)
