@@ -55,7 +55,7 @@ class DarcsTag(SystemCommand):
 
 
 class DarcsChanges(SystemCommand):
-    COMMAND = "darcs changes --from-tag=tagname --xml-output --summary"
+    COMMAND = "darcs changes --from-patch='%(patch)s' --xml-output --summary"
 
 
 class DarcsAnnotate(SystemCommand):
@@ -86,10 +86,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         those pending on the other side.
         """
 
-        tagname = self._getLastTag(root)
-        
         c = DarcsChanges(working_dir=root)
-        changes = c(output=True)
+        changes = c(output=True, patch=sincerev)
 
         changesets = self.__parseDarcsChanges(changes)
 
