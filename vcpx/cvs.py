@@ -342,7 +342,7 @@ class CvsEntries(object):
         self.deleted = False
         """Flag to denote that this directory was removed."""
         
-        entries = join(root, 'CVS/Entries')
+        entries = join(root, 'CVS', 'Entries')
         if exists(entries):
             for entry in open(entries).readlines():
                 entry = entry[:-1]
@@ -367,7 +367,7 @@ class CvsEntries(object):
                 if entry == '.svn':
                     continue                
                 dir = join(root, entry)
-                if (isdir(dir) and exists(join(dir, 'CVS/Entries'))
+                if (isdir(dir) and exists(join(dir, 'CVS', 'Entries'))
                     and not self.directories.has_key(entry)):
                     self.directories[entry] = CvsEntries(dir)
                     
