@@ -17,7 +17,7 @@ the job.
 
 __docformat__ = 'reStructuredText'
 
-from source import UpdatableSourceWorkingDir
+from source import UpdatableSourceWorkingDir, InvocationError
 from target import SyncronizableTargetWorkingDir
 from svn import SvnWorkingDir
 from cvs import CvsWorkingDir
@@ -35,10 +35,18 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def __init__(self, source_kind, target_kind):
         globs = globals()
-        
-        self.source = globs[source_kind.capitalize() + 'WorkingDir']()
-        self.target = globs[target_kind.capitalize() + 'WorkingDir']()
 
+        try:
+            self.source = globs[source_kind.capitalize() + 'WorkingDir']()
+        except KeyError, exp:
+            raise InvocationError("Unhandled source VCS kind: " + source_kind)
+            
+        try:
+            self.target = globs[target_kind.capitalize() + 'WorkingDir']()
+        except KeyError, exp:
+            raise InvocationError("Unhandled target VCS kind: " + target_kind)
+            
+        
     ## UpdatableSourceWorkingDir
 
     def getUpstreamChangesets(self, root, sincerev):
