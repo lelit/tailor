@@ -156,7 +156,7 @@ class UpdatableSourceWorkingDir(object):
                                               **kwargs)
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  logger=None):
+                                  logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """

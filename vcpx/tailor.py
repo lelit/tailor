@@ -221,7 +221,7 @@ class TailorizedProject(object):
             self.__saveOldStatus()
 
     def __loadOldStatus(self):
-        from os.path import join
+        from os.path import join, split
 
         statusfilename = join(self.root, STATUS_FILENAME)
         f = open(statusfilename)
@@ -230,6 +230,7 @@ class TailorizedProject(object):
         self.source_kind = srck[:-1]
         self.target_kind = dstk[:-1]
         self.module = module[:-1]
+        self.subdir = split(self.module)[1]
         self.upstream_repos = upstream_repos[:-1]
         self.upstream_revision = upstream_revision[:-1]
         f.close()
@@ -268,6 +269,9 @@ class TailorizedProject(object):
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
+        if not subdir:
+            subdir = module
+            
         dwd.initializeNewWorkingDir(self.root, repository, subdir, actual)
 
         self.source_kind = source_kind
@@ -499,7 +503,8 @@ def main():
                 tailored.bootstrap(options.source_kind, options.target_kind,
                                    options.repository,
                                    options.module,
-                                   options.revision)
+                                   options.revision,
+                                   options.subdir)
             elif options.update:
                 tailored.update(options.single_commit,
                                 options.concatenate_logs)

@@ -241,14 +241,17 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         return result
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  logger=None):
+                                  subdir=None, logger=None):
         """
         Concretely do the checkout of the upstream revision.
         """
         
-        from os.path import join, exists
+        from os.path import join, exists, split
         
-        wdir = join(basedir, module)
+        if not subdir:
+            subdir = split(module)[1]
+            
+        wdir = join(basedir, subdir)
 
         if not exists(wdir):
             svnco = SvnCheckout(working_dir=basedir)
