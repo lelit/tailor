@@ -185,16 +185,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
 
-    def _replayChangeset(self, root, changeset):
-        """
-        Do nothing except for renames, as darcs will do the right
-        thing on disappeared and added files.
-        """
-
-        for e in changeset.entries:
-            if e.action_kind == e.RENAMED:
-                self._renameEntry(root, e.old_name, e.name)
-    
     def _addEntry(self, root, entry):
         """
         Add a new entry, maybe registering the directory as well.
