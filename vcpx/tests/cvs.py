@@ -5,11 +5,6 @@
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # 
 
-"""
-"""
-
-__docformat__ = 'reStructuredText'
-
 from unittest import TestCase, TestSuite
 from datetime import datetime
 from StringIO import StringIO
@@ -96,6 +91,28 @@ updated
 =============================================================================
 """
     
+    DELETED_TEST = """\
+RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
+Working file: THANKS.txt
+head: 1.2
+branch:
+locks: strict
+access list:
+symbolic names:
+keyword substitution: kv
+total revisions: 2;      selected revisions: 2
+description:
+----------------------------
+revision 1.2
+date: 2004/06/10 02:17:20;  author: goodger;  state: dead;  lines: +3 -2
+updated
+----------------------------
+revision 1.1
+date: 2004/06/03 13:50:58;  author: goodger;  state: Exp;
+Added to project (exctracted from HISTORY.txt)
+=============================================================================
+"""
+
     def testBasicBehaviour(self):
         """Verify basic cvs log parser behaviour"""
 
@@ -121,8 +138,8 @@ updated
         self.assertEqual(entry.new_revision, '1.2')
         self.assertEqual(entry.action_kind, entry.UPDATED)
        
-    def testDoubleBehaviour(self):
-        """Verify cvs log parser behaviour"""
+    def testGroupingCapability(self):
+        """Verify cvs log parser grouping capability"""
 
         log = StringIO(self.DOUBLE_TEST)
         csets = changesets_from_cvslog(log)
@@ -156,3 +173,17 @@ updated
         cset = csets.next()
         self.assertEqual(cset.author, "felixwiemann")
         self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
+
+    def testDeletedEntry(self):
+        """Verify recognition of deleted entries in the cvs log"""
+
+        log = StringIO(self.DELETED_TEST)
+        csets = changesets_from_cvslog(log)
+
+        cset = csets.next()
+        entry = cset.entries[0]
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        cset = csets.next()
+        entry = cset.entries[0]
+        self.assertEqual(entry.action_kind, entry.DELETED)

@@ -117,12 +117,22 @@ class ChangeSetCollector(object):
         rev = revision[9:-1]
 
         info = log.readline().split(';')
+
+        assert info[0][:6] == 'date: '
         
         day,time = info[0][6:].split(' ')
         y,m,d = map(int, day.split('/'))
         hh,mm,ss = map(int, time.split(':'))
         date = datetime(y,m,d,hh,mm,ss)
+
+        assert info[1].strip()[:8] == 'author: '
+
         author = info[1].strip()[8:]
+
+        assert info[2].strip()[:7] == 'state: '
+
+        state = info[2].strip()[7:]
+        
         mesg = []
         l = log.readline()
         while (l <> '----------------------------\n' and
@@ -166,10 +176,13 @@ class ChangeSetCollector(object):
                 
             cs = self.__parseRevision(entry, log)
             while cs:
-                date,author,changelog,e,rev = cs
+                date,author,changelog,e,rev,state = cs
 
                 last = self.__collect(date, author, changelog, e, rev)
-                last.action_kind = last.UPDATED
+                if state == 'dead':
+                    last.action_kind = last.DELETED
+                else:
+                    last.action_kind = last.UPDATED
                 
                 cs = self.__parseRevision(entry, log)
 
