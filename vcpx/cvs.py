@@ -28,12 +28,12 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "cvs log -N -S %(branch)s %(since)s"
+    COMMAND = "cvs log -N -S %(branch)s %(since)s 2>/dev/null"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
         if since:
-            kwargs['since'] = "-d'%s<'" % since.isoformat(sep=' ')
+            kwargs['since'] = "-d'%s<'" % since
         else:
             kwargs['since'] = ''
 
@@ -212,10 +212,14 @@ class CvsWorkingDir(CvspsWorkingDir):
         
         from os.path import join, exists
 
-        entries = CvsEntries(root)
-        latest = entries.getMostRecentEntry()
-        since = latest.timestamp
-
+        if not sincerev:
+            entries = CvsEntries(root)
+            latest = entries.getMostRecentEntry()
+            since = latest.timestamp.isoformat(sep=' ')
+        else:
+            # Assume this is from __getGlobalRevision()
+            since = sincerev.split(';')[0]
+            
         branch = ''
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
