@@ -43,8 +43,7 @@ class SyncronizableTargetWorkingDir(object):
 
         self._replayChangeset(root, changeset)
         
-        remark = 'Upstream changeset %s - %s' % (changeset.revision,
-                                                 changeset.date)
+        remark = 'Upstream changeset %s' % changeset.revision
         changelog = changeset.log
         entries = [e.name for e in changeset.entries]
         self._commit(root, changeset.date, changeset.author,
