@@ -211,7 +211,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
-                "'svn update' returned status %s" % cvsup.exit_status)
+                "'svn update' returned status %s" % svnup.exit_status)
             
         result = []
         for line in out:
