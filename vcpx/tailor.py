@@ -352,6 +352,9 @@ class TailorizedProject(object):
             print "Leaving '%s' unchanged" % proj
             self.logger.info("Leaving '%s' unchanged, stopped by user" % proj)
             return
+        except:
+            self.logger.exception("Unable to get changes for '%s'" % proj)
+            raise
         
         nchanges = len(changesets)
         if nchanges:
