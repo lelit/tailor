@@ -87,28 +87,31 @@ class SvnLogTest(TestCase):
         self.assertEqual(revisions[0].author, 'lele')
         self.assertEqual(revisions[0].date, '2004-05-31T14:38:46.210103Z')
         self.assertEqual(revisions[0].paths, [
+            (u'/DirA', u'A'),
             (u'/DirA/FileD.txt', u'A'),
-            (u'/FileC.txt', u'A'),
             (u'/DirA/FileE.txt', u'A'),
             (u'/FileA.txt', u'A'),
-            (u'/DirA', u'A'),
-            (u'/FileB.txt', u'A')])
+            (u'/FileB.txt', u'A'),
+            (u'/FileC.txt', u'A'),
+            ])
         
         self.assertEqual(revisions[1].revision, '2')
         self.assertEqual(revisions[1].author, 'lele')
         self.assertEqual(revisions[1].date, '2004-05-31T14:40:58.583701Z')
         self.assertEqual(revisions[1].paths, [
             (u'/DirA/FileD.txt', u'M'),
+            (u'/FileA.txt', u'M'),
             (u'/FileC.txt', u'M'),
-            (u'/FileA.txt', u'M')])
+            ])
         
         self.assertEqual(revisions[2].revision, '3')
         self.assertEqual(revisions[2].author, 'lele')
         self.assertEqual(revisions[2].date, '2004-06-01T13:52:35.711425Z')
         self.assertEqual(revisions[2].paths, [
+            (u'/FileA.txt', u'D'),
+            (u'/FileB.txt', u'D'),
             (u'/FileC.txt', u'D'),
             (u'/file_a.txt', (u'A', u'/FileA.txt', u'2')),
-            (u'/FileA.txt', u'D'),
             (u'/file_b.txt', (u'A', u'/FileB.txt', u'2')),
-            (u'/FileB.txt', u'D'),
-            (u'/file_c.txt', (u'A', u'/FileC.txt', u'2'))])
+            (u'/file_c.txt', (u'A', u'/FileC.txt', u'2')),
+            ])

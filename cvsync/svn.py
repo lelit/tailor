@@ -229,6 +229,8 @@ class SvnWorkingDir(object):
 
             def endElement(self, name):
                 if name == 'logentry':
+                    # Sort the paths to make tests easier
+                    self.current.paths.sort()
                     self.revisions.append(self.current)
                     self.current = None
                 elif name in ['author', 'date', 'msg']:
