@@ -466,7 +466,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         remove+add, and both entries must be committed.
         """
 
-        entries = SyncronizableTargetWorkingDir._getCommitEntries(changeset)
+        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+                                                                  changeset)
         entries.extend([e.old_name for e in changeset.renamedEntries()])
 
         return entries
