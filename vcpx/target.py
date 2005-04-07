@@ -88,7 +88,7 @@ class SyncronizableTargetWorkingDir(object):
                 'date': changeset.date,
                 'firstlogline': changeset.log.split('\n')[0]}
             changelog = changeset.log
-            entries = [e.name for e in changeset.entries]
+            entries = self._getCommitEntries(changeset)
             self._commit(root, changeset.date, changeset.author,
                          remark, changelog, entries)
 
@@ -128,7 +128,7 @@ class SyncronizableTargetWorkingDir(object):
                                                               cs.author))
             combined_authors[cs.author] = True
             
-            for e in [e.name for e in cs.entries]:
+            for e in self._getCommitEntries(cs):
                 combined_entries[e] = True
 
         authors = ', '.join(combined_authors.keys())
@@ -144,7 +144,14 @@ class SyncronizableTargetWorkingDir(object):
         entries = combined_entries.keys()
         self._commit(root, datetime.now(), authors,
                          remark, changelog, entries)
-    
+
+    def _getCommitEntries(self, changeset):
+        """
+        Extract the names of the entries for the commit phase.
+        """
+        
+        return [e.name for e in changeset.entries]
+        
     def _replayChangeset(self, root, changeset, logger):
         """
         Replicate the actions performed by the changeset on the tree of
