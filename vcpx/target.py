@@ -169,9 +169,9 @@ class SyncronizableTargetWorkingDir(object):
         # Likewise, sort removed one, but in reverse order
         removed.sort(lambda x,y: cmp(y.name, x.name))
                 
-        if added: self._addEntries(root, added)
         if renamed: self._renameEntries(root, renamed)
         if removed: self._removeEntries(root, removed)
+        if added: self._addEntries(root, added)
             
     def __registerAppliedChangeset(self, changeset):
         """

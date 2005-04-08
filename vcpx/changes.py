@@ -129,7 +129,7 @@ class Changeset(object):
         s.append('Revision: %s' % self.revision)
         s.append('Date: %s' % str(self.date))
         s.append('Author: %s' % self.author)
-        for ak in ['Added', 'Modified', 'Removed', 'Renamed']:
+        for ak in ['Modified', 'Removed', 'Renamed', 'Added']:
             entries = getattr(self, ak.lower()+'Entries')()
             if entries:
                 s.append('%s: %s' % (ak, ','.join([e.name
