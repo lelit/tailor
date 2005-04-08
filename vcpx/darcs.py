@@ -296,9 +296,27 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Rename an entry.
         """
 
-        c = SystemCommand(working_dir=root,
-                          command="darcs mv %(old)s %(new)s")
-        c(old=shrepr(oldentry), new=shrepr(newentry))
+        from os.path import join, exists
+        from os import rename
+        
+        # Check to see if the oldentry is still there. If it does,
+        # that probably means one thing: it's been moved and then
+        # replaced, see svn 'R' event. In this case, rename the
+        # existing old entry to something else to trick "darcs mv"
+        # (that will assume the move was already done manually) and
+        # finally restore its name.
+
+        renamed = exists(join(root, oldentry))
+        if renamed:
+            rename(oldentry, oldentry + '-TAILOR-HACKED-TEMP-NAME')
+
+        try:
+            c = SystemCommand(working_dir=root,
+                              command="darcs mv %(old)s %(new)s")
+            c(old=shrepr(oldentry), new=shrepr(newentry))
+        finally:
+            if renamed:
+                rename(oldentry + '-TAILOR-HACKED-TEMP-NAME', oldentry)
 
     def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """

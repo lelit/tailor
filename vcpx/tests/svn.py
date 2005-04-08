@@ -203,3 +203,83 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'file1.txt')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'file2.txt')
+
+    SVN_R_EVENT_TEST = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="1378">
+<author>cmlenz</author>
+<date>2005-03-21T08:06:13.381116Z</date>
+<paths>
+<path
+   action="M">/trunk/trac/db.py</path>
+</paths>
+<msg>Fix to the database connection wrapper in {{{trac/db.py}}}, which would cause infinite recursion when initialization failed. Closes #1327. Thanks to Mark Rowe for the patch.</msg>
+</logentry>
+<logentry
+   revision="1379">
+<author>cmlenz</author>
+<date>2005-03-21T08:34:02.522947Z</date>
+<paths>
+<path
+   copyfrom-path="/trunk/scripts/trac-admin"
+   copyfrom-rev="1377"
+   action="A">/trunk/trac/scripts/admin.py</path>
+<path
+   action="A">/trunk/trac/scripts</path>
+<path
+   action="M">/trunk/trac/tests/tracadmin.py</path>
+<path
+   action="R">/trunk/scripts/trac-admin</path>
+<path
+   action="A">/trunk/trac/scripts/__init__.py</path>
+<path
+   action="M">/trunk/trac/tests/environment.py</path>
+<path
+   action="M">/trunk/setup.py</path>
+</paths>
+<msg>Applied Mark Rowe's patch for refactoring trad-admin into a real module so that the unit tests don't need to invoke it through the shell. Closes #1328. Many thanks.</msg>
+</logentry>
+</log>
+"""
+   
+    def testREvent(self):
+        """Verify how tailor handle svn "R" event"""
+
+        log = StringIO(self.SVN_R_EVENT_TEST)
+        csets = changesets_from_svnlog(log, 'file:///tmp/rep/trunk')
+        self.assertEqual(len(csets), 2)
+
+        cset = csets[1]
+        self.assertEqual(cset.author, 'cmlenz')
+        self.assertEqual(cset.date, datetime(2005,3,21, 8,34,02,522947))
+        self.assertEqual(len(cset.entries), 7)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'scripts/trac-admin')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'setup.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'trac/scripts')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[3]
+        self.assertEqual(entry.name, 'trac/scripts/__init__.py')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[4]
+        self.assertEqual(entry.name, 'trac/scripts/admin.py')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.old_name, 'scripts/trac-admin')
+
+        entry = cset.entries[5]
+        self.assertEqual(entry.name, 'trac/tests/environment.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+
+        

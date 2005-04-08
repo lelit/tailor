@@ -218,6 +218,11 @@ def changesets_from_svnlog(log, url):
                 for e in self.current['entries']:
                     if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
                         mv_or_cp[e.name].action_kind = e.RENAMED
+                    elif e.action_kind=='R':
+                        if mv_or_cp.has_key(e.name):
+                            mv_or_cp[e.name].action_kind = e.RENAMED
+                        e.action_kind = e.ADDED
+                        entries.append(e)
                     else:
                         entries.append(e)                        
                 
