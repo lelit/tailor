@@ -152,6 +152,27 @@ def changesets_from_svnlog(log, url):
         return None
         
     class SvnXMLLogHandler(ContentHandler):
+        # Map between svn action and tailor's.
+        # NB: 'R', in svn parlance, means REPLACED, something other
+        # system may view as a simpler ADD, taking the following as
+        # the most common idiom::
+        #
+        #   # Rename the old file with a better name
+        #   $ svn mv somefile nicer-name-scheme.py
+        #
+        #   # Be nice with lazy users
+        #   $ echo "exec nicer-name-scheme.py" > somefile
+        #
+        #   # Add the wrapper with the old name
+        #   $ svn add somefile
+        #
+        #   $ svn commit -m "Longer name for somefile"
+
+        ACTIONSMAP = {'R': 'R', # will be ChangesetEntry.ADDED
+                      'M': ChangesetEntry.UPDATED,
+                      'A': ChangesetEntry.ADDED,
+                      'D': ChangesetEntry.DELETED}
+        
         def __init__(self):
             self.changesets = []
             self.current = None
@@ -225,13 +246,13 @@ def changesets_from_svnlog(log, url):
                     if type(self.current_path_action) == type( () ):
                         old = get_entry_from_path(self.current_path_action[1])
                         if old:
-                            entry.action_kind = self.current_path_action[0]
+                            entry.action_kind = self.ACTIONSMAP[self.current_path_action[0]]
                             entry.old_name = old
                             self.renamed[entry.old_name] = True
                         else:
                             entry.action_kind = entry.ADDED
                     else:
-                        entry.action_kind = self.current_path_action
+                        entry.action_kind = self.ACTIONSMAP[self.current_path_action]
 
                     self.current['entries'].append(entry)
 

@@ -21,13 +21,13 @@ class ChangesetEntry(object):
     to indicate possible conflicts.
     """
     
-    ADDED = 'A'
-    DELETED = 'D'
-    UPDATED = 'U'
-    RENAMED = 'R'
+    ADDED = 'ADD'
+    DELETED = 'DEL'
+    UPDATED = 'UPD'
+    RENAMED = 'REN'
 
-    APPLIED = 'A'
-    CONFLICT = 'C'
+    APPLIED = 'APPLIED'
+    CONFLICT = 'CONFLICT'
     
     __slots__ = ('name', 'old_name',
                  'old_revision', 'new_revision',
