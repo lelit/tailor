@@ -158,20 +158,27 @@ class SyncronizableTargetWorkingDir(object):
         files.
         """
 
+        from os.path import join, isdir
+        
         added = changeset.addedEntries()
+        addeddirs = []
+        addedfiles = []
+        for e in added:
+            if isdir(join(root, e.name)):
+                addeddirs.append(e)
+            else:
+                addedfiles.append(e)
         renamed = changeset.renamedEntries()
         removed = changeset.removedEntries()
 
-        # Sort entries, to be sure added directories come before their
-        # entries.
-        added.sort(lambda x,y: cmp(x.name, y.name))
-
-        # Likewise, sort removed one, but in reverse order
+        # Sort removes in reverse order, to delete directories after
+        # their entries.
         removed.sort(lambda x,y: cmp(y.name, x.name))
-                
+
+        if addeddirs: self._addEntries(root, addeddirs)
         if renamed: self._renameEntries(root, renamed)
         if removed: self._removeEntries(root, removed)
-        if added: self._addEntries(root, added)
+        if addedfiles: self._addEntries(root, addedfiles)
             
     def __registerAppliedChangeset(self, changeset):
         """
