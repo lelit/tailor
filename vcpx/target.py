@@ -171,6 +171,10 @@ class SyncronizableTargetWorkingDir(object):
         renamed = changeset.renamedEntries()
         removed = changeset.removedEntries()
 
+        # Sort added dirs, to be sure that /root/addedDir/ comes before
+        # /root/addedDir/addedSubdir
+        addeddirs.sort(lambda x,y: cmp(y.name, x.name))
+        
         # Sort removes in reverse order, to delete directories after
         # their entries.
         removed.sort(lambda x,y: cmp(y.name, x.name))
