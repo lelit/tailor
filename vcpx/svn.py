@@ -131,7 +131,7 @@ def changesets_from_svnlog(log, url, repository, module):
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
 
-    def get_entry_from_path(path, url=url):
+    def get_entry_from_path(path, module=module):
         # Given the repository url of this wc, say
         #   "http://server/plone/CMFPlone/branches/Plone-2_0-branch"
         # extract the "entry" portion (a relative path) from what
@@ -139,15 +139,13 @@ def changesets_from_svnlog(log, url, repository, module):
         #   "/CMFPlone/branches/Plone-2_0-branch/tests/PloneTestCase.py"
         # that is to say "tests/PloneTestCase.py"
 
-        from os.path import split
-
-        prefix = split(path)[0]
-        while prefix:
-            if url.endswith(prefix):
-                return path[len(prefix)+1:]
-
-            prefix = split(prefix)[0]
-
+        if path.startswith(module):
+            relative = path[len(module):]
+            if relative.startswith('/'):
+                return relative[1:]
+            else:
+                return relative
+        
         # The path is outside our tracked tree...
         return None
         
@@ -191,7 +189,7 @@ def changesets_from_svnlog(log, url, repository, module):
                 if attributes.has_key('copyfrom-path'):
                     self.current_path_action = (
                         attributes['action'],
-                        attributes['copyfrom-path'][1:], # make it relative
+                        attributes['copyfrom-path'],
                         attributes['copyfrom-rev'])
                 else:
                     self.current_path_action = attributes['action']
@@ -243,7 +241,7 @@ def changesets_from_svnlog(log, url, repository, module):
             elif name in ['author', 'date', 'msg']:
                 self.current[name] = ''.join(self.current_field)
             elif name == 'path':
-                path = ''.join(self.current_field)[1:]
+                path = ''.join(self.current_field)
                 entrypath = get_entry_from_path(path)
                 if entrypath:
                     entry = ChangesetEntry(entrypath)
