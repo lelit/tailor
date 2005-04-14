@@ -292,5 +292,89 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'trac/tests/environment.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
+    SVN_REPOS_ROOT_TEST = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="2">
+<author>lele</author>
+<date>2005-04-14T20:32:24.686518Z</date>
+<paths>
+<path
+   action="A">/trunk/a.txt</path>
+<path
+   action="A">/trunk/b.txt</path>
+</paths>
+<msg>Some files in trunk</msg>
+</logentry>
+<logentry
+   revision="3">
+<author>lele</author>
+<date>2005-04-14T20:32:55.602712Z</date>
+<paths>
+<path
+   copyfrom-path="/trunk"
+   copyfrom-rev="1"
+   action="A">/branches/branch-a</path>
+<path
+   copyfrom-path="/trunk/a.txt"
+   copyfrom-rev="2"
+   action="A">/branches/branch-a/a.txt</path>
+<path
+   copyfrom-path="/trunk/b.txt"
+   copyfrom-rev="2"
+   action="A">/branches/branch-a/b.txt</path>
+</paths>
+<msg>Branched A</msg>
+</logentry>
+<logentry
+   revision="4">
+<author>lele</author>
+<date>2005-04-14T20:34:25.374254Z</date>
+<paths>
+<path
+   action="M">/branches/branch-a/a.txt</path>
+<path
+   action="M">/branches/branch-a/b.txt</path>
+</paths>
+<msg>Capitalization</msg>
+</logentry>
+<logentry
+   revision="5">
+<author>lele</author>
+<date>2005-04-14T20:35:44.753550Z</date>
+<paths>
+<path
+   action="M">/trunk/a.txt</path>
+<path
+   action="M">/trunk/b.txt</path>
+</paths>
+<msg>Merged back</msg>
+</logentry>
+</log>
+"""
 
+    def testTrackingRoot(self):
+        """Verify we are able to track the root of the repository"""
+
+       
+        log = StringIO(self.SVN_REPOS_ROOT_TEST)
+        csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn/repo',
+                                       'svn+ssh://caia/tmp/svn',
+                                       '/')
+        self.assertEqual(len(csets), 4)
         
+        cset = csets[1]
+        self.assertEqual(len(cset.entries), 3)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'branches/branch-a')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'branches/branch-a/a.txt')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'branches/branch-a/b.txt')
+        self.assertEqual(entry.action_kind, entry.ADDED)
