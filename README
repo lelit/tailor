@@ -48,7 +48,8 @@ Examples
 
 1. Bootstrap a new tailored project, starting at upstream revision 10::
 
-  $ tailor.py -b -s svn -R http://svn.server/Product -r 10 ~/darcs/MyProduct 
+  $ tailor.py -b -s svn -R http://svn.server/path/to/svnrepo \
+    --module Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
 
 2. Bootstrap a new product, fetching from CVS and storing under SVN:
    this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
@@ -69,6 +70,15 @@ Examples
 4. Merge upstream changes since last update/bootstrap::
 
   $ tailor.py ~/svnwc/MyProduct
+
+5. Migrate a whole SVN repository, starting from the beginning::
+
+  $ tailor.py -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
+    --subdir testsvn --revision 1 testdir
+
+.. warning:: When using --revision with a SVN source repository, be
+             sure that the path your are tracking was there at that
+             revision, otherwise svn will exit with an error.
 
 
 Resolving conflicts
