@@ -52,7 +52,7 @@ class SvnLogParserTest(TestCase):
         csets = changesets_from_svnlog(log,
                                        'file:///tmp/t/repo/trunk',
                                        'file:///tmp/t/repo',
-                                       'trunk')
+                                       '/trunk')
         self.assertEqual(len(csets), 2)
 
         cset = csets[0]
@@ -108,7 +108,7 @@ class SvnLogParserTest(TestCase):
         csets = changesets_from_svnlog(log,
                                        'http://server/svn/Shtoom/trunk',
                                        'http://server/svn/Shtoom',
-                                       'trunk')
+                                       '/trunk')
         self.assertEqual(len(csets), 1)
 
         cset = csets[0]
@@ -180,7 +180,7 @@ class SvnLogParserTest(TestCase):
         csets = changesets_from_svnlog(log,
                                        'file:///tmp/rep/test',
                                        'file:///tmp/rep',
-                                       'test')
+                                       '/test')
         self.assertEqual(len(csets), 4)
 
         cset = csets[1]
@@ -259,7 +259,7 @@ class SvnLogParserTest(TestCase):
         log = StringIO(self.SVN_R_EVENT_TEST)
         csets = changesets_from_svnlog(log, 'file:///tmp/rep/trunk',
                                        'file:///tmp/rep',
-                                       'trunk')
+                                       '/trunk')
         self.assertEqual(len(csets), 2)
 
         cset = csets[1]
