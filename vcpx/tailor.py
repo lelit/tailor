@@ -347,7 +347,10 @@ class TailorizedProject(object):
 
         try:
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            changesets = dwd.getUpstreamChangesets(proj, self.upstream_revision)
+            changesets = dwd.getUpstreamChangesets(proj,
+                                                   self.upstream_repos,
+                                                   self.module,
+                                                   self.upstream_revision)
         except KeyboardInterrupt:
             print "Leaving '%s' unchanged" % proj
             self.logger.info("Leaving '%s' unchanged, stopped by user" % proj)

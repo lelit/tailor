@@ -128,7 +128,7 @@ class UpdatableSourceWorkingDir(object):
         else:
             return True
 
-    def getUpstreamChangesets(self, root, sincerev):
+    def getUpstreamChangesets(self, root, repository, module, sincerev):
         """
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets

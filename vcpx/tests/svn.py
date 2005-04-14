@@ -49,7 +49,10 @@ class SvnLogParserTest(TestCase):
         """Verify svn log parser behaves correctly on renames"""
 
         log = StringIO(self.SIMPLE_RENAME_TEST)
-        csets = changesets_from_svnlog(log, 'file:///tmp/t/repo/trunk')
+        csets = changesets_from_svnlog(log,
+                                       'file:///tmp/t/repo/trunk',
+                                       'file:///tmp/t/repo',
+                                       'trunk')
         self.assertEqual(len(csets), 2)
 
         cset = csets[0]
@@ -102,7 +105,10 @@ class SvnLogParserTest(TestCase):
         """Verify svn log parser behaves correctly on renames outside tracked tree"""
 
         log = StringIO(self.RENAME_OUT_TEST)
-        csets = changesets_from_svnlog(log, 'http://server/svn/Shtoom/trunk')
+        csets = changesets_from_svnlog(log,
+                                       'http://server/svn/Shtoom/trunk',
+                                       'http://server/svn/Shtoom',
+                                       'trunk')
         self.assertEqual(len(csets), 1)
 
         cset = csets[0]
@@ -171,7 +177,10 @@ class SvnLogParserTest(TestCase):
         """Verify svn log parser behaves correctly on copies"""
 
         log = StringIO(self.COPY_AND_RENAME_TEST)
-        csets = changesets_from_svnlog(log, 'file:///tmp/rep/test')
+        csets = changesets_from_svnlog(log,
+                                       'file:///tmp/rep/test',
+                                       'file:///tmp/rep',
+                                       'test')
         self.assertEqual(len(csets), 4)
 
         cset = csets[1]
@@ -248,7 +257,9 @@ class SvnLogParserTest(TestCase):
         """Verify how tailor handle svn "R" event"""
 
         log = StringIO(self.SVN_R_EVENT_TEST)
-        csets = changesets_from_svnlog(log, 'file:///tmp/rep/trunk')
+        csets = changesets_from_svnlog(log, 'file:///tmp/rep/trunk',
+                                       'file:///tmp/rep',
+                                       'trunk')
         self.assertEqual(len(csets), 2)
 
         cset = csets[1]

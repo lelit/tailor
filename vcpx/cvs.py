@@ -276,7 +276,7 @@ class CvsWorkingDir(CvspsWorkingDir):
     CVS commits.
     """
     
-    def getUpstreamChangesets(self, root, sincerev=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         from os.path import join, exists
         from datetime import timedelta
         
@@ -302,9 +302,6 @@ class CvsWorkingDir(CvspsWorkingDir):
             if tag[0] in 'NT':
                 branch=tag[1:-1]
 
-        repository = open(join(root, 'CVS', 'Root')).read()[:-1]
-        module = open(join(root, 'CVS', 'Repository')).read()[:-1]
-        
         cvslog = CvsLog(working_dir=root)
         
         changesets = []

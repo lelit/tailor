@@ -49,8 +49,9 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         
     ## UpdatableSourceWorkingDir
 
-    def getUpstreamChangesets(self, root, sincerev):
-        return self.source.getUpstreamChangesets(root, sincerev)
+    def getUpstreamChangesets(self, root, repository, module, sincerev):
+        return self.source.getUpstreamChangesets(root, repository, module,
+                                                 sincerev)
     
     def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,

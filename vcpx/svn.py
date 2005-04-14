@@ -125,7 +125,7 @@ class SvnCheckout(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-def changesets_from_svnlog(log, url):
+def changesets_from_svnlog(log, url, repository, module):
     from xml.sax import parseString
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
@@ -275,7 +275,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def getUpstreamChangesets(self, root, sincerev=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         if sincerev:
             sincerev = int(sincerev)
         else:
@@ -294,12 +294,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if svninfo.exit_status:
             raise GetUpstreamChangesetsFailure('svn info on %r exited with status %d' % (root, svninfo.exit_status))
         
-        return self.__parseSvnLog(log, info['URL'])
+        return self.__parseSvnLog(log, info['URL'], repository, module)
 
-    def __parseSvnLog(self, log, url):
+    def __parseSvnLog(self, log, url, repository, module):
         """Return an object representation of the ``svn log`` thru HEAD."""
 
-        return changesets_from_svnlog(log, url)
+        return changesets_from_svnlog(log, url, repository, module)
     
     def _applyChangeset(self, root, changeset, logger=None):
         svnup = SvnUpdate(working_dir=root)
