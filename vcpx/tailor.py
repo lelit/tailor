@@ -248,6 +248,33 @@ class TailorizedProject(object):
             self.config.loadProject(self)
         else:
             self.__loadOldStatus()
+
+        # Fix old configs
+        
+        if self.source_kind == 'svn' and not '/' in self.module:
+            self.logger.warning('OLD config values for SVN')
+            print "The project at '%s' contains old values for" % self.root
+            print "the upstream repository (%s)" % self.upstream_repos
+            print "and module (%s)." % self.module
+            print "Please correct them, specifying the exact URL of the"
+            print "root of the SVN repository and then the prefix path up"
+            print "to the point you want, that must start with a slash."
+            print "This usually means splitting the repository URL above in"
+            crepo = self.upstream_repos
+            example_split = crepo.rfind('/', 0, crepo.rfind('/'))
+            example_repo = crepo[:example_split]
+            example_module = crepo[example_split:]
+            print "two parts. For example, that could be"
+            print "  Repository=%s" % example_repo
+            print "  Module=%s" % example_module
+            print "but your situation may vary, that's just an example!"
+            print
+            try:
+                self.repository = raw_input('Repository: ')
+                self.module = raw_input('Module/prefix: ')
+            except KeyboardInterrupt:
+                self.logger.warning("Leaving old config values, stopped by user")
+                raise
             
     def bootstrap(self, source_kind, target_kind,
                   repository, module, revision, subdir):
@@ -261,7 +288,12 @@ class TailorizedProject(object):
         """
 
         from os.path import split
-        
+
+        if source_kind == 'svn':
+            if not (module and module.startswith('/')):
+                raise InvocationError('With SVN the module argument is '
+                                      'mandatory and must start with a slash')
+                
         if not subdir:
             subdir = split(module or repository)[1] or ''
             
@@ -447,10 +479,12 @@ BOOTSTRAP_OPTIONS = [
                      "the source version control kind."),
     make_option("-m", "--module", dest="module", metavar="MODULE",
                 help="Specify the module to checkout at bootstrap time. "
-                     "It's mandatory only when dealing with CVS, and used but "
-                     "not required with SVN, but since it's used in "
-                     "the description of the target repository, you "
-                     "are encouraged to give it a value with darcs too."),
+                     "This has different meanings under the various upstream "
+                     "systems: with CVS it indicates the module, while under "
+                     "SVN it's the prefix of the tree you want and must begin "
+                     "with a slash. Since it's used in the description of the "
+                     "target repository, you may want to give it a value with "
+                     "darcs too even if it is otherwise ignored."),
     make_option("-r", "--revision", dest="revision", metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "
