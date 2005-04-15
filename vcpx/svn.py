@@ -46,9 +46,11 @@ class SvnPropSet(SystemCommand):
 
 
 class SvnLog(SystemCommand):
-    COMMAND = "TZ=UTC svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s > /tmp/tailor.last.svnlog 2>&1"
+    COMMAND = "TZ=UTC svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s > %(tempfilename)s 2>&1"
     
     def __call__(self, output=None, dry_run=False, **kwargs):
+        from tempfile import mktemp
+        
         quiet = kwargs.get('quiet', True)
         if quiet == True:
             kwargs['quiet'] = '--quiet'
@@ -70,9 +72,11 @@ class SvnLog(SystemCommand):
         if not endrev:
             kwargs['endrev'] = 'HEAD'
 
+        logfn = kwargs['tempfilename'] = mktemp('svn', 'tailor')
+        
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 
-        return open('/tmp/tailor.last.svnlog')
+        return open(logfn)
 
 
 class SvnCommit(SystemCommand):

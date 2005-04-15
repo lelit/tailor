@@ -37,9 +37,11 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > /tmp/tailor.last.cvslog 2>&1"
+    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
+        from tempfile import mktemp
+        
         since = kwargs.get('since')
         if since:
             kwargs['since'] = "-d'%s UTC<'" % since
@@ -48,10 +50,12 @@ class CvsLog(SystemCommand):
 
         branch = kwargs.get('branch') or 'HEAD'
         kwargs['branch'] = "-r:%s" % branch
-            
+        
+        logfn = kwargs['tempfilename'] = mktemp('cvs', 'tailor')
+        
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 
-        return open('/tmp/tailor.last.cvslog')
+        return open(logfn)
 
 
 def changesets_from_cvslog(log, module):
