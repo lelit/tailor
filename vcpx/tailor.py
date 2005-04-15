@@ -260,11 +260,17 @@ class TailorizedProject(object):
             print "root of the SVN repository and then the prefix path up"
             print "to the point you want, that must start with a slash."
             print "This usually means splitting the repository URL above in"
-            crepo = self.upstream_repos
-            example_split = crepo.rfind('/', 0, crepo.rfind('/'))
-            example_repo = crepo[:example_split]
-            example_module = crepo[example_split:]
             print "two parts. For example, that could be"
+            
+            crepo = self.upstream_repos
+            example_split = crepo.rfind('/', 6, crepo.rfind('/'))
+            if example_split > 0:
+                example_repo = crepo[:example_split]
+                example_module = crepo[example_split:]
+            else:
+                example_repo = 'http://svn.plone.org/collective'
+                example_module = '/ATContentTypes/trunk'
+            
             print "  Repository=%s" % example_repo
             print "  Module=%s" % example_module
             print "but your situation may vary, that's just an example!"
