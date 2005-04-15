@@ -49,7 +49,7 @@ Examples
 1. Bootstrap a new tailored project, starting at upstream revision 10::
 
   $ tailor.py -b -s svn -R http://svn.server/path/to/svnrepo \
-    --module Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
+    --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
 
 2. Bootstrap a new product, fetching from CVS and storing under SVN:
    this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
