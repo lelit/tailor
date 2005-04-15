@@ -260,7 +260,7 @@ def changesets_from_svnlog(log, url, repository, module):
 
 
     handler = SvnXMLLogHandler()
-    parseString(log.getvalue(), handler)
+    parseString(log.read(), handler)
     return handler.changesets
 
 
