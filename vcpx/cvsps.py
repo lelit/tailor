@@ -215,11 +215,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         
         if not entrydir:
             return
+
+        try:
+            cache = self.__deletedDirsCache
+        except AttributeError:
+            cache = self.__deletedDirsCache = {}
+
+        if entrydir in cache:
+            return
         
         absentrydir = join(root, entrydir)
         if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
             deldir = changeset.addEntry(entrydir, None)
             deldir.action_kind = deldir.DELETED
+
+        cache[entrydir] = True
         
     def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname, split
