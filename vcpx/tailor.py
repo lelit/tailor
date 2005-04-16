@@ -424,7 +424,9 @@ class TailorizedProject(object):
 GENERAL_OPTIONS = [
     make_option("-D", "--debug", dest="debug",
                 action="store_true", default=False,
-                help="Print each executed command."),
+                help="Print each executed command. This also keeps "
+                     "temporary files with the upstream logs, that are "
+                     "otherwise removed after use."),
     make_option("-v", "--verbose", dest="verbose",
                 action="store_true", default=False,
                 help="Be verbose, echoing the changelog of each applied "

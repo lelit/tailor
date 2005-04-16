@@ -50,6 +50,7 @@ class SvnLog(SystemCommand):
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         from tempfile import mktemp
+        from os import remove
         
         quiet = kwargs.get('quiet', True)
         if quiet == True:
@@ -76,7 +77,11 @@ class SvnLog(SystemCommand):
         
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 
-        return open(logfn)
+        log = open(logfn)
+        if not SystemCommand.VERBOSE:
+            remove(logfn)
+            
+        return log
 
 
 class SvnCommit(SystemCommand):

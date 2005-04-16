@@ -41,6 +41,7 @@ class CvsLog(SystemCommand):
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         from tempfile import mktemp
+        from os import remove
         
         since = kwargs.get('since')
         if since:
@@ -55,7 +56,11 @@ class CvsLog(SystemCommand):
         
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 
-        return open(logfn)
+        log = open(logfn)
+        if not SystemCommand.VERBOSE:
+            remove(logfn)
+            
+        return log
 
 
 def changesets_from_cvslog(log, module):
