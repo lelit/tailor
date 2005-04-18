@@ -23,6 +23,7 @@ from svn import SvnWorkingDir
 from cvs import CvsWorkingDir
 from cvsps import CvspsWorkingDir
 from darcs import DarcsWorkingDir
+from monotone import MonotoneWorkingDir
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """

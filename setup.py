@@ -3,12 +3,12 @@
 from distutils.core import setup
 
 setup(name='tailor',
-    version='devel-2005-02-10',
+    version='devel-2005-04-19',
     author='Lele Gaifax',
     author_email='lele@nautilus.homeip.net',
     packages=['vcpx'],
     scripts=['tailor.py'],
-    description='a tool to migrate changesets between CVS, Subversion, and darcs repositories.',
+    description='A tool to migrate changesets between CVS, Subversion, darcs and monotone repositories.',
     long_description="""\
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
