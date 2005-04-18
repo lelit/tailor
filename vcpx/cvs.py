@@ -57,7 +57,6 @@ class CvsLog(SystemCommand):
 
         return open(logfn)
 
-
 def changesets_from_cvslog(log, module):
     """
     Parse CVS log.
