@@ -9,9 +9,35 @@ __docformat__ = 'reStructuredText'
 from StringIO import StringIO
 from sys import stderr
 
+
 def shrepr(str):
     str = str.replace("'", "\\'")
     return "'" + str + "'"
+
+
+class ReopenableNamedTemporaryFile:
+    """
+    This uses tempfile.mkstemp() to generate a secure temp file.  It
+    then closes the file, leaving a zero-length file as a placeholder.
+    You can get the filename with ReopenableNamedTemporaryFile.name.
+    When the ReopenableNamedTemporaryFile instance is garbage
+    collected or its shutdown() method is called, it deletes the file.
+
+    Copied from Zooko's pyutil.fileutil, http://zooko.com/repos/pyutil
+    """
+    def __init__(self, suffix=None, prefix=None, dir=None, text=None):
+        from tempfile import mkstemp
+        
+        self.name = mkstemp(suffix, prefix, dir, text)[1]
+      
+    def __del__(self):
+        self.shutdown()
+       
+    def shutdown(self):
+        from os import remove
+        
+        remove(self.name)
+
 
 class VerboseStringIO(StringIO):
 

@@ -11,7 +11,7 @@ Given `cvsps` shortcomings, this backend uses CVS only.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand
+from shwrap import SystemCommand, ReopenableNamedTemporaryFile
 from cvsps import CvspsWorkingDir
 from source import GetUpstreamChangesetsFailure
 
@@ -36,33 +36,10 @@ def compare_cvs_revs(rev1, rev2):
     return cmp(r1, r2)
 
 
-import tempfile
-
-class ReopeableNamedTemporaryFile:
-    """
-    This uses tempfile.mkstemp() to generate a secure temp file.  It then closes
-    the file, leaving a zero-length file as a placeholder.  You can get the
-    filename with ReopenableNamedTemporaryFile.name.  When the
-    ReopenableNamedTemporaryFile instance is garbage collected or its shutdown()
-    method is called, it deletes the file.
-
-    Copied from Zooko's pyutil.fileutil, http://zooko.com/repos/pyutil
-    """
-    def __init__(self, suffix=None, prefix=None, dir=None, text=None):
-        self.name = mkstemp(suffix, prefix, dir, text)[1]
-      
-    def __del__(self):
-        self.shutdown()
-       
-    def shutdown(self):
-        os.remove(self.name)
-
 class CvsLog(SystemCommand):
     COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
-        from tempfile import mktemp
-        
         since = kwargs.get('since')
         if since:
             kwargs['since'] = "-d'%s UTC<'" % since
@@ -74,7 +51,7 @@ class CvsLog(SystemCommand):
         
         
         self.rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
-        logfn = kwargs['tempfilename'] = rontf.name
+        logfn = kwargs['tempfilename'] = self.rontf.name
         
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 

@@ -13,7 +13,7 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr
+from shwrap import SystemCommand, shrepr, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
@@ -171,26 +171,6 @@ def changesets_from_cvsps(log, sincerev=None):
 
             yield Changeset(**pset)
 
-import tempfile
-
-class ReopeableNamedTemporaryFile:
-    """
-    This uses tempfile.mkstemp() to generate a secure temp file.  It then closes
-    the file, leaving a zero-length file as a placeholder.  You can get the
-    filename with ReopenableNamedTemporaryFile.name.  When the
-    ReopenableNamedTemporaryFile instance is garbage collected or its shutdown()
-    method is called, it deletes the file.
-
-    Copied from Zooko's pyutil.fileutil, http://zooko.com/repos/pyutil
-    """
-    def __init__(self, suffix=None, prefix=None, dir=None, text=None):
-        self.name = mkstemp(suffix, prefix, dir, text)[1]
-      
-    def __del__(self):
-        self.shutdown()
-       
-    def shutdown(self):
-        os.remove(self.name)
 
 class CvspsWorkingDir(UpdatableSourceWorkingDir,
                       SyncronizableTargetWorkingDir):
