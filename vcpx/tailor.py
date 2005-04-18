@@ -457,9 +457,15 @@ UPDATE_OPTIONS = [
                 help="Specify the prototype that will be used "
                      "to compute the patch name.  The prototype may contain "
                      "%(keyword)s such as 'module', 'author', 'date', "
-                     "'revision' and 'firstlogline' for normal updates, "
-                     "otherwise 'module', 'authors', 'nchangesets', 'mindate' "
-                     "and 'maxdate' when using --single-commit."),
+                     "'revision', 'firstlogline', 'remaininglog' for normal "
+                     "updates, otherwise 'module', 'authors', 'nchangesets', "
+                     "'mindate' and 'maxdate' when using --single-commit."),
+    make_option("-1", "--remove-first-log-line", action="store_true",
+                default=False,
+                help="Remove the first line of the upstream changelog. This "
+                     "is intented to go in pair with --patch-name-format, "
+                     "when using it's 'firstlogline' variable build the "
+                     "name of the patch."),                
     make_option("-N", "--dont-refill-changelogs", action="store_true",
                 default=False,
                 help="Do not refill every changelog, but keep them as is. "
@@ -545,6 +551,7 @@ def main():
     
     SystemCommand.VERBOSE = options.debug    
     SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
+    SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
     
     if options.configfile:

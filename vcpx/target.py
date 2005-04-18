@@ -55,6 +55,11 @@ class SyncronizableTargetWorkingDir(object):
     """
     The format string used to compute the patch name, used by underlying VCS.
     """
+
+    REMOVE_FIRST_LOG_LINE = False
+    """
+    When true, remove the first line from the upstream changelog.
+    """
     
     def replayChangeset(self, root, module, changeset,
                         delayed_commit=False, logger=None):
@@ -80,14 +85,25 @@ class SyncronizableTargetWorkingDir(object):
         else:
             from os.path import split
 
+            loglines = changeset.log.split('\n')
+            if len(loglines)>1:
+                firstlogline = loglines[0]
+                remaininglog = '\n'.join(loglines[1:])
+            else:
+                firstlogline = changeset.log
+                remaininglog = ''
             remark = (self.PATCH_NAME_FORMAT or
                       '%(module)s: changeset %(revision)s') % {
                 'module': module,
                 'revision': changeset.revision,
                 'author': changeset.author,
                 'date': changeset.date,
-                'firstlogline': changeset.log.split('\n')[0]}
-            changelog = changeset.log
+                'firstlogline': firstlogline,
+                'remaininglog': remaininglog}
+            if self.REMOVE_FIRST_LOG_LINE:
+                changelog = remaininglog
+            else:
+                changelog = changeset.log
             entries = self._getCommitEntries(changeset)
             self._commit(root, changeset.date, changeset.author,
                          remark, changelog, entries)
