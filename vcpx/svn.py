@@ -44,13 +44,32 @@ class SvnPropGet(SystemCommand):
 class SvnPropSet(SystemCommand):
     COMMAND = "svn propset --quiet %(property)s %(value)s %(entry)s"
 
+import shutil, tempfile
+
+class ReopeableNamedTemporaryFile:
+    """
+    This uses tempfile.mkstemp() to generate a secure temp file.  It then closes
+    the file, leaving a zero-length file as a placeholder.  You can get the
+    filename with ReopenableNamedTemporaryFile.name.  When the
+    ReopenableNamedTemporaryFile instance is garbage collected or its shutdown()
+    method is called, it deletes the file.
+
+    Copied from Zooko's pyutil.fileutil, http://zooko.com/repos/pyutil
+    """
+    def __init__(self, suffix=None, prefix=None, dir=None, text=None):
+        self.name = mkstemp(suffix, prefix, dir, text)[1]
+      
+    def __del__(self):
+        self.shutdown()
+       
+    def shutdown(self):
+        os.remove(self.name)
 
 class SvnLog(SystemCommand):
     COMMAND = "TZ=UTC svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s > %(tempfilename)s 2>&1"
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         from tempfile import mktemp
-        from os import remove
         
         quiet = kwargs.get('quiet', True)
         if quiet == True:
@@ -73,15 +92,12 @@ class SvnLog(SystemCommand):
         if not endrev:
             kwargs['endrev'] = 'HEAD'
 
-        logfn = kwargs['tempfilename'] = mktemp('svn', 'tailor')
+        rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
+        logfn = kwargs['tempfilename'] = rontf.name
         
         SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
 
-        log = open(logfn)
-        if not SystemCommand.VERBOSE:
-            remove(logfn)
-            
-        return log
+        return open(logfn)
 
 
 class SvnCommit(SystemCommand):
@@ -89,15 +105,15 @@ class SvnCommit(SystemCommand):
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logfile = kwargs.get('logfile')
+        rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
         if not logfile:
-            from tempfile import NamedTemporaryFile
-
-            log = NamedTemporaryFile(bufsize=0)
             logmessage = kwargs.get('logmessage')
             if logmessage:
+                log = open(rontf.name, "w")
                 log.write(logmessage)
+                log.close()
             
-            kwargs['logfile'] = log.name
+            kwargs['logfile'] = rontf.name
         
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)

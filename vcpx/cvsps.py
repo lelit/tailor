@@ -171,6 +171,26 @@ def changesets_from_cvsps(log, sincerev=None):
 
             yield Changeset(**pset)
 
+import tempfile
+
+class ReopeableNamedTemporaryFile:
+    """
+    This uses tempfile.mkstemp() to generate a secure temp file.  It then closes
+    the file, leaving a zero-length file as a placeholder.  You can get the
+    filename with ReopenableNamedTemporaryFile.name.  When the
+    ReopenableNamedTemporaryFile instance is garbage collected or its shutdown()
+    method is called, it deletes the file.
+
+    Copied from Zooko's pyutil.fileutil, http://zooko.com/repos/pyutil
+    """
+    def __init__(self, suffix=None, prefix=None, dir=None, text=None):
+        self.name = mkstemp(suffix, prefix, dir, text)[1]
+      
+    def __del__(self):
+        self.shutdown()
+       
+    def shutdown(self):
+        os.remove(self.name)
 
 class CvspsWorkingDir(UpdatableSourceWorkingDir,
                       SyncronizableTargetWorkingDir):
@@ -487,25 +507,24 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Commit the changeset.
         """
         
-        from tempfile import NamedTemporaryFile
-        
-        log = NamedTemporaryFile(bufsize=0)
+        rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
+        log = open(rontf.name, "w")
         log.write(remark)
         log.write('\n')
         if changelog:
             log.write(changelog)
             log.write('\n')
-        
+        log.close()
+       
         c = CvsCommit(working_dir=root)
 
         if entries:
             entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
-            
-        c(entries=entries, logfile=log.name)
-        log.close()
-        
+          
+        c(entries=entries, logfile=rontf.name)
+       
     def _removeEntry(self, root, entry):
         """
         Remove an entry.
