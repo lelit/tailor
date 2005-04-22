@@ -108,6 +108,7 @@ class SystemCommand(object):
 
             if input:
                 self.exit_status = wait()[1]
+                out.close()
             else:
                 self.exit_status = out.close() or 0
         else:
