@@ -8,7 +8,7 @@ __docformat__ = 'reStructuredText'
 
 from StringIO import StringIO
 from sys import stderr
-
+import threading
 
 def shrepr(str):
     str = str.replace("'", "\\'")
@@ -47,6 +47,9 @@ class VerboseStringIO(StringIO):
         StringIO.write(self, data)
         stderr.write('.'*data.count('\n'))
 
+joinall(threadlist):
+    for t in threadlist:
+        t.join()
 
 class SystemCommand(object):
     """Wrap a single command to be executed by the shell."""
@@ -75,6 +78,7 @@ class SystemCommand(object):
         
         from os import system, popen, popen2, wait, chdir
         from shutil import copyfileobj
+        threadlist = []
         
         wdir = self.working_dir or kwargs.get('working_dir')
         if wdir:
@@ -98,13 +102,23 @@ class SystemCommand(object):
 
             if input:
                 inp, out = popen2(command)
-                inp.write(input)
-                inp.close()
+                def handleinp():
+                    inp.write(input)
+                    inp.close()
+                inpthread = threading.Thread(target = handleinp)
+                inpthread.start()
+                threadlist.append(inpthread)
             else:
                 out = popen(command)
 
-            copyfileobj(out, output, length=128)
-            output.seek(0)
+            def handleout():
+                copyfileobj(out, output, length=128)
+                output.seek(0)
+            outthread = threading.Thread(target = handleeout)
+            outthread.start()
+            threadlist.append(outthread)
+
+            joinall(threadlist)
 
             if input:
                 self.exit_status = wait()[1]
