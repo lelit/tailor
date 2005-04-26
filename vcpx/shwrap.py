@@ -114,7 +114,7 @@ class SystemCommand(object):
             def handleout():
                 copyfileobj(out, output, length=128)
                 output.seek(0)
-            outthread = threading.Thread(target = handleeout)
+            outthread = threading.Thread(target = handleout)
             outthread.start()
             threadlist.append(outthread)
 
