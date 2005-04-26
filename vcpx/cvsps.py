@@ -259,7 +259,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 # This is a new directory entry, there is no need to update it
                 continue
             
-            cvsup(output=True, entry=e.name, revision=e.new_revision)
+            cvsup(output=True, entry=shrepr(e.name), revision=e.new_revision)
             
             if cvsup.exit_status:
                 if logger: logger.warning("'cvs update' on %s exited "
