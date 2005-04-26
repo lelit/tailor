@@ -47,7 +47,7 @@ class VerboseStringIO(StringIO):
         StringIO.write(self, data)
         stderr.write('.'*data.count('\n'))
 
-joinall(threadlist):
+def joinall(threadlist):
     for t in threadlist:
         t.join()
 
