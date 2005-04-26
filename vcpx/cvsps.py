@@ -33,7 +33,7 @@ class CvsPsLog(SystemCommand):
 
     
 class CvsUpdate(SystemCommand):
-    COMMAND = 'cvs -q %(dry)supdate -d %(revision)s %(entry)s 2>&1'
+    COMMAND = "cvs -q %(dry)supdate -d %(revision)s '%(entry)s' 2>&1"
     
     def __call__(self, output=None, dry_run=False, **kwargs):
         if dry_run:
