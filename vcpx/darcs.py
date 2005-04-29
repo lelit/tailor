@@ -224,10 +224,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             
             dpull = SystemCommand(working_dir=wdir,
                                  command="darcs pull --all --verbose"
-                                         " %(tag)s '%(repository)s'"
+                                         " %(tag)s %(repository)s"
                                          " 2>&1")
             
-            output = dpull(output=True, repository=repository,
+            output = dpull(output=True, repository=shrepr(repository),
                            tag=(revision<>'HEAD' and
                                 '--tag=%s' % shrepr(revision)
                                 or ''))
