@@ -105,3 +105,5 @@ class SystemCommandTest(TestCase):
         self.assertEqual(shrepr(r'''doublequote "'''), r'''"doublequote \""''')
         self.assertEqual(shrepr(r'''quote ' backslash \ doublequote "'''),
                          r'''"quote ' backslash \\ doublequote \""''')
+        self.assertEqual(shrepr(r'''$ubdole'''), r'''"\$ubdole"''')
+
