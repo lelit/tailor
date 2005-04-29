@@ -251,7 +251,7 @@ class SyncronizableTargetWorkingDir(object):
 
     def _renameEntries(self, root, entries):
         """
-        Rename a sequence of entries."
+        Rename a sequence of entries.
         """
         
         for e in entries:
