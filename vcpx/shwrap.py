@@ -11,8 +11,9 @@ from sys import stderr
 import threading
 
 def shrepr(str):
-    str = str.replace("'", "\\'")
-    return "'" + str + "'"
+    str = '\\\\'.join(str.split('\\'))
+    str = '\\"'.join(str.split('"'))
+    return '"' + str + '"'
 
 
 class ReopenableNamedTemporaryFile:

@@ -5,7 +5,7 @@
 # 
 
 from unittest import TestCase, TestSuite
-from vcpx.shwrap import SystemCommand
+from vcpx.shwrap import SystemCommand, shrepr
 
 class SystemCommandTest(TestCase):
     """Perform some basic tests of the wrapper.
@@ -99,3 +99,9 @@ class SystemCommandTest(TestCase):
         out = c(output=True)
         self.assertEqual(out.read(), "/tmp\n")
 
+    def testQuoting(self):
+        """Verifify the quoting mechanism."""
+
+        self.assertEqual(shrepr(r'''doublequote "'''), r'''"doublequote \""''')
+        self.assertEqual(shrepr(r'''quote ' backslash \ doublequote "'''),
+                         r'''"quote ' backslash \\ doublequote \""''')
