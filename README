@@ -84,6 +84,12 @@ Examples
              sure that the path your are tracking was there at that
              revision, otherwise svn will exit with an error.
 
+6. Bootstrap from a CVS branch, starting from a given point in time::
+
+  $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
+              --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
+              --module something new-darcs-repository
+
 
 Resolving conflicts
 ===================

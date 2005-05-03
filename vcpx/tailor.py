@@ -502,7 +502,8 @@ BOOTSTRAP_OPTIONS = [
     make_option("-r", "--revision", dest="revision", metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "
-                     "version control kind.  For CVS it may be a tag/branch. "
+                     "version control kind. For CVS it may be either a branch "
+                     "name, a timestamp or both separated by a space. "
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),

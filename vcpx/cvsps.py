@@ -63,7 +63,28 @@ class CvsRemove(SystemCommand):
 
 
 class CvsCheckout(SystemCommand):
-    COMMAND = "cvs -q -d%(repository)s checkout -r%(revision)s -d%(workingdir)s %(module)s"
+    COMMAND = "cvs -q -d%(repository)s checkout %(revision)s -d%(workingdir)s %(module)s"
+
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        revision = kwargs['revision']
+        if revision is None:
+            revision = ''
+        else:
+            # If the revision contains a space, assume it really
+            # specify a branch and a timestamp. If it starts with
+            # a digit, assume it's a timestamp. Otherwise, it must
+            # be a branch name
+            if revision[0] in '0123456789':
+                revision = "-D'%s'" % revision
+            elif ' ' in revision:
+                branch, timestamp =revision.split(' ', 1)
+                revision = "-r%s -D'%s'" % (branch, timestamp)
+            else:
+                revision = '-r%s' % revision
+        kwargs['revision'] = revision
+        
+        return SystemCommand.__call__(self, output=output,
+                                      dry_run=False, **kwargs)
 
 
 def changesets_from_cvsps(log, sincerev=None):
@@ -290,7 +311,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                   subdir=None, logger=None):
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
-        the name of the tag to get.
+        the name of the tag to get, or as a date if it starts with a number.
 
         Return the effective cvsps revision.
         """
