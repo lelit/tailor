@@ -18,6 +18,10 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 SVN_CMD = "svn"
 
+import string
+allbadchars="\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0B\x0C\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7f"
+TT = string.maketrans(allbadchars, "?"*len(allbadchars))
+
 def changesets_from_svnlog(log, url, repository, module):
     from xml.sax import parse
     from xml.sax.handler import ContentHandler
@@ -158,7 +162,7 @@ def changesets_from_svnlog(log, url, repository, module):
 
 
     handler = SvnXMLLogHandler()
-    parse(log, handler)
+    parseString(log.read(), handler)
     return handler.changesets
 
 
