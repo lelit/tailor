@@ -20,15 +20,15 @@ class MonotoneCommit(SystemCommand):
     COMMAND = "MONOTONE_AUTHOR=\"%(key)s\" monotone commit --date=\"%(date)s\" %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
-                log = open(self.working_dir + "/MT/log", "w");
+        log = open(self.working_dir + "/MT/log", "w");
 
-                logmessage = kwargs.get('logmessage')
-                if logmessage:
-                        log.write(logmessage + "\n")
+        logmessage = kwargs.get('logmessage')
+        if logmessage:
+            log.write(logmessage + "\n")
 
-                log.close();
+        log.close();
 
-                return SystemCommand.__call__(self, output=output,
+        return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
 
 class MonotoneAdd(SystemCommand):
