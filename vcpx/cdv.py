@@ -76,6 +76,23 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
                           command="cdv rename %(old)s %(new)s")
         c(old=shrepr(oldentry), new=repr(newentry))
 
+    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
+        """
+        Initialize a new working directory, just extracted from
+        some other VC system, importing everything's there.
+        """
+
+        from datetime import datetime
+        from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
+             BOOTSTRAP_CHANGELOG
+        
+        now = datetime.now()
+        self._initializeWorkingDir(root, repository, module, subdir)
+        self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
+                     BOOTSTRAP_PATCHNAME % module,
+                     BOOTSTRAP_CHANGELOG % locals(),
+                     entries=[subdir, '%s/...' % subdir])
+
     def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
         """
         Execute `cdv init`.
