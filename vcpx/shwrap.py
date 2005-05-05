@@ -119,7 +119,7 @@ class SystemCommand(object):
             if input:
                 inp, out = popen2(command)
                 def handleinp():
-                    inp.write(input)
+                    inp.write(input.encode('utf8'))
                     inp.close()
                 inpthread = threading.Thread(target = handleinp)
                 inpthread.start()

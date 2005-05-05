@@ -21,6 +21,10 @@ from dualwd import DualWorkingDir
 from source import InvocationError
 from session import interactive
 
+# Make printouts be UTF-8 encoded.
+import codecs, sys
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
 
