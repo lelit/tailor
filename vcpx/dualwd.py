@@ -24,6 +24,7 @@ from cvs import CvsWorkingDir
 from cvsps import CvspsWorkingDir
 from darcs import DarcsWorkingDir
 from monotone import MonotoneWorkingDir
+from cdv import CdvWorkingDir
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """

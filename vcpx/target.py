@@ -306,7 +306,7 @@ class SyncronizableTargetWorkingDir(object):
             c(entry=shrepr(subdir))
 
         for dir, subdirs, files in walk(join(root, subdir)):
-            for excd in ['.svn', '_darcs', 'CVS']:
+            for excd in ['.svn', '_darcs', 'CVS', '.cdv']:
                 if excd in subdirs:
                     subdirs.remove(excd)
 
