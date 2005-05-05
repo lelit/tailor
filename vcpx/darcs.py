@@ -169,8 +169,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss)
                 l = output.readline()
-                assert l.startswith('  * ')
-                name = l[4:-1]
+                assert (l.startswith('  * ') or
+                        l.startswith('  UNDO:') or
+                        l.startswith('  tagged'))
+
+                if l.startswith('  *'):
+                    name = l[4:-1]
+                else:
+                    name = l[2:-1]
 
                 changelog = []
                 l = output.readline()
