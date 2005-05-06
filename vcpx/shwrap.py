@@ -14,6 +14,10 @@ def shrepr(str):
     str = '\\\\'.join(str.split('\\'))
     str = '\\"'.join(str.split('"'))
     str = '\\$'.join(str.split('$'))
+    str = '\\*'.join(str.split('*'))
+    str = '\\?'.join(str.split('?'))
+    str = '\\`'.join(str.split('`'))
+    
     return '"' + str + '"'
 
 
