@@ -18,11 +18,13 @@ class CdvAdd(SystemCommand):
     COMMAND = "cdv add %(entry)s"
 
 class CdvCommit(SystemCommand):
-    COMMAND = "cdv commit -m %(comment)s %(entries)s"
+    COMMAND = "cdv -u %(user)s commit -m %(comment)s %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logmessage = kwargs.get('logmessage')
         kwargs['comment'] = shrepr(logmessage)
+        author = kwargs.get('author')
+        kwargs['user'] = shrepr(author)
         
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
@@ -47,8 +49,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         c = CdvCommit(working_dir=root)
         
-        logmessage = "%s\nOriginal author: %s\nDate: %s" % (remark, author,
-                                                            date)
+        logmessage = "%s\nOriginal date: %s" % (remark, date)
         if changelog:
             logmessage = logmessage + '\n\n' + changelog
             
@@ -57,7 +58,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         else:
             entries = '.'
             
-        c(logmessage=logmessage, entries=entries)
+        c(author=author, logmessage=logmessage, entries=entries)
         
     def _removeEntries(self, root, entries):
         """
