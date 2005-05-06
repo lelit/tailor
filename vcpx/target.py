@@ -189,7 +189,7 @@ class SyncronizableTargetWorkingDir(object):
 
         # Sort added dirs, to be sure that /root/addedDir/ comes before
         # /root/addedDir/addedSubdir
-        addeddirs.sort(lambda x,y: cmp(y.name, x.name))
+        addeddirs.sort(lambda x,y: cmp(x.name, y.name))
         
         # Sort removes in reverse order, to delete directories after
         # their entries.
