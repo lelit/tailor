@@ -11,12 +11,21 @@ from sys import stderr
 import threading
 
 def shrepr(str):
+    """
+    Escape an arbitrary string so that it is safe to pass it as
+    argument to a shell command.
+    """
+    
     str = '\\\\'.join(str.split('\\'))
     str = '\\"'.join(str.split('"'))
     str = '\\$'.join(str.split('$'))
     str = '\\*'.join(str.split('*'))
     str = '\\?'.join(str.split('?'))
     str = '\\`'.join(str.split('`'))
+    str = '\\('.join(str.split('('))
+    str = '\\)'.join(str.split(')'))
+    str = '\\['.join(str.split('['))
+    str = '\\]'.join(str.split(']'))
     
     return '"' + str + '"'
 
