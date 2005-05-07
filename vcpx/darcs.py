@@ -196,16 +196,20 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Do the actual work of applying the changeset to the working copy.
         """
 
+        patchname=shrepr(changeset.revision)
+        
         c = SystemCommand(working_dir=root,
                           command="darcs pull --all --patches=%(patch)s")
-        output = c(output=True, patch=shrepr(changeset.revision))
+        output = c(output=True, patch=patchname)
         if c.exit_status:
             raise ChangesetApplicationFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
 
         c = SystemCommand(working_dir=root,
-                          command="darcs changes --last=1 --xml-output --summ")
-        last = changesets_from_darcschanges(c(output=True))
-        changeset.entries.extend(last[0].entries)
+                          command="darcs changes --patches=%(patch)s"
+                                  " --xml-output --summ")
+        last = changesets_from_darcschanges(c(output=True, patch=patchname))
+        if last:
+            changeset.entries.extend(last[0].entries)
 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None):
