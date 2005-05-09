@@ -330,7 +330,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Execute `darcs initialize`.
+        Execute `darcs initialize` and tweak the default settings of
+        the repository, then add the whole subtree.
         """
 
         from os.path import join
@@ -347,10 +348,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         motd.close()
 
         boring = open(join(root, '_darcs/prefs/boring'), 'a')
-        boring.write('^tailor.log$\n^tailor.info$\n')
+        boring.write('^tailor.log$\n^tailor.info$\n^.cdv\n^MT\n')
         boring.close()
         
-        c = SystemCommand(working_dir=root,
-                          command="darcs add --case-ok --recursive"
-                          " --quiet %(entry)s")
-        c(entry=shrepr(subdir))
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
+                                                            repository, module,
+                                                            subdir)
