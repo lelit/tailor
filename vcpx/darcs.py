@@ -328,7 +328,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if renamed:
                 rename(oldentry + '-TAILOR-HACKED-TEMP-NAME', oldentry)
 
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Execute `darcs initialize`.
         """

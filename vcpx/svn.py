@@ -395,7 +395,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         c = SvnMv(working_dir=root)
         c(old=shrepr(oldentry), new=repr(newentry))
 
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Add the given directory to an already existing svn working tree.
         """
@@ -407,4 +407,4 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
-                                                            subdir, SvnAdd)
+                                                            subdir)

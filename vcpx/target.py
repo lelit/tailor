@@ -279,21 +279,15 @@ class SyncronizableTargetWorkingDir(object):
                      BOOTSTRAP_CHANGELOG % locals(),
                      entries=[subdir])
 
-    def _initializeWorkingDir(self, root, repository, module, subdir,
-                              addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Assuming the `root` directory contains a working copy `module`
         extracted from some VC repository, add it and all its content
         to the target repository.
 
-        This implementation first runs the given `addentry`
-        *SystemCommand* on the `root` directory, then it walks down
-        the `root` tree executing the same command on each entry
-        excepted the usual VC-specific control directories such as
-        ``.svn``, ``_darcs`` or ``CVS``.
-
-        If this does make sense, subclasses should just call this
-        method with the right `addentry` command.
+        This implementation recursively add every file in the subtree.
+        Subclasses should override this method doing whatever is
+        appropriate for the backend.
         """
 
         assert addentry, "Subclass should have specified something as addentry"

@@ -88,7 +88,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         c = MonotoneMv(working_dir=root)
         c(old=shrepr(oldentry), new=repr(newentry))
 
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Execute `monotone setup`.
         """

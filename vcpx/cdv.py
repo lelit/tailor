@@ -94,7 +94,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
                      BOOTSTRAP_CHANGELOG % locals(),
                      entries=[subdir, '%s/...' % subdir])
 
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
+    def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Execute `cdv init`.
         """
@@ -114,4 +114,4 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
-                                                            subdir, CdvAdd)
+                                                            subdir)
