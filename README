@@ -182,15 +182,24 @@ Further help
 ============
 
 See the output of tailor.py -h for some further tips.  There's also a
-`wiki page`_ that may give you some other hints.
+`wiki page`_ that may give you some other hints. The development of
+Tailor is mainly driven by user requests at this point, and the
+preferred comunication media is the dedicated `mailing list`_ [#]_.
 
 .. _wiki page:
    http://www.darcs.net/DarcsWiki/Tailor
 
+.. _mailing list:
+   http://lists.zooko.com/mailman/listinfo/tailor
+   
 I will be more than happy to answer any doubt, question or suggestion
 you may have on it. I'm usually hanging as "lelit" on the IRC channel
 devoted to darcs on the `freenode.net` network. Do not hesitate to
 contact me either by email or chatting there.
+
+.. [#] I wish to say a big `Thank you` to Zooko, for hosting the ML
+       and for supporting Tailor in several ways, from suggestions to
+       bug reporting and fixing.
 
 
 Author
