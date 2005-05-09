@@ -52,33 +52,33 @@ Examples
 
 1. Bootstrap a new tailored project, starting at upstream revision 10::
 
-  $ tailor.py -b -s svn -R http://svn.server/path/to/svnrepo \
-    --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
+    $ tailor.py -b -s svn -R http://svn.server/path/to/svnrepo \
+      --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
 
 2. Bootstrap a new product, fetching from CVS and storing under SVN:
    this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
    already under SVN::
 
-  $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
-              --repository :pserver:cvs.zope.org:/cvs-repository \
-              --module CMF/CMFCore ~/svnwc/cmfcore
+    $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
+                --repository :pserver:cvs.zope.org:/cvs-repository \
+                --module CMF/CMFCore ~/svnwc/cmfcore
 
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
    extracted as "CMFTopic" (ie, the last component of the module
    name)::
 
-  $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
-              -m CMF/CMFTopic ~/darcs/cmftopic
+    $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
+                -m CMF/CMFTopic ~/darcs/cmftopic
               
 4. Merge upstream changes since last update/bootstrap::
 
-  $ tailor.py ~/svnwc/MyProduct
+    $ tailor.py ~/svnwc/MyProduct
 
 5. Migrate a whole SVN repository, starting from the beginning::
 
-  $ tailor.py -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
-    --subdir testsvn --revision 1 testdir
+    $ tailor.py -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
+      --subdir testsvn --revision 1 testdir
 
 .. warning:: When using --revision with a SVN source repository, be
              sure that the path your are tracking was there at that
@@ -86,9 +86,9 @@ Examples
 
 6. Bootstrap from a CVS branch, starting from a given point in time::
 
-  $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
-              --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
-              --module something new-darcs-repository
+    $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
+                --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
+                --module something new-darcs-repository
 
 
 Resolving conflicts
