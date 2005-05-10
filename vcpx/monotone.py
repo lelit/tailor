@@ -17,9 +17,28 @@ from source import UpdatableSourceWorkingDir, \
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 class MonotoneCommit(SystemCommand):
-    COMMAND = "MONOTONE_AUTHOR=\"%(key)s\" monotone commit --date=\"%(date)s\" %(entries)s"
+    COMMAND = "monotone commit --author=\"%(key)s\" --date=\"%(date)s\""
 
     def __call__(self, output=None, dry_run=False, **kwargs):
+
+        from os.path import exists, join
+
+        if not exists(join(self.working_dir, 'MT')):
+            # If MonotoneCommit is called outside the working copy
+            # (i.e. there is no MT directory) we test if we are given
+            # only the subdir as entry to commit. In that case, switch
+            # to root/subdir as working directory and issue a commit
+            # without any entries.
+            
+            entries = kwargs['entries']
+            entries = entries.replace(' ', '')
+            entries = entries.strip('\"')
+            if (exists(join(self.working_dir, entries))):
+                self.working_dir = join(self.working_dir, entries)
+                kwargs['entries'] = ""
+            else:
+                raise TargetInitializationFailure("not a valid monotone working copy (MT directory is missing in %s)" % self.working_dir)
+
         log = open(self.working_dir + "/MT/log", "w");
 
         logmessage = kwargs.get('logmessage')
@@ -39,7 +58,7 @@ class MonotoneMv(SystemCommand):
     COMMAND = "monotone rename %(old)s %(new)s"
 
 
-class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
@@ -62,12 +81,27 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
-            
-        c(key=author, logmessage=changelog, date=date, entries=entries)
 
+        # monotone doesn't like empty changelogs ...
+        if changelog == None or len(changelog)<1:
+            if len(remark)>0:
+                changelog = remark
+            else:
+                changelog = "**** empty log message ****"
+        changelog = changelog.replace('"', '\\"')
+        
+        # monotone date must be expressed as ISO8601 
+        outstr = c(output=True, key=author, logmessage=changelog,
+                   date=date.isoformat(), entries=entries)
+
+        # monotone complaints if there are no changes from the last commit.
+        # we ignore those errors ...
         if c.exit_status:
-            raise TargetInitializationFailure(
-                "'monotone commit returned %s" % c.exit_status)
+           if outstr.getvalue().find("monotone: misuse: no changes to commit") == -1:
+               outstr.close()
+               raise TargetInitializationFailure(
+                  "'monotone commit returned %s" % c.exit_status)
+        outstr.close()      
         
     def _removePathnames(self, root, names):
         """
@@ -87,18 +121,19 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Execute `monotone setup`.
+        Setup the monotone working copy
+        
+        The user must setup a monotone working directory himself. Then
+        we simply use 'monotone commit', without having to specify a database
+        file or branch. Monotone looks up the database and branch in it's MT
+        directory.
         """
 
-        from os.path import join
+        from os.path import exists, join
         
-        c = SystemCommand(working_dir=root, command="monotone setup .")
-        c(output=True)
+        if not exists(join(root, subdir, 'MT')):
+            raise TargetInitializationFailure("Please setup %s as a monotone working directory." % root)
 
-        if c.exit_status:
-            raise TargetInitializationFailure(
-                "'monotone setup' returned status %s" % c.exit_status)
-
-        c = SystemCommand(working_dir=root,
+        c = SystemCommand(working_dir=join(root, subdir),
                           command="monotone add %(names)s")
-        c(names=shrepr(subdir))
+        c(names='.')
