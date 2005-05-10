@@ -37,14 +37,6 @@ class SvnInfo(SystemCommand):
         return res
 
                  
-class SvnPropGet(SystemCommand):
-    COMMAND = "svn propget %(property)s %(entry)s"
-
-    
-class SvnPropSet(SystemCommand):
-    COMMAND = "svn propset --quiet %(property)s %(value)s %(entry)s"
-
-
 class SvnLog(SystemCommand):
     COMMAND = "TZ=UTC svn log %(quiet)s %(xml)s --revision %(startrev)s:%(endrev)s %(entry)s > %(tempfilename)s 2>&1"
     
