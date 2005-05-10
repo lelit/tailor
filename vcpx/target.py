@@ -210,10 +210,10 @@ class SyncronizableTargetWorkingDir(object):
         # executing an _addSubtree on each of them, evenif this may
         # cause "warnings" on items just moved/added above...
 
-        if addeddirs:
-            subdir = addeddirs.pop(0)
+        while addeddirs:
+            subdir = addeddirs.pop(0).name
             self._addSubtree(root, subdir)
-            addeddirs = [d for d in addeddirs if not d.startswith(subdir)]
+            addeddirs = [d for d in addeddirs if not d.name.startswith(subdir)]
 
     def __registerAppliedChangeset(self, changeset):
         """
