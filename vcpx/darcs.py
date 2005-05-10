@@ -259,15 +259,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
    
-    def _addEntries(self, root, entries):
+    def _addPathnames(self, root, names):
         """
-        Add a sequence of entries.
+        Add some new filesystems objects.
         """
 
         c = SystemCommand(working_dir=root,
                           command="darcs add --case-ok --not-recursive"
-                                  " --quiet %(entry)s")
-        c(entry=' '.join([shrepr(e.name) for e in entries]))
+                                  " --quiet %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -286,9 +286,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if c.exit_status:
             raise ChangesetApplicationFailure("'darcs record' returned status %d" % c.exit_status)
         
-    def _removeEntries(self, root, entries):
+    def _removePathnames(self, root, names):
         """
-        Remove a sequence of entries.
+        Remove some filesystem object.
         """
 
         # Since the source VCS already deleted the entry, and given that
@@ -301,9 +301,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         pass
     
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
-        Rename an entry.
+        Rename a filesystem object.
         """
 
         from os.path import join, exists
@@ -316,17 +316,17 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         # (that will assume the move was already done manually) and
         # finally restore its name.
 
-        renamed = exists(join(root, oldentry))
+        renamed = exists(join(root, oldname))
         if renamed:
-            rename(oldentry, oldentry + '-TAILOR-HACKED-TEMP-NAME')
+            rename(oldname, oldname + '-TAILOR-HACKED-TEMP-NAME')
 
         try:
             c = SystemCommand(working_dir=root,
                               command="darcs mv %(old)s %(new)s")
-            c(old=shrepr(oldentry), new=shrepr(newentry))
+            c(old=shrepr(oldname), new=shrepr(newname))
         finally:
             if renamed:
-                rename(oldentry + '-TAILOR-HACKED-TEMP-NAME', oldentry)
+                rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """

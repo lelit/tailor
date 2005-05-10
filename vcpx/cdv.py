@@ -14,9 +14,6 @@ __docformat__ = 'reStructuredText'
 from shwrap import SystemCommand, shrepr
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-class CdvAdd(SystemCommand):
-    COMMAND = "cdv add %(entry)s"
-
 class CdvCommit(SystemCommand):
     COMMAND = "cdv -u %(user)s commit -m %(comment)s %(entries)s"
 
@@ -34,13 +31,13 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addEntries(self, root, entries):
+    def _addPathnames(self, root, names):
         """
-        Add a sequence of entries.
+        Add some new filesystem objects.
         """
 
-        c = SystemCommand(working_dir=root, command="cdv add %(entries)s")
-        c(entries=' '.join([shrepr(e.name) for e in entries]))
+        c = SystemCommand(working_dir=root, command="cdv add %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -60,22 +57,22 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
             
         c(author=author, logmessage=logmessage, entries=entries)
         
-    def _removeEntries(self, root, entries):
+    def _removePathnames(self, root, names):
         """
-        Remove a sequence of entries.
+        Remove some filesystem object.
         """
 
-        c = SystemCommand(working_dir=root, command="cdv remove %(entries)s")
-        c(entries=' '.join([shrepr(e.name) for e in entries]))
+        c = SystemCommand(working_dir=root, command="cdv remove %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
 
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
-        Rename an entry.
+        Rename a filesystem object.
         """
 
         c = SystemCommand(working_dir=root,
                           command="cdv rename %(old)s %(new)s")
-        c(old=shrepr(oldentry), new=repr(newentry))
+        c(old=shrepr(oldname), new=repr(newname))
 
     def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
         """

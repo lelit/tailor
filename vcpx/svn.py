@@ -95,10 +95,6 @@ class SvnCommit(SystemCommand):
                                       dry_run=dry_run, **kwargs)
 
 
-class SvnAdd(SystemCommand):
-    COMMAND = "svn add --quiet --no-auto-props --non-recursive %(entry)s"
-
-        
 class SvnRemove(SystemCommand):
     COMMAND = "svn remove --quiet --force %(entry)s"
 
@@ -352,13 +348,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     
     ## SyncronizableTargetWorkingDir
 
-    def _addEntries(self, root, entries):
+    def _addPathnames(self, root, names):
         """
-        Add a sequence of entries.
+        Add some new filesystem objects.
         """
 
-        c = SvnAdd(working_dir=root)
-        c(entry=' '.join([shrepr(e.name) for e in entries]))
+        c = SystemCommand(working_dir=root,
+                          command="svn add --quiet --no-auto-props "
+                                  "--non-recursive %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -379,21 +377,21 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             
         c(logmessage=logmessage, entries=entries)
         
-    def _removeEntries(self, root, entries):
+    def _removePathnames(self, root, names):
         """
-        Remove a sequence of entries.
+        Remove some filesystem objects.
         """
 
         c = SvnRemove(working_dir=root)
-        c(entry=' '.join([shrepr(e.name) for e in entries]))
+        c(entry=' '.join([shrepr(n) for n in names]))
 
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
-        Rename an entry.
+        Rename a filesystem object.
         """
 
         c = SvnMv(working_dir=root)
-        c(old=shrepr(oldentry), new=repr(newentry))
+        c(old=shrepr(oldname), new=repr(newname))
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """

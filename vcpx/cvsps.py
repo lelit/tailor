@@ -50,10 +50,6 @@ class CvsUpdate(SystemCommand):
                                       dry_run=False, **kwargs)
 
 
-class CvsAdd(SystemCommand):
-    COMMAND = "cvs -q add %(entry)s"
-
-
 class CvsCommit(SystemCommand):
     COMMAND = "cvs -q ci -F %(logfile)s %(entries)s"
     
@@ -448,13 +444,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     
     ## SyncronizableTargetWorkingDir
 
-    def _addEntry(self, root, entry):
+    def _addPathnames(self, root, names):
         """
-        Add a new entry.
+        Add some new filesystem objects.
         """
 
-        c = CvsAdd(working_dir=root)
-        c(entry=shrepr(entry))
+        c = SystemCommand(working_dir=root, command="cvs -q add %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
 
     def __forceTagOnEachEntry(self, root):
         """
@@ -526,29 +522,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
           
         c(entries=entries, logfile=rontf.name)
        
-    def _removeEntry(self, root, entry):
+    def _removePathnames(self, root, names):
         """
-        Remove an entry.
+        Remove some filesystem objects.
         """
 
         c = CvsRemove(working_dir=root)
-        c(entry=shrepr(entry))
+        c(entry=' '.join([shrepr(n) for n in names]))
 
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
-        Rename an entry.
-        """
-
-        self._removeEntry(root, oldentry)
-        self._addEntry(root, newentry)
-
-    def _initializeWorkingDir(self, root, repository, module, subdir, addentry=None):
-        """
-        Add the given directory to an already existing CVS working tree.
+        Rename a filesystem object.
         """
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            repository, module,
-                                                            subdir, CvsAdd)
-
-
+        self._removePathnames(root, [oldname])
+        self._addPathnames(root, [newname])

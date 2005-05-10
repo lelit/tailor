@@ -216,12 +216,11 @@ class SyncronizableTargetWorkingDir(object):
         Add a sequence of entries
         """
 
-        for e in entries:
-            self._addEntry(root, e.name)
+        self._addPathnames(root, [e.name for e in entries])
         
-    def _addEntry(self, root, entry):
+    def _addPathnames(self, root, names):
         """
-        Add a new entry.
+        Add some new filesystem objects.
         """
 
         raise "%s should override this method" % self.__class__
@@ -238,13 +237,12 @@ class SyncronizableTargetWorkingDir(object):
         """
         Remove a sequence of entries.
         """
-        
-        for e in entries:
-            self._removeEntry(root, e.name)
+
+        self._removePathnames(root, [e.name for e in entries])
             
-    def _removeEntry(self, root, entry):
+    def _removePathnames(self, root, names):
         """
-        Remove an entry.
+        Remove some filesystem object.
         """
 
         raise "%s should override this method" % self.__class__
@@ -255,11 +253,11 @@ class SyncronizableTargetWorkingDir(object):
         """
         
         for e in entries:
-            self._renameEntry(root, e.old_name, e.name)
+            self._renamePathname(root, e.old_name, e.name)
         
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldentry, newentry):
         """
-        Rename an entry.
+        Rename a filesystem object to some other name/location.
         """
 
         raise "%s should override this method" % self.__class__

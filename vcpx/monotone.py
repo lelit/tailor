@@ -31,9 +31,6 @@ class MonotoneCommit(SystemCommand):
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
 
-class MonotoneAdd(SystemCommand):
-    COMMAND = "monotone add %(entry)s"
-
 class MonotoneRemove(SystemCommand):
     COMMAND = "monotone drop %(entry)s"
 
@@ -46,13 +43,13 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
     ## SyncronizableTargetWorkingDir
 
-    def _addEntries(self, root, entries):
+    def _addPathnames(self, root, names):
         """
-        Add a sequence of entries.
+        Add some new filesystem objects.
         """
 
-        c = MonotoneAdd(working_dir=root)
-        c(entry=' '.join([shrepr(e.name) for e in entries]))
+        c = SystemCommand(working_dir=root, command="monotone add %(names)s")
+        c(names=' '.join([shrepr(n) for n in names]))
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
@@ -72,21 +69,21 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             raise TargetInitializationFailure(
                 "'monotone commit returned %s" % c.exit_status)
         
-    def _removeEntries(self, root, entries):
+    def _removePathnames(self, root, names):
         """
-        Remove a sequence of entries.
+        Remove some filesystem object.
         """
 
         c = MonotoneRemove(working_dir=root)
-        c(entry=' '.join([shrepr(e.name) for e in entries]))
+        c(entry=' '.join([shrepr(n) for n in names]))
 
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
-        Rename an entry.
+        Rename a filesystem object.
         """
 
         c = MonotoneMv(working_dir=root)
-        c(old=shrepr(oldentry), new=repr(newentry))
+        c(old=shrepr(oldname), new=repr(newname))
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
@@ -103,5 +100,5 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 "'monotone setup' returned status %s" % c.exit_status)
 
         c = SystemCommand(working_dir=root,
-                          command="monotone add %(entry)s")
-        c(entry=shrepr(subdir))
+                          command="monotone add %(names)s")
+        c(names=shrepr(subdir))
