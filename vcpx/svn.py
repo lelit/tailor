@@ -350,6 +350,16 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                   "--non-recursive %(names)s")
         c(names=' '.join([shrepr(n) for n in names]))
 
+    def _addSubtree(self, root, subdir):
+        """
+        Use the --recursive variant of `svn add` to add a subtree.
+        """
+        
+        c = SystemCommand(working_dir=root,
+                          command="svn add --quiet --no-auto-props "
+                                  "--recursive %(entry)s")
+        c(entry=shrepr(subdir))
+        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.

@@ -269,6 +269,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                   " --quiet %(names)s")
         c(names=' '.join([shrepr(n) for n in names]))
         
+    def _addSubtree(self, root, subdir):
+        """
+        Use the --recursive variant of `darcs add` to add a subtree.
+        """
+        
+        c = SystemCommand(working_dir=root,
+                          command="darcs add --case-ok --recursive"
+                          " --quiet %(entry)s")
+        c(entry=shrepr(subdir))
+        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
