@@ -195,11 +195,26 @@ class SyncronizableTargetWorkingDir(object):
         # their entries.
         removed.sort(lambda x,y: cmp(y.name, x.name))
 
+        # First of all, add each subdirectory, since they may be targets
+        # of succeeding operations.
+        
         if addeddirs: self._addEntries(root, addeddirs)
+
+        # Then process the actual files
+        
         if renamed: self._renameEntries(root, renamed)
         if removed: self._removeEntries(root, removed)
         if addedfiles: self._addEntries(root, addedfiles)
-            
+
+        # Finally, deal with "copied" directories. The simple way is
+        # executing an _addSubtree on each of them, evenif this may
+        # cause "warnings" on items just moved/added above...
+
+        if addeddirs:
+            subdir = addeddirs.pop(0)
+            self._addSubtree(root, subdir)
+            addeddirs = [d for d in addeddirs if not d.startswith(subdir)]
+
     def __registerAppliedChangeset(self, changeset):
         """
         Remember about an already applied but not committed changeset,
