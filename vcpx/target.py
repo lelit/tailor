@@ -225,6 +225,38 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
+    def _addSubtree(self, root, subdir):
+        """
+        Add a whole subtree.
+
+        This implementation crawl down the whole subtree, adding
+        entries (subdirs, skipping the usual VC-specific control
+        directories such as ``.svn``, ``_darcs`` or ``CVS``, and
+        files).
+
+        Subclasses may use a better way, if the backend implements
+        a recursive add that skips the various metadata directories.
+        """
+        
+        from os.path import split, join
+        from os import walk
+
+        if subdir<>'.':
+            self._addPathnames(root, [subdir])
+
+        for dir, subdirs, files in walk(join(root, subdir)):
+            for excd in ['.svn', '_darcs', 'CVS', '.cdv', 'MT']:
+                if excd in subdirs:
+                    subdirs.remove(excd)
+
+            # Uhm, is this really desiderable?
+            for excf in ['tailor.info', 'tailor.log']:
+                if excf in files:
+                    files.remove(excf)
+
+            if subdirs or files:
+                self._addPathnames(dir, subdirs + files)
+
     def _commit(self, root, date, author, remark,
                 changelog=None, entries=None):
         """
@@ -288,26 +320,4 @@ class SyncronizableTargetWorkingDir(object):
         appropriate for the backend.
         """
 
-        assert addentry, "Subclass should have specified something as addentry"
-        
-        from os.path import split, join
-        from os import walk
-
-        if subdir<>'.':
-            c = addentry(working_dir=root)
-            c(entry=shrepr(subdir))
-
-        for dir, subdirs, files in walk(join(root, subdir)):
-            for excd in ['.svn', '_darcs', 'CVS', '.cdv']:
-                if excd in subdirs:
-                    subdirs.remove(excd)
-
-            # Uhm, is this really desiderable?
-            for excf in ['tailor.info', 'tailor.log']:
-                if excf in files:
-                    files.remove(excf)
-
-            if subdirs or files:
-                c = addentry(working_dir=dir)
-                c(entry=' '.join([shrepr(e) for e in subdirs+files]))
-
+        self._addSubtree(root, subdir)
