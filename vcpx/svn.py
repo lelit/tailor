@@ -356,8 +356,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         
         c = SystemCommand(working_dir=root,
-                          command="svn add --quiet --no-auto-props "
-                                  "--recursive %(entry)s")
+                          command="svn add --quiet --no-auto-props %(entry)s")
         c(entry=shrepr(subdir))
         
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
