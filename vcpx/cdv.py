@@ -15,13 +15,14 @@ from shwrap import SystemCommand, shrepr
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 class CdvCommit(SystemCommand):
-    COMMAND = "cdv -u %(user)s commit -m %(comment)s %(entries)s"
+    COMMAND = "cdv -u %(user)s commit -m %(comment)s -D '%(time)s' %(entries)s"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
         logmessage = kwargs.get('logmessage')
         kwargs['comment'] = shrepr(logmessage)
         author = kwargs.get('author')
         kwargs['user'] = shrepr(author)
+        kwargs['time'] = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S UTC')
         
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
@@ -46,16 +47,17 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         c = CdvCommit(working_dir=root)
         
-        logmessage = "%s\nOriginal date: %s" % (remark, date)
         if changelog:
-            logmessage = logmessage + '\n\n' + changelog
+            logmessage = remark + '\n\n' + changelog
+        else:
+            logmessage = remark
             
         if entries:
             entries = ' '.join([shrepr(e) for e in entries])
         else:
             entries = '.'
             
-        c(author=author, logmessage=logmessage, entries=entries)
+        c(author=author, logmessage=logmessage, date=date, entries=entries)
         
     def _removePathnames(self, root, names):
         """
