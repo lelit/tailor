@@ -293,13 +293,17 @@ class TailorizedProject(object):
         The actual information on the project are stored in a text file.
         """
 
-        from os.path import split
+        from os.path import split, sep
 
         if source_kind == 'svn':
-            if not (module and module.startswith('/')):
+            if not (module and module.startswith(sep)):
                 raise InvocationError('With SVN the module argument is '
-                                      'mandatory and must start with a slash')
-                
+                                      'mandatory and must start '
+                                      'with a "%s"' % sep)
+
+        if repository.endswith(sep):
+            repository = repository[:-1]
+            
         if not subdir:
             subdir = split(module or repository)[1] or ''
             
