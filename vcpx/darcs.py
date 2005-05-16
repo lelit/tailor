@@ -219,32 +219,53 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
-        
-        wdir = join(basedir, subdir)
-        if not exists(join(wdir, '_darcs')):
-            if not exists(wdir):
-                mkdir(wdir)
 
-            c = SystemCommand(working_dir=wdir, command="darcs initialize")
-            c(output=True)
+        if subdir == '.':
+            # This is currently *very* slow, compared to the darcs get
+            # below!
+            wdir = basedir
+            if not exists(join(wdir, '_darcs')):
+                if not exists(wdir):
+                    mkdir(wdir)
 
-            if c.exit_status:
-                raise TargetInitializationFailure(
-                    "'darcs initialize' returned status %s" % c.exit_status)
+                c = SystemCommand(working_dir=wdir, command="darcs initialize")
+                c(output=True)
+
+                if c.exit_status:
+                    raise TargetInitializationFailure(
+                        "'darcs initialize' returned status %s"%c.exit_status)
+
+                dpull = SystemCommand(working_dir=wdir,
+                                     command="darcs pull --all --verbose"
+                                             " %(tag)s %(repository)s"
+                                             " 2>&1")
+
+                output = dpull(output=True, repository=shrepr(repository),
+                               tag=(revision<>'HEAD' and
+                                    '--tag=%s' % shrepr(revision)
+                                    or ''))
+                if dpull.exit_status:
+                    raise TargetInitializationFailure(
+                        "'darcs pull' returned status %d saying \"%s\"" %
+                        (dpull.exit_status, output.getvalue().strip()))
+        else:
+            # Use much faster 'darcs get'
             
-            dpull = SystemCommand(working_dir=wdir,
-                                 command="darcs pull --all --verbose"
-                                         " %(tag)s %(repository)s"
-                                         " 2>&1")
+            wdir = join(basedir, subdir)           
+            dget = SystemCommand(working_dir=basedir,
+                                 command="darcs get --partial --verbose"
+                                         " %(tag)s '%(repository)s'"
+                                         " %(subdir)s")
+
+            output = dget(output=True, repository=repository,
+                          tag=(revision<>'HEAD' and
+                               '--tag=%s' % shrepr(revision) or ''),
+                          subdir=subdir)
             
-            output = dpull(output=True, repository=shrepr(repository),
-                           tag=(revision<>'HEAD' and
-                                '--tag=%s' % shrepr(revision)
-                                or ''))
-            if dpull.exit_status:
+            if dget.exit_status:
                 raise TargetInitializationFailure(
-                    "'darcs pull' returned status %d saying \"%s\"" %
-                    (dpull.exit_status, output.getvalue().strip()))
+                    "'darcs get' returned status %d saying \"%s\"" %
+                    (dget.exit_status, output.getvalue().strip()))
 
         c = SystemCommand(working_dir=wdir,
                           command="darcs changes --last=1 --xml-output 2>&1")
