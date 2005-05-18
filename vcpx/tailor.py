@@ -303,6 +303,9 @@ class TailorizedProject(object):
 
         if repository.endswith(sep):
             repository = repository[:-1]
+
+        if module and module.endswith(sep):
+            module = module[:-1]
             
         if not subdir:
             subdir = split(module or repository)[1] or ''
