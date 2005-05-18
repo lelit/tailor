@@ -11,41 +11,25 @@ This module contains supporting classes for Monotone.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr
+from shwrap import SystemCommand, shrepr, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from sys import stderr
 
 class MonotoneCommit(SystemCommand):
-    COMMAND = "monotone commit --author=\"%(key)s\" --date=\"%(date)s\""
+    COMMAND = "monotone commit --author=\"%(key)s\" --date=\"%(date)s\" --message-file=\"%(logfile)s\" 2>&1"
 
     def __call__(self, output=None, dry_run=False, **kwargs):
 
-        from os.path import exists, join
-
-        if not exists(join(self.working_dir, 'MT')):
-            # If MonotoneCommit is called outside the working copy
-            # (i.e. there is no MT directory) we test if we are given
-            # only the subdir as entry to commit. In that case, switch
-            # to root/subdir as working directory and issue a commit
-            # without any entries.
-            
-            entries = kwargs['entries']
-            entries = entries.replace(' ', '')
-            entries = entries.strip('\"')
-            if (exists(join(self.working_dir, entries))):
-                self.working_dir = join(self.working_dir, entries)
-                kwargs['entries'] = ""
-            else:
-                raise TargetInitializationFailure("not a valid monotone working copy (MT directory is missing in %s)" % self.working_dir)
-
-        log = open(self.working_dir + "/MT/log", "w");
-
+        # the log message is written on a temporary file
+        rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
         logmessage = kwargs.get('logmessage')
         if logmessage:
-            log.write(logmessage + "\n")
-
-        log.close();
+            log = open(rontf.name, "w")
+            log.write(logmessage)
+            log.close()            
+        kwargs['logfile'] = rontf.name
 
         return SystemCommand.__call__(self, output=output,
                                       dry_run=dry_run, **kwargs)
@@ -88,9 +72,8 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
                 changelog = remark
             else:
                 changelog = "**** empty log message ****"
-        changelog = changelog.replace('"', '\\"')
         
-        # monotone date must be expressed as ISO8601 
+        # monotone dates must be expressed as ISO8601 
         outstr = c(output=True, key=author, logmessage=changelog,
                    date=date.isoformat(), entries=entries)
 
@@ -98,9 +81,13 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         # we ignore those errors ...
         if c.exit_status:
            if outstr.getvalue().find("monotone: misuse: no changes to commit") == -1:
+	       stderr.write(outstr.getvalue())
                outstr.close()
                raise TargetInitializationFailure(
                   "'monotone commit returned %s" % c.exit_status)
+           else:
+               stderr.write("No changes to commit - changeset ignored\n")
+             
         outstr.close()      
         
     def _removePathnames(self, root, names):
@@ -130,10 +117,10 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from os.path import exists, join
-        
-        if not exists(join(root, subdir, 'MT')):
-            raise TargetInitializationFailure("Please setup %s as a monotone working directory." % root)
 
-        c = SystemCommand(working_dir=join(root, subdir),
+        if not exists(join(root, 'MT')):
+            raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % root)
+
+        c = SystemCommand(working_dir=root,
                           command="monotone add %(names)s")
-        c(names='.')
+        c(names=subdir)
