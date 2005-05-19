@@ -2,6 +2,7 @@
 # :Progetto: vcpx -- Tiny wrapper around external command
 # :Creato:   sab 10 apr 2004 16:43:48 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 __docformat__ = 'reStructuredText'

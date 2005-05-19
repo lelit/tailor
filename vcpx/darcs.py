@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Darcs details
 # :Creato:   ven 18 giu 2004 14:45:28 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 """

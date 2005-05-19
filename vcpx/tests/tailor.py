@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Frontend specific tests
 # :Creato:   mar 03 ago 2004 01:53:21 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 from unittest import TestCase, TestSuite

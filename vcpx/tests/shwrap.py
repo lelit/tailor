@@ -2,6 +2,7 @@
 # :Progetto: vcpx -- Test shell wrappers
 # :Creato:   mar 20 apr 2004 16:49:23 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 from unittest import TestCase, TestSuite

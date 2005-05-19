@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- cvs specific tests
 # :Creato:   dom 11 lug 2004 18:21:11 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 from unittest import TestCase, TestSuite

@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Subversion details
 # :Creato:   ven 18 giu 2004 15:00:52 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 #
 
 """

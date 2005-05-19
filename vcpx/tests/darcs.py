@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Darcs specific tests
 # :Creato:   sab 17 lug 2004 02:33:41 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 from unittest import TestCase, TestSuite

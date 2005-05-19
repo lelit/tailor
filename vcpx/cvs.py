@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Pure CVS solution
 # :Creato:   dom 11 lug 2004 01:59:36 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 """

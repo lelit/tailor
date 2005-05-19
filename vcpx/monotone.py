@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Monotone details
 # :Creato:   Tue Apr 12 01:28:10 CEST 2005
 # :Autore:   Markus Schiltknecht <markus@bluegap.ch>
+# :Licenza:  GNU General Public License
 #
 
 """

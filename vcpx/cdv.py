@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Codeville details
 # :Creato:   gio 05 mag 2005 23:47:45 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 """

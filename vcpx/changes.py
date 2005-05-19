@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Changesets 
 # :Creato:   ven 11 giu 2004 15:31:18 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 """

@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Frontend
 # :Creato:   lun 03 mag 2004 01:39:00 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 #
 
 """

@@ -22,7 +22,7 @@ URI and revision in special properties on the branched directory.
         'Programming Language :: Python',
         'Operating System :: Unix',
         'Topic :: Software Development :: Version Control',
-        # Don't know license
+        'License :: GNU General Public License',
         # Don't know the stability. Took a guess
         ]
     )

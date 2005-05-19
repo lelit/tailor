@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Updatable VC working directory
 # :Creato:   mer 09 giu 2004 13:55:35 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 #
 
 """

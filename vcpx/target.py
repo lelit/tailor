@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- Syncable targets
 # :Creato:   ven 04 giu 2004 00:27:07 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 """

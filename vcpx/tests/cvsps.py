@@ -3,6 +3,7 @@
 # :Progetto: vcpx -- basic cvsps tests
 # :Creato:   ven 09 lug 2004 01:43:52 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+# :Licenza:  GNU General Public License
 # 
 
 from unittest import TestCase, TestSuite
