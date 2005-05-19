@@ -227,7 +227,8 @@ Monotone support
 ----------------
 
 Monotone_ support was kindly contributed by `Markus Schiltknecht
-<markus@bluegap.ch>`.  Since I'm not currently using monotone (so
+<markus@bluegap.ch>`_ and further developed by `rghetta
+<birrachiara@tin.it>`_.  Since I'm not currently using monotone (so
 little time, so many VCSs...) I'm not in position to test it out
 properly, but I'll do my best to keep it in sync, maybe with your
 support :-)
