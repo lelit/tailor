@@ -127,6 +127,10 @@ b) It does not work under Windows (no, that's not a feature :-). Maybe
 
 c) Monotone and Codeville are (currently) only supported as *target*
 
+d) Specifying ``--subdir .`` may not work, in particular when dealing
+   with remote CVS repositories (it does when the CVS repository is
+   on local machine).
+   
 This list will always be incomplete, but I'll do my best to keep it
 short :-)
 
