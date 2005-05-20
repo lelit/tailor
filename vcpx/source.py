@@ -43,9 +43,9 @@ class InvocationError(Exception):
 class UpdatableSourceWorkingDir(object):
     """
     This is an abstract working dir able to follow an upstream
-    source of `changesets`.
+    source of ``changesets``.
 
-    It has two main functionalities:
+    It has three main functionalities:
 
     getUpstreamChangesets
         to query the upstream server about new changesets
@@ -180,7 +180,7 @@ class UpdatableSourceWorkingDir(object):
                                               **kwargs)
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  logger=None, **kwargs):
+                                  subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """

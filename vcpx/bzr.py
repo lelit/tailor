@@ -93,7 +93,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Execute `bzr init`.
+        Execute ``bzr init``.
         """
 
         from os import getenv

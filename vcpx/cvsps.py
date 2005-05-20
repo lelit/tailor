@@ -305,7 +305,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                             changeset)
                 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None):
+                                  subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get, or as a date if it starts with a number.
@@ -366,7 +366,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             
         return last.revision
     
-    def _willApplyChangeset(self, root, changeset, applyable):
+    def _willApplyChangeset(self, root, changeset, applyable=None):
         """
         This gets called just before applying each changeset.
         
@@ -459,7 +459,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         entry to its current CVS version.
 
         This is to prevent silly errors such those that could arise
-        after a manual `cvs update` in the working directory.
+        after a manual ``cvs update`` in the working directory.
         """
         
         from os import walk, rename

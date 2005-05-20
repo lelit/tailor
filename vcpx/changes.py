@@ -16,9 +16,9 @@ class ChangesetEntry(object):
     """
     Represent a changed entry in a Changeset.
 
-    For our scope, this simply means an entry `name`, the original
-    `old_revision`, the `new_revision` after this change, an
-    `action_kind` to denote the kind of change, and finally a `status`
+    For our scope, this simply means an entry ``name``, the original
+    ``old_revision``, the ``new_revision`` after this change, an
+    ``action_kind`` to denote the kind of change, and finally a ``status``
     to indicate possible conflicts.
     """
     
@@ -64,7 +64,7 @@ def refill(msg):
     Refill a changelog message.
 
     Normalize the message reducing multiple spaces and newlines to single
-    spaces, recognizing common form of `bullet lists`, that is paragraphs
+    spaces, recognizing common form of ``bullet lists``, that is paragraphs
     starting with either a dash "-" or an asterisk "*".
     """
     

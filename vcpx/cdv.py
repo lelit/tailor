@@ -96,7 +96,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Execute `cdv init`.
+        Execute ``cdv init``.
         """
 
         from os import getenv

@@ -11,7 +11,7 @@ Implement the basic capabilities of the frontend.
 
 This implementation stores the relevant project information, needed to
 keep the whole thing going on, such as the last synced revision, in a
-unversioned file named `tailor.info` at the root.
+unversioned file named ``tailor.info`` at the root.
 """
 
 __docformat__ = 'reStructuredText'
@@ -25,9 +25,9 @@ LOG_FILENAME = 'tailor.log'
 
 def relpathto(source, dest):
     """
-    Compute the relative path needed to point `source` from `dest`.
+    Compute the relative path needed to point ``source`` from ``dest``.
 
-    Warning: `dest` is assumed to be a directory.
+    Warning: ``dest`` is assumed to be a directory.
     """
     
     from os.path import abspath, split, commonprefix
@@ -288,8 +288,8 @@ class TailorizedProject(object):
         """
         Bootstrap a new tailorized module.
 
-        Extract a copy of the `repository` at given `revision` in the `root`
-        directory and initialize a target repository with its content.
+        Extract a copy of the ``repository`` at given ``revision`` in the
+        ``root`` directory and initialize a target repository with its content.
 
         The actual information on the project are stored in a text file.
         """
@@ -375,7 +375,7 @@ class TailorizedProject(object):
         Update an existing tailorized project.
 
         Fetch the upstream changesets and apply them to the working copy.
-        Use the information stored in the `tailor.info` file to ask just
+        Use the information stored in the ``tailor.info`` file to ask just
         the new changeset since last bootstrap/synchronization.
         """
         

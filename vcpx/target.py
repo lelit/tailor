@@ -43,7 +43,7 @@ class SyncronizableTargetWorkingDir(object):
         to replay an already applied changeset, to mimic the actions
         performed by the upstream VC system on the tree such as
         renames, deletions and adds.  This is an useful argument to
-        feed as `replay` to `applyUpstreamChangesets`
+        feed as ``replay`` to ``applyUpstreamChangesets``
 
     initializeNewWorkingDir
         to initialize a pristine working directory tree under this VC
@@ -69,7 +69,7 @@ class SyncronizableTargetWorkingDir(object):
         VC, to register the already applied (under the other VC)
         changeset.
 
-        If `delayed_commit` is not True, the changeset is committed
+        If ``delayed_commit`` is not True, the changeset is committed
         to the target VC right after a successful application; otherwise
         the various information get registered and will be reused later,
         by commitDelayedChangesets().
@@ -114,7 +114,7 @@ class SyncronizableTargetWorkingDir(object):
         If there are changesets pending to be committed, do a single
         commit of all changed entries.
 
-        With `concatenate_logs` there's control over the folded
+        With ``concatenate_logs`` there's control over the folded
         changesets message log: if True every changelog is appended in
         order of application, otherwise it will contain just the name
         of the patches.
@@ -303,7 +303,7 @@ class SyncronizableTargetWorkingDir(object):
         for e in entries:
             self._renamePathname(root, e.old_name, e.name)
         
-    def _renamePathname(self, root, oldentry, newentry):
+    def _renamePathname(self, root, oldname, newname):
         """
         Rename a filesystem object to some other name/location.
         """
@@ -327,7 +327,7 @@ class SyncronizableTargetWorkingDir(object):
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Assuming the `root` directory contains a working copy `module`
+        Assuming the ``root`` directory contains a working copy ``module``
         extracted from some VC repository, add it and all its content
         to the target repository.
 

@@ -57,11 +57,11 @@ class ReopenableNamedTemporaryFile:
 
 class VerboseStringIO(StringIO):
 
-    def write(self, data):        
+    def write(self, s):
         """Give a feedback to the user."""
         
-        StringIO.write(self, data)
-        stderr.write('.'*data.count('\n'))
+        StringIO.write(self, s)
+        stderr.write('.'*s.count('\n'))
 
 def joinall(threadlist):
     for t in threadlist:

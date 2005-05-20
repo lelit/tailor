@@ -305,7 +305,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         return result
         
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None):
+                                  subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """

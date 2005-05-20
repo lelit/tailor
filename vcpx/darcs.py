@@ -7,7 +7,7 @@
 # 
 
 """
-This module contains supporting classes for the `darcs` versioning system.
+This module contains supporting classes for the ``darcs`` versioning system.
 """
 
 __docformat__ = 'reStructuredText'
@@ -44,7 +44,7 @@ def changesets_from_darcschanges(changes):
     """
     Parse XML output of ``darcs changes``.
 
-    Return a list of `Changeset`s.
+    Return a list of ``Changeset`` instances.
     """
     
     from xml.sax import parseString
@@ -213,7 +213,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             changeset.entries.extend(last[0].entries)
 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None):
+                                  subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """
@@ -293,7 +293,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
     def _addSubtree(self, root, subdir):
         """
-        Use the --recursive variant of `darcs add` to add a subtree.
+        Use the --recursive variant of ``darcs add`` to add a subtree.
         """
         
         c = SystemCommand(working_dir=root,
@@ -362,7 +362,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
-        Execute `darcs initialize` and tweak the default settings of
+        Execute ``darcs initialize`` and tweak the default settings of
         the repository, then add the whole subtree.
         """
 
