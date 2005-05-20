@@ -1,8 +1,8 @@
 About
 =====
 
-tailor.py is a tool to migrate changesets between CVS, Subversion, 
-darcs, monotone and Codeville repositories.
+Tailor is a tool to migrate changesets between CVS, Subversion_,
+darcs_, monotone_, Codeville_ and `Baazar-NG`_ [#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
@@ -35,6 +35,15 @@ two way sync::
   +----------+        +--------+        +--------+       +---------+
                (cron)            (cron)
 
+
+.. [#] Monotone, Codeville and Baazar-NG systems may be used only as
+       the `target` backend, since the `source` support isn't
+       coded yet.
+
+.. _subversion: http://subversion.tigris.org/
+.. _darcs: http://www.darcs.net/
+.. _codeville: http://www.codeville.org/
+.. _baazar-ng: http://www.bazaar-ng.org/
 
 Installation
 ============
@@ -91,9 +100,9 @@ Examples
     $ tailor.py -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
       --subdir testsvn --revision 1 testdir
 
-.. warning:: When using --revision with a SVN source repository, be
-             sure that the path your are tracking was there at that
-             revision, otherwise svn will exit with an error.
+   .. warning:: When using --revision with a SVN source repository, be
+                sure that the path your are tracking was there at that
+                revision, otherwise svn will exit with an error.
 
 6. Bootstrap from a CVS branch, starting from a given point in time::
 
@@ -125,7 +134,8 @@ b) It does not work under Windows (no, that's not a feature :-). Maybe
    replacing the shwrap machinery with something built on top of
    subprocess_ that seems able to hide Windows crazyness...
 
-c) Monotone and Codeville are (currently) only supported as *target*
+c) Monotone, Codeville and Baazar-NG are (currently) only supported as
+   *target*
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
    with remote CVS repositories (it does when the CVS repository is
@@ -196,10 +206,11 @@ contained in the dictionary.
 Further help
 ============
 
-See the output of tailor.py -h for some further tips.  There's also a
-`wiki page`_ that may give you some other hints. The development of
-Tailor is mainly driven by user requests at this point, and the
-preferred comunication media is the dedicated `mailing list`_ [#]_.
+See the output of ``tailor.py -h`` for some further tips.  There's
+also a `wiki page`_ that may give you some other hints.  The
+development of Tailor is mainly driven by user requests at this point,
+and the preferred comunication media is the dedicated `mailing list`_
+[#]_.
 
 .. _wiki page:
    http://www.darcs.net/DarcsWiki/Tailor
@@ -212,9 +223,9 @@ you may have on it. I'm usually hanging as "lelit" on the IRC channel
 devoted to darcs on the `freenode.net` network. Do not hesitate to
 contact me either by email or chatting there.
 
-.. [#] I wish to say a big `Thank you` to Zooko, for hosting the ML
-       and for supporting Tailor in several ways, from suggestions to
-       bug reporting and fixing.
+.. [#] I wish to say a big `Thank you` to `Zooko <zooko@zooko.com>`_,
+       for hosting the ML and for supporting Tailor in several ways,
+       from suggestions to bug reporting and fixing.
 
 
 Author
