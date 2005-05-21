@@ -394,7 +394,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from os.path import exists, join
 
         if not exists(join(root, '.svn')):
-            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already be under SVN" % root)
+            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % root)
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
