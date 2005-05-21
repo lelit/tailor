@@ -82,7 +82,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         # we ignore those errors ...
         if c.exit_status:
            if outstr.getvalue().find("monotone: misuse: no changes to commit") == -1:
-	       stderr.write(outstr.getvalue())
+               stderr.write(outstr.getvalue())
                outstr.close()
                raise TargetInitializationFailure(
                   "'monotone commit returned %s" % c.exit_status)
