@@ -32,7 +32,7 @@ class ChangesetEntry(object):
     
     __slots__ = ('name', 'old_name',
                  'old_revision', 'new_revision',
-                 'action_kind', 'status')
+                 'action_kind', 'status', 'unidiff')
 
     def __init__(self, name):
         self.name = name
@@ -41,6 +41,7 @@ class ChangesetEntry(object):
         self.new_revision = None
         self.action_kind = None
         self.status = None
+        self.unidiff = None
 
     def __str__(self):
         if self.action_kind == self.ADDED:
