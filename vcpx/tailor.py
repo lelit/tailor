@@ -19,6 +19,7 @@ __docformat__ = 'reStructuredText'
 from optparse import OptionParser, OptionGroup, make_option
 from dualwd import DualWorkingDir
 from source import InvocationError
+from session import interactive
 
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
@@ -430,6 +431,8 @@ class TailorizedProject(object):
 
 
 GENERAL_OPTIONS = [
+    make_option("-i", "--interactive", default=False, action="store_true",
+                help="Start an interactive session."),
     make_option("-D", "--debug", dest="debug",
                 action="store_true", default=False,
                 help="Print each executed command. This also keeps "
@@ -562,8 +565,10 @@ def main():
     SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
-    
-    if options.configfile:
+
+    if options.interactive:
+        interactive(options, args)
+    elif options.configfile:
         config = TailorConfig(options)
 
         config(map(abspath, args))
@@ -611,4 +616,3 @@ def main():
             elif options.update:
                 tailored.update(options.single_commit,
                                 options.concatenate_logs)
-
