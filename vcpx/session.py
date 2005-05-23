@@ -26,7 +26,14 @@ with the usual `readline` facilities. With "help" you'll get a list of
 available commands.
 """
 
+def yesno(arg):
+    "Return True for '1', 'true' or 'yes', False otherwise."
 
+    try:
+        return bool(int(arg))
+    except ValueError:
+        return arg.lower() in ('true', 'yes')
+    
 class Session(Cmd):
     """Tailor interactive session."""
     
@@ -184,7 +191,7 @@ class Session(Cmd):
         from shwrap import SystemCommand
         
         if arg:
-            SystemCommand.VERBOSE = bool(arg)
+            SystemCommand.VERBOSE = yesno(arg)
 
         self.__log('Print executed commands: %s\n' % SystemCommand.VERBOSE)
 
@@ -224,7 +231,7 @@ class Session(Cmd):
         from target import SyncronizableTargetWorkingDir
 
         if arg:
-            SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = bool(arg)
+            SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = yesno(arg)
 
         self.__log('Remove first log line: %s\n' %
                    SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE)
@@ -240,7 +247,7 @@ class Session(Cmd):
         from changes import Changeset
         
         if arg:
-            Changeset.REFILL_MESSAGE = bool(arg)
+            Changeset.REFILL_MESSAGE = yesno(arg)
 
         self.__log('Refill changelogs: %s\n' % Changeset.REFILL_MESSAGE)
         
