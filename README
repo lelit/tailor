@@ -45,6 +45,7 @@ two way sync::
 .. _codeville: http://www.codeville.org/
 .. _baazar-ng: http://www.bazaar-ng.org/
 
+
 Installation
 ============
 
@@ -201,6 +202,61 @@ etc correspond to options of the same name.
 
 When using a config file, tailor will perform its job on each project
 contained in the dictionary.
+
+
+Interactive sessions
+--------------------
+
+Tailor offers an alternative way of driving its activity by using an
+interactive session, bringing the configuration more similar to a
+script.
+
+Although this is still a work-in-progress, it's quickly becoming my
+preferred usage, as its functionality cover the underlying tailor
+features.
+
+For example, this is the script I'm using to test it::
+
+    cd /tmp/p/wc
+    state_file tailor.state
+    source_kind darcs
+    target_kind svn
+    source_repository /home/lele/WiP/cvsync
+    sub_directory cvsync
+
+that, as you can see, specifies the context needed by tailor to do its
+work. With the following command line::
+
+    $ tailor.py --verbose --interactive tailor.cmds
+    Welcome to the Tailor interactive session: you can issue several commands
+    with the usual `readline` facilities. With "help" you'll get a list of
+    available commands.
+
+    Current directory: /tmp/p/wc
+    Current state file: /tmp/p/wc/tailor.state
+    Current source kind: darcs
+    Current target kind: svn
+    Current source repository: /home/lele/WiP/cvsync
+    Sub directory: cvsync
+    tailor $ help
+    
+    Documented commands (type help <topic>):
+    ========================================
+    EOF                get_changes   source_module      target_module
+    bootstrap          logfile       source_repository  target_repository
+    cd                 save          state_file
+    current_directory  show_changes  sub_directory
+    exit               source_kind   target_kind
+
+    Undocumented commands:
+    ======================
+    help
+
+    tailor $ help bootstrap
+    
+        Checkout the initial upstream revision, by default HEAD (or
+        specified by argument), then import the subtree into the
+        target repository.
 
 
 Further help

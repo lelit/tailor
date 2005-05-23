@@ -12,22 +12,6 @@ Tailor interactive session.
 This module implements an alternative approach at driving the various
 steps tipically performed by tailor, using an interaction with the user
 instead of pushing options madness on him.
-
-Each session's data may persist in *state file*, that may be specified
-either thru the ``state_file`` command::
-
-  bash $ tailor --verbose --interactive
-  Welcome to the Tailor interactive session: you can issue several commands
-  with the usual `readline` facilities. With "help" you'll get a list of
-  available commands.
-
-  tailor $ state_file ~/tailored/someproj.state
-  
-or directly as the only non-option argument on the tailor's command line::
-
-  bash $ tailor -vi ~/tailored/someproj.state
-
-with the same meaning. The content of the file overrides the options.
 """
 
 __docformat__ = 'reStructuredText'
@@ -48,12 +32,15 @@ class Session(Cmd):
     
     prompt = "tailor $ "
     
-    PERSIST_ATTRS = ('source_repository', 'source_kind', 'source_module',
-                     'source_revision', 'target_repository',
-                     'target_kind', 'target_module', 'current_directory',
-                     'sub_directory')
-    
     def __init__(self, options, args):
+        """
+        Initialize a new interactive session.
+
+        Set the default values, and override them with option settings,
+        then slurp in each command line argument that should contain
+        a list of commands to be executed.
+        """
+        
         Cmd.__init__(self)
         self.options = options        
         self.args = args
@@ -61,46 +48,42 @@ class Session(Cmd):
         self.source_repository = options.repository
         self.source_kind = options.source_kind
         self.source_module = options.module
-        self.source_revision = None
         self.target_repository = None
         self.target_kind = options.target_kind
         self.target_module = None
-        self.state_file = args and args[0] or None
         self.current_directory = getcwd()
         self.sub_directory = None
         
-        self.changesets = None
-        self.changed = False
-
-        if self.state_file:
-            self.__loadState()
-            
-    def __del__(self):
-        if self.state_file and self.changed:
-            self.__saveState()
-
-    def __saveState(self):
-        self.__log('Saving state file...\n')
-        state = file(self.state_file, 'w')
-        for attr in self.PERSIST_ATTRS:
-            value = getattr(self, attr)
-            if not value is None:
-                state.write('%s=%s\n' % (attr, value))
-        state.close()
-
-    def __loadState(self):
-        state = file(self.state_file, 'r')
-        for line in state:
-            attr, value = line[:-1].split('=',1)
-            meth = getattr(self, 'do_' + attr)
-            meth(value)
-        state.close()
+        self.state_file = 'tailor.state'
         
+        self.changesets = None
+        self.logfile = None
+        self.logger = None
+        
+        self.__processArgs()
+
+    def __processArgs(self):
+        """
+        Process optional command line arguments.
+
+        Each argument is assumed to contain a list of tailor commands
+        to execute in order.
+        """
+
+        for arg in self.args:
+            self.cmdqueue.extend(file(arg).readlines())
+
     def __log(self, what):
+        if self.logger:
+            self.logger.info(what)
+            
         if self.options.verbose:
             self.stdout.write(what)
 
     def __err(self, what):
+        if self.logger:
+            self.logger.error(what)
+            
         self.stdout.write('Error: ')
         self.stdout.write(what)
         
@@ -108,8 +91,8 @@ class Session(Cmd):
     ## Interactive commands
 
     def emptyline(self):
-        for attr in self.PERSIST_ATTRS:
-            print '%s=%s' % (attr, getattr(self, attr))
+        """Override the default impl of reexecuting last command."""
+        pass
         
     def do_exit(self, arg):
         """Exit the interactive session."""
@@ -123,12 +106,12 @@ class Session(Cmd):
         return self.do_exit(arg)
 
     def do_save(self, arg):
-        """Save the commands history."""
+        """Save the commands history on the specified file."""
 
         import readline
 
         if not arg:
-            arg = '/tmp/tailor.cmds'
+            return
             
         readline.write_history_file(arg)
         self.__log('History saved in: %s\n' % arg)
@@ -140,7 +123,6 @@ class Session(Cmd):
             try:
                 chdir(arg)
                 self.current_directory = getcwd()
-                self.changed = True
             except:
                 self.__log('Cannot change current directory to %s\n' %
                            arg)
@@ -157,17 +139,31 @@ class Session(Cmd):
         """
         
         if arg and self.sub_directory <> arg:
-            self.sub_directory = getcwd()
-            self.changed = True
+            self.sub_directory = arg
 
         self.__log('Sub directory: %s\n' % self.sub_directory)
+
+    def do_logfile(self, arg):
+        """Print or set the logfile of operations."""
+
+        import logging
         
+        if arg:
+            self.logfile = arg
+            self.logger = logging.getLogger('tailor')
+            hdlr = logging.FileHandler(self.logfile)
+            formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+            hdlr.setFormatter(formatter)
+            self.logger.addHandler(hdlr) 
+            self.logger.setLevel(logging.INFO)
+            
+        self.__log('Logging to: %s\n' % self.logfile)
+
     def do_source_kind(self, arg):
         """Print or set the source repository kind."""
 
         if arg and self.source_kind <> arg:
             self.source_kind = arg
-            self.changed = True
 
         self.__log('Current source kind: %s\n' % self.source_kind)
         
@@ -176,7 +172,6 @@ class Session(Cmd):
 
         if arg and self.target_kind <> arg:
             self.target_kind = arg
-            self.changed = True
 
         self.__log('Current target kind: %s\n' % self.target_kind)
 
@@ -189,7 +184,6 @@ class Session(Cmd):
             if arg.endswith(sep):
                 arg = arg[:-1]
             self.source_repository = arg
-            self.changed = True
 
         self.__log('Current source repository: %s\n' % self.source_repository)
 
@@ -202,7 +196,6 @@ class Session(Cmd):
             if arg.endswith(sep):
                 arg = arg[:-1]
             self.target_repository = arg
-            self.changed = True
 
         self.__log('Current target repository: %s\n' % self.target_repository)
 
@@ -215,7 +208,6 @@ class Session(Cmd):
             if arg.endswith(sep):
                 arg = arg[:-1]
             self.source_module = arg
-            self.changed = True
 
         self.__log('Current target kind: %s\n' % self.source_module)
 
@@ -228,31 +220,37 @@ class Session(Cmd):
             if arg.endswith(sep):
                 arg = arg[:-1]
             self.target_module = arg
-            self.changed = True
 
         self.__log('Current target kind: %s\n' % self.target_module)
 
-    def do_source_revision(self, arg):
-        """Print or set the current source revision."""
-        
-        if arg and self.source_revision <> arg:
-            self.source_revision = arg
-            self.changed = True
+    def readSourceRevision(self):
+        """Read the source revision from the state file."""
 
-        self.__log('Current source revision: %s\n' % self.source_revision)
+        try:
+            sf = open(self.state_file)
+            revision = sf.read()
+            sf.close()
+        except IOError:
+            revision = None
+
+        return revision
+            
+    def saveSourceRevision(self, revision):
+        """Write current source revision in the state file."""
+
+        sf = open(self.state_file, 'w')
+        sf.write(revision)
+        sf.close()
         
     def do_state_file(self, arg):
         """
         Print or set the current state_file.
 
-        When specified, this is used as the persistent storage for this
-        session, automatically saved upon clean exit.
-
         The argument must be a file name, possibly with the usual
         "~user/file" convention.        
         """
 
-        from os.path import exists, isabs, abspath, expanduser
+        from os.path import isabs, abspath, expanduser
 
         if arg:
             arg = expanduser(arg)
@@ -261,31 +259,28 @@ class Session(Cmd):
         
         if arg and self.state_file <> arg:
             self.state_file = arg
-            self.changed = True
-
+                
         self.__log('Current state file: %s\n' % self.state_file)
 
-        if exists(self.state_file):
-            self.__loadState()
-            
     def do_get_changes(self, arg):
         """Fetch information on upstream changes."""
-        
+
+        source_revision = self.readSourceRevision()
         if self.source_kind and \
            self.source_repository and \
            self.source_module and \
-           self.source_revision:
+           source_revision:
 
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
             self.changesets = dwd.getUpstreamChangesets(self.current_directory,
                                                         self.source_repository,
                                                         self.source_module,
-                                                        self.source_revision)
+                                                        source_revision)
             self.__log('Collected %d upstream changesets\n' %
                        len(self.changesets))
         else:
-            self.__err("needs 'source_kind', 'source_repository', "
-                       "'source_module' and 'source_revision' to proceed.\n")
+            self.__err("needs 'source_kind', 'source_repository' and "
+                       "'source_module' to proceed.\n")
 
     def do_show_changes(self, arg):
         """Show the upstream changes not yet applied."""
@@ -295,10 +290,14 @@ class Session(Cmd):
             self.__log('\n')
         else:
             self.__err("needs `get_changes` to proceed.\n")
-            
-    def do_bootstrap(self, arg):
-        """Bootstrap a new tailorized module."""
 
+    def do_bootstrap(self, arg):
+        """
+        Checkout the initial upstream revision, by default HEAD (or
+        specified by argument), then import the subtree into the
+        target repository.
+        """
+        
         from os.path import join, split, sep
         from dualwd import DualWorkingDir
 
@@ -307,35 +306,37 @@ class Session(Cmd):
         else:
             subdir = split(self.source_module or self.source_repository)[1] or ''
             self.do_sub_directory(subdir)
-            
-        self.__log("Bootstrapping '%s'\n" % join(self.current_directory, subdir))
 
+        revision = arg or self.options.revision or 'HEAD'
+        
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         self.__log("Getting %s revision '%s' of '%s' from '%s'\n" % (
-            self.source_kind, self.source_revision,
+            self.source_kind, revision,
             self.source_module, self.source_repository))
 
         try:
             actual = dwd.checkoutUpstreamRevision(self.current_directory,
                                                   self.source_repository,
                                                   self.source_module,
-                                                  self.source_revision,
-                                                  subdir=subdir)
-        except:
-            self.__err('Checkout failed!\n')
-            raise
-        
+                                                  revision,
+                                                  subdir=subdir,
+                                                  logger=self.logger)
+            self.saveSourceRevision(actual)
+        except Exception, exc:
+            self.__err('Checkout failed: %s, %s' % (exc.__doc__, exc))
+            if self.logger:
+                self.logger.exception('Checkout failed')
+
         try:
             dwd.initializeNewWorkingDir(self.current_directory,
                                         self.target_repository,
                                         self.target_module,
-                                        subdir, actual)
+                                        self.sub_directory,
+                                        actual)
         except:
-            self.__err('Working copy initialization failed!\n')
-            raise
-
-        self.do_source_revision(actual)
-        self.__log("Bootstrap completed")
+            self.__err('Working copy initialization failed: %s, %s' % (exc.__doc__, exc))
+            if self.logger:
+                self.logger.exception('Working copy initialization failed')
 
         
 def interactive(options, args):
