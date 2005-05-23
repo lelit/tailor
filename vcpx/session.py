@@ -100,10 +100,7 @@ class Session(Cmd):
         self.__log('Exiting...\n')
         return True
 
-    def do_EOF(self, arg):
-        """Exit the interactive session."""
-        
-        return self.do_exit(arg)
+    do_EOF = do_exit
 
     def do_save(self, arg):
         """Save the commands history on the specified file."""
