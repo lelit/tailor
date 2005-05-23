@@ -156,6 +156,76 @@ class Session(Cmd):
             
         self.__log('Logging to: %s\n' % self.logfile)
 
+    def do_print_executed_commands(self, arg):
+        """
+        Usage: print_executed_commands [0|1]
+
+        Print or set the verbosity on external commands execution.
+        """
+
+        from shwrap import SystemCommand
+        
+        if arg:
+            SystemCommand.VERBOSE = bool(arg)
+
+        self.__log('Print executed commands: %s\n' % SystemCommand.VERBOSE)
+
+    def do_patch_name_format(self, arg):
+        """
+        Usage: patch_name_format [format]
+
+        Print or set the patch name format, ie the prototype that will
+        be used to compute the patch name.
+
+        The prototype may contain %(keyword)s such as 'module',
+        'author', 'date', 'revision', 'firstlogline', 'remaininglog'
+        for normal updates, otherwise 'module', 'authors',
+        'nchangesets', 'mindate' and 'maxdate'.
+        """
+
+        from target import SyncronizableTargetWorkingDir
+
+        if arg:
+            SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = arg
+
+        self.__log('Patch name format: %s\n' %
+                   SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT)
+        
+    def do_remove_first_log_line(self, arg):
+        """
+        Usage: remove_first_log_line [0|1]
+        
+        Print or set if tailor should drop the first line of the
+        upstream changelog.
+
+        This is intended to go in pair with patch_name_format, when
+        using it's 'firstlogline' variable to build the name of the
+        patch.
+        """
+
+        from target import SyncronizableTargetWorkingDir
+
+        if arg:
+            SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = bool(arg)
+
+        self.__log('Remove first log line: %s\n' %
+                   SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE)
+
+    def do_refill_changelogs(self, arg):
+        """
+        Usage: refill_changelogs [0|1]
+
+        Print or set if tailor should refill the upstream changelogs,
+        as it does by default.
+        """
+
+        from changes import Changeset
+        
+        if arg:
+            Changeset.REFILL_MESSAGE = bool(arg)
+
+        self.__log('Refill changelogs: %s\n' % Changeset.REFILL_MESSAGE)
+        
     def do_source_kind(self, arg):
         """Print or set the source repository kind."""
 
