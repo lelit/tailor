@@ -95,7 +95,12 @@ class Session(Cmd):
         pass
         
     def do_exit(self, arg):
-        """Exit the interactive session."""
+        """
+        Usage: exit
+
+        Terminate the interactive session. This is the same thing
+        happening upon EOF (Ctrl-D).
+        """
 
         self.__log('Exiting...\n')
         return True
@@ -103,7 +108,11 @@ class Session(Cmd):
     do_EOF = do_exit
 
     def do_save(self, arg):
-        """Save the commands history on the specified file."""
+        """
+        Usage: save filename
+
+        Save the commands history on the specified file.
+        """
 
         import readline
 
@@ -114,7 +123,11 @@ class Session(Cmd):
         self.__log('History saved in: %s\n' % arg)
         
     def do_cd(self, arg):
-        """Print or set current active directory."""
+        """
+        Usage: cd [dirname]
+
+        Print or set current active directory.
+        """
 
         if arg and self.current_directory <> arg:
             try:
@@ -129,10 +142,11 @@ class Session(Cmd):
 
     def do_sub_directory(self, arg):
         """
-        Print or set the subdirectory that actually contains the working copy.
-
-        This is desumed automatically to be the last component of
-        the upstream module or repository.
+        Usage: sub_directory dirname
+        
+        Print or set the subdirectory that actually contains the
+        working copy. When not explicitly set, this is desumed from
+        the last component of the upstream module name or repository.
         """
         
         if arg and self.sub_directory <> arg:
@@ -141,7 +155,11 @@ class Session(Cmd):
         self.__log('Sub directory: %s\n' % self.sub_directory)
 
     def do_logfile(self, arg):
-        """Print or set the logfile of operations."""
+        """
+        Usage: logfile [filename]
+        
+        Print or set the logfile of operations. By default there's no log.
+        """
 
         import logging
         
@@ -227,7 +245,11 @@ class Session(Cmd):
         self.__log('Refill changelogs: %s\n' % Changeset.REFILL_MESSAGE)
         
     def do_source_kind(self, arg):
-        """Print or set the source repository kind."""
+        """
+        Usage: source_kind [svn|darcs|cvs]
+
+        Print or set the source repository kind.
+        """
 
         if arg and self.source_kind <> arg:
             self.source_kind = arg
@@ -235,7 +257,11 @@ class Session(Cmd):
         self.__log('Current source kind: %s\n' % self.source_kind)
         
     def do_target_kind(self, arg):
-        """Print or set the target repository kind."""
+        """
+        Usage: target_kind [svn|darcs|cvs|monotone|cdv|bzr]
+
+        Print or set the target repository kind.
+        """
 
         if arg and self.target_kind <> arg:
             self.target_kind = arg
@@ -243,7 +269,11 @@ class Session(Cmd):
         self.__log('Current target kind: %s\n' % self.target_kind)
 
     def do_source_repository(self, arg):
-        """Print or set the source repository."""
+        """
+        Usage: source_repository [repos]
+
+        Print or set the source repository.
+        """
 
         from os.path import sep
         
@@ -255,7 +285,11 @@ class Session(Cmd):
         self.__log('Current source repository: %s\n' % self.source_repository)
 
     def do_target_repository(self, arg):
-        """Print or set the target repository."""
+        """
+        Usage: target_repository [repos]
+
+        Print or set the target repository. This is currently unused.
+        """
 
         from os.path import sep
         
@@ -267,7 +301,11 @@ class Session(Cmd):
         self.__log('Current target repository: %s\n' % self.target_repository)
 
     def do_source_module(self, arg):
-        """Print or set the source module."""
+        """
+        Usage: source_module [module]
+        
+        Print or set the source module.
+        """
 
         from os.path import sep
         
@@ -279,7 +317,11 @@ class Session(Cmd):
         self.__log('Current target kind: %s\n' % self.source_module)
 
     def do_target_module(self, arg):
-        """Print or set the target module."""
+        """
+        Usage: target_module [module]
+
+        Print or set the target module. This is currently not used.
+        """
 
         from os.path import sep
         
@@ -311,8 +353,11 @@ class Session(Cmd):
         
     def do_state_file(self, arg):
         """
-        Print or set the current state_file.
-
+        Usage: state_file [filename]
+        
+        Print or set the current state file, where tailor stores the
+        source revision that has been applied last.
+        
         The argument must be a file name, possibly with the usual
         "~user/file" convention.        
         """
@@ -360,6 +405,8 @@ class Session(Cmd):
 
     def do_bootstrap(self, arg):
         """
+        Usage: bootstrap [revision]
+        
         Checkout the initial upstream revision, by default HEAD (or
         specified by argument), then import the subtree into the
         target repository.
