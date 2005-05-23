@@ -52,7 +52,7 @@ class SyncronizableTargetWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    PATCH_NAME_FORMAT = None
+    PATCH_NAME_FORMAT = '%(module)s: changeset %(revision)s'
     """
     The format string used to compute the patch name, used by underlying VCS.
     """
@@ -93,8 +93,7 @@ class SyncronizableTargetWorkingDir(object):
             else:
                 firstlogline = changeset.log
                 remaininglog = ''
-            remark = (self.PATCH_NAME_FORMAT or
-                      '%(module)s: changeset %(revision)s') % {
+            remark = self.PATCH_NAME_FORMAT % {
                 'module': module,
                 'revision': changeset.revision,
                 'author': changeset.author,

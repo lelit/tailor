@@ -561,8 +561,9 @@ def main():
     
     options, args = parser.parse_args()
     
-    SystemCommand.VERBOSE = options.debug    
-    SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
+    SystemCommand.VERBOSE = options.debug
+    if options.patch_name_format:
+        SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
 
