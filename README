@@ -217,12 +217,14 @@ features.
 
 For example, this is the script I'm using to test it::
 
-    cd /tmp/p/wc
+    cd /tmp
     state_file tailor.state
     source_kind darcs
     target_kind svn
     source_repository /home/lele/WiP/cvsync
     sub_directory cvsync
+    refill_changelogs no
+    patch_name_format [%(module)s] Changeset %(revision)s by %(author)s
 
 that, as you can see, specifies the context needed by tailor to do its
 work. With the following command line::
@@ -232,21 +234,25 @@ work. With the following command line::
     with the usual `readline` facilities. With "help" you'll get a list of
     available commands.
 
-    Current directory: /tmp/p/wc
-    Current state file: /tmp/p/wc/tailor.state
+    Current directory: /tmp
+    Current state file: /tmp/tailor.state
     Current source kind: darcs
     Current target kind: svn
     Current source repository: /home/lele/WiP/cvsync
     Sub directory: cvsync
+    Refill changelogs: False
+    Patch name format: [%(module)s] Changeset %(revision)s by %(author)s
     tailor $ help
     
     Documented commands (type help <topic>):
     ========================================
-    EOF                get_changes   source_module      target_module
-    bootstrap          logfile       source_repository  target_repository
-    cd                 save          state_file
-    current_directory  show_changes  sub_directory
-    exit               source_kind   target_kind
+    EOF                print_executed_commands  state_file
+    bootstrap          refill_changelogs        sub_directory
+    cd                 remove_first_log_line    target_kind
+    current_directory  save                     target_module
+    exit               source_kind              target_repository
+    logfile            source_module
+    patch_name_format  source_repository
 
     Undocumented commands:
     ======================
@@ -254,6 +260,8 @@ work. With the following command line::
 
     tailor $ help bootstrap
     
+        Usage: bootstrap [revision]
+
         Checkout the initial upstream revision, by default HEAD (or
         specified by argument), then import the subtree into the
         target repository.
