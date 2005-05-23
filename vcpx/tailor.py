@@ -474,8 +474,8 @@ UPDATE_OPTIONS = [
     make_option("-1", "--remove-first-log-line", action="store_true",
                 default=False,
                 help="Remove the first line of the upstream changelog. This "
-                     "is intented to go in pair with --patch-name-format, "
-                     "when using it's 'firstlogline' variable build the "
+                     "is intended to go in pair with --patch-name-format, "
+                     "when using it's 'firstlogline' variable to build the "
                      "name of the patch."),                
     make_option("-N", "--dont-refill-changelogs", action="store_true",
                 default=False,
