@@ -381,35 +381,6 @@ class Session(Cmd):
                 
         self.__log('Current state file: %s\n' % self.state_file)
 
-    def do_get_changes(self, arg):
-        """Fetch information on upstream changes."""
-
-        source_revision = self.readSourceRevision()
-        if self.source_kind and \
-           self.source_repository and \
-           self.source_module and \
-           source_revision:
-
-            dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            self.changesets = dwd.getUpstreamChangesets(self.current_directory,
-                                                        self.source_repository,
-                                                        self.source_module,
-                                                        source_revision)
-            self.__log('Collected %d upstream changesets\n' %
-                       len(self.changesets))
-        else:
-            self.__err("needs 'source_kind', 'source_repository' and "
-                       "'source_module' to proceed.\n")
-
-    def do_show_changes(self, arg):
-        """Show the upstream changes not yet applied."""
-
-        if self.changesets:
-            self.__log(`self.changesets`)
-            self.__log('\n')
-        else:
-            self.__err("needs `get_changes` to proceed.\n")
-
     def do_bootstrap(self, arg):
         """
         Usage: bootstrap [revision]
@@ -458,6 +429,93 @@ class Session(Cmd):
             self.__err('Working copy initialization failed: %s, %s' % (exc.__doc__, exc))
             if self.logger:
                 self.logger.exception('Working copy initialization failed')
+
+    def willApply(self, root, changeset):
+        """
+        Print the changeset being applied.
+        """
+
+        self.__log("Changeset %s:\n%s\n" % (changeset.revision,
+                                            changeset.log))
+        return True
+
+    def shouldApply(self, root, changeset):
+        """
+        Ask weather a changeset should be applied.
+        """
+
+        self.stdout.write("Changeset %s:\n%s\n" % (changeset.revision,
+                                                   changeset.log))
+        ans = raw_input("Apply [Y/n]? ")
+        
+        return ans == '' or ans[0].lower() == 'y'
+
+    def applied(self, root, changeset):
+        """
+        Save current status.
+        """
+
+        self.saveSourceRevision(changeset.revision)
+
+    def do_update(self, arg):
+        """
+        Usage: update [arg]
+
+        Fetch information on upstream changes and replay them with the
+        target system.
+
+        Argument may be either an integer value or the string 'ask'. The
+        number specify the maximum number of changesets the will be
+        applied. With 'ask' tailor will propose a "y/n" question for each
+        changeset before applying it.
+        """
+
+        source_revision = self.readSourceRevision()
+        if self.source_kind and \
+           self.source_repository and \
+           self.source_module and \
+           source_revision:
+
+            dwd = DualWorkingDir(self.source_kind, self.target_kind)
+            self.changesets = dwd.getUpstreamChangesets(self.current_directory,
+                                                        self.source_repository,
+                                                        self.source_module,
+                                                        source_revision)
+            nchanges = len(changesets)
+            if nchanges:
+                self.__log('Collected %d upstream changesets\n' % nchanges)
+
+                if arg:
+                    appliable = self.willApply
+                    try:
+                        howmany = min(int(arg), nchanges)
+                        changesets = changesets[:howmany]
+                        self.__log('Applying first %d of them\n' % howmany)
+                    except ValueError:
+                        if arg.lower() == 'ask':
+                            appliable = self.shouldApply
+
+                try:
+                    last, conflicts = dwd.applyUpstreamChangesets(
+                        proj, self.module, changesets, applyable=applyable,
+                        applied=self.applied, logger=self.logger,
+                        delayed_commit=single_commit)
+                except:
+                    if self.logger:
+                        self.logger.exception('Upstream change application '
+                                              'failed')
+                    self.__err('Stopping after upstream change application '
+                               'failure.')
+                    return
+
+                if last:
+                    self.__log("Update completed, now at revision '%s'" %
+                               self.readSourceRevision())
+            else:
+                self.__log("Update completed with no upstream changes")
+        else:
+            self.__err("needs 'source_kind', 'source_repository' and "
+                       "'source_module' to proceed.\n")
 
         
 def interactive(options, args):
