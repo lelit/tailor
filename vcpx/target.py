@@ -256,7 +256,7 @@ class SyncronizableTargetWorkingDir(object):
         a recursive add that skips the various metadata directories.
         """
         
-        from os.path import split, join
+        from os.path import join
         from os import walk
 
         if subdir<>'.':
