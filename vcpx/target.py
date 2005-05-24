@@ -84,15 +84,18 @@ class SyncronizableTargetWorkingDir(object):
         if delayed_commit:
             self.__registerAppliedChangeset(changeset)
         else:
-            from os.path import split
-
-            loglines = changeset.log.split('\n')
-            if len(loglines)>1:
-                firstlogline = loglines[0]
-                remaininglog = '\n'.join(loglines[1:])
-            else:
-                firstlogline = changeset.log
+            if changeset.log == '':
+                firstlogline = 'Empty log message'
                 remaininglog = ''
+            else:
+                loglines = changeset.log.split('\n')
+                if len(loglines)>1:
+                    firstlogline = loglines[0]
+                    remaininglog = '\n'.join(loglines[1:])
+                else:
+                    firstlogline = changeset.log
+                    remaininglog = ''
+                    
             remark = self.PATCH_NAME_FORMAT % {
                 'module': module,
                 'revision': changeset.revision,
