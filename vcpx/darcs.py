@@ -142,8 +142,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from changes import Changeset
         
         c = SystemCommand(working_dir=root,
-                          command="TZ=UTC darcs pull --dry-run")
-        output = c(output=True)
+                          command="TZ=UTC darcs pull --dry-run %(repository)s")
+        output = c(output=True, repository=shrepr(repository))
         if c.exit_status:
             raise GetUpstreamChangesetsFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
         
