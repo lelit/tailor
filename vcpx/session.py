@@ -61,7 +61,7 @@ class Session(Cmd):
         self.current_directory = getcwd()
         self.sub_directory = None
         
-        self.state_file = 'tailor.state'
+        self.state_file = None
         
         self.logfile = None
         self.logger = None
@@ -392,6 +392,10 @@ class Session(Cmd):
         from os.path import join, split, sep
         from dualwd import DualWorkingDir
 
+        if not self.state_file:
+            self.__err('Need a state_file to proceed!\n')
+            return
+        
         if self.sub_directory:
             subdir = self.sub_directory
         else:
@@ -471,49 +475,54 @@ class Session(Cmd):
 
         from dualwd import DualWorkingDir
         from os.path import join
-        
+
+        if not self.state_file:
+            self.__err('Need a state_file to proceed!\n')
+            return
+                
         source_revision = self.readSourceRevision()
-        if source_revision:
-            repodir = join(self.current_directory, self.sub_directory)
-            dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            changesets = dwd.getUpstreamChangesets(repodir,
-                                                   self.source_repository,
-                                                   self.source_module,
-                                                   source_revision)
-            nchanges = len(changesets)
-            if nchanges:
-                self.__log('Collected %d upstream changesets\n' % nchanges)
-
-                if arg:
-                    applyable = self.willApply
-                    try:
-                        howmany = min(int(arg), nchanges)
-                        changesets = changesets[:howmany]
-                        self.__log('Applying first %d of them\n' % howmany)
-                    except ValueError:
-                        if arg.lower() == 'ask':
-                            applyable = self.shouldApply
-
-                try:
-                    last, conflicts = dwd.applyUpstreamChangesets(
-                        repodir, self.source_module, changesets,
-                        applyable=applyable, applied=self.applied,
-                        logger=self.logger) # , delayed_commit=single_commit)
-                except:
-                    if self.logger:
-                        self.logger.exception('Upstream change application '
-                                              'failed')
-                    self.__err('Stopping after upstream change application '
-                               'failure.')
-                    return
-
-                if last:
-                    self.__log("Update completed, now at revision '%s'" %
-                               self.readSourceRevision())
-            else:
-                self.__log("Update completed with no upstream changes")
-        else:
+        if not source_revision:
             self.__err("Not yet bootstrapped!\n")
+            return
+        
+        repodir = join(self.current_directory, self.sub_directory)
+        dwd = DualWorkingDir(self.source_kind, self.target_kind)
+        changesets = dwd.getUpstreamChangesets(repodir,
+                                               self.source_repository,
+                                               self.source_module,
+                                               source_revision)
+        nchanges = len(changesets)
+        if nchanges:
+            self.__log('Collected %d upstream changesets\n' % nchanges)
+
+            if arg:
+                applyable = self.willApply
+                try:
+                    howmany = min(int(arg), nchanges)
+                    changesets = changesets[:howmany]
+                    self.__log('Applying first %d of them\n' % howmany)
+                except ValueError:
+                    if arg.lower() == 'ask':
+                        applyable = self.shouldApply
+
+            try:
+                last, conflicts = dwd.applyUpstreamChangesets(
+                    repodir, self.source_module, changesets,
+                    applyable=applyable, applied=self.applied,
+                    logger=self.logger) # , delayed_commit=single_commit)
+            except:
+                if self.logger:
+                    self.logger.exception('Upstream change application '
+                                          'failed')
+                self.__err('Stopping after upstream change application '
+                           'failure.')
+                return
+
+            if last:
+                self.__log("Update completed, now at revision '%s'" %
+                           self.readSourceRevision())
+        else:
+            self.__log("Update completed with no upstream changes")
 
         
 def interactive(options, args):
