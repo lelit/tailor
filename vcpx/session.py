@@ -399,11 +399,12 @@ class Session(Cmd):
         if self.sub_directory:
             subdir = self.sub_directory
         else:
-            subdir = split(self.source_module or self.source_repository)[1] or ''
+            subdir = split(self.source_module or
+                           self.source_repository)[1] or ''
             self.do_sub_directory(subdir)
 
         revision = arg or self.options.revision or 'HEAD'
-        
+
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         self.__log("Getting %s revision '%s' of '%s' from '%s'\n" % (
             self.source_kind, revision,
@@ -429,7 +430,8 @@ class Session(Cmd):
                                         self.sub_directory,
                                         actual)
         except Exception, exc:
-            self.__err('Working copy initialization failed: %s, %s' % (exc.__doc__, exc))
+            self.__err('Working copy initialization failed: %s, %s' %
+                       (exc.__doc__, exc))
             if self.logger:
                 self.logger.exception('Working copy initialization failed')
 
