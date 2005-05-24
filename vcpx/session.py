@@ -63,7 +63,6 @@ class Session(Cmd):
         
         self.state_file = 'tailor.state'
         
-        self.changesets = None
         self.logfile = None
         self.logger = None
         
@@ -425,7 +424,7 @@ class Session(Cmd):
                                         self.target_module,
                                         self.sub_directory,
                                         actual)
-        except:
+        except Exception, exc:
             self.__err('Working copy initialization failed: %s, %s' % (exc.__doc__, exc))
             if self.logger:
                 self.logger.exception('Working copy initialization failed')
@@ -470,36 +469,36 @@ class Session(Cmd):
         changeset before applying it.
         """
 
+        from dualwd import DualWorkingDir
+        from os.path import join
+        
         source_revision = self.readSourceRevision()
-        if self.source_kind and \
-           self.source_repository and \
-           self.source_module and \
-           source_revision:
-
+        if source_revision:
+            repodir = join(self.current_directory, self.sub_directory)
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            self.changesets = dwd.getUpstreamChangesets(self.current_directory,
-                                                        self.source_repository,
-                                                        self.source_module,
-                                                        source_revision)
+            changesets = dwd.getUpstreamChangesets(repodir,
+                                                   self.source_repository,
+                                                   self.source_module,
+                                                   source_revision)
             nchanges = len(changesets)
             if nchanges:
                 self.__log('Collected %d upstream changesets\n' % nchanges)
 
                 if arg:
-                    appliable = self.willApply
+                    applyable = self.willApply
                     try:
                         howmany = min(int(arg), nchanges)
                         changesets = changesets[:howmany]
                         self.__log('Applying first %d of them\n' % howmany)
                     except ValueError:
                         if arg.lower() == 'ask':
-                            appliable = self.shouldApply
+                            applyable = self.shouldApply
 
                 try:
                     last, conflicts = dwd.applyUpstreamChangesets(
-                        proj, self.module, changesets, applyable=applyable,
-                        applied=self.applied, logger=self.logger,
-                        delayed_commit=single_commit)
+                        repodir, self.source_module, changesets,
+                        applyable=applyable, applied=self.applied,
+                        logger=self.logger) # , delayed_commit=single_commit)
                 except:
                     if self.logger:
                         self.logger.exception('Upstream change application '
@@ -514,8 +513,7 @@ class Session(Cmd):
             else:
                 self.__log("Update completed with no upstream changes")
         else:
-            self.__err("needs 'source_kind', 'source_repository' and "
-                       "'source_module' to proceed.\n")
+            self.__err("Not yet bootstrapped!\n")
 
         
 def interactive(options, args):
