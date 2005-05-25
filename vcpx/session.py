@@ -476,7 +476,7 @@ class Session(Cmd):
         """
 
         from dualwd import DualWorkingDir
-        from os.path import join
+        from os.path import join, split
 
         if not self.state_file:
             self.__err('Need a state_file to proceed!\n')
@@ -487,7 +487,14 @@ class Session(Cmd):
             self.__err("Not yet bootstrapped!\n")
             return
         
-        repodir = join(self.current_directory, self.sub_directory)
+        if self.sub_directory:
+            subdir = self.sub_directory
+        else:
+            subdir = split(self.source_module or
+                           self.source_repository)[1] or ''
+            self.do_sub_directory(subdir)
+            
+        repodir = join(self.current_directory, subdir)
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         changesets = dwd.getUpstreamChangesets(repodir,
                                                self.source_repository,
