@@ -518,7 +518,7 @@ class Session(Cmd):
         target system.
 
         Argument may be either an integer value or the string 'ask'. The
-        number specify the maximum number of changesets the will be
+        number specify the maximum number of changesets that will be
         applied. With 'ask' tailor will propose a "y/n" question for each
         changeset before applying it.
         """
