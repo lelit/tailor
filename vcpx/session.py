@@ -320,7 +320,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.source_module = arg
 
-        self.__log('Current target kind: %s\n' % self.source_module)
+        self.__log('Current source module: %s\n' % self.source_module)
 
     def do_target_module(self, arg):
         """
@@ -336,7 +336,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.target_module = arg
 
-        self.__log('Current target kind: %s\n' % self.target_module)
+        self.__log('Current target module: %s\n' % self.target_module)
 
     def readSourceRevision(self):
         """Read the source revision from the state file."""
