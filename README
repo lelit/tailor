@@ -266,7 +266,49 @@ work. With the following command line::
         specified by argument), then import the subtree into the
         target repository.
 
+As another example, consider the following commands::
 
+    cd /tmp/wc
+    state_file tailor.state
+    source_kind cvs
+    target_kind darcs
+    source_repository :pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot
+    source_module buildbot
+    refill_changelogs false
+    patch_name_format %(firstlogline)s
+    print_executed_commands true
+    bootstrap 2004/01/01 20:05:24
+    update ask
+
+Assuming ``/tmp/wc`` exists, executing them will first bootstrap a new
+darcs repository with a snapshot at the given date of the upstream
+sources, then will proceed with the update, asking confirmation about
+any single changeset::
+
+    ...
+    Collected 586 upstream changesets
+    Changeset 2004-01-07 00:42:07 by warner:
+    * buildbot/changes/mail.py (parseFreshCVSMail): ....
+    * test/test_mailparse.py (Test1.testMsg9): test for same
+
+    Apply [Y/n/v/h/q]? h
+    y: yes, apply it and keep going
+    n: no, skip the current changeset
+    v: view more detailed information
+    q: do not apply the current changeset and stop iterating
+
+    Apply [Y/n/v/h/q]? v
+    Revision: 2004-01-07 00:42:07 by warner
+    Date: 2004-01-07 00:42:07
+    Author: warner
+    Modified: ChangeLog,buildbot/changes/mail.py,test/test_mailparse.py
+    Added: test/mail/msg9
+    Log: * buildbot/changes/mail.py (parseFreshCVSMail): ...
+    * test/test_mailparse.py (Test1.testMsg9): test for same
+    
+    Apply [Y/n/v/h/q]?
+
+        
 Further help
 ============
 

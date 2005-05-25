@@ -451,9 +451,26 @@ class Session(Cmd):
 
         self.stdout.write("Changeset %s:\n%s\n" % (changeset.revision,
                                                    changeset.log))
-        ans = raw_input("Apply [Y/n]? ")
-        
-        return ans == '' or ans[0].lower() == 'y'
+
+        while 1:
+            self.stdout.write('\n')
+            ans = raw_input("Apply [Y/n/v/h/q]? ")
+            ans = ans=='' and 'y' or ans[0].lower()
+
+            if ans == 'y':
+                return True
+            elif ans == 'n':
+                return False
+            elif ans == 'h':
+                self.stdout.write('y: yes, apply it and keep going\n'
+                                  'n: no, skip the current changeset\n'
+                                  'v: view more detailed information\n'
+                                  'q: do not apply the current changeset '
+                                  'and stop iterating\n')
+            elif ans == 'q':
+                raise StopIteration()
+            else:
+                self.stdout.write(str(changeset) + '\n')
 
     def applied(self, root, changeset):
         """
@@ -519,9 +536,10 @@ class Session(Cmd):
                     repodir, self.source_module, changesets,
                     applyable=applyable, applied=self.applied,
                     logger=self.logger) # , delayed_commit=single_commit)
-            except KeyboardInterrupt:
+            except StopIteration, KeyboardInterrupt:
                 if self.logger:
                     self.logger.warning("Stopped by user")
+                return
             except:
                 if self.logger:
                     self.logger.exception('Upstream change application '
