@@ -99,6 +99,16 @@ class Session(Cmd):
     def emptyline(self):
         """Override the default impl of reexecuting last command."""
         pass
+
+    def precmd(self, line):
+        """Strip anything after the first '#', to allow comments."""
+
+        try:
+            line = line[:line.index('#')]
+        except ValueError:
+            pass
+
+        return line
         
     def do_exit(self, arg):
         """
