@@ -519,6 +519,9 @@ class Session(Cmd):
                     repodir, self.source_module, changesets,
                     applyable=applyable, applied=self.applied,
                     logger=self.logger) # , delayed_commit=single_commit)
+            except KeyboardInterrupt:
+                if self.logger:
+                    self.logger.warning("Stopped by user")
             except:
                 if self.logger:
                     self.logger.exception('Upstream change application '
