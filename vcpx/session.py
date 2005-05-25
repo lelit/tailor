@@ -62,12 +62,16 @@ class Session(Cmd):
         self.sub_directory = None
         
         self.state_file = None
-        
         self.logfile = None
         self.logger = None
         
         self.__processArgs()
 
+        # Persistent
+        
+        self.changesets = None
+        self.source_revision = None
+        
     def __processArgs(self):
         """
         Process optional command line arguments.
@@ -93,9 +97,7 @@ class Session(Cmd):
         self.stdout.write('Error: ')
         self.stdout.write(what)
         
-
-    ## Interactive commands
-
+    
     def emptyline(self):
         """Override the default impl of reexecuting last command."""
         pass
@@ -110,6 +112,8 @@ class Session(Cmd):
 
         return line
         
+    ## Interactive commands
+
     def do_exit(self, arg):
         """
         Usage: exit
@@ -348,25 +352,36 @@ class Session(Cmd):
 
         self.__log('Current target module: %s\n' % self.target_module)
 
-    def readSourceRevision(self):
-        """Read the source revision from the state file."""
+    def loadStateFile(self):
+        """
+        Read the source revision and pending changesets from the state file.
+        """
+
+        from cPickle import load
 
         try:
             sf = open(self.state_file)
-            revision = sf.read()
+            self.source_revision, self.changesets = load(sf)
             sf.close()
+
+            self.__log('Source revision: %s\n' % self.source_revision)
+            if self.changesets:
+                self.__log('Pending changesets: %d\n' % len(self.changesets))
         except IOError:
-            revision = None
+            self.source_revision = None
+            self.changesets = None
 
-        return revision
-            
-    def saveSourceRevision(self, revision):
-        """Write current source revision in the state file."""
+    def writeStateFile(self):
+        """
+        Write current source revision and pending changesets in the state file.
+        """
 
-        sf = open(self.state_file, 'w')
-        sf.write(revision)
-        sf.close()
+        from cPickle import dump
         
+        sf = open(self.state_file, 'w')
+        dump((self.source_revision, self.changesets), sf)
+        sf.close()
+
     def do_state_file(self, arg):
         """
         Usage: state_file [filename]
@@ -379,7 +394,8 @@ class Session(Cmd):
         """
 
         from os.path import isabs, abspath, expanduser
-
+        from cPickle import load
+        
         if arg:
             arg = expanduser(arg)
             if not isabs(arg):
@@ -387,8 +403,10 @@ class Session(Cmd):
         
         if arg and self.state_file <> arg:
             self.state_file = arg
-                
+            
         self.__log('Current state file: %s\n' % self.state_file)
+
+        self.loadStateFile()
 
     def do_bootstrap(self, arg):
         """
@@ -405,7 +423,10 @@ class Session(Cmd):
         if not self.state_file:
             self.__err('Need a state_file to proceed!\n')
             return
-        
+
+        if self.source_revision is not None:
+            self.__err('Already bootstrapped!')
+            
         if self.sub_directory:
             subdir = self.sub_directory
         else:
@@ -421,24 +442,23 @@ class Session(Cmd):
             self.source_module, self.source_repository))
 
         try:
-            actual = dwd.checkoutUpstreamRevision(self.current_directory,
-                                                  self.source_repository,
-                                                  self.source_module,
-                                                  revision,
-                                                  subdir=subdir,
-                                                  logger=self.logger)
-            self.saveSourceRevision(actual)
+            self.source_revision = dwd.checkoutUpstreamRevision(
+                self.current_directory, self.source_repository,
+                self.source_module, revision,
+                subdir=subdir, logger=self.logger)
         except Exception, exc:
             self.__err('Checkout failed: %s, %s' % (exc.__doc__, exc))
             if self.logger:
                 self.logger.exception('Checkout failed')
 
+        self.writeStateFile()
+        
         try:
             dwd.initializeNewWorkingDir(self.current_directory,
                                         self.target_repository,
                                         self.target_module,
                                         self.sub_directory,
-                                        actual)
+                                        self.source_revision)
         except Exception, exc:
             self.__err('Working copy initialization failed: %s, %s' %
                        (exc.__doc__, exc))
@@ -459,8 +479,8 @@ class Session(Cmd):
         Ask weather a changeset should be applied.
         """
 
-        self.stdout.write("Changeset %s:\n%s\n" % (changeset.revision,
-                                                   changeset.log))
+        self.stdout.write("\nChangeset %s:\n%s\n" % (changeset.revision,
+                                                     changeset.log))
 
         while 1:
             self.stdout.write('\n')
@@ -487,7 +507,8 @@ class Session(Cmd):
         Save current status.
         """
 
-        self.saveSourceRevision(changeset.revision)
+        self.source_revision = changeset.revision
+        self.changesets.remove(changeset)
 
     def do_update(self, arg):
         """
@@ -509,8 +530,7 @@ class Session(Cmd):
             self.__err('Need a state_file to proceed!\n')
             return
                 
-        source_revision = self.readSourceRevision()
-        if not source_revision:
+        if self.source_revision is None:
             self.__err("Not yet bootstrapped!\n")
             return
         
@@ -523,44 +543,70 @@ class Session(Cmd):
             
         repodir = join(self.current_directory, subdir)
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        changesets = dwd.getUpstreamChangesets(repodir,
-                                               self.source_repository,
-                                               self.source_module,
-                                               source_revision)
-        nchanges = len(changesets)
-        if nchanges:
-            self.__log('Collected %d upstream changesets\n' % nchanges)
 
-            if arg:
-                applyable = self.willApply
-                try:
-                    howmany = min(int(arg), nchanges)
-                    changesets = changesets[:howmany]
-                    self.__log('Applying first %d of them\n' % howmany)
-                except ValueError:
-                    if arg.lower() == 'ask':
-                        applyable = self.shouldApply
-
+        # If we have no pending changesets, ask the upstream server
+        # about new changes
+        
+        if not self.changesets:
             try:
-                last, conflicts = dwd.applyUpstreamChangesets(
-                    repodir, self.source_module, changesets,
-                    applyable=applyable, applied=self.applied,
-                    logger=self.logger) # , delayed_commit=single_commit)
-            except StopIteration, KeyboardInterrupt:
+                self.changesets = dwd.getUpstreamChangesets(
+                                           repodir,
+                                           self.source_repository,
+                                           self.source_module,
+                                           self.source_revision)
+            except KeyboardInterrupt:
                 if self.logger:
                     self.logger.warning("Stopped by user")
                 return
             except:
                 if self.logger:
-                    self.logger.exception('Upstream change application '
-                                          'failed')
-                self.__err('Stopping after upstream change application '
-                           'failure.')
+                    self.logger.exception('Unable to collect upstream changes')
+                self.__err('Unable to collect upstream changes')
                 return
+            
+        nchanges = len(self.changesets)
+        if nchanges:
+            if arg:
+                applyable = self.willApply
+                try:
+                    howmany = min(int(arg), nchanges)
+                    changesets = self.changesets[:howmany]
+                except ValueError:
+                    changesets = self.changesets[:]
+                    if arg.lower() == 'ask':
+                        applyable = self.shouldApply
 
-            if last:
-                self.__log("Update completed, now at revision '%s'" %
-                           self.readSourceRevision())
+            self.__log('Applying %d changesets (out of %d)\n' %
+                       (len(changesets), nchanges))
+
+            last = None
+            try:
+                try:
+                    last, conflicts = dwd.applyUpstreamChangesets(
+                        repodir, self.source_module, changesets,
+                        applyable=applyable, applied=self.applied,
+                        logger=self.logger) # , delayed_commit=single_commit)
+                except StopIteration, KeyboardInterrupt:
+                    if self.logger:
+                        self.logger.warning("Stopped by user")
+                    return
+                except:
+                    if self.logger:
+                        self.logger.exception('Upstream change application '
+                                              'failed')
+                    self.__err('Stopping after upstream change application '
+                               'failure.')
+                    return
+            finally:
+                self.writeStateFile()
+                
+                if self.changesets:
+                    self.__log("There are still %d pending changesets, "
+                               "now at revision '%s'\n" %
+                               (len(self.changesets), self.source_revision))
+                else:
+                    self.__log("Update completed, now at revision '%s'\n" %
+                               self.source_revision)
         else:
             self.__log("Update completed with no upstream changes")
 

@@ -30,10 +30,6 @@ class ChangesetEntry(object):
     APPLIED = 'APPLIED'
     CONFLICT = 'CONFLICT'
     
-    __slots__ = ('name', 'old_name',
-                 'old_revision', 'new_revision',
-                 'action_kind', 'status', 'unidiff')
-
     def __init__(self, name):
         self.name = name
         self.old_name = None
