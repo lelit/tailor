@@ -466,8 +466,8 @@ class Session(Cmd):
         
         try:
             dwd.initializeNewWorkingDir(self.current_directory,
-                                        self.target_repository,
-                                        self.target_module,
+                                        self.source_repository,
+                                        self.source_module,
                                         self.sub_directory,
                                         self.source_revision)
         except Exception, exc:
