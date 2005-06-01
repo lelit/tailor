@@ -542,8 +542,7 @@ class Session(Cmd):
             return
                 
         if self.source_revision is None:
-            self.__err("Not yet bootstrapped!\n")
-            return
+            return self.do_bootstrap(None)
         
         if self.sub_directory:
             subdir = self.sub_directory
