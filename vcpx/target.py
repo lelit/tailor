@@ -20,11 +20,11 @@ HOST = socket.getfqdn()
 AUTHOR = "tailor"
 BOOTSTRAP_PATCHNAME = 'Tailorization of %s'
 BOOTSTRAP_CHANGELOG = """\
-Import of the upstream sources from the repository
+Import of the upstream sources from
 
- %(repository)s
-
-as of revision %(revision)s
+  Repository: %(repository)s
+  Module:     %(module)s
+  Revision:   %(revision)s
 """
 
 class TargetInitializationFailure(Exception):
@@ -322,9 +322,9 @@ class SyncronizableTargetWorkingDir(object):
 
         now = datetime.now()
         self._initializeWorkingDir(root, repository, module, subdir)
-        self._commit(root, now, '%s@%s' % (AUTHOR, HOST),
-                     BOOTSTRAP_PATCHNAME % module,
-                     BOOTSTRAP_CHANGELOG % locals(),
+        patchname = BOOTSTRAP_PATCHNAME % module
+        changelog = BOOTSTRAP_CHANGELOG % locals()
+        self._commit(root, now, '%s@%s' % (AUTHOR, HOST), patchname, changelog,
                      entries=[subdir])
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
