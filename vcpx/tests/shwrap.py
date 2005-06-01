@@ -101,7 +101,7 @@ class SystemCommandTest(TestCase):
         self.assertEqual(out.read(), "/tmp\n")
 
     def testQuoting(self):
-        """Verifify the quoting mechanism."""
+        """Verify the quoting mechanism."""
 
         self.assertEqual(shrepr(r'''doublequote "'''), r'''"doublequote \""''')
         self.assertEqual(shrepr(r'''quote ' backslash \ doublequote "'''),
