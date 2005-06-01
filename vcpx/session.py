@@ -90,6 +90,7 @@ class Session(Cmd):
             
         if self.options.verbose:
             self.stdout.write(what)
+            self.stdout.write('\n')
 
     def __err(self, what):
         if self.logger:
@@ -97,8 +98,8 @@ class Session(Cmd):
             
         self.stdout.write('Error: ')
         self.stdout.write(what)
-        
-    
+        self.stdout.write('\n')
+
     def emptyline(self):
         """Override the default impl of reexecuting last command."""
         pass
@@ -123,7 +124,7 @@ class Session(Cmd):
         happening upon EOF (Ctrl-D).
         """
 
-        self.__log('Exiting...\n')
+        self.__log('Exiting...')
         return True
 
     do_EOF = do_exit
@@ -141,7 +142,7 @@ class Session(Cmd):
             return
             
         readline.write_history_file(arg)
-        self.__log('History saved in: %s\n' % arg)
+        self.__log('History saved in: %s' % arg)
         
     def do_cd(self, arg):
         """
@@ -182,7 +183,7 @@ class Session(Cmd):
         if arg and self.sub_directory <> arg:
             self.sub_directory = arg
 
-        self.__log('Sub directory: %s\n' % self.sub_directory)
+        self.__log('Sub directory: %s' % self.sub_directory)
 
     def do_logfile(self, arg):
         """
@@ -202,7 +203,7 @@ class Session(Cmd):
             self.logger.addHandler(hdlr) 
             self.logger.setLevel(logging.INFO)
             
-        self.__log('Logging to: %s\n' % self.logfile)
+        self.__log('Logging to: %s' % self.logfile)
 
     def do_print_executed_commands(self, arg):
         """
@@ -216,7 +217,7 @@ class Session(Cmd):
         if arg:
             SystemCommand.VERBOSE = yesno(arg)
 
-        self.__log('Print executed commands: %s\n' % SystemCommand.VERBOSE)
+        self.__log('Print executed commands: %s' % SystemCommand.VERBOSE)
 
     def do_patch_name_format(self, arg):
         """
@@ -236,7 +237,7 @@ class Session(Cmd):
         if arg:
             SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = arg
 
-        self.__log('Patch name format: %s\n' %
+        self.__log('Patch name format: %s' %
                    SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT)
         
     def do_remove_first_log_line(self, arg):
@@ -256,7 +257,7 @@ class Session(Cmd):
         if arg:
             SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = yesno(arg)
 
-        self.__log('Remove first log line: %s\n' %
+        self.__log('Remove first log line: %s' %
                    SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE)
 
     def do_refill_changelogs(self, arg):
@@ -272,7 +273,7 @@ class Session(Cmd):
         if arg:
             Changeset.REFILL_MESSAGE = yesno(arg)
 
-        self.__log('Refill changelogs: %s\n' % Changeset.REFILL_MESSAGE)
+        self.__log('Refill changelogs: %s' % Changeset.REFILL_MESSAGE)
         
     def do_source_kind(self, arg):
         """
@@ -284,7 +285,7 @@ class Session(Cmd):
         if arg and self.source_kind <> arg:
             self.source_kind = arg
 
-        self.__log('Current source kind: %s\n' % self.source_kind)
+        self.__log('Current source kind: %s' % self.source_kind)
         
     def do_target_kind(self, arg):
         """
@@ -296,7 +297,7 @@ class Session(Cmd):
         if arg and self.target_kind <> arg:
             self.target_kind = arg
 
-        self.__log('Current target kind: %s\n' % self.target_kind)
+        self.__log('Current target kind: %s' % self.target_kind)
 
     def do_source_repository(self, arg):
         """
@@ -312,7 +313,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.source_repository = arg
 
-        self.__log('Current source repository: %s\n' % self.source_repository)
+        self.__log('Current source repository: %s' % self.source_repository)
 
     def do_target_repository(self, arg):
         """
@@ -328,7 +329,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.target_repository = arg
 
-        self.__log('Current target repository: %s\n' % self.target_repository)
+        self.__log('Current target repository: %s' % self.target_repository)
 
     def do_source_module(self, arg):
         """
@@ -344,7 +345,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.source_module = arg
 
-        self.__log('Current source module: %s\n' % self.source_module)
+        self.__log('Current source module: %s' % self.source_module)
 
     def do_target_module(self, arg):
         """
@@ -360,7 +361,7 @@ class Session(Cmd):
                 arg = arg[:-1]
             self.target_module = arg
 
-        self.__log('Current target module: %s\n' % self.target_module)
+        self.__log('Current target module: %s' % self.target_module)
 
     def loadStateFile(self):
         """
@@ -374,9 +375,9 @@ class Session(Cmd):
             self.source_revision, self.changesets = load(sf)
             sf.close()
 
-            self.__log('Source revision: %s\n' % self.source_revision)
+            self.__log('Source revision: %s' % self.source_revision)
             if self.changesets:
-                self.__log('Pending changesets: %d\n' % len(self.changesets))
+                self.__log('Pending changesets: %d' % len(self.changesets))
         except IOError:
             self.source_revision = None
             self.changesets = None
@@ -414,7 +415,7 @@ class Session(Cmd):
         if arg and self.state_file <> arg:
             self.state_file = arg
             
-        self.__log('Current state file: %s\n' % self.state_file)
+        self.__log('Current state file: %s' % self.state_file)
 
         self.loadStateFile()
 
@@ -431,7 +432,7 @@ class Session(Cmd):
         from dualwd import DualWorkingDir
 
         if not self.state_file:
-            self.__err('Need a state_file to proceed!\n')
+            self.__err('Need a state_file to proceed!')
             return
 
         if self.source_revision is not None:
@@ -447,7 +448,7 @@ class Session(Cmd):
         revision = arg or self.options.revision or 'HEAD'
 
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
-        self.__log("Getting %s revision '%s' of '%s' from '%s'\n" % (
+        self.__log("Getting %s revision '%s' of '%s' from '%s'" % (
             self.source_kind, revision,
             self.source_module, self.source_repository))
 
@@ -480,7 +481,7 @@ class Session(Cmd):
         Print the changeset being applied.
         """
 
-        self.__log("Changeset %s:\n%s\n" % (changeset.revision,
+        self.__log("Changeset %s:\n%s" % (changeset.revision,
                                             changeset.log))
         return True
 
@@ -489,7 +490,7 @@ class Session(Cmd):
         Ask weather a changeset should be applied.
         """
 
-        self.stdout.write("\nChangeset %s:\n%s\n" % (changeset.revision,
+        self.stdout.write("\nChangeset %s:\n%s" % (changeset.revision,
                                                      changeset.log))
 
         while 1:
@@ -537,7 +538,7 @@ class Session(Cmd):
         from os.path import join, split
 
         if not self.state_file:
-            self.__err('Need a state_file to proceed!\n')
+            self.__err('Need a state_file to proceed!')
             return
                 
         if self.source_revision is None:
@@ -586,7 +587,7 @@ class Session(Cmd):
                     if arg.lower() == 'ask':
                         applyable = self.shouldApply
 
-            self.__log('Applying %d changesets (out of %d)\n' %
+            self.__log('Applying %d changesets (out of %d)' %
                        (len(changesets), nchanges))
 
             last = None
@@ -612,10 +613,10 @@ class Session(Cmd):
                 
                 if self.changesets:
                     self.__log("There are still %d pending changesets, "
-                               "now at revision '%s'\n" %
+                               "now at revision '%s'" %
                                (len(self.changesets), self.source_revision))
                 else:
-                    self.__log("Update completed, now at revision '%s'\n" %
+                    self.__log("Update completed, now at revision '%s'" %
                                self.source_revision)
         else:
             self.__log("Update completed with no upstream changes")
