@@ -17,7 +17,6 @@ instead of pushing options madness on him.
 __docformat__ = 'reStructuredText'
 
 from cmd import Cmd
-from os import chdir, getcwd       
 
 
 INTRO = """\
@@ -48,6 +47,8 @@ class Session(Cmd):
         a list of commands to be executed.
         """
         
+        from os import getcwd       
+
         Cmd.__init__(self)
         self.options = options        
         self.args = args
@@ -146,17 +147,26 @@ class Session(Cmd):
         """
         Usage: cd [dirname]
 
-        Print or set current active directory.
+        Print or set current active directory. If the directory does not
+        exist it is created.
         """
 
+        from os import chdir, makedirs, getcwd
+        
         if arg and self.current_directory <> arg:
             try:
                 chdir(arg)
-                self.current_directory = getcwd()
-            except:
-                self.__log('Cannot change current directory to %s\n' %
-                           arg)
-        self.__log('Current directory: %s\n' % self.current_directory)
+            except OSError:
+                self.__log('Creating directory %s' % arg)
+                try:
+                    makedirs(arg)
+                    chdir(arg)
+                except:
+                    self.__err('Cannot create directory %s' % arg)
+                    
+            self.current_directory = getcwd()
+            
+        self.__log('Current directory: %s' % self.current_directory)
 
     do_current_directory = do_cd
 
