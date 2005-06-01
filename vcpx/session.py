@@ -152,7 +152,8 @@ class Session(Cmd):
         exist it is created.
         """
 
-        from os import chdir, makedirs, getcwd, isabs, abspath, expanduser
+        from os import chdir, makedirs, getcwd
+        from os.path import isabs, abspath, expanduser
         
         if arg:
             arg = expanduser(arg)
