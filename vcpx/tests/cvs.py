@@ -17,7 +17,7 @@ class CvsEntryTest(TestCase):
     def testBasicCapabilities(self):
         """Verify CvsEntry parser"""
 
-        from datetime import datetime
+        from datetime import datetime, timedelta
         
         tagline = "/version.txt/1.16.2.1/Tue Jul 13 12:49:02 2004//T1.16.2.1"
         e = CvsEntry(tagline)
@@ -32,6 +32,13 @@ class CvsEntryTest(TestCase):
         self.assertEqual(e.cvs_version, '1.31.2.5')
         self.assertEqual(e.timestamp, datetime(2004, 7, 13, 13, 43, 6))
         self.assertEqual(e.cvs_tag, 'T1.31.2.5')
+
+        tagline = "/Makefile.am/1.55/Result of merge//T1.55"
+        e = CvsEntry(tagline)
+        self.assertEqual(e.filename, 'Makefile.am')
+        self.assertEqual(e.cvs_version, '1.55')
+        self.assert_((datetime.today() - e.timestamp) < timedelta(seconds=1))
+        self.assertEqual(e.cvs_tag, 'T1.55')
         
 
 class CvsLogParserTest(TestCase):
