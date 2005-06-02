@@ -344,13 +344,17 @@ class CvsEntry(object):
         
         dummy, fn, rev, ts, dummy, tag = entry.split('/')
 
-        if ts.startswith('Result of merge+'):
-            ts = ts[16:]
-            
         self.filename = fn
         self.cvs_version = rev
-        y,m,d,hh,mm,ss,d1,d2,d3 = strptime(ts, "%a %b %d %H:%M:%S %Y")
-        self.timestamp = datetime(y,m,d,hh,mm,ss)
+
+        if ts == 'Result of merge':
+            self.timestamp = datetime.today()
+        else:
+            if ts.startswith('Result of merge+'):
+                ts = ts[16:]
+            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(ts, "%a %b %d %H:%M:%S %Y")
+            self.timestamp = datetime(y,m,d,hh,mm,ss)
+
         self.cvs_tag = tag
 
     def __str__(self):
