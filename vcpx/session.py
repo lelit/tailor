@@ -591,7 +591,9 @@ class Session(Cmd):
                     changesets = self.changesets[:]
                     if arg.lower() == 'ask':
                         applyable = self.shouldApply
-
+            else:
+                changesets = self.changesets[:]
+                
             self.__log('Applying %d changesets (out of %d)' %
                        (len(changesets), nchanges))
 
