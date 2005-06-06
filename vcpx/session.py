@@ -582,8 +582,8 @@ class Session(Cmd):
             
         nchanges = len(self.changesets)
         if nchanges:
+            applyable = self.willApply
             if arg:
-                applyable = self.willApply
                 try:
                     howmany = min(int(arg), nchanges)
                     changesets = self.changesets[:howmany]
