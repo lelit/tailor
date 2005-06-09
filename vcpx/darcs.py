@@ -301,7 +301,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                           " --quiet %(entry)s")
         c(entry=shrepr(subdir))
         
-    def _commit(self,root, date, author, remark, changelog=None, entries=None):
+    def _commit(self, root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
