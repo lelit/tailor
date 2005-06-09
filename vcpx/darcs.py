@@ -116,10 +116,11 @@ def changesets_from_darcschanges(changes):
             self.current_field.append(data)
 
     handler = DarcsXMLChangesHandler()
+    output = changes.getvalue()
     try:
-        parseString(changes.getvalue(), handler)
+        parseString(output, handler)
     except SAXException, le:
-        print "parseString(%s, %s) yielded the following error..." % (changes.getValue(), handler,)
+        print "parseString(%s, %s) yielded the following error..." % (output, handler)
         raise le
 
     changesets = handler.changesets
