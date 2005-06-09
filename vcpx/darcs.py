@@ -16,6 +16,7 @@ from shwrap import SystemCommand, shrepr
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from xml.sax import SAXException
 
 MOTD = """\
 This is the Darcs equivalent of
@@ -115,7 +116,11 @@ def changesets_from_darcschanges(changes):
             self.current_field.append(data)
 
     handler = DarcsXMLChangesHandler()
-    parseString(changes.getvalue(), handler)
+    try:
+        parseString(changes.getvalue(), handler)
+    except SAXException, le:
+        print "parseString(%s, %s) yielded the following error..." % (changes.getValue(), handler,)
+        raise le
 
     changesets = handler.changesets
     
