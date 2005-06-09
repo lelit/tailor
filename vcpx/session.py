@@ -423,6 +423,10 @@ class Session(Cmd):
             
         self.__log('Current state file: %s' % self.state_file)
 
+        if not self.state_file:
+            self.__err('Need a state_file to proceed to load state file!')
+            return
+
         self.loadStateFile()
 
     def do_bootstrap(self, arg):
@@ -548,11 +552,15 @@ class Session(Cmd):
             return
                 
         if self.source_revision is None:
+            self.__log('Boostrapping, because source_revision is None!')
             return self.do_bootstrap(None)
         
         if self.sub_directory:
             subdir = self.sub_directory
         else:
+            if not self.source_module:
+                self.__err('Need a source_module to proceed!')
+                return
             subdir = split(self.source_module or
                            self.source_repository)[1] or ''
             self.do_sub_directory(subdir)
@@ -574,10 +582,12 @@ class Session(Cmd):
                 if self.logger:
                     self.logger.warning("Stopped by user")
                 return
-            except:
+            except Exception, le:
                 if self.logger:
-                    self.logger.exception('Unable to collect upstream changes')
+                    self.logger.exception('Unable to collect upstream changes. Exception follows.')
+                    self.logger.exception(`le`)
                 self.__err('Unable to collect upstream changes')
+                self.__err(`le`)
                 return
             
         nchanges = len(self.changesets)
