@@ -41,7 +41,7 @@ class DarcsRecord(SystemCommand):
                                       **kwargs)
 
 
-def changesets_from_darcschanges(changes):
+def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     """
     Parse XML output of ``darcs changes``.
 
@@ -58,7 +58,14 @@ def changesets_from_darcschanges(changes):
             self.changesets = []
             self.current = None
             self.current_field = []
-
+            if unidiff and repodir:
+                self.darcsdiff = SystemCommand(command="darcs diff --unified "
+                                                       "--repodir=" +
+                                                       shrepr(repodir) +
+                                                       " --patch=%(patchname)s")
+            else:
+                self.darcsdiff = None
+                
         def startElement(self, name, attributes):
             if name == 'patch':
                 self.current = {}
@@ -87,11 +94,17 @@ def changesets_from_darcschanges(changes):
             if name == 'patch':
                 # Sort the paths to make tests easier
                 self.current['entries'].sort(lambda x,y: cmp(x.name, y.name))
-                self.changesets.append(Changeset(self.current['name'],
-                                                 self.current['date'],
-                                                 self.current['author'],
-                                                 self.current['comment'],
-                                                 self.current['entries']))
+                cset = Changeset(self.current['name'],
+                                 self.current['date'],
+                                 self.current['author'],
+                                 self.current['comment'],
+                                 self.current['entries'])
+                
+                if self.darcsdiff:
+                    cset.unidiff = self.darcsdiff(output=True,
+                                                  patchname=cset.revision).read()
+                    
+                self.changesets.append(cset)
                 self.current = None
             elif name in ['name', 'comment']:
                 self.current[name] = ''.join(self.current_field)

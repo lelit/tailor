@@ -10,6 +10,7 @@ from unittest import TestCase, TestSuite
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.darcs import changesets_from_darcschanges
+from shwrap import SystemCommand
 
 class DarcsChangesParserTest(TestCase):
     """Tests for the parser of darcs changes"""
@@ -81,3 +82,17 @@ class DarcsChangesParserTest(TestCase):
         self.assertEqual(entry.name, 'vcpx/cvs.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
         
+    def testOnTailorOwnRepo(self):
+        """Verify fetching unidiff of a darcs patch"""
+
+        from os import getcwd
+
+        patchname = 'more detailed diags on SAXException'
+        changes = SystemCommand(command="darcs changes --xml --summary "
+                                        "--patches='%s'" % patchname)
+        csets = changesets_from_darcschanges(changes(output=True),
+                                             unidiff=True,
+                                             repodir=getcwd())
+        unidiff = csets[0].unidiff
+        head = unidiff.split('\n')[0]
+        self.assertEqual(head, 'Thu Jun  9 22:17:11 CEST 2005  zooko@zooko.com')
