@@ -37,7 +37,7 @@ class ChangesetEntry(object):
         self.new_revision = None
         self.action_kind = None
         self.status = None
-        self.unidiff = None
+        self.unidiff = None # This is the unidiff of this particular entry
 
     def __str__(self):
         if self.action_kind == self.ADDED:
@@ -111,6 +111,7 @@ class Changeset(object):
         else:
             self.log = log
         self.entries = entries or []
+        self.unidiff = None        # This is the unidiff of the whole changeset
 
     def addEntry(self, entry, revision):
         """
