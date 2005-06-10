@@ -100,7 +100,7 @@ class Changeset(object):
     
     def __init__(self, revision, date, author, log, entries=None, **other):
         """
-        Initialize a new ChangeSet.
+        Initialize a new Changeset.
         """
         
         self.revision = revision
@@ -138,28 +138,28 @@ class Changeset(object):
 
     def addedEntries(self):
         """
-        Filter the changesets and extract the added entries.
+        Facility to extract a list of added entries.
         """
         
         return [e for e in self.entries if e.action_kind == e.ADDED]
 
     def modifiedEntries(self):
         """
-        Filter the changesets and extract the modified entries.
+        Facility to extract a list of modified entries.
         """
 
         return [e for e in self.entries if e.action_kind == e.UPDATED]
 
     def removedEntries(self):
         """
-        Filter the changesets and extract the deleted entries.
+        Facility to extract a list of deleted entries.
         """
 
         return [e for e in self.entries if e.action_kind == e.DELETED]
 
     def renamedEntries(self):
         """
-        Filter the changesets and extract the renamed entries.
+        Facility to extract a list of renamed entries.
         """
 
         return [e for e in self.entries if e.action_kind == e.RENAMED]
