@@ -136,6 +136,22 @@ class Changeset(object):
         s.append('Log: %s' % self.log)
         return '\n'.join(s)
 
+    def applyPatch(self, working_dir, patch_options="-p1"):
+        """
+        Apply the changeset using ``patch(1)`` to a given directory.
+        """
+        
+        from shwrap import SystemCommand
+        from source import ChangesetApplicationFailure
+        
+        if self.unidiff:
+            patch = SystemCommand(working_dir=working_dir,
+                                  command="patch " + patch_options)
+            patch(input=self.unidiff)
+            if patch.exit_status:
+                raise ChangesetApplicationFailure(
+                    "%s: error %s" % (patch.command, patch.exit_status))
+        
     def addedEntries(self):
         """
         Facility to extract a list of added entries.
