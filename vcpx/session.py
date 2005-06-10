@@ -225,6 +225,26 @@ class Session(Cmd):
 
         self.__log('Print executed commands: %s' % SystemCommand.VERBOSE)
 
+    def do_force_output_encoding(self, arg):
+        """
+        Usage: force_output_encoding [charset]
+
+        Print or set the current output encoding. When given, charset must
+        be either the string "None" or a recognized Python charset name.
+        In the former case (the default), tailor will use the current
+        settings from the user environment.
+        """
+
+        from shwrap import SystemCommand
+        
+        if arg:
+            if arg == 'None':
+                SystemCommand.FORCE_ENCODING = None
+            else:
+                SystemCommand.FORCE_ENCODING = arg
+
+        self.__log('Print executed commands: %s' % SystemCommand.FORCE_ENCODING)
+
     def do_patch_name_format(self, arg):
         """
         Usage: patch_name_format [format]
