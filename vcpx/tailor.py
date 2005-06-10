@@ -21,10 +21,6 @@ from dualwd import DualWorkingDir
 from source import InvocationError
 from session import interactive
 
-# Make printouts be UTF-8 encoded.
-import codecs, sys
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
 
@@ -453,6 +449,10 @@ GENERAL_OPTIONS = [
     make_option("--migrate-config", dest="migrate",
                 action="store_true", default=False,
                 help="Migrate old configuration to new centralized storage."),
+    make_option("--encoding", metavar="CHARSET", default=None,
+                help="Force the output encoding to given CHARSET, rather "
+                     "then using the user default settings specified in the "
+                     "environment."),
 ]    
 
 UPDATE_OPTIONS = [
@@ -566,6 +566,16 @@ def main():
     options, args = parser.parse_args()
     
     SystemCommand.VERBOSE = options.debug
+    if options.encoding:
+        SystemCommand.FORCE_ENCODING = options.encoding
+
+        # Make printouts be encoded as well. A better solution would be
+        # using the replace mechanism of the encoder, and keep printing
+        # in the user LC_CTYPE/LANG setting.
+        
+        import codecs, sys
+        sys.stdout = codecs.getwriter(options.encoding)(sys.stdout)
+
     if options.patch_name_format:
         SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line

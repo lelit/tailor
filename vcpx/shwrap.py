@@ -75,6 +75,9 @@ class SystemCommand(object):
 
     VERBOSE = True
     """Print the executed command on stderr, at each run."""
+
+    FORCE_ENCODING = None
+    """Force the output encoding to some other charset instead of user prefs."""
     
     def __init__(self, command=None, working_dir=None):
         """Initialize a SystemCommand instance, specifying the command
@@ -119,7 +122,10 @@ class SystemCommand(object):
             if input:
                 inp, out = popen2(command)
                 def handleinp():
-                    inp.write(input.encode('utf8'))
+                    if self.FORCE_ENCODING:
+                        inp.write(input.encode(self.FORCE_ENCODING))
+                    else:
+                        inp.write(input)
                     inp.close()
                 inpthread = threading.Thread(target = handleinp)
                 inpthread.start()
@@ -144,7 +150,10 @@ class SystemCommand(object):
         else:
             if input:
                 inp, out = popen2(command)
-                inp.write(input)
+                if self.FORCE_ENCODING:
+                    inp.write(input.encode(self.FORCE_ENCODING))
+                else:
+                    inp.write(input)
                 inp.close()
                 out.close()
                 self.exit_status = wait()[1]
