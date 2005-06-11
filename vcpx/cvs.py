@@ -263,14 +263,18 @@ class ChangeSetCollector(object):
             while cs:
                 date,author,changelog,e,rev,state,newentry = cs
 
-                last = self.__collect(date, author, changelog, e, rev)
-                if state == 'dead':
-                    last.action_kind = last.DELETED
-                elif newentry:
-                    last.action_kind = last.ADDED
-                else:
-                    last.action_kind = last.UPDATED
-                
+                # Skip spurious entries added in a branch
+                if not (rev == '1.1' and state == 'dead' and
+                        changelog.startswith('file ') and
+                        ' was initially added on branch ' in changelog):
+                    last = self.__collect(date, author, changelog, e, rev)
+                    if state == 'dead':
+                        last.action_kind = last.DELETED
+                    elif newentry:
+                        last.action_kind = last.ADDED
+                    else:
+                        last.action_kind = last.UPDATED
+
                 cs = self.__parseRevision(entry)
         
 

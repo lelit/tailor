@@ -631,7 +631,7 @@ cvs rlog: Logging ATContentTypes/types/criteria
         log = StringIO(self.LONGLOG_TEST)
         csets = changesets_from_cvslog(log, 'ATContentTypes')
 
-        self.assertEqual(len(csets), 9)
+        self.assertEqual(len(csets), 6)
         
         cset = csets[0]
         self.assertEqual(cset.author, "tiran")
@@ -658,54 +658,21 @@ the migration.""")
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
         cset = csets[2]
-        self.assertEqual(cset.author, "rochael")
-        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 9, 46))
-        self.assertEqual(cset.log, """\
-file ConstrainTypesMixin.py was initially added on branch jensens-
-restrain_mixin-branch.""")
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'ConstrainTypesMixin.py')
-        self.assertEqual(entry.new_revision, '1.1')
-        self.assertEqual(entry.action_kind, entry.DELETED)
-
-        cset = csets[3]
-        self.assertEqual(cset.author, "rochael")
-        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 9, 47))
-        self.assertEqual(cset.log, """\
-file IConstrainTypes.py was initially added on branch jensens-
-restrain_mixin-branch.""")
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'interfaces/IConstrainTypes.py')
-        self.assertEqual(entry.new_revision, '1.1')
-        self.assertEqual(entry.action_kind, entry.DELETED)
-
-        cset = csets[4]
-        self.assertEqual(cset.author, "rochael")
-        self.assertEqual(cset.date, datetime(2004, 8, 11, 1, 13, 43))
-        self.assertEqual(cset.log, """\
-file testContrainTypes.py was initially added on branch jensens-
-restrain_mixin-branch.""")
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'tests/testContrainTypes.py')
-        self.assertEqual(entry.new_revision, '1.1')
-        self.assertEqual(entry.action_kind, entry.DELETED)
-
-        cset = csets[5]
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 15, 46))
         self.assertEqual(cset.log, "Fixed typo")
 
-        cset = csets[6]
+        cset = csets[3]
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 24))
         self.assertEqual(cset.log, "Something went wrong ...")
 
-        cset = csets[7]
+        cset = csets[4]
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 53))
         self.assertEqual(cset.log, "Somehow I mixed up two sentences")
 
-        cset = csets[8]
+        cset = csets[5]
         self.assertEqual(cset.author, "rochael")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 59, 55))
         self.assertEqual(cset.log, "removed duplicated ENABLE_TEMPLATE_MIXIN")
@@ -726,3 +693,33 @@ head: 1.2
         self.assertRaises(AssertionError,
                           changesets_from_cvslog, log, 'docutils')
 
+    CREATED_IN_BRANCH_TEST = """\
+cvs rlog: Logging dsssl-utils/bigdiesel/src
+
+RCS file: /cvsroot/dsssl-utils/dsssl-utils/bigdiesel/src/tokenizer-rgc-test.scm,v
+head: 1.2
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;     selected revisions: 2
+description:
+----------------------------
+revision 1.2
+date: 2002/07/30 12:38:24;  author: ydirson;  state: Exp;  lines: +36 -0
+merged until bigloo-parser_trunk-merge_2: new tokenizer, basic attributes support
+----------------------------
+revision 1.1
+date: 2002/07/27 16:28:23;  author: ydirson;  state: dead;
+branches:  1.1.2;
+file tokenizer-rgc-test.scm was initially added on branch bigloo-parser.
+=============================================================================
+"""
+
+    def testInitialCreationOnBranchBehaviour(self):
+        """Verify cvs log parser skip spurious entries"""
+
+        log = StringIO(self.CREATED_IN_BRANCH_TEST)
+        csets = changesets_from_cvslog(log, 'dsssl-utils')
+
+        self.assertEqual(len(csets), 1)
