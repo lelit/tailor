@@ -50,33 +50,23 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         except KeyError, exp:
             raise InvocationError("Unhandled target VCS kind: " + target_kind)
             
+        # UpdatableSourceWorkingDir
         
-    ## UpdatableSourceWorkingDir
-
-    def getUpstreamChangesets(self, root, repository, module, sincerev):
-        return self.source.getUpstreamChangesets(root, repository, module,
-                                                 sincerev)
+        self.getUpstreamChangesets = self.source.getUpstreamChangesets
+        self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
+        
+        # SyncronizableTargetWorkingDir
     
+        self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
+        self.commitDelayedChangesets = self.target.commitDelayedChangesets
+        self.replayChangeset = self.target.replayChangeset
+        
     def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
         return self.source.applyUpstreamChangesets(root, module, changesets,
-                                                   replay=self.target.replayChangeset,
+                                                   replay=self.replayChangeset,
                                                    applyable=applyable,
                                                    applied=applied,
                                                    logger=logger,
                                                    delayed_commit=delayed_commit)
-        
-    def checkoutUpstreamRevision(self, root, repository, module, revision,
-                                 **kwargs):
-        return self.source.checkoutUpstreamRevision(root,
-                                                    repository, module,
-                                                    revision, **kwargs)
-
-    ## SyncronizableTargetWorkingDir
-    
-    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
-        self.target.initializeNewWorkingDir(root, repository, module, subdir, revision)
-
-    def commitDelayedChangesets(self, root, concatenate_logs):
-        self.target.commitDelayedChangesets(root, concatenate_logs)
