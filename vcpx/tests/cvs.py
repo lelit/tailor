@@ -393,7 +393,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 5;	selected revisions: 1
+total revisions: 5;     selected revisions: 1
 description:
 ----------------------------
 revision 1.1
@@ -408,7 +408,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 9;	selected revisions: 1
+total revisions: 9;     selected revisions: 1
 description:
 ----------------------------
 revision 1.7
@@ -423,7 +423,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 3;	selected revisions: 1
+total revisions: 3;     selected revisions: 1
 description:
 ----------------------------
 revision 1.2
@@ -442,7 +442,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 2;	selected revisions: 1
+total revisions: 2;     selected revisions: 1
 description:
 ----------------------------
 revision 1.1
@@ -463,7 +463,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 2;	selected revisions: 1
+total revisions: 2;     selected revisions: 1
 description:
 ----------------------------
 revision 1.1
@@ -478,7 +478,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 44;	selected revisions: 1
+total revisions: 44;    selected revisions: 1
 description:
 ----------------------------
 revision 1.42
@@ -498,7 +498,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 2;	selected revisions: 1
+total revisions: 2;     selected revisions: 1
 description:
 ----------------------------
 revision 1.1
@@ -514,7 +514,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 14;	selected revisions: 1
+total revisions: 14;    selected revisions: 1
 description:
 ----------------------------
 revision 1.12
@@ -532,7 +532,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 9;	selected revisions: 1
+total revisions: 9;     selected revisions: 1
 description:
 ----------------------------
 revision 1.8
@@ -550,7 +550,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 17;	selected revisions: 1
+total revisions: 17;    selected revisions: 1
 description:
 ----------------------------
 revision 1.15
@@ -570,7 +570,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 7;	selected revisions: 1
+total revisions: 7;     selected revisions: 1
 description:
 ----------------------------
 revision 1.5
@@ -585,7 +585,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 4;	selected revisions: 1
+total revisions: 4;     selected revisions: 1
 description:
 ----------------------------
 revision 1.1
@@ -601,7 +601,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 38;	selected revisions: 1
+total revisions: 38;    selected revisions: 1
 description:
 ----------------------------
 revision 1.36
@@ -615,7 +615,7 @@ branch:
 locks: strict
 access list:
 keyword substitution: kv
-total revisions: 49;	selected revisions: 1
+total revisions: 49;    selected revisions: 1
 description:
 ----------------------------
 revision 1.45
