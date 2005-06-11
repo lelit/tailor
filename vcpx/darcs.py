@@ -102,7 +102,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff(output=True,
-                                                  patchname=cset.revision).read()
+                                                  patchname=shrepr(cset.revision)).read()
                     
                 self.changesets.append(cset)
                 self.current = None
