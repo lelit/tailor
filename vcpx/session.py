@@ -658,6 +658,52 @@ class Session(Cmd):
         else:
             self.__log("Update completed with no upstream changes")
 
+    def do_dopplebanger(self, arg):
+        """
+        Usage: dopplebanger patchname
+
+        Given two repositories (in the actual implementation, the source
+        must be a local darcs repository), do something similar to update
+        but using diff and patch instead.
+        """
+
+        from os.path import isdir
+        from dualwd import DualWorkingDir
+        from darcs import changesets_from_darcschanges
+        from shwrap import SystemCommand, shrepr
+        
+        if not (self.source_repository and self.target_repository and
+                isdir(self.source_repository) and
+                isdir(self.target_repository) and
+                self.source_kind == 'darcs' and
+                self.target_kind):
+            self.__err('Both source and target repository must be under '
+                       'darcs and on the local filesystem!')
+            return
+
+        if not arg:
+            self.__err('Needs a patchname to proceed')
+            return
+        
+        c = SystemCommand(working_dir=self.source_repository,
+                          command="darcs changes --patches=%(patch)s"
+                                  " --xml-output --summ")
+        last = changesets_from_darcschanges(c(output=True,
+                                              patch=shrepr(arg)),
+                                            unidiff=True,
+                                            repodir=self.source_repository)
+        
+        if not last:
+            self.__err('Specified patchname does not exist!')
+            return
+        
+        cset = last[0]
+        cset.applyPatch(working_dir=self.target_repository,
+                        patch_options="-p1 --force")
+        
+        dwd = DualWorkingDir(self.source_kind, self.target_kind)
+        dwd.replayChangeset(self.target_repository, self.target_module, cset,
+                            logger=self.logger)
         
 def interactive(options, args):
     session = Session(options, args)
