@@ -261,7 +261,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         for e in changeset.entries:
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
-                if info and info.cvs_version == e.new_revision:
+                if not info:
+                    if logger: logger.info("promoting '%s' to ADDED at "
+                                           "revision %s", e.name,
+                                           e.new_revision)
+                    e.action_kind = e.ADDED
+                elif info.cvs_version == e.new_revision:
                     if logger: logger.debug("skipping '%s' since it's already "
                                             "at revision %s", e.name,
                                             e.new_revision)

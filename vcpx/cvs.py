@@ -320,16 +320,6 @@ class CvsWorkingDir(CvspsWorkingDir):
             raise GetUpstreamChangesetsFailure("'cvs log' on %r returned status %d" % (root, cvslog.exit_status))
                 
         for cs in changesets_from_cvslog(log, module):
-            for e in cs.entries:
-                # If the entry is not already there, and, for whatever
-                # reason (most probably, manually tweaked CVS
-                # repository), from the log we desumed it's an update,
-                # consider it as a NEW entry instead.
-                
-                if (e.action_kind == e.UPDATED and
-                    entries.getFileInfo(e.name) is None):
-                    e.action_kind = e.ADDED
-                    
             changesets.append(cs)
 
         return changesets
