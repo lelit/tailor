@@ -579,6 +579,7 @@ class Session(Cmd):
 
         from dualwd import DualWorkingDir
         from os.path import join, split
+        from source import GetUpstreamChangesetsFailure
 
         if not self.state_file:
             self.__err('Need a state_file to proceed!')
@@ -611,6 +612,10 @@ class Session(Cmd):
                                            self.source_repository,
                                            self.source_module,
                                            self.source_revision)
+            except GetUpstreamChangesetsFailure, exc:
+                self.__err('Unable to collect upstream changes from %s: %s' %
+                           (self.source_repository, exc))
+                return
             except KeyboardInterrupt:
                 if self.logger:
                     self.logger.warning("Stopped by user")
