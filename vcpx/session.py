@@ -92,12 +92,21 @@ class Session(Cmd):
             self.stdout.write(what)
             self.stdout.write('\n')
 
-    def __err(self, what):
+    def __err(self, what, exc=False):
         if self.logger:
-            self.logger.error(what)
+            if exc:
+                self.logger.exception(what)
+            else:
+                self.logger.error(what)
+            
             
         self.stdout.write('Error: ')
         self.stdout.write(what)
+        if exc:
+            from sys import exc_info
+
+            ei = exc_info()
+            self.stdout.write(' -- Exception %s: %s' % ei[0:2])
         self.stdout.write('\n')
 
     def emptyline(self):
@@ -169,8 +178,9 @@ class Session(Cmd):
                     makedirs(arg)
                     chdir(arg)
                 except:
-                    self.__err('Cannot create directory %s' % arg)
-                    
+                    self.__err("Cannot create directory '%s'" % arg, True)
+                    return
+                
             self.current_directory = getcwd()
             
         self.__log('Current directory: %s' % self.current_directory)
@@ -447,7 +457,13 @@ class Session(Cmd):
             self.__err('Need a state_file to proceed to load state file!')
             return
 
-        self.loadStateFile()
+        try:
+            self.loadStateFile()
+        except:
+            self.__err("'%s' is not a valid state file" % self.state_file,
+                       True)
+            self.state_file = None
+            return
 
     def do_bootstrap(self, arg):
         """
@@ -487,11 +503,10 @@ class Session(Cmd):
                 self.current_directory, self.source_repository,
                 self.source_module, revision,
                 subdir=subdir, logger=self.logger)
-        except Exception, exc:
-            self.__err('Checkout failed: %s, %s' % (exc.__doc__, exc))
-            if self.logger:
-                self.logger.exception('Checkout failed')
-
+        except:
+            self.__err('Checkout failed', True)
+            return
+        
         self.writeStateFile()
         
         try:
@@ -500,12 +515,10 @@ class Session(Cmd):
                                         self.source_module,
                                         self.sub_directory,
                                         self.source_revision)
-        except Exception, exc:
-            self.__err('Working copy initialization failed: %s, %s' %
-                       (exc.__doc__, exc))
-            if self.logger:
-                self.logger.exception('Working copy initialization failed')
-
+        except:
+            self.__err('Working copy initialization failed', True)
+            return
+        
     def willApply(self, root, changeset):
         """
         Print the changeset being applied.
@@ -602,12 +615,8 @@ class Session(Cmd):
                 if self.logger:
                     self.logger.warning("Stopped by user")
                 return
-            except Exception, le:
-                if self.logger:
-                    self.logger.exception('Unable to collect upstream changes. Exception follows.')
-                    self.logger.exception(`le`)
-                self.__err('Unable to collect upstream changes')
-                self.__err(`le`)
+            except:
+                self.__err('Unable to collect upstream changes', True)
                 return
             
         nchanges = len(self.changesets)
@@ -637,14 +646,9 @@ class Session(Cmd):
                 except StopIteration, KeyboardInterrupt:
                     if self.logger:
                         self.logger.warning("Stopped by user")
-                    return
                 except:
-                    if self.logger:
-                        self.logger.exception('Upstream change application '
-                                              'failed')
                     self.__err('Stopping after upstream change application '
-                               'failure.')
-                    return
+                               'failure', True)
             finally:
                 self.writeStateFile()
                 
