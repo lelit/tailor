@@ -38,7 +38,7 @@ def compare_cvs_revs(rev1, rev2):
 
 
 class CvsLog(SystemCommand):
-    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N -S %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
+    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
        
     def __call__(self, output=None, dry_run=False, **kwargs):
         since = kwargs.get('since')
@@ -89,6 +89,10 @@ def changesets_from_cvslog(log, module):
         
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
+
+    # Some string constants we look for in CVS output.
+    intra_sep = '----------------------------\n'
+    inter_sep = '=============================================================================\n'
     
     def __init__(self, log, module):
         """
@@ -223,8 +227,7 @@ class ChangeSetCollector(object):
             l = self.__readline()
             
         mesg = []
-        while (l <> '----------------------------\n' and
-               l <> '=============================================================================\n'):
+        while l not in (None, '', self.inter_sep, self.intra_sep):
             mesg.append(l[:-1])
             l = self.__readline()
 
@@ -239,6 +242,9 @@ class ChangeSetCollector(object):
         """Parse a complete CVS log."""
 
         from os.path import split, join
+        import sre
+
+        revcount_regex = sre.compile('\\bselected revisions:\\s*(\\d+)\\b')
 
         self.__currentdir = None
         
@@ -254,13 +260,26 @@ class ChangeSetCollector(object):
                    "Missed 'cvs rlog: Logging XX' line"
             
             entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
-            
-            l = self.__readline()
-            while l and l <> '----------------------------\n':
+
+            seen_description_line = 0
+            expected_revisions = None
+            while 1:
                 l = self.__readline()
-                
-            cs = self.__parseRevision(entry)
-            while cs:
+                if l in (self.inter_sep, self.intra_sep):
+                    assert seen_description_line, 'Should see description: line before separator line'
+                    break
+                assert not seen_description_line, 'Should see separator right after description: line'
+                if l == 'description:\n':
+                    seen_description_line = 1
+                m = revcount_regex.search(l)
+                if m is not None:
+                    expected_revisions = int(m.group(1))
+
+            found_revisions = 0
+            while l <> self.inter_sep:
+                cs = self.__parseRevision(entry)
+                if cs is None:
+                    break
                 date,author,changelog,e,rev,state,newentry = cs
 
                 # Skip spurious entries added in a branch
@@ -274,8 +293,13 @@ class ChangeSetCollector(object):
                         last.action_kind = last.ADDED
                     else:
                         last.action_kind = last.UPDATED
-
-                cs = self.__parseRevision(entry)
+                    found_revisions = found_revisions + 1
+            #
+            if expected_revisions <> found_revisions:
+                print 'warning: expecting %s revisions, read %s revisions' % \
+                      ( expected_revisions, found_revisions )
+        #
+    # end of __parseCvsLog()
         
 
 class CvsWorkingDir(CvspsWorkingDir):
