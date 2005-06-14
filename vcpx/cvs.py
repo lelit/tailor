@@ -293,12 +293,12 @@ class ChangeSetCollector(object):
                         last.action_kind = last.ADDED
                     else:
                         last.action_kind = last.UPDATED
-                    found_revisions = found_revisions + 1
-            #
+                found_revisions = found_revisions + 1
+
             if expected_revisions <> found_revisions:
                 print 'warning: expecting %s revisions, read %s revisions' % \
                       ( expected_revisions, found_revisions )
-        #
+
     # end of __parseCvsLog()
         
 
