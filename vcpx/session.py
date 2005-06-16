@@ -253,7 +253,7 @@ class Session(Cmd):
             else:
                 SystemCommand.FORCE_ENCODING = arg
 
-        self.__log('Print executed commands: %s' % SystemCommand.FORCE_ENCODING)
+        self.__log('Forced output encoding: %s' % SystemCommand.FORCE_ENCODING)
 
     def do_patch_name_format(self, arg):
         """
