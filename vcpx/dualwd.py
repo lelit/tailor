@@ -27,6 +27,7 @@ from darcs import DarcsWorkingDir
 from monotone import MonotoneWorkingDir
 from cdv import CdvWorkingDir
 from bzr import BzrWorkingDir
+from hg import HgWorkingDir
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """
