@@ -616,10 +616,6 @@ class Session(Cmd):
                 self.__err('Unable to collect upstream changes from %s: %s' %
                            (self.source_repository, exc))
                 return
-            except KeyboardInterrupt:
-                if self.logger:
-                    self.logger.warning("Stopped by user")
-                return
             except:
                 self.__err('Unable to collect upstream changes', True)
                 return
