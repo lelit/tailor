@@ -358,7 +358,6 @@ class SvnLogParserTest(TestCase):
     def testTrackingRoot(self):
         """Verify we are able to track the root of the repository"""
 
-       
         log = StringIO(self.SVN_REPOS_ROOT_TEST)
         csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn/repo',
                                        'svn+ssh://caia/tmp/svn',
@@ -379,3 +378,79 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'branches/branch-a/b.txt')
         self.assertEqual(entry.action_kind, entry.ADDED)
+
+    PYDIST_STRANGE_CASE = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="7969">
+<author>hpk</author>
+<date>2004-12-22T10:30:39.458701Z</date>
+<paths>
+<path
+   copyfrom-path="/py/dist/example/test"
+   copyfrom-rev="7968"
+   action="R">/py/dist/py/documentation/example/test</path>
+<path
+   action="D">/py/dist/example</path>
+<path
+   copyfrom-path="/py/dist/example"
+   copyfrom-rev="7965"
+   action="A">/py/dist/py/documentation/example</path>
+<path
+   action="M">/py/dist/py/documentation/test.txt</path>
+</paths>
+<msg>moved example directory below the documentation directory lib
+
+</msg>
+</logentry>
+</log>
+"""
+    def testPydistStrangeCase(self):
+        """Verify we are able to groke with svn 'R' strangeness"""
+
+        log = StringIO(self.PYDIST_STRANGE_CASE)
+        csets = changesets_from_svnlog(log, 'http://codespeak.net/svn/py/dist',
+                                       'http://codespeak.net/svn',
+                                       '/py/dist')
+
+        self.assertEqual(len(csets), 1)
+        
+        cset = csets[0]
+        self.assertEqual(len(cset.entries), 3)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'py/documentation/example')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.old_name, 'example')
+        
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'py/documentation/example/test')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'py/documentation/test.txt')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+        
+        log = StringIO(self.PYDIST_STRANGE_CASE)
+        csets = changesets_from_svnlog(log, 'http://codespeak.net/svn/py/dist',
+                                       'http://codespeak.net/svn',
+                                       '/py/dist/py')
+
+        self.assertEqual(len(csets), 1)
+
+        cset = csets[0]
+        self.assertEqual(len(cset.entries), 3)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'documentation/example')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'documentation/example/test')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'documentation/test.txt')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+        
