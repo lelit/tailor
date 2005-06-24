@@ -261,16 +261,12 @@ class ChangeSetCollector(object):
             
             entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
 
-            seen_description_line = 0
             expected_revisions = None
             while 1:
                 l = self.__readline()
                 if l in (self.inter_sep, self.intra_sep):
-                    assert seen_description_line, 'Should see description: line before separator line'
                     break
-                assert not seen_description_line, 'Should see separator right after description: line'
-                if l == 'description:\n':
-                    seen_description_line = 1
+
                 m = revcount_regex.search(l)
                 if m is not None:
                     expected_revisions = int(m.group(1))

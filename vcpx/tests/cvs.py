@@ -723,3 +723,36 @@ file tokenizer-rgc-test.scm was initially added on branch bigloo-parser.
         csets = changesets_from_cvslog(log, 'dsssl-utils')
 
         self.assertEqual(len(csets), 1)
+
+    DESCRIPTION_TEST = """\
+cvs rlog: Logging Zope
+
+RCS file: /cvs-repository/Packages/ZServer/Attic/start_medusa.py,v
+head: 1.3
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;     selected revisions: 0
+description:
+=============================================================================
+cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/ZServer/Attic/zinit.py,v'
+
+RCS file: /cvs-repository/Packages/ZServer/Attic/zinit.py,v
+head: 1.5
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 5;     selected revisions: 0
+description:
+Persistent server script
+=============================================================================
+cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/ZServer/Attic/zope_handler.py,v'
+"""
+    
+    def testDescriptionPresent(self):
+        """Verify cvs log parser handle eventual description"""
+
+        log = StringIO(self.DESCRIPTION_TEST)
+        csets = changesets_from_cvslog(log, 'zope')
