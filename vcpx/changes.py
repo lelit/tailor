@@ -131,8 +131,12 @@ class Changeset(object):
         for ak in ['Modified', 'Removed', 'Renamed', 'Added']:
             entries = getattr(self, ak.lower()+'Entries')()
             if entries:
-                s.append('%s: %s' % (ak, ','.join([e.name
-                                                   for e in entries])))
+                if ak == 'Renamed':
+                    entries = ['%s (from %s)' % (e.name, e.old_name)
+                               for e in entries]
+                else:
+                    entries = [e.name for e in entries]
+                s.append('%s: %s' % (ak, ','.join(entries)))
         s.append('Log: %s' % self.log)
         return '\n'.join(s)
 
