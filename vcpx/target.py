@@ -179,43 +179,32 @@ class SyncronizableTargetWorkingDir(object):
         from os.path import join, isdir
         
         added = changeset.addedEntries()
-        addeddirs = []
-        addedfiles = []
-        for e in added:
-            if isdir(join(root, e.name)):
-                addeddirs.append(e)
-            else:
-                addedfiles.append(e)
         renamed = changeset.renamedEntries()
         removed = changeset.removedEntries()
 
-        # Sort added dirs, to be sure that /root/addedDir/ comes before
-        # /root/addedDir/addedSubdir
-        addeddirs.sort(lambda x,y: cmp(x.name, y.name))
+        # Sort added entries, to be sure that /root/addedDir/ comes
+        # before /root/addedDir/addedSubdir
+        added.sort(lambda x,y: cmp(x.name, y.name))
         
         # Sort removes in reverse order, to delete directories after
-        # their entries.
+        # their contents.
         removed.sort(lambda x,y: cmp(y.name, x.name))
 
-        # First of all, add each subdirectory, since they may be targets
-        # of succeeding operations.
-        
-        if addeddirs: self._addEntries(root, addeddirs)
-
-        # Then process the actual files
+        # Replay the actions
         
         if renamed: self._renameEntries(root, renamed)
         if removed: self._removeEntries(root, removed)
-        if addedfiles: self._addEntries(root, addedfiles)
+        if added: self._addEntries(root, added)
 
         # Finally, deal with "copied" directories. The simple way is
         # executing an _addSubtree on each of them, evenif this may
         # cause "warnings" on items just moved/added above...
 
-        while addeddirs:
-            subdir = addeddirs.pop(0).name
-            self._addSubtree(root, subdir)
-            addeddirs = [d for d in addeddirs if not d.name.startswith(subdir)]
+        while added:
+            subdir = added.pop(0).name
+            if isdir(join(root, subdir)):
+                self._addSubtree(root, subdir)
+                added = [e for e in added if not e.name.startswith(subdir)]
 
     def __registerAppliedChangeset(self, changeset):
         """
@@ -298,10 +287,25 @@ class SyncronizableTargetWorkingDir(object):
 
     def _renameEntries(self, root, entries):
         """
-        Rename a sequence of entries.
+        Rename a sequence of entries, adding all the parent directories
+        of each entry.
         """
         
+        from os.path import split
+
+        added = []
         for e in entries:
+            parents = []
+            parent = split(e.name)[0]
+            while parent:
+                if not parent in added:
+                    parents.append(parent)
+                    added.append(parent)
+                parent = split(parent)[0]
+            if parents:
+                parents.reverse()
+                self._addPathnames(root, parents)
+
             self._renamePathname(root, e.old_name, e.name)
         
     def _renamePathname(self, root, oldname, newname):
