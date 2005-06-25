@@ -268,6 +268,7 @@ class ChangeSetCollector(object):
                 if m is not None:
                     expected_revisions = int(m.group(1))
 
+            last = previous = None
             found_revisions = 0
             while l <> self.inter_sep:
                 cs = self.__parseRevision(entry)
@@ -288,6 +289,11 @@ class ChangeSetCollector(object):
                         last.action_kind = last.UPDATED
                 found_revisions = found_revisions + 1
 
+                if previous and last.action_kind == last.DELETED:
+                    previous.action_kind = previous.ADDED
+
+                previous = last
+                
             if expected_revisions <> found_revisions:
                 print 'warning: expecting %s revisions, read %s revisions' % \
                       ( expected_revisions, found_revisions )

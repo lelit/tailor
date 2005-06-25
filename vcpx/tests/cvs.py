@@ -756,3 +756,68 @@ cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/ZS
 
         log = StringIO(self.DESCRIPTION_TEST)
         csets = changesets_from_cvslog(log, 'zope')
+
+    ADD_DEL_ADD_AGAIN_TEST = """\
+cvs rlog: Logging test
+
+RCS file: /tmp/t/test-repo/test/file,v
+head: 1.6
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 6;     selected revisions: 6
+description:
+----------------------------
+revision 1.6
+date: 2004-07-27 19:26:13 +0000;  author: mdlavin;  state: Exp;  lines: +2 -1
+*** empty log message ***
+----------------------------
+revision 1.5
+date: 2004-03-31 21:56:41 +0000;  author: mdlavin;  state: Exp;  lines: +1 -2
+Remove generated header files from CVS
+----------------------------
+revision 1.4
+date: 2004-03-31 21:51:08 +0000;  author: mdlavin;  state: Exp;  lines: +2 -1
+*** empty log message ***
+----------------------------
+revision 1.3
+date: 2004-03-23 19:24:21 +0000;  author: mdlavin;  state: Exp;  lines: +1 -1
+*** empty log message ***
+----------------------------
+revision 1.2
+date: 2004-03-23 19:22:13 +0000;  author: mdlavin;  state: dead;  lines: +0 -0
+*** empty log message ***
+----------------------------
+revision 1.1
+date: 2004-03-23 19:20:02 +0000;  author: mdlavin;  state: Exp;
+*** empty log message ***
+=============================================================================
+"""
+    
+    def testAddDelAddAgain(self):
+        """Verify add->delete->add/modify->modify CVS case"""
+        
+        log = StringIO(self.ADD_DEL_ADD_AGAIN_TEST)
+        csets = changesets_from_cvslog(log, 'test')
+
+        self.assertEqual(len(csets), 6)
+
+        cset = csets[0]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'file')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
+        cset = csets[1]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'file')
+        self.assertEqual(entry.new_revision, '1.2')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+        
+        cset = csets[2]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'file')
+        self.assertEqual(entry.new_revision, '1.3')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        
