@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Changesets 
 # :Creato:   ven 11 giu 2004 15:31:18 CEST

@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Updatable VC working directory
 # :Creato:   mer 09 giu 2004 13:55:35 CEST

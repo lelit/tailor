@@ -1,4 +1,4 @@
-#  -*- Python -*- -*- coding: iso-8859-1 -*-
+# -*- mode: python; coding: iso-8859-1 -*-
 # :Progetto: vcpx -- Test shell wrappers
 # :Creato:   mar 20 apr 2004 16:49:23 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>

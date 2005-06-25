@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Dual working directory
 # :Creato:   dom 20 giu 2004 11:02:01 CEST

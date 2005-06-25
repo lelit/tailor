@@ -1,4 +1,4 @@
-#  -*- Python -*- -*- coding: iso-8859-1 -*-
+# -*- mode: python; coding: iso-8859-1 -*-
 # :Progetto: vcpx -- Tiny wrapper around external command
 # :Creato:   sab 10 apr 2004 16:43:48 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>

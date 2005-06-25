@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Codeville details
 # :Creato:   gio 05 mag 2005 23:47:45 CEST

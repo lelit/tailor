@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Interactive session
 # :Creato:   ven 13 mag 2005 02:00:57 CEST

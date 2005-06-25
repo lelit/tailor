@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- svn specific tests
 # :Creato:   gio 11 nov 2004 19:09:06 CET

@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Subversion details
 # :Creato:   ven 18 giu 2004 15:00:52 CEST

@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Mercurial stuff
 # :Creato:   ven 24 giu 2005 20:42:46 CEST

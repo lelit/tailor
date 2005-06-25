@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Frontend capabilities
 # :Creato:   dom 04 lug 2004 00:40:54 CEST

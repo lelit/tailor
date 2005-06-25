@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Monotone details
 # :Creato:   Tue Apr 12 01:28:10 CEST 2005

@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- basic cvsps tests
 # :Creato:   ven 09 lug 2004 01:43:52 CEST

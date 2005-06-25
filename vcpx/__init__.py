@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx - Version Control Patch eXchanger
 # :Creato:   mer 16 giu 2004 00:15:54 CEST

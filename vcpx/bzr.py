@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- baazar-ng support
 # :Creato:   ven 20 mag 2005 08:15:02 CEST

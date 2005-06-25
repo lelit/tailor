@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- mode: python; coding: utf-8 -*-
 # :Progetto: vcpx -- Pure CVS solution
 # :Creato:   dom 11 lug 2004 01:59:36 CEST
