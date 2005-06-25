@@ -262,7 +262,7 @@ class SyncronizableTargetWorkingDir(object):
             self._addPathnames(root, [subdir])
 
         for dir, subdirs, files in walk(join(root, subdir)):
-            for excd in ['.svn', '_darcs', 'CVS', '.cdv', 'MT']:
+            for excd in ['.svn', '_darcs', 'CVS', '.cdv', 'MT', '.hg']:
                 if excd in subdirs:
                     subdirs.remove(excd)
 

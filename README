@@ -2,7 +2,8 @@ About
 =====
 
 Tailor is a tool to migrate changesets between CVS, Subversion_,
-darcs_, monotone_, Codeville_ and `Baazar-NG`_ [#]_ repositories.
+darcs_, monotone_, Codeville_, Mercurial_ and `Baazar-NG`_ [#]_
+repositories.
 
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
@@ -36,14 +37,18 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] Monotone, Codeville and Baazar-NG systems may be used only as
-       the `target` backend, since the `source` support isn't
-       coded yet.
+.. [#] Monotone, Codeville, Mercurial and Baazar-NG systems may be
+       used only as the `target` backend, since the `source` support
+       isn't coded yet. Contributions on these backends will be very
+       appreciated, since I do not use them enough to figure out the
+       best way to get pending changes and build tailor ChangeSets out
+       of them.
 
 .. _subversion: http://subversion.tigris.org/
 .. _darcs: http://www.darcs.net/
 .. _codeville: http://www.codeville.org/
 .. _baazar-ng: http://www.bazaar-ng.org/
+.. _mercurial: http://www.selenic.com/mercurial/
 
 
 Installation
