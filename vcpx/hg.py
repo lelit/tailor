@@ -93,6 +93,8 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         from os import getenv
         from os.path import join
+        from re import escape
+        from dualwd import IGNORED_METADIRS
         
         c = SystemCommand(working_dir=root, command="hg init")
         c(output=True)
@@ -100,6 +102,14 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         if c.exit_status:
             raise TargetInitializationFailure(
                 "'hg init' returned status %s" % c.exit_status)
+
+        # Create the .hgignore file, that contains a regexp per line
+        # with all known VCs metadirs to be skipped.
+        ignore = open(join(root, '.hgignore'), 'w')
+        ignore.write('\n'.join(['(^|/)%s($|/)' % escape(md)
+                                for md in IGNORED_METADIRS]))
+        ignore.write('\n^tailor.log$\n^tailor.info$\n')
+        ignore.close()
 
         c = SystemCommand(working_dir=root, command="hg addremove")
         c()

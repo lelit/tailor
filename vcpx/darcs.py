@@ -385,6 +385,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         from os.path import join
+        from re import escape
+        from dualwd import IGNORED_METADIRS
         
         c = SystemCommand(working_dir=root, command="darcs initialize")
         c(output=True)
@@ -397,8 +399,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         motd.write(MOTD % (repository, module))
         motd.close()
 
+        # Augment the boring file, that contains a regexp per line
+        # with all known VCs metadirs to be skipped.
         boring = open(join(root, '_darcs/prefs/boring'), 'a')
-        boring.write('^tailor.log$\n^tailor.info$\n^.cdv\n^MT\n')
+        boring.write('\n'.join(['(^|/)%s($|/)' % escape(md)
+                                for md in IGNORED_METADIRS]))
+        boring.write('\n^tailor.log$\n^tailor.info$\n')
         boring.close()
         
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,

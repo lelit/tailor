@@ -97,6 +97,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
         from os import getenv
         from os.path import join
+        from dualwd import IGNORED_METADIRS
         
         c = SystemCommand(working_dir=root, command="bzr init")
         c(output=True)
@@ -108,6 +109,14 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         #c = SystemCommand(working_dir=root,
         #                  command="bzr add %(entry)s")
         #c(entry=shrepr(subdir))
+
+        # Create the .bzrignore file, that contains a glob per line,
+        # with all known VCs metadirs to be skipped.
+        ignore = open(join(root, '.hgignore'), 'w')
+        ignore.write('\n'.join(['(^|/)%s($|/)' % md
+                                for md in IGNORED_METADIRS]))
+        ignore.write('\ntailor.log\ntailor.info\n')
+        ignore.close()
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
