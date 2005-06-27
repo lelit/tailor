@@ -43,9 +43,11 @@ class ReopenableNamedTemporaryFile:
     """
     def __init__(self, suffix=None, prefix=None, dir=None, text=None):
         from tempfile import mkstemp
+        from os import close
         
-        self.name = mkstemp(suffix, prefix, dir, text)[1]
-      
+        fd, self.name = mkstemp(suffix, prefix, dir, text)
+        close(fd)
+        
     def __del__(self):
         self.shutdown()
        
