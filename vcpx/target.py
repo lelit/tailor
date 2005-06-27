@@ -246,12 +246,13 @@ class SyncronizableTargetWorkingDir(object):
         
         from os.path import join
         from os import walk
+        from dualwd import IGNORED_METADIRS
 
         if subdir<>'.':
             self._addPathnames(root, [subdir])
 
         for dir, subdirs, files in walk(join(root, subdir)):
-            for excd in ['.svn', '_darcs', 'CVS', '.cdv', 'MT', '.hg']:
+            for excd in IGNORED_METADIRS:
                 if excd in subdirs:
                     subdirs.remove(excd)
 

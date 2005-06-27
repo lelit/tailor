@@ -28,6 +28,8 @@ from cdv import CdvWorkingDir
 from bzr import BzrWorkingDir
 from hg import HgWorkingDir
 
+IGNORED_METADIRS = ['.svn', '_darcs', 'CVS', '.cdv', 'MT', '.hg', '.bzr']
+
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """
     Dual working directory, one that is under two different VC systems at
