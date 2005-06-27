@@ -399,9 +399,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         motd.write(MOTD % (repository, module))
         motd.close()
 
+        # Remove .cvsignore from default boring file
+        boring = open(join(root, '_darcs/prefs/boring'), 'r')
+        ignored = [line for line in boring if line <> '\.cvsignore$\n']
+        boring.close()
+        
         # Augment the boring file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
-        boring = open(join(root, '_darcs/prefs/boring'), 'a')
+        boring = open(join(root, '_darcs/prefs/boring'), 'w')
+        boring.write(''.join(ignored))
         boring.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
         boring.write('\n^tailor.log$\n^tailor.info$\n')
