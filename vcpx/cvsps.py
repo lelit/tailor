@@ -241,6 +241,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname, split
         from os import makedirs, listdir
+        from shutil import rmtree
         from cvs import CvsEntries
         from time import sleep
         
@@ -270,34 +271,48 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             elif e.action_kind == e.ADDED and e.new_revision is None:
                 # This is a new directory entry, there is no need to update it
                 continue
+
+            # If this is a directory (CVS does not version directories,
+            # and thus new_revision is always None for them), and it's
+            # going to be deleted, do not execute a 'cvs update', that
+            # in some cases does not what one would expect. Instead,
+            # remove it with everything it contains (that should be
+            # just a single "CVS" subdir, btw)
             
-            cvsup(output=True, entry=shrepr(e.name), revision=e.new_revision)
+            if e.action_kind == e.DELETED and e.new_revision is None:
+                assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
+                rmtree(join(root, e.name))
+            else:
+                cvsup(output=True, entry=shrepr(e.name),
+                      revision=e.new_revision)
             
-            if cvsup.exit_status:
-                if logger: logger.warning("'cvs update' on %s exited "
-                                          "with status %d, retrying once..." %
-                                          (e.name, cvsup.exit_status))
-                sleep(2)
-                cvsup(output=True, entry=e.name, revision=e.new_revision)
                 if cvsup.exit_status:
                     if logger: logger.warning("'cvs update' on %s exited "
                                               "with status %d, retrying "
-                                              "one last time..." %
-                                              (e.name, cvsup.exit_status))
-                    sleep(8)
-                    cvsup(output=True, entry=e.name, revision=e.new_revision)
-                    
-            if cvsup.exit_status:
-                raise ChangesetApplicationFailure(
-                    "'cvs update' returned status %s" % cvsup.exit_status)
-            
-            if logger: logger.info("%s updated to %s" % (e.name,
-                                                         e.new_revision))
-            
+                                              "once..." % (e.name,
+                                                           cvsup.exit_status))
+                    sleep(2)
+                    cvsup(output=True, entry=shrepr(e.name),
+                          revision=e.new_revision)
+                    if cvsup.exit_status:
+                        if logger: logger.warning("'cvs update' on %s exited "
+                                                  "with status %d, retrying "
+                                                  "one last time..." %
+                                                  (e.name, cvsup.exit_status))
+                        sleep(8)
+                        cvsup(output=True, entry=shrepr(e.name),
+                              revision=e.new_revision)
+
+                if cvsup.exit_status:
+                    raise ChangesetApplicationFailure(
+                        "'cvs update' returned status %s" % cvsup.exit_status)
+
+                if logger: logger.info("%s updated to %s" % (e.name,
+                                                             e.new_revision))
+
             if e.action_kind == e.DELETED:
-                self.__maybeDeleteDirectory(root, split(e.name)[0],
-                                            changeset)
-                
+                self.__maybeDeleteDirectory(root, split(e.name)[0], changeset)
+
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None, **kwargs):
         """
