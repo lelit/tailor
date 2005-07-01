@@ -74,7 +74,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="cdv rename %(old)s %(new)s")
-        c(old=shrepr(oldname), new=repr(newname))
+        c(old=shrepr(oldname), new=shrepr(newname))
 
     def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
         """

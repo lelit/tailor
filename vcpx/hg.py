@@ -80,7 +80,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="hg copy %(old)s %(new)s")
-        c(old=shrepr(oldname), new=repr(newname))
+        c(old=shrepr(oldname), new=shrepr(newname))
         
         c = SystemCommand(working_dir=root,
                           command="hg remove %(old)s")
