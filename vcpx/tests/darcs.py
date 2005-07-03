@@ -9,7 +9,7 @@ from unittest import TestCase, TestSuite
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.darcs import changesets_from_darcschanges
-from shwrap import SystemCommand
+from shwrap import ExternalCommand, PIPE
 
 class DarcsChangesParserTest(TestCase):
     """Tests for the parser of darcs changes"""
@@ -87,9 +87,9 @@ class DarcsChangesParserTest(TestCase):
         from os import getcwd
 
         patchname = 'more detailed diags on SAXException'
-        changes = SystemCommand(command="darcs changes --xml --summary "
-                                        "--patches='%s'" % patchname)
-        csets = changesets_from_darcschanges(changes(output=True),
+        changes = ExternalCommand(command=["darcs", "changes", "--xml", "--summary",
+                                           "--patches", patchname])
+        csets = changesets_from_darcschanges(changes.execute(stdout=PIPE),
                                              unidiff=True,
                                              repodir=getcwd())
         unidiff = csets[0].unidiff

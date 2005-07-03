@@ -6,89 +6,41 @@
 # 
 
 from unittest import TestCase, TestSuite
-from vcpx.shwrap import SystemCommand, shrepr
+from vcpx.shwrap import ExternalCommand, PIPE
 
 class SystemCommandTest(TestCase):
     """Perform some basic tests of the wrapper.
     """
 
     def testExitStatusForTrue(self):
-        """Verify SystemCommand exit_status of ``true``.
+        """Verify ExternalCommand exit_status of ``true``.
         """
 
-        c = SystemCommand('true')
-        c()
-        self.assertEqual(c.exit_status, 0)
-
-    def testExitStatusForTrueWithOutput(self):
-        """Verify SystemCommand exit_status of ``true`` asking output.
-        """
-
-        c = SystemCommand('true')
-        c(output=True)
-        self.assertEqual(c.exit_status, 0)
-
-    def testExitStatusForTrueWithInput(self):
-        """Verify SystemCommand exit_status of ``true`` feeding input.
-        """
-
-        c = SystemCommand('cat > /dev/null && true')
-        c(input="Ciao")
-        self.assertEqual(c.exit_status, 0)
-
-    def testExitStatusForTrueWithInputAndOutput(self):
-        """Verify SystemCommand exit_status of ``true`` input/output.
-        """
-
-        c = SystemCommand('cat > /dev/null && true')
-        c(output=True, input="Ciao")
+        c = ExternalCommand(['true'])
+        c.execute()
         self.assertEqual(c.exit_status, 0)
 
     def testExitStatusForFalse(self):
-        """Verify SystemCommand exit_status of ``false``.
+        """Verify ExternalCommand exit_status of ``false``.
         """
 
-        c = SystemCommand('false')
-        c()
-        self.assertNotEqual(c.exit_status, 0)
-
-    def testExitStatusForFalseWithOutput(self):
-        """Verify SystemCommand exit_status of ``false`` asking output.
-        """
-
-        c = SystemCommand('false')
-        c(output=True)
-        self.assertNotEqual(c.exit_status, 0)
-
-    def testExitStatusForFalseWithInput(self):
-        """Verify SystemCommand exit_status of ``false`` feeding input.
-        """
-
-        c = SystemCommand('cat > /dev/null && false')
-        c(input="Ciao")
-        self.assertNotEqual(c.exit_status, 0)
-
-    def testExitStatusForFalseWithInputAndOutput(self):
-        """Verify SystemCommand exit_status of ``false`` input/output.
-        """
-
-        c = SystemCommand('cat > /dev/null && false')
-        c(output=True, input="Ciao")
+        c = ExternalCommand(['false'])
+        c.execute()
         self.assertNotEqual(c.exit_status, 0)
 
     def testExitStatusUnknownCommand(self):
-        """Verify SystemCommand exit_status for non existing command.
+        """Verify ExternalCommand exit_status for non existing command.
         """
 
-        c = SystemCommand('/does/not/exist 2>/dev/null')
-        c()
+        c = ExternalCommand(['/does/not/exist'])
+        c.execute()
         self.assertNotEqual(c.exit_status, 0)
 
     def testStandardOutput(self):
-        """Verify that SystemCommand redirects stdout."""
+        """Verify that ExternalCommand redirects stdout."""
 
-        c = SystemCommand('echo "ciao"')
-        out = c(output=True)
+        c = ExternalCommand(['echo'])
+        out = c.execute("ciao", stdout=PIPE)
         self.assertEqual(out.read(), "ciao\n")
 
     def testWorkingDir(self):
@@ -96,15 +48,7 @@ class SystemCommandTest(TestCase):
         working directory.
         """
 
-        c = SystemCommand('pwd', '/tmp')
-        out = c(output=True)
+        c = ExternalCommand(['pwd'], '/tmp')
+        out = c.execute(stdout=PIPE)
         self.assertEqual(out.read(), "/tmp\n")
-
-    def testQuoting(self):
-        """Verify the quoting mechanism."""
-
-        self.assertEqual(shrepr(r'''doublequote "'''), r'''"doublequote \""''')
-        self.assertEqual(shrepr(r'''quote ' backslash \ doublequote "'''),
-                         r'''"quote ' backslash \\ doublequote \""''')
-        self.assertEqual(shrepr(r'''$ubdole'''), r'''"\$ubdole"''')
 

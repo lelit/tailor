@@ -13,75 +13,13 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, PIPE, STDOUT
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-
-class CvsPsLog(SystemCommand):
-    COMMAND = "cvsps %(update)s-b %(branch)s 2>/dev/null"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        update = kwargs.get('update', '')
-        if update:
-            update = '-u '
-        kwargs['update'] = update
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
-
-    
-class CvsUpdate(SystemCommand):
-    COMMAND = 'cvs -q %(dry)supdate -d %(revision)s %(entry)s 2>&1'
-    
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        if dry_run:
-            kwargs['dry'] = '-n '
-        else:
-            kwargs['dry'] = ''
-
-        if kwargs['revision'] is None:
-            kwargs['revision'] = ''
-        else:
-            kwargs['revision'] = '-r%s' % kwargs['revision']
-            
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=False, **kwargs)
-
-
-class CvsCommit(SystemCommand):
-    COMMAND = "cvs -q ci -F %(logfile)s %(entries)s"
-    
-
-class CvsRemove(SystemCommand):
-    COMMAND = "cvs -q remove %(entry)s"
-
-
-class CvsCheckout(SystemCommand):
-    COMMAND = "cvs -q -d%(repository)s checkout %(revision)s -d%(workingdir)s %(module)s"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        revision = kwargs['revision']
-        if revision is None:
-            revision = ''
-        else:
-            # If the revision contains a space, assume it really
-            # specify a branch and a timestamp. If it starts with
-            # a digit, assume it's a timestamp. Otherwise, it must
-            # be a branch name
-            if revision[0] in '0123456789':
-                revision = "-D'%s'" % revision
-            elif ' ' in revision:
-                branch, timestamp =revision.split(' ', 1)
-                revision = "-r%s -D'%s'" % (branch, timestamp)
-            else:
-                revision = '-r%s' % revision
-        kwargs['revision'] = revision
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=False, **kwargs)
-
+CVS_CMD = 'cvs'
+CVSPS_CMD = 'cvsps'   
 
 def changesets_from_cvsps(log, sincerev=None):
     """
@@ -104,8 +42,6 @@ def changesets_from_cvsps(log, sincerev=None):
     ##
     ## Members:
     ##         docutils/writers/latex2e.py:1.78->1.79
-
-    log.seek(0)
 
     l = None
     while 1:
@@ -201,14 +137,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     from the server, so that we can reasonably group together related
     changes that would otherwise be sparsed, as CVS is file-centric.
     """
-    
+
     ## UpdatableSourceWorkingDir
     
     def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         from os.path import join, exists
-         
-        cvsps = CvsPsLog(working_dir=root)
-        
+
         branch="HEAD"
         fname = join(root, 'CVS', 'Tag')
         if exists(fname):
@@ -220,7 +154,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             sincerev = int(sincerev)
             
         changesets = []
-        log = cvsps(output=True, update=True, branch=branch)
+        cmd = [CVSPS_CMD, "-u", "-b", branch]
+        cvsps = ExternalCommand(cwd=root, command=cmd)
+        log = cvsps.execute(stdout=PIPE)
+        
         for cs in changesets_from_cvsps(log, sincerev):
             changesets.append(cs)
 
@@ -246,8 +183,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from time import sleep
         
         entries = CvsEntries(root)
-        
-        cvsup = CvsUpdate(working_dir=root)
+
         for e in changeset.entries:
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
@@ -286,26 +222,36 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cvsup(output=True, entry=shrepr(e.name),
                       revision=e.new_revision)
             
+            cmd = [CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
+            cvsup = ExternalCommand(cwd=root, command=cmd)
+            cvsup.execute(e.name, stdout=PIPE)
+            
+            if cvsup.exit_status:
+                if logger:
+                    logger.warning("%s returned status %s, retrying once..." %
+                                   (str(cvsup), cvsup.exit_status))
+                sleep(2)
+                cvsup.execute(e.name, stdout=PIPE)
                 if cvsup.exit_status:
-                    if logger: logger.warning("'cvs update' on %s exited "
-                                              "with status %d, retrying "
-                                              "once..." % (e.name,
-                                                           cvsup.exit_status))
-                    sleep(2)
-                    cvsup(output=True, entry=shrepr(e.name),
-                          revision=e.new_revision)
+                    if logger:
+                        logger.warning("%s returned status %s, "
+                                       "retrying once more..." %
+                                       (str(cvsup), cvsup.exit_status))
+                    sleep(4)
+                    cvsup.execute(e.name, stdout=PIPE)
                     if cvsup.exit_status:
-                        if logger: logger.warning("'cvs update' on %s exited "
-                                                  "with status %d, retrying "
-                                                  "one last time..." %
-                                                  (e.name, cvsup.exit_status))
+                        if logger:
+                            logger.warning("%s returned status %s, retrying "
+                                           "one last time..." %
+                                           (str(cvsup), cvsup.exit_status))
                         sleep(8)
                         cvsup(output=True, entry=shrepr(e.name),
                               revision=e.new_revision)
 
                 if cvsup.exit_status:
                     raise ChangesetApplicationFailure(
-                        "'cvs update' returned status %s" % cvsup.exit_status)
+                        "%s returned status %s" % (str(cvsup),
+                                                   cvsup.exit_status))
 
                 if logger: logger.info("%s updated to %s" % (e.name,
                                                              e.new_revision))
@@ -330,15 +276,28 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         wdir = join(basedir, subdir)
         if not exists(join(wdir, 'CVS')):
-            c = CvsCheckout(working_dir=basedir)
-            c(output=True,
-              repository=repository,
-              module=module,
-              revision=revision,
-              workingdir=shrepr(subdir))
-            if c.exit_status:
+            cmd = [CVS_CMD, "-q", "-d", repository, "checkout",
+                   "-d", subdir]
+            if not revision is None:
+                # If the revision contains a space, assume it really
+                # specify a branch and a timestamp. If it starts with
+                # a digit, assume it's a timestamp. Otherwise, it must
+                # be a branch name
+                if revision[0] in '0123456789':
+                    cmd.extend(["-D", revision])
+                elif ' ' in revision:
+                    branch, timestamp =revision.split(' ', 1)
+                    cmd.extend(["-r", branch, "-D", timestamp])
+                else:
+                    cmd.extend(["-r", revision])
+
+            checkout = ExternalCommand(cwd=basedir, command=cmd)
+            checkout.execute(module)
+            
+            if checkout.exit_status:
                 raise TargetInitializationFailure(
-                    "'cvs checkout' returned status %s" % c.exit_status)
+                    "%s returned status %s" % (str(checkout),
+                                               checkout.exit_status))
         else:
             if logger: logger.info("Using existing %s", wdir)
             
@@ -459,8 +418,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Add some new filesystem objects.
         """
 
-        c = SystemCommand(working_dir=root, command="cvs -q add %(names)s")
-        c(names=' '.join([shrepr(n) for n in names]))
+        cmd = [CVS_CMD, "-q", "add"]
+        ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def __forceTagOnEachEntry(self, root):
         """
@@ -513,32 +472,31 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
         Commit the changeset.
         """
+
+        from shwrap import ReopenableNamedTemporaryFile
         
         rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
         log = open(rontf.name, "w")
         log.write(remark)
-        log.write('\n')
         if changelog:
-            log.write(changelog)
             log.write('\n')
-        log.close()
-       
-        c = CvsCommit(working_dir=root)
+            log.write(changelog)
+        log.write("\n\nOriginal author: %s\nDate: %s\n" % (author, date))
+        log.close()            
 
-        if entries:
-            entries = ' '.join([shrepr(e) for e in entries])
-        else:
-            entries = '.'
+        cmd = [CVS_CMD, "-q", "ci", "-F", rontf.name]
+        if not entries:
+            entries = ['.']
           
-        c(entries=entries, logfile=rontf.name)
+        ExternalCommand(cwd=root, command=cmd).execute(entries)
        
     def _removePathnames(self, root, names):
         """
         Remove some filesystem objects.
         """
 
-        c = CvsRemove(working_dir=root)
-        c(entry=' '.join([shrepr(n) for n in names]))
+        cmd = [CVS_CMD, "-q", "remove"]
+        ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _renamePathname(self, root, oldname, newname):
         """

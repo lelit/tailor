@@ -11,34 +11,18 @@ This module contains supporting classes for the ``darcs`` versioning system.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr
+from shwrap import ExternalCommand, PIPE
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from xml.sax import SAXException
 
+DARCS_CMD = 'darcs'
+
 MOTD = """\
 This is the Darcs equivalent of
 %s/%s
 """
-
-class DarcsRecord(SystemCommand):
-    COMMAND = "darcs record --all --pipe %(entries)s"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        date = kwargs.get('date').strftime('%Y/%m/%d %H:%M:%S')
-        author = kwargs.get('author')
-        patchname = kwargs.get('patchname')
-        logmessage = kwargs.get('logmessage')
-        if not logmessage:
-            logmessage = ''
-
-        input = "%s UTC\n%s\n%s\n%s\n" % (date, author, patchname, logmessage)
-        
-        return SystemCommand.__call__(self, output=output, input=input,
-                                      dry_run=dry_run, 
-                                      **kwargs)
-
 
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     """
@@ -47,7 +31,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     Return a list of ``Changeset`` instances.
     """
     
-    from xml.sax import parseString
+    from xml.sax import parse
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
@@ -58,10 +42,9 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
             self.current = None
             self.current_field = []
             if unidiff and repodir:
-                self.darcsdiff = SystemCommand(command="darcs diff --unified "
-                                                       "--repodir=" +
-                                                       shrepr(repodir) +
-                                                       " --patch=%(patchname)s")
+                cmd = ["darcs", "diff", "--unified", "--repodir", repodir,
+                       "--patch", "%(patchname)s"]
+                self.darcsdiff = ExternalCommand(command=cmd)
             else:
                 self.darcsdiff = None
                 
@@ -100,8 +83,8 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                                  self.current['entries'])
                 
                 if self.darcsdiff:
-                    cset.unidiff = self.darcsdiff(output=True,
-                                                  patchname=shrepr(cset.revision)).read()
+                    cset.unidiff = self.darcsdiff.execute(
+                        stdout=PIPE, patchname=cset.revision).read()
                     
                 self.changesets.append(cset)
                 self.current = None
@@ -127,14 +110,9 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
         def characters(self, data):
             self.current_field.append(data)
 
-    handler = DarcsXMLChangesHandler()
-    output = changes.getvalue()
-    try:
-        parseString(output, handler)
-    except SAXException, le:
-        print "parseString(%s, %s) yielded the following error..." % (output, handler)
-        raise le
 
+    handler = DarcsXMLChangesHandler()
+    parse(changes, handler)
     changesets = handler.changesets
     
     # sort changeset by date
@@ -159,12 +137,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from time import strptime
         from changes import Changeset
         
-        c = SystemCommand(working_dir=root,
-                          command="TZ=UTC darcs pull --dry-run %(repository)s")
-        output = c(output=True, repository=shrepr(repository))
-        if c.exit_status:
-            raise GetUpstreamChangesetsFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
+        cmd = [DARCS_CMD, "pull", "--dry-run"]
+        pull = ExternalCommand(cwd=root, command=cmd)
+        output = pull.execute(repository, stdout=PIPE, TZ='UTC')
         
+        if pull.exit_status:
+            raise GetUpstreamChangesetsFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(pull), pull.exit_status, output.strip()))
+
         l = output.readline()
         while l and not (l.startswith('Would pull the following changes:') or
                          l == 'No remote changes to pull in!\n'):
@@ -215,18 +196,19 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Do the actual work of applying the changeset to the working copy.
         """
 
-        patchname=shrepr(changeset.revision)
+        cmd = [DARCS_CMD, "pull", "--all", "--patches", changeset.revision]
+        pull = ExternalCommand(cwd=root, command=cmd)
+        output = pull.execute(stdout=PIPE)
         
-        c = SystemCommand(working_dir=root,
-                          command="darcs pull --all --patches=%(patch)s")
-        output = c(output=True, patch=patchname)
-        if c.exit_status:
-            raise ChangesetApplicationFailure("'darcs pull' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
+        if pull.exit_status:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(pull), pull.exit_status, output.strip()))
 
-        c = SystemCommand(working_dir=root,
-                          command="darcs changes --patches=%(patch)s"
-                                  " --xml-output --summ")
-        last = changesets_from_darcschanges(c(output=True, patch=patchname))
+        cmd = [DARCS_CMD, "changes", "--patches", changeset.revision,
+               "--xml-output", "--summ"]
+        changes = ExternalCommand(cwd=root, command=cmd)
+        last = changesets_from_darcschanges(changes.execute(stdout=PIPE))
         if last:
             changeset.entries.extend(last[0].entries)
 
@@ -247,50 +229,48 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 if not exists(wdir):
                     mkdir(wdir)
 
-                c = SystemCommand(working_dir=wdir, command="darcs initialize")
-                c(output=True)
+                init = ExternalCommand(cwd=wdir,
+                                       command=[DARCS_CMD, "initialize"])
+                init.execute(stdout=PIPE)
 
-                if c.exit_status:
+                if init.exit_status:
                     raise TargetInitializationFailure(
-                        "'darcs initialize' returned status %s"%c.exit_status)
+                        "%s returned status %s" % (str(init),
+                                                   init.exit_status))
 
-                dpull = SystemCommand(working_dir=wdir,
-                                     command="darcs pull --all --verbose"
-                                             " %(tag)s %(repository)s"
-                                             " 2>&1")
-
-                output = dpull(output=True, repository=shrepr(repository),
-                               tag=(revision<>'HEAD' and
-                                    '--tag=%s' % shrepr(revision)
-                                    or ''))
+                cmd = [DARCS_CMD, "pull", "--all", "--verbose"]
+                if revision and revision<>'HEAD':
+                    cmd.extend(["--tag", revision])
+                dpull = ExternalCommand(cwd=wdir, command=cmd)
+                output = dpull.execute(repository, stdout=PIPE)
+                        
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
-                        "'darcs pull' returned status %d saying \"%s\"" %
-                        (dpull.exit_status, output.getvalue().strip()))
+                        "%s returned status %d saying \"%s\"" %
+                        (str(dpull), dpull.exit_status, output.strip()))
         else:
             # Use much faster 'darcs get'
             
-            wdir = join(basedir, subdir)           
-            dget = SystemCommand(working_dir=basedir,
-                                 command="darcs get --partial --verbose"
-                                         " %(tag)s '%(repository)s'"
-                                         " %(subdir)s")
-
-            output = dget(output=True, repository=repository,
-                          tag=(revision<>'HEAD' and
-                               '--tag=%s' % shrepr(revision) or ''),
-                          subdir=subdir)
+            wdir = join(basedir, subdir)
+            cmd = [DARCS_CMD, "get", "--partial", "--verbose"]
+            if revision and revision<>'HEAD':
+                cmd.extend(["--tag", revision])
+            dget = ExternalCommand(cwd=basedir, command=cmd)
+            output = dget.execute(repository, subdir, stdout=PIPE)
             
             if dget.exit_status:
                 raise TargetInitializationFailure(
-                    "'darcs get' returned status %d saying \"%s\"" %
-                    (dget.exit_status, output.getvalue().strip()))
+                    "%s returned status %d saying \"%s\"" %
+                    (str(dget), dget.exit_status, output.strip()))
 
-        c = SystemCommand(working_dir=wdir,
-                          command="darcs changes --last=1 --xml-output 2>&1")
-        output = c(output=True)
-        if c.exit_status:
-            raise ChangesetApplicationFailure("'darcs changes' returned status %d saying \"%s\"" % (c.exit_status, output.getvalue().strip()))
+        cmd = [DARCS_CMD, "changes", "--last", "1", "--xml-output"]
+        changes = ExternalCommand(cwd=wdir, command=cmd)
+        output = changes.execute(stdout=PIPE)
+        
+        if changes.exit_status:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(changes), changes.exit_status, output.strip()))
         
         last = changesets_from_darcschanges(output)
         
@@ -304,37 +284,37 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Add some new filesystems objects.
         """
 
-        c = SystemCommand(working_dir=root,
-                          command="darcs add --case-ok --not-recursive"
-                                  " --quiet %(names)s")
-        c(names=' '.join([shrepr(n) for n in names]))
+        cmd = [DARCS_CMD, "add", "--case-ok", "--not-recursive", "--quiet"]
+        ExternalCommand(cwd=root, command=cmd).execute(names)
         
     def _addSubtree(self, root, subdir):
         """
         Use the --recursive variant of ``darcs add`` to add a subtree.
         """
-        
-        c = SystemCommand(working_dir=root,
-                          command="darcs add --case-ok --recursive"
-                          " --quiet %(entry)s")
-        c(entry=shrepr(subdir))
+
+        cmd = [DARCS_CMD, "add", "--case-ok", "--recursive", "--quiet"]
+        ExternalCommand(cwd=root, command=cmd).execute(subdir)
         
     def _commit(self, root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
-        c = DarcsRecord(working_dir=root)
-
-        if entries:
-            entries = ' '.join([shrepr(e) for e in entries])
-        else:
-            entries = '.'
+        input = "%s UTC\n%s\n%s\n%s\n" % (date.strftime('%Y/%m/%d %H:%M:%S'),
+                                          author,
+                                          remark,
+                                          changelog or '')
+        
+        cmd = [DARCS_CMD, "record", "--all", "--pipe"]
+        if not entries:
+            entries = ['.']
             
-        c(output=True, date=date, patchname=remark,
-          logmessage=changelog, author=author, entries=entries)
-        if c.exit_status:
-            raise ChangesetApplicationFailure("'darcs record' returned status %d" % c.exit_status)
+        record = ExternalCommand(cwd=root, command=cmd)
+        record.execute(entries, input=input, stdout=PIPE)
+        
+        if record.exit_status:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d" % (str(record), record.exit_status))
         
     def _removePathnames(self, root, names):
         """
@@ -344,9 +324,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         # Since the source VCS already deleted the entry, and given that
         # darcs will do the right thing with it, do nothing here, instead
         # of 
-        #         c = SystemCommand(working_dir=root,
-        #                           command="darcs remove %(entry)s")
-        #         c(entry=' '.join([e.name for e in entries]))
+        #         c = ExternalCommand(cwd=root,
+        #                             command=[DARCS_CMD, "remove"])
+        #         c.execute(entries)
         # that raises status 512 on darcs not finding the entry.
 
         pass
@@ -371,9 +351,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             rename(oldname, oldname + '-TAILOR-HACKED-TEMP-NAME')
 
         try:
-            c = SystemCommand(working_dir=root,
-                              command="darcs mv %(old)s %(new)s")
-            c(old=shrepr(oldname), new=shrepr(newname))
+            cmd = [DARCS_CMD, "mv"]
+            ExternalCommand(cwd=root, command=cmd).execute(oldname, newname)
         finally:
             if renamed:
                 rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
@@ -388,12 +367,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from re import escape
         from dualwd import IGNORED_METADIRS
         
-        c = SystemCommand(working_dir=root, command="darcs initialize")
-        c(output=True)
+        init = ExternalCommand(cwd=root, command=[DARCS_CMD, "initialize"])
+        init.execute(stdout=PIPE)
 
-        if c.exit_status:
+        if init.exit_status:
             raise TargetInitializationFailure(
-                "'darcs initialize' returned status %s" % c.exit_status)
+                "%s returned status %s" % (str(init), init.exit_status))
 
         motd = open(join(root, '_darcs/prefs/motd'), 'w')
         motd.write(MOTD % (repository, module))

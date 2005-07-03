@@ -11,36 +11,13 @@ This module contains supporting classes for Monotone.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from sys import stderr
 
-class MonotoneCommit(SystemCommand):
-    COMMAND = "monotone commit --author=\"%(key)s\" --date=\"%(date)s\" --message-file=\"%(logfile)s\" 2>&1"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-
-        # the log message is written on a temporary file
-        rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
-        logmessage = kwargs.get('logmessage')
-        if logmessage:
-            log = open(rontf.name, "w")
-            log.write(logmessage)
-            log.close()            
-        kwargs['logfile'] = rontf.name
-
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
-
-class MonotoneRemove(SystemCommand):
-    COMMAND = "monotone drop %(entry)s"
-
-
-class MonotoneMv(SystemCommand):
-    COMMAND = "monotone rename %(old)s %(new)s"
-
+MONOTONE_CMD = "monotone"
 
 class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -51,60 +28,62 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        c = SystemCommand(working_dir=root, command="monotone add %(names)s")
-        c(names=' '.join([shrepr(n) for n in names]))
+        cmd = [MONOTONE_CMD, "add"]
+        add = ExternalCommand(cwd=root, command=cmd)
+        add.execute(names)
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
-        c = MonotoneCommit(working_dir=root)
-        
-        if entries:
-            entries = ' '.join([shrepr(e) for e in entries])
-        else:
-            entries = '.'
+        rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
+        log = open(rontf.name, "w")
+        log.write(remark)
+        log.write('\n')
+        if changelog:
+            log.write(changelog)
+            log.write('\n')
+        log.close()
 
-        # monotone doesn't like empty changelogs ...
-        if changelog == None or len(changelog)<1:
-            if len(remark)>0:
-                changelog = remark
-            else:
-                changelog = "**** empty log message ****"
+        cmd = [MONOTONE_CMD, "commit", "--author", author,
+               "--date", date.isoformat(),
+               "--message-file", rontf.name]
+        commit = ExternalCommit(cwd=root, command=cmd)
         
-        # monotone dates must be expressed as ISO8601 
-        outstr = c(output=True, key=author, logmessage=changelog,
-                   date=date.isoformat(), entries=entries)
+        if not entries:
+            entries = ['.']
+
+        output = commit.execute(entries, stdout=PIPE)
 
         # monotone complaints if there are no changes from the last commit.
         # we ignore those errors ...
-        if c.exit_status:
-           if outstr.getvalue().find("monotone: misuse: no changes to commit") == -1:
-               stderr.write(outstr.getvalue())
-               outstr.close()
-               raise TargetInitializationFailure(
-                  "'monotone commit returned %s" % c.exit_status)
-           else:
-               stderr.write("No changes to commit - changeset ignored\n")
-             
-        outstr.close()      
+        if commit.exit_status:
+            text = output.read()
+            if text.find("monotone: misuse: no changes to commit") == -1:
+                stderr.write(text)
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(commit),commit.exit_status))
+            else:
+                stderr.write("No changes to commit - changeset ignored\n")
         
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
         """
 
-        c = MonotoneRemove(working_dir=root)
-        c(entry=' '.join([shrepr(n) for n in names]))
+        cmd = [MONOTONE_CMD, "drop"]
+        drop = ExternalCommand(cwd=root, command=cmd)
+        drop.execute(names)
 
     def _renamePathname(self, root, oldname, newname):
         """
         Rename a filesystem object.
         """
 
-        c = MonotoneMv(working_dir=root)
-        c(old=shrepr(oldname), new=shrepr(newname))
+        cmd = [MONOTONE_CMD, "rename"]
+        rename = ExternalCommand(cwd=root, command=cmd)
+        rename.execute(oldname, newname)
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
@@ -121,6 +100,4 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         if not exists(join(root, 'MT')):
             raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % root)
 
-        c = SystemCommand(working_dir=root,
-                          command="monotone add %(names)s")
-        c(names=subdir)
+        self._addPathnames(root, [subdir])

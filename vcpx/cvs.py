@@ -11,8 +11,8 @@ Given `cvsps` shortcomings, this backend uses CVS only.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, ReopenableNamedTemporaryFile
-from cvsps import CvspsWorkingDir
+from shwrap import ExternalCommand, STDOUT, PIPE
+from cvsps import CvspsWorkingDir, CVS_CMD
 from source import GetUpstreamChangesetsFailure
 
 class EmptyRepositoriesFoolsMe(Exception):
@@ -35,27 +35,6 @@ def compare_cvs_revs(rev1, rev2):
     
     return cmp(r1, r2)
 
-
-class CvsLog(SystemCommand):
-    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
-       
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        since = kwargs.get('since')
-        if since:
-            kwargs['since'] = "-d'%s UTC<'" % since
-        else:
-            kwargs['since'] = ''
-
-        branch = kwargs.get('branch') or 'HEAD'
-        kwargs['branch'] = "-r:%s" % branch
-        
-        
-        self.rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
-        logfn = kwargs['tempfilename'] = self.rontf.name
-        
-        SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
-
-        return open(logfn)
 
 def changesets_from_cvslog(log, module):
     """
@@ -87,8 +66,8 @@ class ChangeSetCollector(object):
     """Collector of the applied change sets."""
 
     # Some string constants we look for in CVS output.
-    intra_sep = '----------------------------\n'
-    inter_sep = '=============================================================================\n'
+    intra_sep = '-' * 28 + '\n'
+    inter_sep = '=' * 77 + '\n'
     
     def __init__(self, log, module):
         """
@@ -305,7 +284,7 @@ class CvsWorkingDir(CvspsWorkingDir):
     Reimplement the mechanism used to get a *changeset* view of the
     CVS commits.
     """
-    
+
     def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         from os.path import join, exists
         from datetime import timedelta
@@ -332,19 +311,22 @@ class CvsWorkingDir(CvspsWorkingDir):
             if tag[0] in 'NT':
                 branch=tag[1:-1]
 
-        cvslog = CvsLog(working_dir=root)
+        cmd = [CVS_CMD, "-f", "-d", "%(repository)s", "rlog", "-N",
+               "-r", ":%(branch)s"]
+        if since:
+            cmd.append(["-d", "%(since)s UTC"])
+        cmd.append(module)
+
+        cvslog = ExternalCommand(working_dir=root, command=cmd)
+        log = cvslog.execute(stdout=PIPE, stderr=STDOUT,
+                             repository=repository, since=since,
+                             branch=branch, TZ='UTC')
         
-        changesets = []
-        log = cvslog(output=True, since=since, branch=branch,
-                     repository=repository, module=module)
-
         if cvslog.exit_status:
-            raise GetUpstreamChangesetsFailure("'cvs log' on %r returned status %d" % (root, cvslog.exit_status))
+            raise GetUpstreamChangesetsFailure(
+                "%s returned status %d" % (str(cvslog), cvslog.exit_status))
                 
-        for cs in changesets_from_cvslog(log, module):
-            changesets.append(cs)
-
-        return changesets
+        return changesets_from_cvslog(log, module)
     
 
 class CvsEntry(object):

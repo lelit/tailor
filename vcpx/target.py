@@ -13,7 +13,6 @@ working directory under two different version control systems.
 __docformat__ = 'reStructuredText'
 
 import socket
-from shwrap import shrepr
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
@@ -167,7 +166,7 @@ class SyncronizableTargetWorkingDir(object):
         """
         Extract the names of the entries for the commit phase.
         """
-        
+
         return [e.name for e in changeset.entries]
         
     def _replayChangeset(self, root, changeset, logger):

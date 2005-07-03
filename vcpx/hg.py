@@ -11,28 +11,10 @@ This module implements the backends for Mercurial.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-class HgCommit(SystemCommand):
-    COMMAND = "hg commit -u %(user)s -l %(logfile)s -d '%(time)s UTC'"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        from time import mktime
-        
-        logmessage = kwargs.get('logmessage')
-        rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
-        log = open(rontf.name, "w")
-        log.write(logmessage)
-        log.close()            
-        kwargs['logfile'] = rontf.name
-        author = kwargs.get('author')
-        kwargs['user'] = shrepr(author)
-        kwargs['time'] = mktime(kwargs.get('date').timetuple())
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
-    
+HG_CMD = "hg"
 
 class HgWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -43,48 +25,48 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        c = SystemCommand(working_dir=root, command="hg add %(names)s")
-        c(names=' '.join([shrepr(n) for n in names]))
+        cmd = [HG_CMD, "add"]
+        ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
-        c = HgCommit(working_dir=root)
+        from time import mktime
+
+        cmd = [HG_CMD, "commit", "-u", author, "-l", "%(logfile)s",
+               "-d", "%(time)s UTC"]
+        c = ExternalCommand(cwd=root, command=cmd)
         
+        rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
+        log = open(rontf.name, "w")
+        log.write(remark)
         if changelog:
-            logmessage = remark + '\n\n' + changelog
-        else:
-            logmessage = remark
-            
-        if entries:
-            entries = ' '.join([shrepr(e) for e in entries])
-        else:
-            entries = '.'
-            
-        c(author=author, logmessage=logmessage, date=date, entries=entries)
+            log.write('\n\n')
+            log.write(changelog)
+        log.close()            
+
+        c.execute(logfile=rontf.name, time=mktime(date.timetuple()))
         
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
         """
 
-        c = SystemCommand(working_dir=root, command="hg remove %(names)s")
-        c(names=' '.join([shrepr(n) for n in names]))
+        cmd = [HG_CMD, "remove"]
+        ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _renamePathname(self, root, oldname, newname):
         """
         Rename a filesystem object.
         """
 
-        c = SystemCommand(working_dir=root,
-                          command="hg copy %(old)s %(new)s")
-        c(old=shrepr(oldname), new=shrepr(newname))
-        
-        c = SystemCommand(working_dir=root,
-                          command="hg remove %(old)s")
-        c(old=shrepr(oldname))
+        cmd = [HG_CMD, "copy"]
+        ExternalCommand(cwd=root, command=cmd).execute(oldname, newname)
+
+        cmd = [HG_CMD, "remove"]
+        ExternalCommand(cwd=root, command=cmd).execute(oldname)
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
@@ -96,12 +78,12 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from re import escape
         from dualwd import IGNORED_METADIRS
         
-        c = SystemCommand(working_dir=root, command="hg init")
-        c(output=True)
+        init = ExternalCommand(cwd=root, command=[HG_CMD, "init"])
+        init.execute()
 
-        if c.exit_status:
+        if init.exit_status:
             raise TargetInitializationFailure(
-                "'hg init' returned status %s" % c.exit_status)
+                "%s returned status %s" % (str(init), init.exit_status))
 
         # Create the .hgignore file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
@@ -111,5 +93,4 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         ignore.write('\n^tailor.log$\n^tailor.info$\n')
         ignore.close()
 
-        c = SystemCommand(working_dir=root, command="hg addremove")
-        c()
+        ExternalCommand(cwd=root, command=[HG_CMD, "addremove"]).execute()

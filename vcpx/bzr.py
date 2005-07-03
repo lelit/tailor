@@ -11,20 +11,11 @@ This module implements the backends for Bazaar-NG.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import SystemCommand, shrepr
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from shwrap import ExternalCommand
 
-class BzrCommit(SystemCommand):
-    COMMAND = "bzr commit -m %(comment)s %(entries)s"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        logmessage = kwargs.get('logmessage')
-        kwargs['comment'] = shrepr(logmessage)
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
+BAZAAR_CMD = 'bzr'
     
-
 class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -34,44 +25,40 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Add a sequence of entries.
         """
 
-        c = SystemCommand(working_dir=root, command="bzr add %(entries)s")
-        c(entries=' '.join([shrepr(e.name) for e in entries]))
+        cmd = [BAZAAR_CMD, "add"]
+        ExternalCommand(cwd=root, command=cmd).execute(entries)
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
-        c = BzrCommit(working_dir=root)
-        
-        logmessage = "%s\nOriginal author: %s\nDate: %s" % (remark, author,
-                                                            date)
+        logmessage = remark
         if changelog:
-            logmessage = logmessage + '\n\n' + changelog
-            
-        if entries:
-            entries = ' '.join([shrepr(e) for e in entries])
-        else:
-            entries = '.'
-            
-        c(logmessage=logmessage, entries=entries)
+            logmessage += '\n%s' % changelog
+        logmessage += '\n\nOriginal author: %s\nDate: %s\n' % (author, date)
+
+        cmd = [BAZAAR_CMD, "commit", "-m", logmessage]
+        if not entries:
+            entries = ['.']
+
+        ExternalCommand(cwd=root, command=cmd).execute(entries)
         
     def _removeEntries(self, root, entries):
         """
         Remove a sequence of entries.
         """
 
-        c = SystemCommand(working_dir=root, command="bzr remove %(entries)s")
-        c(entries=' '.join([shrepr(e.name) for e in entries]))
+        cmd = [BAZAAR_CMD, "remove"]
+        ExternalCommand(cwd=root, command=cmd).execute(entries)
 
     def _renameEntry(self, root, oldentry, newentry):
         """
         Rename an entry.
         """
 
-        c = SystemCommand(working_dir=root,
-                          command="bzr rename %(old)s %(new)s")
-        c(old=shrepr(oldentry), new=shrepr(newentry))
+        cmd = [BAZAAR_CMD, "rename"]
+        ExternalCommand(cwd=root, command=cmd).execute(old, new)
 
     def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
         """
@@ -98,17 +85,14 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         from os import getenv
         from os.path import join
         from dualwd import IGNORED_METADIRS
-        
-        c = SystemCommand(working_dir=root, command="bzr init")
-        c(output=True)
 
-        if c.exit_status:
+        cmd = [BAZAAR_CMD, "init"]
+        init = ExternalCommand(cwd=root, command=cmd)
+        init.execute()
+
+        if init.exit_status:
             raise TargetInitializationFailure(
-                "'bzr init' returned status %s" % c.exit_status)
-
-        #c = SystemCommand(working_dir=root,
-        #                  command="bzr add %(entry)s")
-        #c(entry=shrepr(subdir))
+                "%s returned status %s" % (str(init), init.exit_status))
 
         # Create the .bzrignore file, that contains a glob per line,
         # with all known VCs metadirs to be skipped.

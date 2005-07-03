@@ -12,5 +12,5 @@ from darcs import *
 from svn import *
 from tailor import *
 
-SystemCommand.VERBOSE = False
+ExternalCommand.VERBOSE = False
 

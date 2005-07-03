@@ -144,16 +144,23 @@ class Changeset(object):
         Apply the changeset using ``patch(1)`` to a given directory.
         """
         
-        from shwrap import SystemCommand
+        from shwrap import ExternalCommand
         from source import ChangesetApplicationFailure
-        
+
         if self.unidiff:
-            patch = SystemCommand(working_dir=working_dir,
-                                  command="patch " + patch_options)
-            patch(input=self.unidiff)
+            cmd = ["patch"]
+            if patch_options:
+                if isinstance(patch_options, basestring):
+                    cmd.extend(patch_options.split(' '))
+                else:
+                    cmd.extend(patch_options)
+
+            patch = ExternalCommand(cwd=working_dir, command=cmd)
+            patch.execute(input=self.unidiff)
+            
             if patch.exit_status:
                 raise ChangesetApplicationFailure(
-                    "%s: error %s" % (patch.command, patch.exit_status))
+                    "%s returned status %s" % (str(patch), patch.exit_status))
         
     def addedEntries(self):
         """

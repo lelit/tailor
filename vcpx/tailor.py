@@ -546,7 +546,7 @@ def main():
     
     from os import getcwd, chdir
     from os.path import abspath, exists, join
-    from shwrap import SystemCommand
+    from shwrap import ExternalCommand
     from target import SyncronizableTargetWorkingDir
     from changes import Changeset
     
@@ -564,9 +564,9 @@ def main():
     
     options, args = parser.parse_args()
     
-    SystemCommand.VERBOSE = options.debug
+    ExternalCommand.VERBOSE = options.debug
     if options.encoding:
-        SystemCommand.FORCE_ENCODING = options.encoding
+        ExternalCommand.FORCE_ENCODING = options.encoding
 
         # Make printouts be encoded as well. A better solution would be
         # using the replace mechanism of the encoder, and keep printing

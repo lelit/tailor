@@ -7,29 +7,12 @@
 
 __docformat__ = 'reStructuredText'
 
-from StringIO import StringIO
-from sys import stderr
-import threading
-
-def shrepr(str):
-    """
-    Escape an arbitrary string so that it is safe to pass it as
-    argument to a shell command.
-    """
-    
-    str = '\\\\'.join(str.split('\\'))
-    str = '\\"'.join(str.split('"'))
-    str = '\\$'.join(str.split('$'))
-    str = '\\*'.join(str.split('*'))
-    str = '\\?'.join(str.split('?'))
-    str = '\\`'.join(str.split('`'))
-    str = '\\('.join(str.split('('))
-    str = '\\)'.join(str.split(')'))
-    str = '\\['.join(str.split('['))
-    str = '\\]'.join(str.split(']'))
-    
-    return '"' + str + '"'
-
+try:
+    # Python 2.4
+    from subprocess import Popen, PIPE, STDOUT
+except ImportError:
+    # Older snakes
+    from _process import Popen, PIPE, STDOUT
 
 class ReopenableNamedTemporaryFile:
     """
@@ -57,116 +40,131 @@ class ReopenableNamedTemporaryFile:
         remove(self.name)
 
 
-class VerboseStringIO(StringIO):
-
-    def write(self, s):
-        """Give a feedback to the user."""
-        
-        StringIO.write(self, s)
-        stderr.write('.'*s.count('\n'))
-
-def joinall(threadlist):
-    for t in threadlist:
-        t.join()
-
-class SystemCommand(object):
+class ExternalCommand:
     """Wrap a single command to be executed by the shell."""
-
-    COMMAND = None
-    """The default command for this class.  Must be redefined by subclasses."""
 
     VERBOSE = True
     """Print the executed command on stderr, at each run."""
 
+    DRY_RUN = False
+    """Don't really execute the command."""
+
     FORCE_ENCODING = None
     """Force the output encoding to some other charset instead of user prefs."""
     
-    def __init__(self, command=None, working_dir=None):
-        """Initialize a SystemCommand instance, specifying the command
+    def __init__(self, command=None, cwd=None):
+        """Initialize a ExternalCommand instance, specifying the command
            to be executed and eventually the working directory."""
-        
-        self.command = command or self.COMMAND
+
+        self.command = command
         """The command to be executed."""
-        
-        self.working_dir = working_dir
+
+        self.cwd = cwd
         """The working directory, go there before execution."""
         
         self.exit_status = None
         """Once the command has been executed, this is its exit status."""
+
+        self._last_command = None
+        """Last executed command."""
         
-    def __call__(self, output=None, input=None, dry_run=False, **kwargs):
+    def __str__(self):
+        result = []
+        needquote = False
+        for arg in self._last_command or self.command:
+            bs_buf = []
+            
+            # Add a space to separate this argument from the others
+            if result:
+                result.append(' ')
+
+            needquote = (" " in arg) or ("\t" in arg)
+            if needquote:
+                result.append('"')
+
+            for c in arg:
+                if c == '\\':
+                    # Don't know if we need to double yet. 
+                    bs_buf.append(c)
+                elif c == '"':
+                    # Double backspaces. 
+                    result.append('\\' * len(bs_buf)*2)
+                    bs_buf = []
+                    result.append('\\"')
+                else:
+                    # Normal char
+                    if bs_buf:
+                        result.extend(bs_buf)
+                        bs_buf = []
+                    result.append(c)
+
+            # Add remaining backspaces, if any. 
+            if bs_buf:
+                result.extend(bs_buf)
+
+            if needquote:
+                result.append('"')
+
+        return "+ %s (in %s)" % (''.join(result), self.cwd)
+        
+    def execute(self, *args, **kwargs):
         """Execute the command."""
-        
-        from os import system, popen, popen2, wait, chdir
-        from shutil import copyfileobj
-        threadlist = []
-        
-        wdir = self.working_dir or kwargs.get('working_dir')
-        if wdir:
-            chdir(wdir)
 
-        command = self.command % kwargs
+        from sys import stderr
+        from os import environ
+        from cStringIO import StringIO
+        
+        self.exit_status = None
+
+        self._last_command = [chunk % kwargs for chunk in self.command]
+        if len(args) == 1 and type(args[0]) == type([]):
+            self._last_command.extend(args[0])
+        else:
+            self._last_command.extend(args)
+            
         if self.VERBOSE:
-            stderr.write("%s " % command)
+            stderr.write(str(self))
 
-        if dry_run:
-            if self.VERBOSE:
-                stderr.write(" [dry run]\n")
+        if self.DRY_RUN:
+            return
+
+        if not kwargs.has_key('cwd') and self.cwd:
+            kwargs['cwd'] = self.cwd
+
+        if not kwargs.has_key('env'):
+            env = kwargs['env'] = {}
+            env.update(environ)
+
+            for v in ['LANG', 'TZ', 'PATH']:
+                if kwargs.has_key(v):
+                    env[v] = kwargs[v]
+
+        input = kwargs.get('input')
+        
+        try:
+            process = Popen(self._last_command,
+                            stdin=input and PIPE or None,
+                            stdout=kwargs.get('stdout'),
+                            stderr=kwargs.get('stderr'),
+                            env=kwargs.get('env'),
+                            cwd=kwargs.get('cwd'))
+        except OSError:
+            stderr.write("'%s' does not exist!" % self._last_command[0])
+            self.exit_status = -1
             return
         
-        if output:
-            if output is True:
-                if self.VERBOSE:
-                    output = VerboseStringIO()
-                else:
-                    output = StringIO()
-
-            if input:
-                inp, out = popen2(command)
-                def handleinp():
-                    if self.FORCE_ENCODING:
-                        inp.write(input.encode(self.FORCE_ENCODING))
-                    else:
-                        inp.write(input)
-                    inp.close()
-                inpthread = threading.Thread(target = handleinp)
-                inpthread.start()
-                threadlist.append(inpthread)
-            else:
-                out = popen(command)
-
-            def handleout():
-                copyfileobj(out, output, length=128)
-                output.seek(0)
-            outthread = threading.Thread(target = handleout)
-            outthread.start()
-            threadlist.append(outthread)
-
-            joinall(threadlist)
-
-            if input:
-                self.exit_status = wait()[1]
-                out.close()
-            else:
-                self.exit_status = out.close() or 0
-        else:
-            if input:
-                inp, out = popen2(command)
-                if self.FORCE_ENCODING:
-                    inp.write(input.encode(self.FORCE_ENCODING))
-                else:
-                    inp.write(input)
-                inp.close()
-                out.close()
-                self.exit_status = wait()[1]
-            else:
-                self.exit_status = system(command)            
-                    
+        if input and self.FORCE_ENCODING:
+            input = input.encode(self.FORCE_ENCODING)
+        out = process.communicate(input=input)[0]
+        if out:
+            out = StringIO(out)
+        self.exit_status = process.returncode
+            
         if self.VERBOSE:
             if not self.exit_status:
                 stderr.write(" [Ok]\n")
             else:
-                stderr.write(" [Error %s]\n" % self.exit_status)
+                stderr.write(" [Status %s]\n" % self.exit_status)
                 
-        return output
+        return out
 
