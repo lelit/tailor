@@ -350,6 +350,19 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                   "--non-recursive %(names)s")
         c(names=' '.join([shrepr(n) for n in names]))
 
+    def _getCommitEntries(self, changeset):
+        """
+        Extract the names of the entries for the commit phase.  Since SVN
+        handles "rename" operations as "remove+add", both entries must be
+        committed.
+        """
+
+        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+                                                                  changeset)
+        entries.extend([e.old_name for e in changeset.renamedEntries()])
+
+        return entries
+        
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
@@ -384,6 +397,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         c = SvnMv(working_dir=root)
         c(old=shrepr(oldname), new=shrepr(newname))
+        if c.exit_status:
+            # Subversion does not seem to allow
+            #   $ mv a.txt b.txt
+            #   $ svn mv a.txt b.txt
+            # Here we are in this situation, since upstream VCS already
+            # moved the item. OTOH, svn really treats "mv" as "cp+rm",
+            # so we do the same here
+            self._removePathnames(root, [oldname])
+            self._addPathnames(root, [newname])
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
