@@ -71,7 +71,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
         c = SystemCommand(working_dir=root,
                           command="bzr rename %(old)s %(new)s")
-        c(old=shrepr(oldentry), new=repr(newentry))
+        c(old=shrepr(oldentry), new=shrepr(newentry))
 
     def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
         """

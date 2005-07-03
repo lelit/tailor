@@ -104,7 +104,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         c = MonotoneMv(working_dir=root)
-        c(old=shrepr(oldname), new=repr(newname))
+        c(old=shrepr(oldname), new=shrepr(newname))
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """

@@ -383,7 +383,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         c = SvnMv(working_dir=root)
-        c(old=shrepr(oldname), new=repr(newname))
+        c(old=shrepr(oldname), new=shrepr(newname))
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
