@@ -61,8 +61,15 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        cmd = [HG_CMD, "remove"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        from os.path import join, isdir
+
+        # Currently hg does not handle directories at all, so filter
+        # them out.
+        
+        notdirs = [n for n in names if not isdir(join(root, n))]
+        if notdirs:
+            cmd = [HG_CMD, "remove"]
+            ExternalCommand(cwd=root, command=cmd).execute(notdirs)
 
     def _renamePathname(self, root, oldname, newname):
         """
