@@ -69,12 +69,30 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [HG_CMD, "copy"]
-        ExternalCommand(cwd=root, command=cmd).execute(oldname, newname)
+        from os.path import join, isdir
+        from os.path import join
+        from os import walk
+        from dualwd import IGNORED_METADIRS
 
-        cmd = [HG_CMD, "remove"]
-        ExternalCommand(cwd=root, command=cmd).execute(oldname)
+        if isdir(join(root, newname)):
+            oldnames = [newname]
+            for dir, subdirs, files in walk(join(root, newname)):
+                prefix = dir[len(root):]
+                
+                for excd in IGNORED_METADIRS:
+                    if excd in subdirs:
+                        subdirs.remove(excd)
 
+                oldnames.extend([join(prefix, n) for n in subdirs+files])
+
+            oldnames.sort(lambda x,y: cmp(y.name, x.name))
+
+            self._removePathnames(root, oldnames)
+            self._addSubtree(root, newname)
+        else:
+            self._removePathnames(root, [oldname])
+            self._addPathnames(root, [newname])
+            
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Execute ``hg init``.
