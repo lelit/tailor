@@ -335,8 +335,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             # Here we are in this situation, since upstream VCS already
             # moved the item. OTOH, svn really treats "mv" as "cp+rm",
             # so we do the same here
-            self._removePathnames(root, oldname)
-            self._addPathnames(root, newname)
+            self._removePathnames(root, [oldname])
+            self._addPathnames(root, [newname])
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
