@@ -1,12 +1,12 @@
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- baazar-ng support
+# :Progetto: vcpx -- bazaar-ng support
 # :Creato:   ven 20 mag 2005 08:15:02 CEST
 # :Autore:   Johan Rydberg <jrydberg@gnu.org>
 # :Licenza:  GNU General Public License
 # 
 
 """
-This module implements the backends for Baazar-NG.
+This module implements the backends for Bazaar-NG.
 """
 
 __docformat__ = 'reStructuredText'
