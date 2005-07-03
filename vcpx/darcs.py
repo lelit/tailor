@@ -196,7 +196,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Do the actual work of applying the changeset to the working copy.
         """
 
-        cmd = [DARCS_CMD, "pull", "--all", "--patches", changeset.revision]
+        if changeset.revision.startswith('tagged '):
+            selector = '--tags'
+            revtag = changeset.revision[7:]
+        else:
+            selector = '--patches'
+            revtag = changeset.revision
+            
+        cmd = [DARCS_CMD, "pull", "--all", selector, revtag]
         pull = ExternalCommand(cwd=root, command=cmd)
         output = pull.execute(stdout=PIPE)
         
@@ -205,7 +212,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 "%s returned status %d saying \"%s\"" %
                 (str(pull), pull.exit_status, output.strip()))
 
-        cmd = [DARCS_CMD, "changes", "--patches", changeset.revision,
+        cmd = [DARCS_CMD, "changes", selector, revtag,
                "--xml-output", "--summ"]
         changes = ExternalCommand(cwd=root, command=cmd)
         last = changesets_from_darcschanges(changes.execute(stdout=PIPE))
