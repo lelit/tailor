@@ -25,8 +25,15 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [HG_CMD, "add"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        from os.path import join, isdir
+
+        # Currently hg does not handle directories at all, so filter
+        # them out.
+        
+        notdirs = [n for n in names if not isdir(join(root, n))]
+        if notdirs:
+            cmd = [HG_CMD, "add"]
+            ExternalCommand(cwd=root, command=cmd).execute(notdirs)
 
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
