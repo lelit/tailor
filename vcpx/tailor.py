@@ -15,6 +15,8 @@ unversioned file named ``tailor.info`` at the root.
 
 __docformat__ = 'reStructuredText'
 
+__version__ = '0.9.0'
+
 from optparse import OptionParser, OptionGroup, make_option
 from dualwd import DualWorkingDir
 from source import InvocationError
@@ -551,6 +553,7 @@ def main():
     from changes import Changeset
     
     parser = OptionParser(usage='%prog [options] [project ...]',
+                          version=__version__,
                           option_list=GENERAL_OPTIONS)
     
     bsoptions = OptionGroup(parser, "Bootstrap options")

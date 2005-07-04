@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+from vcpx.tailor import __version__ as VERSION
 
 setup(name='tailor',
-    version='devel-2005-04-19',
+    version=VERSION,
     author='Lele Gaifax',
     author_email='lele@nautilus.homeip.net',
     packages=['vcpx'],
