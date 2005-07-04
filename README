@@ -54,7 +54,7 @@ two way sync::
 Installation
 ============
 
-tailor.py is written in Python, and thus Python must be installed on
+tailor is written in Python, and thus Python must be installed on
 your system to use it.  It has been successfully used with Python 2.3
 and 2.4.
 
@@ -62,11 +62,11 @@ Since it relies on external tools to do the real work such as `cvs`,
 `darcs` and `svn`, they need to be installed as well, although only
 those you will actually use.
 
-Make tailor.py executable::
+Make tailor executable::
 
- $ chmod +x tailor.py
+ $ chmod +x tailor
 
-You can either run tailor.py where it is currently located, or move it
+You can either run tailor where it is currently located, or move it
 along with the vcpx directory to a location in your PATH.
 
 There's even a standard setup.py that you may use to install the
@@ -78,14 +78,14 @@ Examples
 
 1. Bootstrap a new tailored project, starting at upstream revision 10::
 
-    $ tailor.py -b -s svn -R http://svn.server/path/to/svnrepo \
+    $ tailor -b -s svn -R http://svn.server/path/to/svnrepo \
       --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
 
 2. Bootstrap a new product, fetching from CVS and storing under SVN:
    this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
    already under SVN::
 
-    $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
+    $ tailor --source-kind cvs --target-kind svn --bootstrap \
                 --repository :pserver:cvs.zope.org:/cvs-repository \
                 --module CMF/CMFCore ~/svnwc/cmfcore
 
@@ -94,16 +94,16 @@ Examples
    extracted as "CMFTopic" (ie, the last component of the module
    name)::
 
-    $ tailor.py -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
+    $ tailor -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
                 -m CMF/CMFTopic ~/darcs/cmftopic
               
 4. Merge upstream changes since last update/bootstrap::
 
-    $ tailor.py ~/svnwc/MyProduct
+    $ tailor ~/svnwc/MyProduct
 
 5. Migrate a whole SVN repository, starting from the beginning::
 
-    $ tailor.py -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
+    $ tailor -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
       --subdir testsvn --revision 1 testdir
 
    .. warning:: When using --revision with a SVN source repository, be
@@ -112,7 +112,7 @@ Examples
 
 6. Bootstrap from a CVS branch, starting from a given point in time::
 
-    $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
+    $ tailor -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
                 --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
                 --module something new-darcs-repository
 
@@ -120,7 +120,7 @@ Examples
 Resolving conflicts
 ===================
 
-Should one of the replayed changes generate any conflict, tailor.py
+Should one of the replayed changes generate any conflict, tailor
 will prompt the user to correct them. This is done after the upstream
 patch has been applied and before the final commit on the target
 system, so that manually tweaking the conflict can produce a clean
@@ -234,7 +234,7 @@ For example, this is the script I'm using to test it::
 that, as you can see, specifies the context needed by tailor to do its
 work. With the following command line::
 
-    $ tailor.py --verbose --interactive tailor.cmds
+    $ tailor --verbose --interactive tailor.cmds
     Welcome to the Tailor interactive session: you can issue several commands
     with the usual `readline` facilities. With "help" you'll get a list of
     available commands.
@@ -317,7 +317,7 @@ any single changeset::
 Further help
 ============
 
-See the output of ``tailor.py -h`` for some further tips.  There's
+See the output of ``tailor -h`` for some further tips.  There's
 also a `wiki page`_ that may give you some other hints.  The
 development of Tailor is mainly driven by user requests at this point,
 and the preferred comunication media is the dedicated `mailing list`_

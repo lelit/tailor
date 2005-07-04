@@ -7,8 +7,9 @@ setup(name='tailor',
     author='Lele Gaifax',
     author_email='lele@nautilus.homeip.net',
     packages=['vcpx'],
-    scripts=['tailor.py'],
-    description='A tool to migrate changesets between CVS, Subversion, darcs and monotone repositories.',
+    scripts=['tailor'],
+    description='A tool to migrate changesets between CVS, Subversion, '
+      'Darcs, Bazaar-ng, Codeville, Monotone and Mercurial repositories.',
     long_description="""\
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
