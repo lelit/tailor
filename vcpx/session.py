@@ -227,12 +227,12 @@ class Session(Cmd):
         Print or set the verbosity on external commands execution.
         """
 
-        from shwrap import SystemCommand
+        from shwrap import ExternalCommand
         
         if arg:
-            SystemCommand.VERBOSE = yesno(arg)
+            ExternalCommand.VERBOSE = yesno(arg)
 
-        self.__log('Print executed commands: %s' % SystemCommand.VERBOSE)
+        self.__log('Print executed commands: %s' % ExternalCommand.VERBOSE)
 
     def do_force_output_encoding(self, arg):
         """
@@ -244,15 +244,15 @@ class Session(Cmd):
         settings from the user environment.
         """
 
-        from shwrap import SystemCommand
+        from shwrap import ExternalCommand
         
         if arg:
             if arg == 'None':
-                SystemCommand.FORCE_ENCODING = None
+                ExternalCommand.FORCE_ENCODING = None
             else:
-                SystemCommand.FORCE_ENCODING = arg
+                ExternalCommand.FORCE_ENCODING = arg
 
-        self.__log('Forced output encoding: %s' % SystemCommand.FORCE_ENCODING)
+        self.__log('Forced output encoding: %s' % ExternalCommand.FORCE_ENCODING)
 
     def do_patch_name_format(self, arg):
         """
@@ -673,8 +673,8 @@ class Session(Cmd):
 
         from os.path import isdir
         from dualwd import DualWorkingDir
-        from darcs import changesets_from_darcschanges
-        from shwrap import SystemCommand, shrepr
+        from darcs import DARCS_CMD, changesets_from_darcschanges
+        from shwrap import ExternalCommand, PIPE
         
         if not (self.source_repository and self.target_repository and
                 isdir(self.source_repository) and
@@ -689,11 +689,10 @@ class Session(Cmd):
             self.__err('Needs a patchname to proceed')
             return
         
-        c = SystemCommand(working_dir=self.source_repository,
-                          command="darcs changes --patches=%(patch)s"
-                                  " --xml-output --summ")
-        last = changesets_from_darcschanges(c(output=True,
-                                              patch=shrepr(arg)),
+        c = ExternalCommand(cwd=self.source_repository,
+                            command=[DARCS_CMD, "changes", "--patches",
+                                     arg, "--xml-output", "--summ"])
+        last = changesets_from_darcschanges(c.execute(output=PIPE),
                                             unidiff=True,
                                             repodir=self.source_repository)
         
@@ -703,7 +702,7 @@ class Session(Cmd):
         
         cset = last[0]
         cset.applyPatch(working_dir=self.target_repository,
-                        patch_options="-p1 --force")
+                        patch_options=["-p1", "--force"])
         
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         dwd.replayChangeset(self.target_repository, self.target_module, cset,
