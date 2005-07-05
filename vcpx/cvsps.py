@@ -192,6 +192,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                            "revision %s", e.name,
                                            e.new_revision)
                     e.action_kind = e.ADDED
+                    self.__createParentCVSDirectories(changeset, root, e.name)
                 elif info.cvs_version == e.new_revision:
                     if logger: logger.debug("skipping '%s' since it's already "
                                             "at revision %s", e.name,
