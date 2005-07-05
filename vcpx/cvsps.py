@@ -220,35 +220,26 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
                 rmtree(join(root, e.name))
             else:
-                cvsup(output=True, entry=shrepr(e.name),
-                      revision=e.new_revision)
-            
-            cmd = [CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
-            cvsup = ExternalCommand(cwd=root, command=cmd)
-            cvsup.execute(e.name, stdout=PIPE)
-            
-            if cvsup.exit_status:
-                if logger:
-                    logger.warning("%s returned status %s, retrying once..." %
-                                   (str(cvsup), cvsup.exit_status))
-                sleep(2)
-                cvsup.execute(e.name, stdout=PIPE)
-                if cvsup.exit_status:
-                    if logger:
-                        logger.warning("%s returned status %s, "
-                                       "retrying once more..." %
-                                       (str(cvsup), cvsup.exit_status))
-                    sleep(4)
+                cmd = [CVS_CMD, "-q", "update", "-d", "-r%s" % e.new_revision]
+                cvsup = ExternalCommand(cwd=root, command=cmd)
+                retry = 0
+                while True:
                     cvsup.execute(e.name, stdout=PIPE)
+            
                     if cvsup.exit_status:
+                        retry += 1
+                        if retry>3:
+                            break
+                        delay = 2**retry
                         if logger:
-                            logger.warning("%s returned status %s, retrying "
-                                           "one last time..." %
-                                           (str(cvsup), cvsup.exit_status))
-                        sleep(8)
-                        cvsup(output=True, entry=shrepr(e.name),
-                              revision=e.new_revision)
-
+                            logger.warning("%s returned status %s, "
+                                           "retrying in %d seconds..." %
+                                           (str(cvsup), cvsup.exit_status,
+                                            delay))
+                        sleep(retry)
+                    else:
+                        break
+                    
                 if cvsup.exit_status:
                     raise ChangesetApplicationFailure(
                         "%s returned status %s" % (str(cvsup),
