@@ -36,6 +36,27 @@ def compare_cvs_revs(rev1, rev2):
     return cmp(r1, r2)
 
 
+class CvsLog(SystemCommand):
+    COMMAND = "TZ=UTC cvs -f -d%(repository)s rlog -N %(branch)s %(since)s %(module)s > %(tempfilename)s 2>&1"
+       
+    def __call__(self, output=None, dry_run=False, **kwargs):
+        since = kwargs.get('since')
+        if since:
+            kwargs['since'] = "-d'%s UTC<'" % since
+        else:
+            kwargs['since'] = ''
+
+        branch = kwargs.get('branch') or 'HEAD'
+        kwargs['branch'] = "-r:%s" % branch
+        
+        
+        self.rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
+        logfn = kwargs['tempfilename'] = self.rontf.name
+        
+        SystemCommand.__call__(self, output=False, dry_run=dry_run, **kwargs)
+
+        return open(logfn)
+
 def changesets_from_cvslog(log, module):
     """
     Parse CVS log.
@@ -285,36 +306,37 @@ class CvsWorkingDir(CvspsWorkingDir):
     CVS commits.
     """
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
-                              branch=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         from os.path import join, exists
         from datetime import timedelta
-
-        if branch is None:
-            entries = CvsEntries(root)
-            youngest_entry = entries.getYoungestEntry()
-            if youngest_entry is None:
-                raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
-
-            branch = ''
-            fname = join(root, 'CVS', 'Tag')
-            if exists(fname):
-                tag = open(fname).read()
-                if tag[0] in 'NT':
-                    branch=tag[1:-1]
-
+        
+        entries = CvsEntries(root)
+        youngest_entry = entries.getYoungestEntry()
+        if youngest_entry is None:
+            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
+        
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
-            since = None
+            youngest_ts = youngest_entry.timestamp
+            youngest_ts -= timedelta(days=15)
+            since = youngest_ts.isoformat(sep=' ')
         else:
             # Assume this is from __getGlobalRevision()
-            since, author = sincerev.split(' by ')
+            since,author = sincerev.split(' by ')
 
-        cmd = [CVS_CMD, "-f", "-d", "%(repository)s", "rlog", "-N",
-               "-r:%(branch)s"]
-        if since:
-            cmd.extend(["-d", "%(since)s UTC<"])
+        branch = ''
+        fname = join(root, 'CVS', 'Tag')
+        if exists(fname):
+            tag = open(fname).read()
+            if tag[0] in 'NT':
+                branch=tag[1:-1]
+
+        cvslog = CvsLog(working_dir=root)
+        
+        changesets = []
+        log = cvslog(output=True, since=since, branch=branch,
+                     repository=repository, module=module)
 
         cvslog = ExternalCommand(command=cmd)
         
