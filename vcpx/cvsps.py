@@ -140,15 +140,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## UpdatableSourceWorkingDir
     
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
+                              branch=None):
         from os.path import join, exists
 
-        branch="HEAD"
-        fname = join(root, 'CVS', 'Tag')
-        if exists(fname):
-            tag = open(fname).read()
-            if tag.startswith('T'):
-                branch=tag[1:-1]
+        if branch is None:
+            branch="HEAD"
+            fname = join(root, 'CVS', 'Tag')
+            if exists(fname):
+                tag = open(fname).read()
+                if tag.startswith('T'):
+                    branch=tag[1:-1]
 
         if sincerev:
             sincerev = int(sincerev)
@@ -266,23 +268,34 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not module:
             raise InvocationError("Must specify a module name")
 
+        timestamp = None
+        if revision is not None:
+            # If the revision contains a space, assume it really
+            # specify a branch and a timestamp. If it starts with
+            # a digit, assume it's a timestamp. Otherwise, it must
+            # be a branch name
+            if revision[0] in '0123456789' or revision == 'INITIAL':
+                timestamp = revision
+                revision = None
+            elif ' ' in revision:
+                revision, timestamp = revision.split(' ', 1)
+
         wdir = join(basedir, subdir)
+        csets = self.getUpstreamChangesets(wdir, repository, module,
+                                           branch=revision or 'HEAD')
+        csets.reverse()
+
+        if timestamp == 'INITIAL':
+            timestamp = csets[-1].date.isoformat(sep=' ')
+            
         if not exists(join(wdir, 'CVS')):
             cmd = [CVS_CMD, "-q", "-d", repository, "checkout",
                    "-d", subdir]
-            if not revision is None:
-                # If the revision contains a space, assume it really
-                # specify a branch and a timestamp. If it starts with
-                # a digit, assume it's a timestamp. Otherwise, it must
-                # be a branch name
-                if revision[0] in '0123456789':
-                    cmd.extend(["-D", revision])
-                elif ' ' in revision:
-                    branch, timestamp =revision.split(' ', 1)
-                    cmd.extend(["-r", branch, "-D", timestamp])
-                else:
-                    cmd.extend(["-r", revision])
-
+            if revision:
+                cmd.extend(["-r", revision])
+            if timestamp:
+                cmd.extend(["-D", "%s UTC" % timestamp])
+            
             checkout = ExternalCommand(cwd=basedir, command=cmd)
             checkout.execute(module)
             
@@ -300,8 +313,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # update cvsps cache, then loop over the changesets and find the
         # last applied, to find out the actual cvsps revision
 
-        csets = self.getUpstreamChangesets(wdir, repository, module)
-        csets.reverse()
         found = False
         for cset in csets:
             for m in cset.entries:

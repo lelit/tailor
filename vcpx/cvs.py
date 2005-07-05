@@ -285,43 +285,43 @@ class CvsWorkingDir(CvspsWorkingDir):
     CVS commits.
     """
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
+                              branch=None):
         from os.path import join, exists
         from datetime import timedelta
-        
-        entries = CvsEntries(root)
-        youngest_entry = entries.getYoungestEntry()
-        if youngest_entry is None:
-            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
-        
+
+        if branch is None:
+            entries = CvsEntries(root)
+            youngest_entry = entries.getYoungestEntry()
+            if youngest_entry is None:
+                raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
+
+            branch = ''
+            fname = join(root, 'CVS', 'Tag')
+            if exists(fname):
+                tag = open(fname).read()
+                if tag[0] in 'NT':
+                    branch=tag[1:-1]
+
         if not sincerev:
             # We are bootstrapping, trying to collimate the
             # actual revision on disk with the changesets.
-            youngest_ts = youngest_entry.timestamp
-            youngest_ts -= timedelta(days=15)
-            since = youngest_ts.isoformat(sep=' ')
+            since = None
         else:
             # Assume this is from __getGlobalRevision()
-            since,author = sincerev.split(' by ')
-
-        branch = ''
-        fname = join(root, 'CVS', 'Tag')
-        if exists(fname):
-            tag = open(fname).read()
-            if tag[0] in 'NT':
-                branch=tag[1:-1]
+            since, author = sincerev.split(' by ')
 
         cmd = [CVS_CMD, "-f", "-d", "%(repository)s", "rlog", "-N",
-               "-r", ":%(branch)s"]
+               "-r:%(branch)s"]
         if since:
-            cmd.append(["-d", "%(since)s UTC"])
-        cmd.append(module)
+            cmd.extend(["-d", "%(since)s UTC<"])
 
-        cvslog = ExternalCommand(working_dir=root, command=cmd)
-        log = cvslog.execute(stdout=PIPE, stderr=STDOUT,
-                             repository=repository, since=since,
-                             branch=branch, TZ='UTC')
+        cvslog = ExternalCommand(command=cmd)
         
+        log = cvslog.execute(module, stdout=PIPE, stderr=STDOUT,
+                             repository=repository, since=since,
+                             branch=branch or 'HEAD', TZ='UTC')
+
         if cvslog.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
