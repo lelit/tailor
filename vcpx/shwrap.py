@@ -70,13 +70,16 @@ class ExternalCommand:
         
     def __str__(self):
         result = []
+        if self.cwd:
+            result.append(self.cwd)
+            result.append(' ')
+        result.append('$')
         needquote = False
         for arg in self._last_command or self.command:
             bs_buf = []
             
             # Add a space to separate this argument from the others
-            if result:
-                result.append(' ')
+            result.append(' ')
 
             needquote = (" " in arg) or ("\t" in arg)
             if needquote:
@@ -103,9 +106,10 @@ class ExternalCommand:
                 result.extend(bs_buf)
 
             if needquote:
+                result.extend(bs_buf)
                 result.append('"')
 
-        return "+ %s (in %s)" % (''.join(result), self.cwd)
+        return ''.join(result)
         
     def execute(self, *args, **kwargs):
         """Execute the command."""

@@ -52,3 +52,17 @@ class SystemCommandTest(TestCase):
         out = c.execute(stdout=PIPE)
         self.assertEqual(out.read(), "/tmp\n")
 
+
+    def testStringification(self):
+        """Verify the conversion from sequence of args to string"""
+
+        c = ExternalCommand(['some spaces here'])
+        self.assertEqual(str(c), '$ "some spaces here"')
+
+        c = ExternalCommand(['a "double quoted" arg'])
+        self.assertEqual(str(c), r'$ "a \"double quoted\" arg"')
+
+        c = ExternalCommand([r'a \" backslashed quote mark\\'])
+        self.assertEqual(str(c), r'$ "a \\\" backslashed quote mark\\\\"')
+        
+        
