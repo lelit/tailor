@@ -116,12 +116,6 @@ Examples
                 --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
                 --module something new-darcs-repository
 
-7. Bootstrap from a CVS branch, starting from the beginning of time::
-
-    $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
-                --revision 'unstable-branch INITIAL' \
-                --module something new-darcs-repository
-
 
 Resolving conflicts
 ===================

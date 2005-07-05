@@ -21,70 +21,6 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 CVS_CMD = 'cvs'
 CVSPS_CMD = 'cvsps'   
 
-class CvsPsLog(SystemCommand):
-    COMMAND = "cvsps %(update)s-b %(branch)s 2>/dev/null"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        update = kwargs.get('update', '')
-        if update:
-            update = '-u '
-        kwargs['update'] = update
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=dry_run, **kwargs)
-
-    
-class CvsUpdate(SystemCommand):
-    COMMAND = 'cvs -q %(dry)supdate -d %(revision)s %(entry)s 2>&1'
-    
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        if dry_run:
-            kwargs['dry'] = '-n '
-        else:
-            kwargs['dry'] = ''
-
-        if kwargs['revision'] is None:
-            kwargs['revision'] = ''
-        else:
-            kwargs['revision'] = '-r%s' % kwargs['revision']
-            
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=False, **kwargs)
-
-
-class CvsCommit(SystemCommand):
-    COMMAND = "cvs -q ci -F %(logfile)s %(entries)s"
-    
-
-class CvsRemove(SystemCommand):
-    COMMAND = "cvs -q remove %(entry)s"
-
-
-class CvsCheckout(SystemCommand):
-    COMMAND = "cvs -q -d%(repository)s checkout %(revision)s -d%(workingdir)s %(module)s"
-
-    def __call__(self, output=None, dry_run=False, **kwargs):
-        revision = kwargs['revision']
-        if revision is None:
-            revision = ''
-        else:
-            # If the revision contains a space, assume it really
-            # specify a branch and a timestamp. If it starts with
-            # a digit, assume it's a timestamp. Otherwise, it must
-            # be a branch name
-            if revision[0] in '0123456789':
-                revision = "-D'%s'" % revision
-            elif ' ' in revision:
-                branch, timestamp =revision.split(' ', 1)
-                revision = "-r%s -D'%s'" % (branch, timestamp)
-            else:
-                revision = '-r%s' % revision
-        kwargs['revision'] = revision
-        
-        return SystemCommand.__call__(self, output=output,
-                                      dry_run=False, **kwargs)
-
-
 def changesets_from_cvsps(log, sincerev=None):
     """
     Parse CVSps log.
@@ -204,17 +140,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## UpdatableSourceWorkingDir
     
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
+                              branch=None):
         from os.path import join, exists
-         
-        cvsps = CvsPsLog(working_dir=root)
-        
-        branch="HEAD"
-        fname = join(root, 'CVS', 'Tag')
-        if exists(fname):
-            tag = open(fname).read()
-            if tag.startswith('T'):
-                branch=tag[1:-1]
+
+        if branch is None:
+            branch="HEAD"
+            fname = join(root, 'CVS', 'Tag')
+            if exists(fname):
+                tag = open(fname).read()
+                if tag.startswith('T'):
+                    branch=tag[1:-1]
 
         if sincerev:
             sincerev = int(sincerev)
@@ -344,27 +280,26 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             elif ' ' in revision:
                 revision, timestamp = revision.split(' ', 1)
 
-        timestamp = None
-        if revision is not None:
-            # If the revision contains a space, assume it really
-            # specify a branch and a timestamp. If it starts with
-            # a digit, assume it's a timestamp. Otherwise, it must
-            # be a branch name
-            if revision[0] in '0123456789' or revision == 'INITIAL':
-                timestamp = revision
-                revision = None
-            elif ' ' in revision:
-                revision, timestamp = revision.split(' ', 1)
-
         wdir = join(basedir, subdir)
+        csets = self.getUpstreamChangesets(wdir, repository, module,
+                                           branch=revision or 'HEAD')
+        csets.reverse()
+
+        if timestamp == 'INITIAL':
+            timestamp = csets[-1].date.isoformat(sep=' ')
+            
         if not exists(join(wdir, 'CVS')):
-            c = CvsCheckout(working_dir=basedir)
-            c(output=True,
-              repository=repository,
-              module=module,
-              revision=revision,
-              workingdir=shrepr(subdir))
-            if c.exit_status:
+            cmd = [CVS_CMD, "-q", "-d", repository, "checkout",
+                   "-d", subdir]
+            if revision:
+                cmd.extend(["-r", revision])
+            if timestamp:
+                cmd.extend(["-D", "%s UTC" % timestamp])
+            
+            checkout = ExternalCommand(cwd=basedir, command=cmd)
+            checkout.execute(module)
+            
+            if checkout.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(checkout),
                                                checkout.exit_status))
@@ -378,8 +313,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # update cvsps cache, then loop over the changesets and find the
         # last applied, to find out the actual cvsps revision
 
-        csets = self.getUpstreamChangesets(wdir, repository, module)
-        csets.reverse()
         found = False
         for cset in csets:
             for m in cset.entries:
