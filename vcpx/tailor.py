@@ -519,7 +519,9 @@ BOOTSTRAP_OPTIONS = [
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "
                      "version control kind. For CVS it may be either a branch "
-                     "name, a timestamp or both separated by a space. "
+                     "name, a timestamp or both separated by a space, and "
+                     "timestamp may be 'INITIAL' to denote the beginning of "
+                     "time for the given branch. "
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),
