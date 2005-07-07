@@ -135,11 +135,9 @@ class ChangeSetCollector(object):
         while l.startswith('cvs rlog: Logging '):
             currentdir = l[18:-1]
             # strip away first component, the name of the product
-            if '/' in currentdir:
-                assert currentdir.startswith(self.module), \
-                       "Directory %s does not start with %s" % (currentdir,
-                                                                self.module)
-                self.__currentdir = currentdir[len(self.module)+1:]
+            slash = currentdir.find('/')
+            if slash >= 0:
+                self.__currentdir = currentdir[slash+1:]
             else:
                 self.__currentdir = ''
             l = self.log.readline()
