@@ -77,7 +77,6 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, isdir
-        from os.path import join
         from os import walk
         from dualwd import IGNORED_METADIRS
 
