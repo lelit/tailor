@@ -80,24 +80,25 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
+        cmd = [HG_CMD, "copy"]
+        copy = ExternalCommand(cwd=root, command=cmd)
         if isdir(join(root, newname)):
-            oldnames = [newname]
+            # Given lack of support for directories in current HG,
+            # loop over all files under the new directory and
+            # do a copy on them.
+            skip = len(root)+len(newname)+2
             for dir, subdirs, files in walk(join(root, newname)):
-                prefix = dir[len(root):]
+                prefix = dir[skip:]
                 
                 for excd in IGNORED_METADIRS:
                     if excd in subdirs:
                         subdirs.remove(excd)
 
-                oldnames.extend([join(prefix, n) for n in subdirs+files])
-
-            oldnames.sort(lambda x,y: cmp(y.name, x.name))
-
-            self._removePathnames(root, oldnames)
-            self._addSubtree(root, newname)
+                for f in files:
+                    copy.execute(join(oldname, prefix, f),
+                                 join(newname, prefix, f))
         else:
-            self._removePathnames(root, [oldname])
-            self._addPathnames(root, [newname])
+            copy.execute(oldname, newname)
             
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
