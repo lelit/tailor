@@ -306,7 +306,7 @@ class TailorizedProject(object):
         if repository.endswith('/'):
             repository = repository[:-1]
 
-        if module and module.endswith(sep):
+        if module and module.endswith('/'):
             module = module[:-1]
             
         if not subdir:
