@@ -151,7 +151,8 @@ class ExternalCommand:
                             stdout=kwargs.get('stdout'),
                             stderr=kwargs.get('stderr'),
                             env=kwargs.get('env'),
-                            cwd=kwargs.get('cwd'))
+                            cwd=kwargs.get('cwd'),
+                            universal_newlines=True)
         except OSError:
             stderr.write("'%s' does not exist!" % self._last_command[0])
             self.exit_status = -1
