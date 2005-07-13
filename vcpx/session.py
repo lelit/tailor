@@ -523,8 +523,12 @@ class Session(Cmd):
         Print the changeset being applied.
         """
 
-        self.__log("Changeset %s:\n%s" % (changeset.revision,
-                                            changeset.log))
+        try:
+            self.__log("Changeset %s:\n%s" % (changeset.revision,
+                                              changeset.log))
+        except UnicodeEncodeError:
+            self.__log("Changeset %s:\n%s" % (changeset.revision,
+                                              ">>Non-printable changelog<<"))
         return True
 
     def shouldApply(self, root, changeset):

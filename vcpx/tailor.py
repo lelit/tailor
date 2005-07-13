@@ -357,8 +357,11 @@ class TailorizedProject(object):
 
         if self.verbose:
             print "Changeset %s:" % changeset.revision
-            print changeset.log
-
+            try:
+                print changeset.log
+            except UnicodeEncodeError:
+                print ">>> Non-printable changelog <<<"
+                
         return True
     
     def applied(self, root, changeset):
