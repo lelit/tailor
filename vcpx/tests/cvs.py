@@ -293,7 +293,7 @@ Fake changelog 4
 
         cset = csets[0]
         self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 11))
+        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 12))
         
         cset = csets[1]
         self.assertEqual(len(cset.entries), 1)
@@ -309,7 +309,7 @@ Fake changelog 4
         
         cset = csets[3]
         self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 36))
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 45))
         
     BRANCHES_TEST = """\
 cvs rlog: Logging Archetypes/tests
@@ -643,7 +643,7 @@ cvs rlog: Logging ATContentTypes/types/criteria
         
         cset = csets[1]
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 5))
+        self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9))
         self.assertEqual(cset.log, """\
 Recoded migration walkers to use a generator instead returning a list
 to make them much more memory efficient. Rewritten folder migration to

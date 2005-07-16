@@ -51,12 +51,17 @@ def changesets_from_cvslog(log, module):
     
     for cs in collected:
         if (last and last.author == cs.author and  last.log == cs.log and 
-            abs(last.date - cs.date) < threshold and 
+            abs(lastts - cs.date) < threshold and 
             not [e for e in cs.entries
                  if e.name in [n.name for n in last.entries]]):
             last.entries.extend(cs.entries)
+            if lastts < cs.date:
+                lastts = cs.date
         else:
+            if last:
+                last.date = lastts
             last = cs
+            lastts = cs.date
             collapsed.append(cs)
 
     return collapsed
