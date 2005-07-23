@@ -81,14 +81,18 @@ Examples
     $ tailor -b -s svn -R http://svn.server/path/to/svnrepo \
       --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
 
-2. Bootstrap a new product, fetching from CVS and storing under SVN:
-   this will create the directory "~/svnwc/cmfcore"; "~/svnwc" must be
-   already under SVN::
+2. Bootstrap a new product, fetching its whole CVS repository and
+   storing under SVN
 
-    $ tailor --source-kind cvs --target-kind svn --bootstrap \
+    $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
                 --repository :pserver:cvs.zope.org:/cvs-repository \
-                --module CMF/CMFCore ~/svnwc/cmfcore
+                --module CMF/CMFCore --revision INITIAL cmfcore
 
+   c. Finally run it again without --bootstrap to bring the repository
+      in sync with latest CVS version::
+
+      $ tailor -D -v $HOME/svnwc/cmfcore
+      
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
    extracted as "CMFTopic" (ie, the last component of the module
