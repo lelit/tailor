@@ -84,7 +84,17 @@ Examples
 2. Bootstrap a new product, fetching its whole CVS repository and
    storing under SVN
 
-    $ tailor.py --source-kind cvs --target-kind svn --bootstrap \
+   a. First create a SVN repository and extract a working copy out of
+      it. This is needed also when using a CVS or a Monotone target::
+
+       $ cd $HOME
+       $ svnadmin create --fs-type fsfs svn_repo
+       $ svn co file://$HOME/svn_repo svnwc
+      
+   b. Then run tailor once to set up the repository::
+
+       $ cd $HOME/svnwc
+       $ tailor --source-kind cvs --target-kind svn --bootstrap \
                 --repository :pserver:cvs.zope.org:/cvs-repository \
                 --module CMF/CMFCore --revision INITIAL cmfcore
 
