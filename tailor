@@ -39,5 +39,6 @@ if __name__ == '__main__':
                 InvocationError, GetUpstreamChangesetsFailure,
                 ChangesetApplicationFailure), exc:
             print "%s: %s" % (exc.__doc__, exc)
-
-
+        except UnicodeEncodeError, exc:
+            print exc
+            print "You may want to specify a suitable charset using --encoding"

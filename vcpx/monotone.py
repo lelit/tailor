@@ -37,12 +37,16 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
+        from sys import getdefaultencoding
+
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+
         rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
         log = open(rontf.name, "w")
-        log.write(remark)
+        log.write(remark.encode(encoding))
         log.write('\n')
         if changelog:
-            log.write(changelog)
+            log.write(changelog.encode(encoding))
             log.write('\n')
         log.close()
 

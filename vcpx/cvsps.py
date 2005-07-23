@@ -477,14 +477,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from shwrap import ReopenableNamedTemporaryFile
+        from sys import getdefaultencoding
+        
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
         
         rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
         log = open(rontf.name, "w")
-        log.write(remark)
+        log.write(remark.encode(encoding))
         if changelog:
             log.write('\n')
-            log.write(changelog)
-        log.write("\n\nOriginal author: %s\nDate: %s\n" % (author, date))
+            log.write(changelog.encode(encoding))
+        log.write("\n\nOriginal author: %s\nDate: %s\n" % (
+            author.encode(encoding), date))
         log.close()            
 
         cmd = [CVS_CMD, "-q", "ci", "-F", rontf.name]

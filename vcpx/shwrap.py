@@ -114,7 +114,7 @@ class ExternalCommand:
     def execute(self, *args, **kwargs):
         """Execute the command."""
 
-        from sys import stderr
+        from sys import stderr, getdefaultencoding
         from os import environ
         from cStringIO import StringIO
         
@@ -158,8 +158,9 @@ class ExternalCommand:
             self.exit_status = -1
             return
         
-        if input and self.FORCE_ENCODING:
-            input = input.encode(self.FORCE_ENCODING)
+        if input:
+            input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
+            
         out = process.communicate(input=input)[0]
         if out:
             out = StringIO(out)
