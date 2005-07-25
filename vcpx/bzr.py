@@ -71,6 +71,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
              BOOTSTRAP_CHANGELOG
         
         self._initializeWorkingDir(root, repository, module, subdir)
+        revision = changeset.revision
         self._commit(root, changeset.date, AUTHOR,
                      BOOTSTRAP_PATCHNAME % module,
                      BOOTSTRAP_CHANGELOG % locals(),

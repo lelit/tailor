@@ -73,6 +73,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
              BOOTSTRAP_CHANGELOG
         
         self._initializeWorkingDir(root, repository, module, subdir)
+        revision = changeset.revision
         self._commit(root, changeset.date, '%s@%s' % (AUTHOR, HOST),
                      BOOTSTRAP_PATCHNAME % module,
                      BOOTSTRAP_CHANGELOG % locals(),
