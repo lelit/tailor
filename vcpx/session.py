@@ -498,13 +498,15 @@ class Session(Cmd):
             self.source_module, self.source_repository))
 
         try:
-            self.source_revision = dwd.checkoutUpstreamRevision(
+            actual = dwd.checkoutUpstreamRevision(
                 self.current_directory, self.source_repository,
                 self.source_module, revision,
                 subdir=subdir, logger=self.logger)
         except:
             self.__err('Checkout failed', True)
             return
+
+        self.source_revision = actual.revision
         
         self.writeStateFile()
         
@@ -513,7 +515,7 @@ class Session(Cmd):
                                         self.source_repository,
                                         self.source_module,
                                         self.sub_directory,
-                                        self.source_revision)
+                                        actual)
         except:
             self.__err('Working copy initialization failed', True)
             return

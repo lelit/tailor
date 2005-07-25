@@ -60,19 +60,18 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [BAZAAR_CMD, "rename"]
         ExternalCommand(cwd=root, command=cmd).execute(old, new)
 
-    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
+    def initializeNewWorkingDir(self, root, repository, module, subdir,
+                                changeset):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
         """
 
-        from datetime import datetime
         from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
              BOOTSTRAP_CHANGELOG
         
-        now = datetime.now()
         self._initializeWorkingDir(root, repository, module, subdir)
-        self._commit(root, now, AUTHOR,
+        self._commit(root, changeset.date, AUTHOR,
                      BOOTSTRAP_PATCHNAME % module,
                      BOOTSTRAP_CHANGELOG % locals(),
                      entries=[subdir, '%s/...' % subdir])

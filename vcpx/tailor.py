@@ -344,7 +344,7 @@ class TailorizedProject(object):
         self.upstream_repos = repository
         self.module = module
         self.subdir = subdir
-        self.upstream_revision = actual
+        self.upstream_revision = actual.revision
 
         self.__saveStatus()
 

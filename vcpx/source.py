@@ -166,7 +166,7 @@ class UpdatableSourceWorkingDir(object):
         
         :revision: extract that revision/branch
 
-        Return the checked out revision.
+        Return the last applied changeset.
         """
 
         if not root:

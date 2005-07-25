@@ -259,7 +259,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get, or as a date if it starts with a number.
 
-        Return the effective cvsps revision.
+        Return the last applied changeset.
         """
 
         from os.path import join, exists
@@ -335,7 +335,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             if logger: logger.info("working copy up to cvsps revision %s",
                                    last.revision)
             
-        return last.revision
+        return last
     
     def _willApplyChangeset(self, root, changeset, applyable=None):
         """

@@ -259,12 +259,23 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         info = self.__getSvnInfo(wdir)
         
-        actual = info['Revision']
+        cmd = [SVN_CMD, "log", "--verbose", "--xml", "--revision", revision]
+        svnlog = ExternalCommand(cwd=wdir, command=cmd)
+        output = svnlog.execute(stdout=PIPE)
+        
+        if svnlog.exit_status:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(changes), changes.exit_status, output.read()))
+        
+        csets = changesets_from_svnlog(output, info['URL'], repository, module)
+        
+        last = csets[0]
         
         if logger: logger.info("working copy up to svn revision %s",
-                               actual)
-        
-        return actual 
+                               last.revision)
+
+        return last
     
     ## SyncronizableTargetWorkingDir
 

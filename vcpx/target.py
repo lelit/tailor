@@ -315,20 +315,19 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def initializeNewWorkingDir(self, root, repository, module, subdir, revision):
+    def initializeNewWorkingDir(self, root, repository, module, subdir,
+                                changeset):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
         """
 
-        from datetime import datetime
-
-        now = datetime.now()
         self._initializeWorkingDir(root, repository, module, subdir)
         patchname = BOOTSTRAP_PATCHNAME % module
+        revision = changeset.revision
         changelog = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, now, '%s@%s' % (AUTHOR, HOST), patchname, changelog,
-                     entries=[subdir])
+        self._commit(root, changeset.date, '%s@%s' % (AUTHOR, HOST), patchname,
+                     changelog, entries=[subdir])
 
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """

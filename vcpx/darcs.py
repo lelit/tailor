@@ -222,7 +222,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None, **kwargs):
         """
-        Concretely do the checkout of the upstream revision.
+        Concretely do the checkout of the upstream revision and return
+        the last applied changeset.
         """
 
         from os.path import join, exists
@@ -282,7 +283,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
         last = changesets_from_darcschanges(output)
         
-        return last[0].revision
+        return last[0]
 
     
     ## SyncronizableTargetWorkingDir
