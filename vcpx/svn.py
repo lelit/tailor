@@ -190,7 +190,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         info = self.__getSvnInfo(root)
 
-        return self.__parseSvnLog(log, info['URL'], repository, module)
+        return changesets_from_svnlog(log, info['URL'], repository, module)
 
     def __getSvnInfo(self, root):
         cmd = [SVN_CMD, "info"]
@@ -210,11 +210,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         return info
 
-    def __parseSvnLog(self, log, url, repository, module):
-        """Return an object representation of the ``svn log`` thru HEAD."""
-
-        return changesets_from_svnlog(log, url, repository, module)
-    
     def _applyChangeset(self, root, changeset, logger=None):
         cmd = [SVN_CMD, "update", "--revision", changeset.revision, "."]
         svnup = ExternalCommand(cwd=root, command=cmd)
