@@ -11,7 +11,7 @@ This module contains supporting classes for the ``darcs`` versioning system.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE
+from shwrap import ExternalCommand, PIPE, STDOUT
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
@@ -139,12 +139,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         
         cmd = [DARCS_CMD, "pull", "--dry-run"]
         pull = ExternalCommand(cwd=root, command=cmd)
-        output = pull.execute(repository, stdout=PIPE, TZ='UTC')
+        output = pull.execute(repository, stdout=PIPE, stderr=STDOUT, TZ='UTC')
         
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d saying \"%s\"" %
-                (str(pull), pull.exit_status, output.strip()))
+                (str(pull), pull.exit_status, output.read()))
 
         l = output.readline()
         while l and not (l.startswith('Would pull the following changes:') or
@@ -205,12 +205,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             
         cmd = [DARCS_CMD, "pull", "--all", selector, revtag]
         pull = ExternalCommand(cwd=root, command=cmd)
-        output = pull.execute(stdout=PIPE)
+        output = pull.execute(stdout=PIPE, stderr=STDOUT)
         
         if pull.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %d saying \"%s\"" %
-                (str(pull), pull.exit_status, output.strip()))
+                (str(pull), pull.exit_status, output.read()))
 
         cmd = [DARCS_CMD, "changes", selector, revtag,
                "--xml-output", "--summ"]
@@ -249,12 +249,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 if revision and revision<>'HEAD':
                     cmd.extend(["--tag", revision])
                 dpull = ExternalCommand(cwd=wdir, command=cmd)
-                output = dpull.execute(repository, stdout=PIPE)
+                output = dpull.execute(repository, stdout=PIPE, stderr=STDOUT)
                         
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
                         "%s returned status %d saying \"%s\"" %
-                        (str(dpull), dpull.exit_status, output.strip()))
+                        (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
             
@@ -263,21 +263,22 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if revision and revision<>'HEAD':
                 cmd.extend(["--tag", revision])
             dget = ExternalCommand(cwd=basedir, command=cmd)
-            output = dget.execute(repository, subdir, stdout=PIPE)
+            output = dget.execute(repository, subdir,
+                                  stdout=PIPE, stderr=STDOUT)
             
             if dget.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
-                    (str(dget), dget.exit_status, output.strip()))
+                    (str(dget), dget.exit_status, output.read()))
 
         cmd = [DARCS_CMD, "changes", "--last", "1", "--xml-output"]
         changes = ExternalCommand(cwd=wdir, command=cmd)
-        output = changes.execute(stdout=PIPE)
+        output = changes.execute(stdout=PIPE, stderr=STDOUT)
         
         if changes.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %d saying \"%s\"" %
-                (str(changes), changes.exit_status, output.strip()))
+                (str(changes), changes.exit_status, output.read()))
         
         last = changesets_from_darcschanges(output)
         
