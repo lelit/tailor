@@ -156,9 +156,8 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
    bootstrap a project that has nothing in its CVS upstream
    repository, or from a point in time where this condition was true.
 
-b) It does not work under Windows (no, that's not a feature :-). Maybe
-   replacing the shwrap machinery with something built on top of
-   subprocess_ that seems able to hide Windows crazyness...
+b) It's completely unsupported under Windows, evenif it now uses
+   2.4's subprocess_ that seems able to hide Windows crazyness...
 
 c) Monotone, Codeville and Baazar-NG are (currently) only supported as
    *target*
