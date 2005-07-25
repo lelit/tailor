@@ -21,6 +21,7 @@ from optparse import OptionParser, OptionGroup, make_option
 from dualwd import DualWorkingDir
 from source import InvocationError
 from session import interactive
+from svn import SvnWorkingDir
 
 STATUS_FILENAME = 'tailor.info'
 LOG_FILENAME = 'tailor.log'
@@ -532,6 +533,14 @@ BOOTSTRAP_OPTIONS = [
                      "by default it's the tail part of the module name."),
 ]
 
+VC_SPECIFIC_OPTIONS = [
+    make_option("--use-svn-propset", action="store_true", default=False,
+                help="Use 'svn propset' to set the real date and author of "
+                     "each commit, instead of appending these information to "
+                     "the changelog. This requires some tweaks on the SVN "
+                     "repository to enable revision propchanges."),
+]
+                
 class ExistingProjectError(Exception):
     "Project seems already tailored"
 
@@ -565,9 +574,13 @@ def main():
 
     upoptions = OptionGroup(parser, "Update options")
     upoptions.add_options(UPDATE_OPTIONS)
+
+    vcoptions = OptionGroup(parser, "VC specific options")
+    vcoptions.add_options(VC_SPECIFIC_OPTIONS)
     
     parser.add_option_group(bsoptions)
     parser.add_option_group(upoptions)
+    parser.add_option_group(vcoptions)
     
     options, args = parser.parse_args()
     
@@ -587,6 +600,8 @@ def main():
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
 
+    SvnWorkingDir.USE_PROPSET = options.use_svn_propset
+    
     if options.interactive:
         interactive(options, args)
     elif options.configfile:

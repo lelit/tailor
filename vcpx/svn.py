@@ -310,8 +310,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if changelog:
             log.write('\n')
             log.write(changelog.encode(encoding))
-        log.write("\n\nOriginal author: %s\nDate: %s\n" % (
-            author.encode(encoding), date))
+
+        # If we cannot use propset, fall back to old behaviour of
+        # appending these info to the changelog
+        
+        if not self.USE_PROPSET:
+            log.write("\n\nOriginal author: %s\nDate: %s\n" % (
+                author.encode(encoding), date))
+
         log.close()            
 
         cmd = [SVN_CMD, "commit", "--quiet", "--file", rontf.name]
@@ -321,7 +327,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             entries = ['.']
             
         commit.execute(entries)
-        
+
+        if self.USE_PROPSET:
+            cmd = [SVN_CMD, "propset", "%(propname)s",
+                   "--quiet", "--revprop", "-rHEAD"]
+            propset = ExternalCommand(cwd=root, command=cmd)
+
+            propset.execute(date.isoformat()+".000000Z", propname='svn:date')
+            propset.execute(author, propname='svn:author')
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem objects.

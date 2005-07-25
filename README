@@ -102,7 +102,26 @@ Examples
       in sync with latest CVS version::
 
       $ tailor -D -v $HOME/svnwc/cmfcore
-      
+
+   .. note:: In the step a) above, you may want to install an
+             appropriate hook in the repository to enable the
+             propset command to operate on unversioned properties,
+             as described in the `svn manual`__. Then you can
+             specify '--use-svn-propset' option, and tailor will
+             put the original author and timestamp in the proper
+             svn metadata instead of appending them to the changelog.
+
+             Beware: there is a note__ that revisions have to be
+             sorted in date order! This means that, if you have an
+             existing subversion repository, you can't really add in
+             another project.  The dates would all be interwined.
+             You would basically have to recreate the repo.  You can
+             work around this by using separate repos.
+
+__ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
+__ http://svn.haxx.se/users/archive-2004-05/0245.shtml
+   
+   
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
    extracted as "CMFTopic" (ie, the last component of the module
