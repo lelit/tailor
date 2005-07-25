@@ -375,7 +375,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from os.path import join
         from re import escape
         from dualwd import IGNORED_METADIRS
-        
+
         init = ExternalCommand(cwd=root, command=[DARCS_CMD, "initialize"])
         init.execute(stdout=PIPE)
 

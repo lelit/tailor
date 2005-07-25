@@ -90,7 +90,7 @@ Examples
        $ cd $HOME
        $ svnadmin create --fs-type fsfs svn_repo
        $ svn co file://$HOME/svn_repo svnwc
-      
+
    b. Then run tailor once to set up the repository::
 
        $ cd $HOME/svnwc
