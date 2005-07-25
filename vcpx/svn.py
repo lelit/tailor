@@ -188,6 +188,11 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if svnlog.exit_status:
             return []
 
+        info = self.__getSvnInfo(root)
+
+        return self.__parseSvnLog(log, info['URL'], repository, module)
+
+    def __getSvnInfo(self, root):
         cmd = [SVN_CMD, "info"]
         svninfo = ExternalCommand(cwd=root, command=cmd)
         output = svninfo.execute('.', stdout=PIPE, LANG='')
@@ -202,8 +207,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if l:
                 key, value = l.split(':', 1)
                 info[key] = value[1:]
-        
-        return self.__parseSvnLog(log, info['URL'], repository, module)
+
+        return info
 
     def __parseSvnLog(self, log, url, repository, module):
         """Return an object representation of the ``svn log`` thru HEAD."""
@@ -252,21 +257,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         else:
             if logger: logger.info("%s already exists, assuming it's a svn working dir" % wdir)
 
-        cmd = [SVN_CMD, "info"]
-        svninfo = ExternalCommand(cwd=wdir, command=cmd)
-        output = svninfo.execute('.', stdout=PIPE, LANG='')
-
-        if svninfo.exit_status:
-            raise GetUpstreamChangesetsFailure(
-                "%s returned status %d" % (str(svninfo), svninfo.exit_status))
-
-        info = {}
-        for l in output:
-            l = l[:-1]
-            if l:
-                key, value = l.split(':', 1)
-                info[key] = value[1:]
-
+        info = self.__getSvnInfo(wdir)
+        
         actual = info['Revision']
         
         if logger: logger.info("working copy up to svn revision %s",
