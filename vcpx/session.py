@@ -515,7 +515,7 @@ class Session(Cmd):
                                         self.source_repository,
                                         self.source_module,
                                         self.sub_directory,
-                                        actual)
+                                        actual, revision=='INITIAL')
         except:
             self.__err('Working copy initialization failed', True)
             return

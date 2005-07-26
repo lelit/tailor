@@ -335,7 +335,8 @@ class TailorizedProject(object):
             module = split(repository)[1]
 
         try:
-            dwd.initializeNewWorkingDir(self.root, repository, module, subdir, actual)
+            dwd.initializeNewWorkingDir(self.root, repository, module, subdir,
+                                        actual, revision=='INITIAL')
         except:
             self.logger.exception('Working copy initialization failed!')
             raise
@@ -524,7 +525,10 @@ BOOTSTRAP_OPTIONS = [
                      "version control kind. For CVS it may be either a branch "
                      "name, a timestamp or both separated by a space, and "
                      "timestamp may be 'INITIAL' to denote the beginning of "
-                     "time for the given branch. "
+                     "time for the given branch. Under Darcs, INITIAL is a "
+                     "shortcut for the name of the first patch in the upstream "
+                     "repository, otherwise it is interpreted as the name of "
+                     "a tag. "
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),

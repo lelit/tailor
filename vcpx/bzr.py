@@ -61,7 +61,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         ExternalCommand(cwd=root, command=cmd).execute(old, new)
 
     def initializeNewWorkingDir(self, root, repository, module, subdir,
-                                changeset):
+                                changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
@@ -69,12 +69,18 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
         from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
              BOOTSTRAP_CHANGELOG
-        
+
         self._initializeWorkingDir(root, repository, module, subdir)
         revision = changeset.revision
-        self._commit(root, changeset.date, AUTHOR,
-                     BOOTSTRAP_PATCHNAME % module,
-                     BOOTSTRAP_CHANGELOG % locals(),
+        if initial:
+            author = changeset.author
+            remark = changeset.log
+            log = None
+        else:
+            author = "%s@%s" % (AUTHOR, HOST)
+            remark = BOOTSTRAP_PATCHNAME % module
+            log = BOOTSTRAP_CHANGELOG % locals()
+        self._commit(root, changeset.date, author, remark, log,
                      entries=[subdir, '%s/...' % subdir])
 
     def _initializeWorkingDir(self, root, repository, module, subdir):

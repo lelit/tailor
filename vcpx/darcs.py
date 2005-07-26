@@ -196,12 +196,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Do the actual work of applying the changeset to the working copy.
         """
 
+        from re import escape
+        
         if changeset.revision.startswith('tagged '):
             selector = '--tags'
             revtag = changeset.revision[7:]
         else:
             selector = '--patches'
-            revtag = changeset.revision
+            revtag = escape(changeset.revision)
             
         cmd = [DARCS_CMD, "pull", "--all", selector, revtag]
         pull = ExternalCommand(cwd=root, command=cmd)
@@ -228,11 +230,28 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
+        from re import escape
+        
+        if revision == 'INITIAL':
+            initial = True
+            cmd = [DARCS_CMD, "changes", "--xml-output", "--repo", repository]
+            changes = ExternalCommand(command=cmd)
+            output = changes.execute(stdout=PIPE, stderr=STDOUT)
 
+            if changes.exit_status:
+                raise ChangesetApplicationFailure(
+                    "%s returned status %d saying \"%s\"" %
+                    (str(changes), changes.exit_status, output.read()))
+
+            csets = changesets_from_darcschanges(output)
+            revision = escape(csets[0].revision)
+        else:
+            initial = False
+
+        wdir = join(basedir, subdir)
         if subdir == '.':
             # This is currently *very* slow, compared to the darcs get
             # below!
-            wdir = basedir
             if not exists(join(wdir, '_darcs')):
                 if not exists(wdir):
                     mkdir(wdir)
@@ -248,7 +267,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 cmd = [DARCS_CMD, "pull", "--all", "--verbose"]
                 if revision and revision<>'HEAD':
-                    cmd.extend(["--tag", revision])
+                    cmd.extend([initial and "--patches" or "--tags", revision])
                 dpull = ExternalCommand(cwd=wdir, command=cmd)
                 output = dpull.execute(repository, stdout=PIPE, stderr=STDOUT)
                         
@@ -258,11 +277,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                         (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
-            
-            wdir = join(basedir, subdir)
             cmd = [DARCS_CMD, "get", "--partial", "--verbose"]
             if revision and revision<>'HEAD':
-                cmd.extend(["--tag", revision])
+                cmd.extend([initial and "--to-patch" or "--tag", revision])
             dget = ExternalCommand(cwd=basedir, command=cmd)
             output = dget.execute(repository, subdir,
                                   stdout=PIPE, stderr=STDOUT)
