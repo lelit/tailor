@@ -33,12 +33,21 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        logmessage = remark
+        from sys import getdefaultencoding
+        
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        
+        logmessage = []
+        if remark:
+            logmessage.append(remark.encode(encoding))
         if changelog:
-            logmessage += '\n%s' % changelog
-        logmessage += '\n\nOriginal author: %s\nDate: %s\n' % (author, date)
+            logmessage.append(changelog.encode(encoding))
+        logmessage.append('')
+        logmessage.append('Original author: %s' % author.encode(encoding))
+        logmessage.append('Date: %s' % date)
+        logmessage.append('')
 
-        cmd = [BAZAAR_CMD, "commit", "-m", logmessage]
+        cmd = [BAZAAR_CMD, "commit", "-m", '\n'.join(logmessage)]
         if not entries:
             entries = ['.']
 

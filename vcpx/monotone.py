@@ -41,13 +41,17 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
+        logmessage = []
+        if remark:
+            logmessage.append(remark.encode(encoding))
+        if changelog:
+            logmessage.append('')
+            logmessage.append(changelog.encode(encoding))
+        logmessage.append('')
+
         rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
         log = open(rontf.name, "w")
-        log.write(remark.encode(encoding))
-        log.write('\n')
-        if changelog:
-            log.write(changelog.encode(encoding))
-            log.write('\n')
+        log.write('\n'.join(logmessage))
         log.close()
 
         cmd = [MONOTONE_CMD, "commit", "--author", author,

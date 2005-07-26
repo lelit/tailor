@@ -43,18 +43,23 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from time import mktime
         from sys import getdefaultencoding
         
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+
+        logmessage = []
+        if remark:
+            logmessage.append(remark.encode(encoding))
+        if changelog:
+            logmessage.append('')
+            logmessage.append(changelog.encode(encoding))
+        logmessage.append('')
+
         cmd = [HG_CMD, "commit", "-u", author, "-l", "%(logfile)s",
                "-d", "%(time)s UTC"]
         c = ExternalCommand(cwd=root, command=cmd)
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-        
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
         log = open(rontf.name, "w")
-        log.write(remark.encode(encoding))
-        if changelog:
-            log.write('\n\n')
-            log.write(changelog.encode(encoding))
+        log.write('\n'.join(logmessage))
         log.close()            
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))

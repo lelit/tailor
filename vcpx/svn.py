@@ -323,20 +323,26 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
         
-        rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
-        log = open(rontf.name, "w")
-        log.write(remark.encode(encoding))
+        logmessage = []
+        if remark:
+            logmessage.append(remark.encode(encoding))
         if changelog:
-            log.write('\n')
-            log.write(changelog.encode(encoding))
+            logmessage.append('')
+            logmessage.append(changelog.encode(encoding))
+        logmessage.append('')
 
         # If we cannot use propset, fall back to old behaviour of
         # appending these info to the changelog
         
         if not self.USE_PROPSET:
-            log.write("\n\nOriginal author: %s\nDate: %s\n" % (
-                author.encode(encoding), date))
-
+            logmessage.append('')
+            logmessage.append('Original author: %s' % author.encode(encoding))
+            logmessage.append('Date: %s' % date)
+            logmessage.append('')
+            
+        rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
+        log = open(rontf.name, "w")
+        log.write('\n'.join(logmessage))
         log.close()            
 
         cmd = [SVN_CMD, "commit", "--quiet", "--file", rontf.name]

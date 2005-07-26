@@ -326,17 +326,24 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        input = "%s UTC\n%s\n%s\n%s\n" % (date.strftime('%Y/%m/%d %H:%M:%S'),
-                                          author,
-                                          remark,
-                                          changelog or '')
+        from sys import getdefaultencoding
         
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+
+        logmessage = []
+
+        logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
+        logmessage.append(author.encode(encoding))
+        logmessage.append(remark and remark.encode(encoding) or 'Unnamed patch')
+        logmessage.append(changelog and changelog.encode(encoding) or '')
+        logmessage.append('')
+
         cmd = [DARCS_CMD, "record", "--all", "--pipe"]
         if not entries:
             entries = ['.']
             
         record = ExternalCommand(cwd=root, command=cmd)
-        record.execute(entries, input=input, stdout=PIPE)
+        record.execute(entries, input='\n'.join(logmessage), stdout=PIPE)
         
         if record.exit_status:
             raise ChangesetApplicationFailure(

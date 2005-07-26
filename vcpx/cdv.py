@@ -33,12 +33,19 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        if changelog:
-            logmessage = remark + '\n\n' + changelog
-        else:
-            logmessage = remark
+        from sys import getdefaultencoding
         
-        cmd = [CODEVILLE_CMD, "-u", author, "commit", "-m", logmessage,
+        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        
+        logmessage = []
+        if remark:
+            logmessage.append(remark.encode(encoding))
+        if changelog:
+            logmessage.append(changelog.encode(encoding))
+        logmessage.append('')
+        
+        cmd = [CODEVILLE_CMD, "-u", author.encode(encoding), "commit",
+               "-m", '\n'.join(logmessage),
                "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC')]
         
         if not entries:
