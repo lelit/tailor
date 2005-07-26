@@ -238,9 +238,26 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         
         from os.path import join, exists
-        
-        wdir = join(basedir, subdir)
 
+        if revision == 'INITIAL':
+            initial = True
+            cmd = [SVN_CMD, "log", "--verbose", "--xml", "--limit", "1",
+                   "--revision", "1:HEAD"]
+            svnlog = ExternalCommand(cwd=wdir, command=cmd)
+            output = svnlog.execute("%s%s" % (repository, module), stdout=PIPE)
+
+            if svnlog.exit_status:
+                raise ChangesetApplicationFailure(
+                    "%s returned status %d saying \"%s\"" %
+                    (str(changes), changes.exit_status, output.read()))
+
+            csets = changesets_from_svnlog(output, info['URL'], repository,
+                                           module)
+            revision = escape(csets[0].revision)
+        else:
+            initial = False
+
+        wdir = join(basedir, subdir)
         if not exists(join(wdir, '.svn')):
             if logger: logger.info("checking out a working copy")
             cmd = [SVN_CMD, "co", "--quiet", "--revision", revision]
@@ -252,19 +269,21 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         else:
             if logger: logger.info("%s already exists, assuming it's a svn working dir" % wdir)
 
-        info = self.__getSvnInfo(wdir)
-        
-        cmd = [SVN_CMD, "log", "--verbose", "--xml", "--revision", revision]
-        svnlog = ExternalCommand(cwd=wdir, command=cmd)
-        output = svnlog.execute(stdout=PIPE)
-        
-        if svnlog.exit_status:
-            raise ChangesetApplicationFailure(
-                "%s returned status %d saying \"%s\"" %
-                (str(changes), changes.exit_status, output.read()))
-        
-        csets = changesets_from_svnlog(output, info['URL'], repository, module)
-        
+        if not initial:
+            info = self.__getSvnInfo(wdir)
+
+            cmd = [SVN_CMD, "log", "--verbose", "--xml", "--revision", revision]
+            svnlog = ExternalCommand(cwd=wdir, command=cmd)
+            output = svnlog.execute(stdout=PIPE)
+
+            if svnlog.exit_status:
+                raise ChangesetApplicationFailure(
+                    "%s returned status %d saying \"%s\"" %
+                    (str(changes), changes.exit_status, output.read()))
+
+            csets = changesets_from_svnlog(output, info['URL'], repository,
+                                           module)
+
         last = csets[0]
         
         if logger: logger.info("working copy up to svn revision %s",

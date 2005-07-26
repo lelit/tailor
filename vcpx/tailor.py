@@ -528,7 +528,9 @@ BOOTSTRAP_OPTIONS = [
                      "time for the given branch. Under Darcs, INITIAL is a "
                      "shortcut for the name of the first patch in the upstream "
                      "repository, otherwise it is interpreted as the name of "
-                     "a tag. "
+                     "a tag. Under Subversion, 'INITIAL' is the first patch "
+                     "that touches given repos/module, otherwise it must be "
+                     "an integer revision number. "
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),
