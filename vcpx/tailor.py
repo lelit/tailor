@@ -479,7 +479,10 @@ UPDATE_OPTIONS = [
                      "%(keyword)s such as 'module', 'author', 'date', "
                      "'revision', 'firstlogline', 'remaininglog' for normal "
                      "updates, otherwise 'module', 'authors', 'nchangesets', "
-                     "'mindate' and 'maxdate' when using --single-commit."),
+                     "'mindate' and 'maxdate' when using --single-commit. It "
+                     "defaults to '%(module)s: changeset %(revision)s'; "
+                     "setting it to the empty string means that tailor will "
+                     "simply use the original changelog."),
     make_option("-1", "--remove-first-log-line", action="store_true",
                 default=False,
                 help="Remove the first line of the upstream changelog. This "
@@ -601,7 +604,7 @@ def main():
         import codecs, sys
         sys.stdout = codecs.getwriter(options.encoding)(sys.stdout)
 
-    if options.patch_name_format:
+    if options.patch_name_format is not None:
         SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
