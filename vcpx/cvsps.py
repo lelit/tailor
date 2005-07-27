@@ -486,7 +486,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if remark:
             logmessage.append(remark.encode(encoding))
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog.replace('%', '%%').encode(encoding))
         logmessage.append('')
         logmessage.append('Original author: %s' % author.encode(encoding))
         logmessage.append('Date: %s' % date)
