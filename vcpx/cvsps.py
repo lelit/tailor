@@ -78,7 +78,7 @@ def changesets_from_cvsps(log, sincerev=None):
         while l.startswith('\t'):
             if not sincerev or (sincerev<int(pset['revision'])):
                 file,revs = l[1:-1].split(':')
-                fromrev,torev = revs.split('->')
+                fromrev,torev = revs.strip().split('->')
 
                 # Due to the fuzzy mechanism, cvsps may group
                 # together two commits on a single entry, thus
@@ -223,7 +223,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
                 rmtree(join(root, e.name))
             else:
-                cmd = [CVS_CMD, "-q", "update", "-d", "-r%s" % e.new_revision]
+                cmd = [CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
                 cvsup = ExternalCommand(cwd=root, command=cmd)
                 retry = 0
                 while True:
