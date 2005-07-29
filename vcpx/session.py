@@ -566,6 +566,7 @@ class Session(Cmd):
 
         self.source_revision = changeset.revision
         self.changesets.remove(changeset)
+        self.writeStateFile()
 
     def do_update(self, arg):
         """
@@ -654,8 +655,6 @@ class Session(Cmd):
                     self.__err('Stopping after upstream change application '
                                'failure', True)
             finally:
-                self.writeStateFile()
-
                 if self.changesets:
                     self.__log("There are still %d pending changesets, "
                                "now at revision '%s'" %
