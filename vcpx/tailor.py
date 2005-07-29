@@ -87,7 +87,7 @@ class TailorConfig(object):
         try:
             for root in args:
                 if self.options.bootstrap:
-                    if not (fromconfig or self.options.repository):
+                    if not (fromconfig or self.options.source_repository):
                         raise InvocationError('Need a repository to bootstrap '
                                               '%r' % root, '--bootstrap')
                 else:
@@ -102,16 +102,16 @@ class TailorConfig(object):
                         info = self.loadProject(root=root)
                         self.options.source_kind = info['source_kind']
                         self.options.target_kind = info['target_kind']
-                        self.options.repository = info['upstream_repos']
-                        self.options.module = info['module']
+                        self.options.source_repository = info['upstream_repos']
+                        self.options.source_module = info['module']
                         self.options.subdir = info.get('subdir',
                                                        split(info['module'])[1])
                         self.options.revision = info['upstream_revision']
 
                     tailored.bootstrap(self.options.source_kind,
                                        self.options.target_kind,
-                                       self.options.repository,
-                                       self.options.module,
+                                       self.options.source_repository,
+                                       self.options.source_module,
                                        self.options.revision,
                                        self.options.subdir)
                 elif self.options.migrate:
@@ -151,8 +151,9 @@ class TailorConfig(object):
         if info and project:
             project.source_kind = info['source_kind']
             project.target_kind = info['target_kind']
-            project.module = info['module']
-            project.subdir = info.get('subdir', split(project.module)[1])
+            project.upstream_module = info['module']
+            project.subdir = info.get('subdir',
+                                      split(project.upstream_module)[1])
             project.upstream_repos = info['upstream_repos']
             project.upstream_revision = info['upstream_revision']
 
@@ -164,7 +165,7 @@ class TailorConfig(object):
         self.config[relpath] = {
             'source_kind': project.source_kind,
             'target_kind': project.target_kind,
-            'module': project.module,
+            'module': project.upstream_module,
             'subdir': project.subdir,
             'upstream_repos': project.upstream_repos,
             'upstream_revision': project.upstream_revision,
@@ -210,7 +211,7 @@ class TailorizedProject(object):
         f = open(statusfilename, 'w')
         print >>f, self.source_kind
         print >>f, self.target_kind
-        print >>f, self.module
+        print >>f, self.upstream_module
         print >>f, self.upstream_repos
         print >>f, self.upstream_revision
         print >>f, self.subdir
@@ -233,14 +234,14 @@ class TailorizedProject(object):
         f = open(statusfilename)
         self.source_kind = f.readline()[:-1]
         self.target_kind = f.readline()[:-1]
-        self.module = f.readline()[:-1]
+        self.upstream_module = f.readline()[:-1]
         self.upstream_repos = f.readline()[:-1]
         self.upstream_revision = f.readline()[:-1]
         subdir = f.readline()
         if subdir:
             self.subdir = subdir[:-1]
         else:
-            self.subdir = split(self.module)[1]
+            self.subdir = split(self.upstream_module)[1]
         f.close()
 
     def __loadStatus(self):
@@ -255,11 +256,11 @@ class TailorizedProject(object):
 
         # Fix old configs
 
-        if self.source_kind == 'svn' and not '/' in self.module:
+        if self.source_kind == 'svn' and not '/' in self.upstream_module:
             self.logger.warning('OLD config values for SVN')
             print "The project at '%s' contains old values for" % self.root
             print "the upstream repository (%s)" % self.upstream_repos
-            print "and module (%s)." % self.module
+            print "and module (%s)." % self.upstream_module
             print "Please correct them, specifying the exact URL of the"
             print "root of the SVN repository and then the prefix path up"
             print "to the point you want, that must start with a slash."
@@ -281,13 +282,13 @@ class TailorizedProject(object):
             print
             try:
                 self.repository = raw_input('Repository: ')
-                self.module = raw_input('Module/prefix: ')
+                self.upstream_module = raw_input('Module/prefix: ')
             except KeyboardInterrupt:
                 self.logger.warning("Leaving old config values, stopped by user")
                 raise
 
     def bootstrap(self, source_kind, target_kind,
-                  repository, module, revision, subdir):
+                  source_repository, source_module, revision, subdir):
         """
         Bootstrap a new tailorized module.
 
@@ -300,28 +301,28 @@ class TailorizedProject(object):
         from os.path import split
 
         if source_kind == 'svn':
-            if not (module and module.startswith('/')):
+            if not (source_module and source_module.startswith('/')):
                 raise InvocationError('With SVN the module argument is '
                                       'mandatory and must start with a "/"')
 
-        if repository.endswith('/'):
-            repository = repository[:-1]
+        if source_repository.endswith('/'):
+            source_repository = source_repository[:-1]
 
-        if module and module.endswith('/'):
-            module = module[:-1]
+        if source_module and source_module.endswith('/'):
+            source_module = source_module[:-1]
 
         if not subdir:
-            subdir = split(module or repository)[1] or ''
+            subdir = split(source_module or source_repository)[1] or ''
 
         self.logger.info("Bootstrapping '%s'" % (self.root,))
 
         dwd = DualWorkingDir(source_kind, target_kind)
         self.logger.info("getting %s revision '%s' of '%s' from '%s'" % (
-            source_kind, revision, module, repository))
+            source_kind, revision, source_module, source_repository))
 
         try:
-            actual = dwd.checkoutUpstreamRevision(self.root, repository,
-                                                  module, revision,
+            actual = dwd.checkoutUpstreamRevision(self.root, source_repository,
+                                                  source_module, revision,
                                                   subdir=subdir,
                                                   logger=self.logger)
         except:
@@ -331,11 +332,12 @@ class TailorizedProject(object):
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
-        if not module:
-            module = split(repository)[1]
+        if not source_module:
+            source_module = split(repository)[1]
 
         try:
-            dwd.initializeNewWorkingDir(self.root, repository, module, subdir,
+            dwd.initializeNewWorkingDir(self.root, source_repository,
+                                        source_module, subdir,
                                         actual, revision=='INITIAL')
         except:
             self.logger.exception('Working copy initialization failed!')
@@ -343,8 +345,8 @@ class TailorizedProject(object):
 
         self.source_kind = source_kind
         self.target_kind = target_kind
-        self.upstream_repos = repository
-        self.module = module
+        self.upstream_repos = source_repository
+        self.upstream_module = source_module
         self.subdir = subdir
         self.upstream_revision = actual.revision
 
@@ -391,17 +393,17 @@ class TailorizedProject(object):
         proj = join(self.root, self.subdir)
 
         self.logger.info("Updating '%s' from revision '%s'" % (
-            self.module, self.upstream_revision))
+            self.upstream_module, self.upstream_revision))
 
         if self.verbose:
             print "\nUpdating '%s' from revision '%s'" % (
-                self.module, self.upstream_revision)
+                self.upstream_module, self.upstream_revision)
 
         try:
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
             changesets = dwd.getUpstreamChangesets(proj,
                                                    self.upstream_repos,
-                                                   self.module,
+                                                   self.upstream_module,
                                                    self.upstream_revision)
         except KeyboardInterrupt:
             print "Leaving '%s' unchanged" % proj
@@ -418,7 +420,8 @@ class TailorizedProject(object):
 
             try:
                 last, conflicts = dwd.applyUpstreamChangesets(
-                    proj, self.module, changesets, applyable=self.applyable,
+                    proj, self.upstream_module, changesets,
+                    applyable=self.applyable,
                     applied=self.applied, logger=self.logger,
                     delayed_commit=single_commit)
             except:
@@ -510,11 +513,13 @@ BOOTSTRAP_OPTIONS = [
                 help="Select VC-KIND as backend for the shadow repository, "
                      "with 'darcs' as default.",
                 default="darcs"),
-    make_option("-R", "--repository", dest="repository", metavar="REPOS",
+    make_option("-R", "--repository", "--source-repository",
+                dest="source_repository", metavar="REPOS",
                 help="Specify the upstream repository, from where bootstrap "
                      "will checkout the module.  REPOS syntax depends on "
                      "the source version control kind."),
-    make_option("-m", "--module", dest="module", metavar="MODULE",
+    make_option("-m", "--module", "--source-module", dest="source_module",
+                metavar="MODULE",
                 help="Specify the module to checkout at bootstrap time. "
                      "This has different meanings under the various upstream "
                      "systems: with CVS it indicates the module, while under "
@@ -638,7 +643,7 @@ def main():
                     raise ExistingProjectError(
                         "Project %r cannot be bootstrapped twice" % proj)
 
-                if not options.repository:
+                if not options.source_repository:
                     raise InvocationError('Need a repository to bootstrap %r' %
                                           proj)
             else:
@@ -654,8 +659,8 @@ def main():
 
             if options.bootstrap:
                 tailored.bootstrap(options.source_kind, options.target_kind,
-                                   options.repository,
-                                   options.module,
+                                   options.source_repository,
+                                   options.source_module,
                                    options.revision,
                                    options.subdir)
             elif options.update:

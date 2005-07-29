@@ -52,9 +52,9 @@ class Session(Cmd):
         self.options = options
         self.args = args
 
-        self.source_repository = options.repository
+        self.source_repository = options.source_repository
         self.source_kind = options.source_kind
-        self.source_module = options.module
+        self.source_module = options.source_module
         self.target_repository = None
         self.target_kind = options.target_kind
         self.target_module = None
