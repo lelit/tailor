@@ -20,8 +20,8 @@ BOOTSTRAP_PATCHNAME = 'Tailorization of %s'
 BOOTSTRAP_CHANGELOG = """\
 Import of the upstream sources from
 
-  Repository: %(repository)s
-  Module:     %(module)s
+  Repository: %(source_repository)s
+  Module:     %(source_module)s
   Revision:   %(revision)s
 """
 
@@ -315,14 +315,15 @@ class SyncronizableTargetWorkingDir(object):
 
         raise "%s should override this method" % self.__class__
 
-    def initializeNewWorkingDir(self, root, repository, module, subdir,
-                                changeset, initial):
+    def initializeNewWorkingDir(self, root, source_repository,
+                                source_module, subdir, changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
         """
 
-        self._initializeWorkingDir(root, repository, module, subdir)
+        self._initializeWorkingDir(root, source_repository, source_module,
+                                   subdir)
         revision = changeset.revision
         if initial:
             author = changeset.author
