@@ -39,10 +39,10 @@ def changesets_from_svnlog(log, url, repository, module):
                 return relative[1:]
             else:
                 return relative
-        
+
         # The path is outside our tracked tree...
         return None
-        
+
     class SvnXMLLogHandler(ContentHandler):
         # Map between svn action and tailor's.
         # NB: 'R', in svn parlance, means REPLACED, something other
@@ -64,13 +64,13 @@ def changesets_from_svnlog(log, url, repository, module):
                       'M': ChangesetEntry.UPDATED,
                       'A': ChangesetEntry.ADDED,
                       'D': ChangesetEntry.DELETED}
-        
+
         def __init__(self):
             self.changesets = []
             self.current = None
             self.current_field = []
             self.renamed = {}
-            
+
         def startElement(self, name, attributes):
             if name == 'logentry':
                 self.current = {}
@@ -105,7 +105,7 @@ def changesets_from_svnlog(log, url, repository, module):
                 for e in self.current['entries']:
                     if e.action_kind == e.ADDED and e.old_name is not None:
                         mv_or_cp[e.old_name] = e
-                
+
                 entries = []
                 for e in self.current['entries']:
                     if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
@@ -116,15 +116,15 @@ def changesets_from_svnlog(log, url, repository, module):
                         e.action_kind = e.ADDED
                         entries.append(e)
                     else:
-                        entries.append(e)                        
-                
+                        entries.append(e)
+
                 svndate = self.current['date']
                 # 2004-04-16T17:12:48.000000Z
                 y,m,d = map(int, svndate[:10].split('-'))
                 hh,mm,ss = map(int, svndate[11:19].split(':'))
                 ms = int(svndate[20:-1])
                 timestamp = datetime(y, m, d, hh, mm, ss, ms)
-                
+
                 changeset = Changeset(self.current['revision'],
                                       timestamp,
                                       self.current['author'],
@@ -153,7 +153,7 @@ def changesets_from_svnlog(log, url, repository, module):
 
                     self.current['entries'].append(entry)
 
-                    
+
         def characters(self, data):
             self.current_field.append(data)
 
@@ -161,7 +161,7 @@ def changesets_from_svnlog(log, url, repository, module):
     # Apparently some (SVN repo contains)/(SVN server dumps) some characters that
     # are illegal in an XML stream. This was the case with Twisted Matrix master
     # repository. To be safe, we replace all of them with a question mark.
-    
+
     allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0B\x0C\x0E\x0F\x10\x11" \
                   "\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7f"
     tt = maketrans(allbadchars, "?"*len(allbadchars))
@@ -184,7 +184,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                "--revision", "%d:HEAD" % (sincerev+1)]
         svnlog = ExternalCommand(cwd=root, command=cmd)
         log = svnlog.execute('.', stdout=PIPE, TZ='UTC')
-        
+
         if svnlog.exit_status:
             return []
 
@@ -218,25 +218,25 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %s" % (str(svnup), svnup.exit_status))
-            
+
         if logger: logger.info("%s updated to %s" % (
             ','.join([e.name for e in changeset.entries]),
             changeset.revision))
-        
+
         result = []
         for line in out:
             if len(line)>2 and line[0] == 'C' and line[1] == ' ':
                 logger.warn("Conflict after 'svn update': '%s'" % line)
                 result.append(line[2:-1])
-            
+
         return result
-        
+
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """
-        
+
         from os.path import join, exists
 
         if revision == 'INITIAL':
@@ -285,12 +285,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                            module)
 
         last = csets[0]
-        
+
         if logger: logger.info("working copy up to svn revision %s",
                                last.revision)
 
         return last
-    
+
     ## SyncronizableTargetWorkingDir
 
     def _addPathnames(self, root, names):
@@ -313,16 +313,16 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         entries.extend([e.old_name for e in changeset.renamedEntries()])
 
         return entries
-        
+
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-        
+
         logmessage = []
         if remark:
             logmessage.append(remark.encode(encoding))
@@ -333,24 +333,24 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # If we cannot use propset, fall back to old behaviour of
         # appending these info to the changelog
-        
+
         if not self.USE_PROPSET:
             logmessage.append('')
             logmessage.append('Original author: %s' % author.encode(encoding))
             logmessage.append('Date: %s' % date)
             logmessage.append('')
-            
+
         rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
         log = open(rontf.name, "w")
         log.write('\n'.join(logmessage))
-        log.close()            
+        log.close()
 
         cmd = [SVN_CMD, "commit", "--quiet", "--file", rontf.name]
         commit = ExternalCommand(cwd=root, command=cmd)
-        
+
         if not entries:
             entries = ['.']
-            
+
         commit.execute(entries)
 
         if self.USE_PROPSET:
