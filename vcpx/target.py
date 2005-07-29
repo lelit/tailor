@@ -3,7 +3,7 @@
 # :Creato:   ven 04 giu 2004 00:27:07 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 Syncronizable targets are the simplest abstract wrappers around a
@@ -27,7 +27,7 @@ Import of the upstream sources from
 
 class TargetInitializationFailure(Exception):
     "Failure initializing the target VCS"
-    
+
     pass
 
 class SyncronizableTargetWorkingDir(object):
@@ -46,7 +46,7 @@ class SyncronizableTargetWorkingDir(object):
     initializeNewWorkingDir
         to initialize a pristine working directory tree under this VC
         system, possibly extracted under a different kind of VC
-    
+
     Subclasses MUST override at least the _underscoredMethods.
     """
 
@@ -59,7 +59,7 @@ class SyncronizableTargetWorkingDir(object):
     """
     When true, remove the first line from the upstream changelog.
     """
-    
+
     def replayChangeset(self, root, module, changeset,
                         delayed_commit=False, logger=None):
         """
@@ -78,7 +78,7 @@ class SyncronizableTargetWorkingDir(object):
         except:
             if logger: logger.critical(str(changeset))
             raise
-        
+
         if delayed_commit:
             self.__registerAppliedChangeset(changeset)
         else:
@@ -93,7 +93,7 @@ class SyncronizableTargetWorkingDir(object):
                 else:
                     firstlogline = changeset.log
                     remaininglog = ''
-                    
+
             remark = self.PATCH_NAME_FORMAT % {
                 'module': module,
                 'revision': changeset.revision,
@@ -121,7 +121,7 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         from datetime import datetime
-        
+
         if not hasattr(self, '_registered_cs'):
             return
 
@@ -144,7 +144,7 @@ class SyncronizableTargetWorkingDir(object):
                 combined_log.append('* changeset %s by %s' % (cs.revision,
                                                               cs.author))
             combined_authors[cs.author] = True
-            
+
             for e in self._getCommitEntries(cs):
                 combined_entries[e] = True
 
@@ -168,7 +168,7 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         return [e.name for e in changeset.entries]
-        
+
     def _replayChangeset(self, root, changeset, logger):
         """
         Replicate the actions performed by the changeset on the tree of
@@ -176,7 +176,7 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         from os.path import join, isdir
-        
+
         added = changeset.addedEntries()
         renamed = changeset.renamedEntries()
         removed = changeset.removedEntries()
@@ -184,13 +184,13 @@ class SyncronizableTargetWorkingDir(object):
         # Sort added entries, to be sure that /root/addedDir/ comes
         # before /root/addedDir/addedSubdir
         added.sort(lambda x,y: cmp(x.name, y.name))
-        
+
         # Sort removes in reverse order, to delete directories after
         # their contents.
         removed.sort(lambda x,y: cmp(y.name, x.name))
 
         # Replay the actions
-        
+
         if renamed: self._renameEntries(root, renamed)
         if removed: self._removeEntries(root, removed)
         if added: self._addEntries(root, added)
@@ -210,7 +210,7 @@ class SyncronizableTargetWorkingDir(object):
         Remember about an already applied but not committed changeset,
         to be done later.
         """
-        
+
         if not hasattr(self, '_registered_cs'):
             self._registered_cs = []
 
@@ -222,7 +222,7 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         self._addPathnames(root, [e.name for e in entries])
-        
+
     def _addPathnames(self, root, names):
         """
         Add some new filesystem objects.
@@ -242,7 +242,7 @@ class SyncronizableTargetWorkingDir(object):
         Subclasses may use a better way, if the backend implements
         a recursive add that skips the various metadata directories.
         """
-        
+
         from os.path import join
         from os import walk
         from dualwd import IGNORED_METADIRS
@@ -268,7 +268,7 @@ class SyncronizableTargetWorkingDir(object):
         """
         Commit the changeset.
         """
-        
+
         raise "%s should override this method" % self.__class__
 
     def _removeEntries(self, root, entries):
@@ -277,7 +277,7 @@ class SyncronizableTargetWorkingDir(object):
         """
 
         self._removePathnames(root, [e.name for e in entries])
-            
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -290,7 +290,7 @@ class SyncronizableTargetWorkingDir(object):
         Rename a sequence of entries, adding all the parent directories
         of each entry.
         """
-        
+
         from os.path import split
 
         added = []
@@ -307,7 +307,7 @@ class SyncronizableTargetWorkingDir(object):
                 self._addPathnames(root, parents)
 
             self._renamePathname(root, e.old_name, e.name)
-        
+
     def _renamePathname(self, root, oldname, newname):
         """
         Rename a filesystem object to some other name/location.
