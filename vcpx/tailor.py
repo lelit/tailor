@@ -3,7 +3,7 @@
 # :Creato:   dom 04 lug 2004 00:40:54 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 Implement the basic capabilities of the frontend.
@@ -32,15 +32,15 @@ def relpathto(source, dest):
 
     Warning: ``dest`` is assumed to be a directory.
     """
-    
+
     from os.path import abspath, split, commonprefix
-    
+
     source = abspath(source)
     dest = abspath(dest)
 
     if source.startswith(dest):
         return source[len(dest)+1:]
-    
+
     prefix = commonprefix([source, dest])
 
     source = source[len(prefix):]
@@ -57,18 +57,18 @@ class TailorConfig(object):
     relative path of each project. The information about a single project
     is another dictionary.
     """
-    
+
     def __init__(self, options):
         from os.path import abspath, split
-        
+
         self.options = options
         self.configfile = abspath(options.configfile)
         self.basedir = split(self.configfile)[0]
-        
+
     def __call__(self, args):
         from os.path import join, exists, split
         from source import ChangesetApplicationFailure
-        
+
         self.__load()
 
         if len(args) == 0:
@@ -77,16 +77,16 @@ class TailorConfig(object):
                 f = lambda x: not exists(x)
             else:
                 f = exists
-                
+
             args = [p for p in [join(self.basedir, r)
                                 for r in self.config.keys()] if f(p)]
             args.sort()
         else:
             fromconfig = False
-            
+
         try:
             for root in args:
-                if self.options.bootstrap:                
+                if self.options.bootstrap:
                     if not (fromconfig or self.options.repository):
                         raise InvocationError('Need a repository to bootstrap '
                                               '%r' % root, '--bootstrap')
@@ -94,11 +94,11 @@ class TailorConfig(object):
                     if not self.config.has_key(relpathto(root, self.basedir)):
                         raise UnknownProjectError("Project %r does not exist" %
                                                   root)
-                    
+
                 tailored = TailorizedProject(root, self.options.verbose, self)
 
                 if self.options.bootstrap:
-                    if fromconfig:                        
+                    if fromconfig:
                         info = self.loadProject(root=root)
                         self.options.source_kind = info['source_kind']
                         self.options.target_kind = info['target_kind']
@@ -107,7 +107,7 @@ class TailorConfig(object):
                         self.options.subdir = info.get('subdir',
                                                        split(info['module'])[1])
                         self.options.revision = info['upstream_revision']
-                        
+
                     tailored.bootstrap(self.options.source_kind,
                                        self.options.target_kind,
                                        self.options.repository,
@@ -124,7 +124,7 @@ class TailorConfig(object):
                         print "Skipping '%s' because of errors:" % root, e
         finally:
             self.__save()
-        
+
     def __save(self):
         from pprint import pprint
 
@@ -141,12 +141,12 @@ class TailorConfig(object):
             configfile.close()
         else:
             self.config = {}
-            
+
     def loadProject(self, project=None, root=None):
         from os.path import split
-        
+
         relpath = relpathto(project and project.root or root, self.basedir)
-        
+
         info = self.config.get(relpath)
         if info and project:
             project.source_kind = info['source_kind']
@@ -157,11 +157,11 @@ class TailorConfig(object):
             project.upstream_revision = info['upstream_revision']
 
         return info
-        
+
     def saveProject(self, project):
         relpath = relpathto(project.root, self.basedir)
-        
-        self.config[relpath] = { 
+
+        self.config[relpath] = {
             'source_kind': project.source_kind,
             'target_kind': project.target_kind,
             'module': project.module,
@@ -170,14 +170,14 @@ class TailorConfig(object):
             'upstream_revision': project.upstream_revision,
             }
 
-    
+
 class TailorizedProject(object):
     """
     A TailorizedProject has two main capabilities: it may be bootstrapped
     from an upstream repository or brought in sync with current upstream
     revision.
     """
-    
+
     def __init__(self, root, verbose=False, config=None):
         import logging
         from os import makedirs
@@ -192,7 +192,7 @@ class TailorizedProject(object):
         hdlr = logging.FileHandler(join(root, LOG_FILENAME))
         formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
         hdlr.setFormatter(formatter)
-        self.logger.addHandler(hdlr) 
+        self.logger.addHandler(hdlr)
         self.logger.setLevel(logging.INFO)
 
         self.source_kind = self.target_kind = None
@@ -202,15 +202,15 @@ class TailorizedProject(object):
     def migrateConfiguration(self):
         self.__loadOldStatus()
         self.__saveStatus()
-        
+
     def __saveOldStatus(self):
         from os.path import join
 
         statusfilename = join(self.root, STATUS_FILENAME)
         f = open(statusfilename, 'w')
         print >>f, self.source_kind
-        print >>f, self.target_kind        
-        print >>f, self.module        
+        print >>f, self.target_kind
+        print >>f, self.module
         print >>f, self.upstream_repos
         print >>f, self.upstream_revision
         print >>f, self.subdir
@@ -240,7 +240,7 @@ class TailorizedProject(object):
         if subdir:
             self.subdir = subdir[:-1]
         else:
-            self.subdir = split(self.module)[1]            
+            self.subdir = split(self.module)[1]
         f.close()
 
     def __loadStatus(self):
@@ -254,7 +254,7 @@ class TailorizedProject(object):
             self.__loadOldStatus()
 
         # Fix old configs
-        
+
         if self.source_kind == 'svn' and not '/' in self.module:
             self.logger.warning('OLD config values for SVN')
             print "The project at '%s' contains old values for" % self.root
@@ -265,7 +265,7 @@ class TailorizedProject(object):
             print "to the point you want, that must start with a slash."
             print "This usually means splitting the repository URL above in"
             print "two parts. For example, that could be"
-            
+
             crepo = self.upstream_repos
             example_split = crepo.rfind('/', 6, crepo.rfind('/'))
             if example_split > 0:
@@ -274,7 +274,7 @@ class TailorizedProject(object):
             else:
                 example_repo = 'http://svn.plone.org/collective'
                 example_module = '/ATContentTypes/trunk'
-            
+
             print "  Repository=%s" % example_repo
             print "  Module=%s" % example_module
             print "but your situation may vary, that's just an example!"
@@ -285,7 +285,7 @@ class TailorizedProject(object):
             except KeyboardInterrupt:
                 self.logger.warning("Leaving old config values, stopped by user")
                 raise
-            
+
     def bootstrap(self, source_kind, target_kind,
                   repository, module, revision, subdir):
         """
@@ -309,10 +309,10 @@ class TailorizedProject(object):
 
         if module and module.endswith('/'):
             module = module[:-1]
-            
+
         if not subdir:
             subdir = split(module or repository)[1] or ''
-            
+
         self.logger.info("Bootstrapping '%s'" % (self.root,))
 
         dwd = DualWorkingDir(source_kind, target_kind)
@@ -327,7 +327,7 @@ class TailorizedProject(object):
         except:
             self.logger.exception('Checkout failed!')
             raise
-        
+
         # the above machinery checked out a copy under of the wc
         # in the directory named as the last component of the module's name
 
@@ -340,7 +340,7 @@ class TailorizedProject(object):
         except:
             self.logger.exception('Working copy initialization failed!')
             raise
-        
+
         self.source_kind = source_kind
         self.target_kind = target_kind
         self.upstream_repos = repository
@@ -363,9 +363,9 @@ class TailorizedProject(object):
                 print changeset.log
             except UnicodeEncodeError:
                 print ">>> Non-printable changelog <<<"
-                
+
         return True
-    
+
     def applied(self, root, changeset):
         """
         Save current status.
@@ -384,7 +384,7 @@ class TailorizedProject(object):
         Use the information stored in the ``tailor.info`` file to ask just
         the new changeset since last bootstrap/synchronization.
         """
-        
+
         from os.path import join
 
         self.__loadStatus()
@@ -410,7 +410,7 @@ class TailorizedProject(object):
         except:
             self.logger.exception("Unable to get changes for '%s'" % proj)
             raise
-        
+
         nchanges = len(changesets)
         if nchanges:
             if self.verbose:
@@ -424,7 +424,7 @@ class TailorizedProject(object):
             except:
                 self.logger.exception('Upstream change application failed')
                 raise
-            
+
             if last:
                 if single_commit:
                     dwd.commitDelayedChangesets(proj, concatenate_logs)
@@ -458,7 +458,7 @@ GENERAL_OPTIONS = [
                 help="Force the output encoding to given CHARSET, rather "
                      "then using the user default settings specified in the "
                      "environment."),
-]    
+]
 
 UPDATE_OPTIONS = [
     make_option("--update", action="store_true", default=True,
@@ -488,7 +488,7 @@ UPDATE_OPTIONS = [
                 help="Remove the first line of the upstream changelog. This "
                      "is intended to go in pair with --patch-name-format, "
                      "when using it's 'firstlogline' variable to build the "
-                     "name of the patch."),                
+                     "name of the patch."),
     make_option("-N", "--dont-refill-changelogs", action="store_true",
                 default=False,
                 help="Do not refill every changelog, but keep them as is. "
@@ -549,7 +549,7 @@ VC_SPECIFIC_OPTIONS = [
                      "the changelog. This requires some tweaks on the SVN "
                      "repository to enable revision propchanges."),
 ]
-                
+
 class ExistingProjectError(Exception):
     "Project seems already tailored"
 
@@ -558,7 +558,7 @@ class UnknownProjectError(Exception):
 
 class ProjectNotTailored(Exception):
     "Not a tailored project"
-    
+
 def main():
     """
     Script entry point.
@@ -567,17 +567,17 @@ def main():
     specified working copy directory (the current working directory by
     default) execute the tailorization steps.
     """
-    
+
     from os import getcwd, chdir
     from os.path import abspath, exists, join
     from shwrap import ExternalCommand
     from target import SyncronizableTargetWorkingDir
     from changes import Changeset
-    
+
     parser = OptionParser(usage='%prog [options] [project ...]',
                           version=__version__,
                           option_list=GENERAL_OPTIONS)
-    
+
     bsoptions = OptionGroup(parser, "Bootstrap options")
     bsoptions.add_options(BOOTSTRAP_OPTIONS)
 
@@ -586,13 +586,13 @@ def main():
 
     vcoptions = OptionGroup(parser, "VC specific options")
     vcoptions.add_options(VC_SPECIFIC_OPTIONS)
-    
+
     parser.add_option_group(bsoptions)
     parser.add_option_group(upoptions)
     parser.add_option_group(vcoptions)
-    
+
     options, args = parser.parse_args()
-    
+
     ExternalCommand.VERBOSE = options.debug
     if options.encoding:
         ExternalCommand.FORCE_ENCODING = options.encoding
@@ -600,7 +600,7 @@ def main():
         # Make printouts be encoded as well. A better solution would be
         # using the replace mechanism of the encoder, and keep printing
         # in the user LC_CTYPE/LANG setting.
-        
+
         import codecs, sys
         sys.stdout = codecs.getwriter(options.encoding)(sys.stdout)
 
@@ -610,7 +610,7 @@ def main():
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
 
     SvnWorkingDir.USE_PROPSET = options.use_svn_propset
-    
+
     if options.interactive:
         interactive(options, args)
     elif options.configfile:
@@ -619,11 +619,11 @@ def main():
         config(map(abspath, args))
     else:
         # Good (?) old way
-        
+
         config = None
-        
+
         base = getcwd()
-        
+
         if len(args) == 0:
             args.append(base)
 
