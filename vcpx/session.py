@@ -3,7 +3,7 @@
 # :Creato:   ven 13 mag 2005 02:00:57 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 Tailor interactive session.
@@ -31,12 +31,12 @@ def yesno(arg):
         return bool(int(arg))
     except ValueError:
         return arg.lower() in ('true', 'yes')
-    
+
 class Session(Cmd):
     """Tailor interactive session."""
-    
+
     prompt = "tailor $ "
-    
+
     def __init__(self, options, args):
         """
         Initialize a new interactive session.
@@ -45,13 +45,13 @@ class Session(Cmd):
         then slurp in each command line argument that should contain
         a list of commands to be executed.
         """
-        
-        from os import getcwd       
+
+        from os import getcwd
 
         Cmd.__init__(self)
-        self.options = options        
+        self.options = options
         self.args = args
-        
+
         self.source_repository = options.repository
         self.source_kind = options.source_kind
         self.source_module = options.module
@@ -60,18 +60,18 @@ class Session(Cmd):
         self.target_module = None
         self.current_directory = getcwd()
         self.sub_directory = None
-        
+
         self.state_file = None
         self.logfile = None
         self.logger = None
-        
+
         self.__processArgs()
 
         # Persistent
-        
+
         self.changesets = None
         self.source_revision = None
-        
+
     def __processArgs(self):
         """
         Process optional command line arguments.
@@ -86,7 +86,7 @@ class Session(Cmd):
     def __log(self, what):
         if self.logger:
             self.logger.info(what)
-            
+
         if self.options.verbose:
             self.stdout.write(what)
             self.stdout.write('\n')
@@ -97,8 +97,8 @@ class Session(Cmd):
                 self.logger.exception(what)
             else:
                 self.logger.error(what)
-            
-            
+
+
         self.stdout.write('Error: ')
         self.stdout.write(what)
         if exc:
@@ -121,7 +121,7 @@ class Session(Cmd):
             pass
 
         return line
-        
+
     ## Interactive commands
 
     def do_exit(self, arg):
@@ -148,10 +148,10 @@ class Session(Cmd):
 
         if not arg:
             return
-            
+
         readline.write_history_file(arg)
         self.__log('History saved in: %s' % arg)
-        
+
     def do_cd(self, arg):
         """
         Usage: cd [dirname]
@@ -162,7 +162,7 @@ class Session(Cmd):
 
         from os import chdir, makedirs, getcwd
         from os.path import isabs, abspath, expanduser
-        
+
         if arg:
             arg = expanduser(arg)
             if not isabs(arg):
@@ -179,9 +179,9 @@ class Session(Cmd):
                 except:
                     self.__err("Cannot create directory '%s'" % arg, True)
                     return
-                
+
             self.current_directory = getcwd()
-            
+
         self.__log('Current directory: %s' % self.current_directory)
 
     do_current_directory = do_cd
@@ -189,12 +189,12 @@ class Session(Cmd):
     def do_sub_directory(self, arg):
         """
         Usage: sub_directory dirname
-        
+
         Print or set the subdirectory that actually contains the
         working copy. When not explicitly set, this is desumed from
         the last component of the upstream module name or repository.
         """
-        
+
         if arg and self.sub_directory <> arg:
             self.sub_directory = arg
 
@@ -203,21 +203,21 @@ class Session(Cmd):
     def do_logfile(self, arg):
         """
         Usage: logfile [filename]
-        
+
         Print or set the logfile of operations. By default there's no log.
         """
 
         import logging
-        
+
         if arg:
             self.logfile = arg
             self.logger = logging.getLogger('tailor')
             hdlr = logging.FileHandler(self.logfile)
             formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
             hdlr.setFormatter(formatter)
-            self.logger.addHandler(hdlr) 
+            self.logger.addHandler(hdlr)
             self.logger.setLevel(logging.INFO)
-            
+
         self.__log('Logging to: %s' % self.logfile)
 
     def do_print_executed_commands(self, arg):
@@ -228,7 +228,7 @@ class Session(Cmd):
         """
 
         from shwrap import ExternalCommand
-        
+
         if arg:
             ExternalCommand.VERBOSE = yesno(arg)
 
@@ -245,7 +245,7 @@ class Session(Cmd):
         """
 
         from shwrap import ExternalCommand
-        
+
         if arg:
             if arg == 'None':
                 ExternalCommand.FORCE_ENCODING = None
@@ -274,11 +274,11 @@ class Session(Cmd):
 
         self.__log('Patch name format: %s' %
                    SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT)
-        
+
     def do_remove_first_log_line(self, arg):
         """
         Usage: remove_first_log_line [0|1]
-        
+
         Print or set if tailor should drop the first line of the
         upstream changelog.
 
@@ -304,12 +304,12 @@ class Session(Cmd):
         """
 
         from changes import Changeset
-        
+
         if arg:
             Changeset.REFILL_MESSAGE = yesno(arg)
 
         self.__log('Refill changelogs: %s' % Changeset.REFILL_MESSAGE)
-        
+
     def do_source_kind(self, arg):
         """
         Usage: source_kind [svn|darcs|cvs]
@@ -321,7 +321,7 @@ class Session(Cmd):
             self.source_kind = arg
 
         self.__log('Current source kind: %s' % self.source_kind)
-        
+
     def do_target_kind(self, arg):
         """
         Usage: target_kind [svn|darcs|cvs|monotone|cdv|bzr]
@@ -342,7 +342,7 @@ class Session(Cmd):
         """
 
         from os.path import sep
-        
+
         if arg and self.source_repository <> arg:
             if arg.endswith(sep):
                 arg = arg[:-1]
@@ -358,7 +358,7 @@ class Session(Cmd):
         """
 
         from os.path import sep
-        
+
         if arg and self.target_repository <> arg:
             if arg.endswith(sep):
                 arg = arg[:-1]
@@ -369,12 +369,12 @@ class Session(Cmd):
     def do_source_module(self, arg):
         """
         Usage: source_module [module]
-        
+
         Print or set the source module.
         """
 
         from os.path import sep
-        
+
         if arg and self.source_module <> arg:
             if arg.endswith(sep):
                 arg = arg[:-1]
@@ -390,7 +390,7 @@ class Session(Cmd):
         """
 
         from os.path import sep
-        
+
         if arg and self.target_module <> arg:
             if arg.endswith(sep):
                 arg = arg[:-1]
@@ -423,7 +423,7 @@ class Session(Cmd):
         """
 
         from cPickle import dump
-        
+
         sf = open(self.state_file, 'w')
         dump((self.source_revision, self.changesets), sf)
         sf.close()
@@ -431,25 +431,25 @@ class Session(Cmd):
     def do_state_file(self, arg):
         """
         Usage: state_file [filename]
-        
+
         Print or set the current state file, where tailor stores the
         source revision that has been applied last.
-        
+
         The argument must be a file name, possibly with the usual
-        "~user/file" convention.        
+        "~user/file" convention.
         """
 
         from os.path import isabs, abspath, expanduser
         from cPickle import load
-        
+
         if arg:
             arg = expanduser(arg)
             if not isabs(arg):
                 arg = abspath(arg)
-        
+
         if arg and self.state_file <> arg:
             self.state_file = arg
-            
+
         self.__log('Current state file: %s' % self.state_file)
 
         if not self.state_file:
@@ -467,12 +467,12 @@ class Session(Cmd):
     def do_bootstrap(self, arg):
         """
         Usage: bootstrap [revision]
-        
+
         Checkout the initial upstream revision, by default HEAD (or
         specified by argument), then import the subtree into the
         target repository.
         """
-        
+
         from os.path import join, split, sep
         from dualwd import DualWorkingDir
 
@@ -482,7 +482,7 @@ class Session(Cmd):
 
         if self.source_revision is not None:
             self.__err('Already bootstrapped!')
-            
+
         if self.sub_directory:
             subdir = self.sub_directory
         else:
@@ -505,11 +505,9 @@ class Session(Cmd):
         except:
             self.__err('Checkout failed', True)
             return
-
-        self.source_revision = actual.revision
         
         self.writeStateFile()
-        
+
         try:
             dwd.initializeNewWorkingDir(self.current_directory,
                                         self.source_repository,
@@ -519,7 +517,7 @@ class Session(Cmd):
         except:
             self.__err('Working copy initialization failed', True)
             return
-        
+
     def willApply(self, root, changeset):
         """
         Print the changeset being applied.
@@ -589,11 +587,11 @@ class Session(Cmd):
         if not self.state_file:
             self.__err('Need a state_file to proceed!')
             return
-                
+
         if self.source_revision is None:
             self.__log('Boostrapping, because source_revision is None!')
             return self.do_bootstrap(None)
-        
+
         if self.sub_directory:
             subdir = self.sub_directory
         else:
@@ -603,13 +601,13 @@ class Session(Cmd):
             subdir = split(self.source_module or
                            self.source_repository)[1] or ''
             self.do_sub_directory(subdir)
-            
+
         repodir = join(self.current_directory, subdir)
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
 
         # If we have no pending changesets, ask the upstream server
         # about new changes
-        
+
         if not self.changesets:
             try:
                 self.changesets = dwd.getUpstreamChangesets(
@@ -624,7 +622,7 @@ class Session(Cmd):
             except:
                 self.__err('Unable to collect upstream changes', True)
                 return
-            
+
         nchanges = len(self.changesets)
         if nchanges:
             applyable = self.willApply
@@ -638,7 +636,7 @@ class Session(Cmd):
                         applyable = self.shouldApply
             else:
                 changesets = self.changesets[:]
-                
+
             self.__log('Applying %d changesets (out of %d)' %
                        (len(changesets), nchanges))
 
@@ -657,7 +655,7 @@ class Session(Cmd):
                                'failure', True)
             finally:
                 self.writeStateFile()
-                
+
                 if self.changesets:
                     self.__log("There are still %d pending changesets, "
                                "now at revision '%s'" %
@@ -681,7 +679,7 @@ class Session(Cmd):
         from dualwd import DualWorkingDir
         from darcs import DARCS_CMD, changesets_from_darcschanges
         from shwrap import ExternalCommand, PIPE
-        
+
         if not (self.source_repository and self.target_repository and
                 isdir(self.source_repository) and
                 isdir(self.target_repository) and
@@ -694,26 +692,26 @@ class Session(Cmd):
         if not arg:
             self.__err('Needs a patchname to proceed')
             return
-        
+
         c = ExternalCommand(cwd=self.source_repository,
                             command=[DARCS_CMD, "changes", "--patches",
                                      arg, "--xml-output", "--summ"])
         last = changesets_from_darcschanges(c.execute(output=PIPE),
                                             unidiff=True,
                                             repodir=self.source_repository)
-        
+
         if not last:
             self.__err('Specified patchname does not exist!')
             return
-        
+
         cset = last[0]
         cset.applyPatch(working_dir=self.target_repository,
                         patch_options=["-p1", "--force"])
-        
+
         dwd = DualWorkingDir(self.source_kind, self.target_kind)
         dwd.replayChangeset(self.target_repository, self.target_module, cset,
                             logger=self.logger)
-        
+
 def interactive(options, args):
     session = Session(options, args)
     session.cmdloop(options.verbose and INTRO or "")
