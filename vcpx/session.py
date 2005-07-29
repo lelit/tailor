@@ -505,7 +505,8 @@ class Session(Cmd):
         except:
             self.__err('Checkout failed', True)
             return
-        
+
+        self.source_revision = actual.revision
         self.writeStateFile()
 
         try:
