@@ -120,8 +120,7 @@ Examples
 
 __ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
 __ http://svn.haxx.se/users/archive-2004-05/0245.shtml
-   
-   
+
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
    extracted as "CMFTopic" (ie, the last component of the module
@@ -155,7 +154,20 @@ __ http://svn.haxx.se/users/archive-2004-05/0245.shtml
                 --revision 'unstable-branch INITIAL' \
                 --module something new-darcs-repository
 
+8. Bootstrap a new SVN repository with tailor's master one. This
+   demonstrate the new --target-repository feature::
 
+    $ tailor -D -v -b -R http://nautilus.homeip.net/~lele/projects/tailor \
+            -s darcs -t svn --target-repository file:///tmp/svnrepo \
+            --target-module / /tmp/wc
+    $ svn info file:///tmp/svnrepo [Status 1]
+    $ svnadmin create --fs-type fsfs /tmp/svnrepo [Ok]
+    $ svn co --quiet file:///tmp/svnrepo/ /tmp/wc [Ok]
+    /tmp/wc $ darcs get --partial --verbose http://.../tailor tailor [Ok]
+    /tmp/wc/tailor $ darcs changes --last 1 --xml-output [Ok]
+    /tmp/wc $ svn add --quiet --no-auto-props --non-recursive tailor [Ok]
+    ...
+    
 Resolving conflicts
 ===================
 

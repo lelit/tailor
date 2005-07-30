@@ -11,12 +11,13 @@ This module contains supporting classes for Subversion.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, PIPE, STDOUT, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 SVN_CMD = "svn"
+SVNADMIN_CMD = "svnadmin"
 
 def changesets_from_svnlog(log, url, repository, module):
     from xml.sax import parseString
@@ -387,6 +388,61 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             # so we do the same here
             self._removePathnames(root, [oldname])
             self._addPathnames(root, [newname])
+
+    def __createRepository(self, target_repository, target_module):
+        """
+        Create a local repository.
+        """
+
+        assert target_repository.startswith('file:///')
+
+        cmd = [SVNADMIN_CMD, "create", "--fs-type", "fsfs"]
+        svnadmin = ExternalCommand(command=cmd)
+        svnadmin.execute(target_repository[7:])
+
+        if svnadmin.exit_status:
+            raise TargetInitializationFailure("Was not able to create a 'fsfs' "
+                                              "svn repository at %r" %
+                                              target_repository)
+
+        if target_module and target_module <> '/':
+            cmd = [SVN_CMD, "mkdir", "-m",
+                   "This directory will host the upstream sources"]
+            svnmkdir = ExternalCommand(command=cmd)
+            svnmkdir.execute(target_repository + target_module)
+            if svnmkdir.exit_status:
+                raise TargetInitializationFailure("Was not able to create the "
+                                                  "module %r, maybe more than "
+                                                  "one level directory?" %
+                                                  target_module)
+
+    def _prepareTargetRepository(self, root, target_repository, target_module):
+        """
+        Check for target repository existence, eventually create it.
+        """
+
+        cmd = [SVN_CMD, "info"]
+        svninfo = ExternalCommand(command=cmd)
+        svninfo.execute(target_repository, stdout=PIPE, stderr=STDOUT)
+
+        if svninfo.exit_status:
+            if target_repository.startswith('file:///'):
+                self.__createRepository(target_repository, target_module)
+            else:
+                raise TargetInitializationFailure("%r does not exist and "
+                                                  "cannot be created since "
+                                                  "it's not a local (file:///) "
+                                                  "repository" %
+                                                  target_repository)
+
+    def _prepareWorkingDirectory(self, root, target_repository, target_module):
+        """
+        Checkout a working copy of the target SVN repository.
+        """
+
+        cmd = [SVN_CMD, "co", "--quiet"]
+        svnco = ExternalCommand(command=cmd)
+        svnco.execute(target_repository + target_module, root)
 
     def _initializeWorkingDir(self, root, source_repository, source_module,
                               subdir):
