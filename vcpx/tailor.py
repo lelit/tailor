@@ -346,7 +346,7 @@ class TailorizedProject(object):
         # in the directory named as the last component of the module's name
 
         if not source_module:
-            source_module = split(repository)[1]
+            source_module = split(source_repository)[1]
 
         try:
             dwd.initializeNewWorkingDir(self.root, source_repository,
