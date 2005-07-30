@@ -3,7 +3,7 @@
 # :Creato:   ven 24 giu 2005 20:42:46 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 This module implements the backends for Mercurial.
@@ -29,7 +29,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         # Currently hg does not handle directories at all, so filter
         # them out.
-        
+
         notdirs = [n for n in names if not isdir(join(root, n))]
         if notdirs:
             cmd = [HG_CMD, "add"]
@@ -42,7 +42,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         from time import mktime
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = []
@@ -60,10 +60,10 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
         log = open(rontf.name, "w")
         log.write('\n'.join(logmessage))
-        log.close()            
+        log.close()
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))
-        
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -73,7 +73,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         # Currently hg does not handle directories at all, so filter
         # them out.
-        
+
         notdirs = [n for n in names if not isdir(join(root, n))]
         if notdirs:
             cmd = [HG_CMD, "remove"]
@@ -97,7 +97,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
             skip = len(root)+len(newname)+2
             for dir, subdirs, files in walk(join(root, newname)):
                 prefix = dir[skip:]
-                
+
                 for excd in IGNORED_METADIRS:
                     if excd in subdirs:
                         subdirs.remove(excd)
@@ -107,7 +107,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
                                  join(newname, prefix, f))
         else:
             copy.execute(oldname, newname)
-            
+
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Execute ``hg init``.
@@ -117,7 +117,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from os.path import join
         from re import escape
         from dualwd import IGNORED_METADIRS
-        
+
         init = ExternalCommand(cwd=root, command=[HG_CMD, "init"])
         init.execute()
 
