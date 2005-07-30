@@ -113,6 +113,8 @@ class TailorConfig(object):
                                        self.options.source_repository,
                                        self.options.source_module,
                                        self.options.revision,
+                                       self.options.target_repository,
+                                       self.options.target_module,
                                        self.options.subdir)
                 elif self.options.migrate:
                     tailored.migrateConfiguration()
@@ -288,9 +290,13 @@ class TailorizedProject(object):
                 raise
 
     def bootstrap(self, source_kind, target_kind,
-                  source_repository, source_module, revision, subdir):
+                  source_repository, source_module, revision,
+                  target_repository, target_module, subdir):
         """
         Bootstrap a new tailorized module.
+
+        First of all prepare the target system working directory such that
+        it can host the upstream source tree. This is backend specific.
 
         Extract a copy of the ``repository`` at given ``revision`` in the
         ``root`` directory and initialize a target repository with its content.
@@ -319,6 +325,13 @@ class TailorizedProject(object):
         dwd = DualWorkingDir(source_kind, target_kind)
         self.logger.info("getting %s revision '%s' of '%s' from '%s'" % (
             source_kind, revision, source_module, source_repository))
+
+        try:
+            dwd.prepareWorkingDirectory(self.root,
+                                        target_repository, target_module)
+        except:
+            self.logger.exception('Cannot prepare working directory!')
+            raise
 
         try:
             actual = dwd.checkoutUpstreamRevision(self.root, source_repository,
@@ -542,6 +555,14 @@ BOOTSTRAP_OPTIONS = [
                      "'HEAD', the default, means the latest version in all "
                      "backends.",
                 default="HEAD"),
+    make_option("-T", "--target-repository",
+                dest="target_repository", metavar="REPOS", default=None,
+                help="Specify the target repository, the one that will "
+                     "receive the patches coming from the source one."),
+    make_option("-M", "--target-module", dest="target_module",
+                metavar="MODULE",
+                help="Specify the module on the target repository that will "
+                     "actually contain the upstream source tree."),
     make_option("--subdir", metavar="DIR",
                 help="Force the subdirectory where the checkout will happen, "
                      "by default it's the tail part of the module name."),
@@ -662,6 +683,8 @@ def main():
                                    options.source_repository,
                                    options.source_module,
                                    options.revision,
+                                   options.target_repository,
+                                   options.target_module,
                                    options.subdir)
             elif options.update:
                 tailored.update(options.single_commit,

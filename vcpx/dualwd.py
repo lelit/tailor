@@ -59,6 +59,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # SyncronizableTargetWorkingDir
 
+        self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
         self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
         self.commitDelayedChangesets = self.target.commitDelayedChangesets
         self.replayChangeset = self.target.replayChangeset
