@@ -3,7 +3,7 @@
 # :Creato:   ven 18 giu 2004 14:45:28 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 This module contains supporting classes for the ``darcs`` versioning system.
@@ -30,7 +30,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
 
     Return a list of ``Changeset`` instances.
     """
-    
+
     from xml.sax import parse
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
@@ -47,7 +47,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 self.darcsdiff = ExternalCommand(command=cmd)
             else:
                 self.darcsdiff = None
-                
+
         def startElement(self, name, attributes):
             if name == 'patch':
                 self.current = {}
@@ -81,11 +81,11 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                                  self.current['author'],
                                  self.current['comment'],
                                  self.current['entries'])
-                
+
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(
                         stdout=PIPE, patchname=cset.revision).read()
-                    
+
                 self.changesets.append(cset)
                 self.current = None
             elif name in ['name', 'comment']:
@@ -114,20 +114,20 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     handler = DarcsXMLChangesHandler()
     parse(changes, handler)
     changesets = handler.changesets
-    
+
     # sort changeset by date
     changesets.sort(lambda x, y: cmp(x.date, y.date))
 
     return changesets
 
-    
+
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
     """
 
     ## UpdatableSourceWorkingDir
-    
+
     def getUpstreamChangesets(self, root, repository, module, sincerev=None):
         """
         Do the actual work of fetching the upstream changeset.
@@ -136,11 +136,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from datetime import datetime
         from time import strptime
         from changes import Changeset
-        
+
         cmd = [DARCS_CMD, "pull", "--dry-run"]
         pull = ExternalCommand(cwd=root, command=cmd)
         output = pull.execute(repository, stdout=PIPE, stderr=STDOUT, TZ='UTC')
-        
+
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d saying \"%s\"" %
@@ -190,25 +190,25 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     l = output.readline()
 
         return changesets
-    
+
     def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
         """
 
         from re import escape
-        
+
         if changeset.revision.startswith('tagged '):
             selector = '--tags'
             revtag = changeset.revision[7:]
         else:
             selector = '--patches'
             revtag = escape(changeset.revision)
-            
+
         cmd = [DARCS_CMD, "pull", "--all", selector, revtag]
         pull = ExternalCommand(cwd=root, command=cmd)
         output = pull.execute(stdout=PIPE, stderr=STDOUT)
-        
+
         if pull.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %d saying \"%s\"" %
@@ -231,7 +231,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from os.path import join, exists
         from os import mkdir
         from re import escape
-        
+
         if revision == 'INITIAL':
             initial = True
             cmd = [DARCS_CMD, "changes", "--xml-output", "--repo", repository]
@@ -270,7 +270,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     cmd.extend([initial and "--patches" or "--tags", revision])
                 dpull = ExternalCommand(cwd=wdir, command=cmd)
                 output = dpull.execute(repository, stdout=PIPE, stderr=STDOUT)
-                        
+
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
                         "%s returned status %d saying \"%s\"" %
@@ -283,7 +283,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             dget = ExternalCommand(cwd=basedir, command=cmd)
             output = dget.execute(repository, subdir,
                                   stdout=PIPE, stderr=STDOUT)
-            
+
             if dget.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
@@ -292,19 +292,19 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [DARCS_CMD, "changes", "--last", "1", "--xml-output"]
         changes = ExternalCommand(cwd=wdir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)
-        
+
         if changes.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %d saying \"%s\"" %
                 (str(changes), changes.exit_status, output.read()))
-        
+
         last = changesets_from_darcschanges(output)
-        
+
         return last[0]
 
-    
+
     ## SyncronizableTargetWorkingDir
-   
+
     def _addPathnames(self, root, names):
         """
         Add some new filesystems objects.
@@ -312,7 +312,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         cmd = [DARCS_CMD, "add", "--case-ok", "--not-recursive", "--quiet"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
-        
+
     def _addSubtree(self, root, subdir):
         """
         Use the --recursive variant of ``darcs add`` to add a subtree.
@@ -320,14 +320,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         cmd = [DARCS_CMD, "add", "--case-ok", "--recursive", "--quiet"]
         ExternalCommand(cwd=root, command=cmd).execute(subdir)
-        
+
     def _commit(self, root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = []
@@ -341,14 +341,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [DARCS_CMD, "record", "--all", "--pipe"]
         if not entries:
             entries = ['.']
-            
+
         record = ExternalCommand(cwd=root, command=cmd)
         record.execute(entries, input='\n'.join(logmessage), stdout=PIPE)
-        
+
         if record.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %d" % (str(record), record.exit_status))
-        
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -356,14 +356,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         # Since the source VCS already deleted the entry, and given that
         # darcs will do the right thing with it, do nothing here, instead
-        # of 
+        # of
         #         c = ExternalCommand(cwd=root,
         #                             command=[DARCS_CMD, "remove"])
         #         c.execute(entries)
         # that raises status 512 on darcs not finding the entry.
 
         pass
-    
+
     def _renamePathname(self, root, oldname, newname):
         """
         Rename a filesystem object.
@@ -371,7 +371,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import rename
-        
+
         # Check to see if the oldentry is still there. If it does,
         # that probably means one thing: it's been moved and then
         # replaced, see svn 'R' event. In this case, rename the
@@ -415,7 +415,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         boring = open(join(root, '_darcs/prefs/boring'), 'r')
         ignored = [line for line in boring if line <> '\.cvsignore$\n']
         boring.close()
-        
+
         # Augment the boring file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
         boring = open(join(root, '_darcs/prefs/boring'), 'w')
@@ -424,7 +424,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                 for md in IGNORED_METADIRS]))
         boring.write('\n^tailor.log$\n^tailor.info$\n')
         boring.close()
-        
+
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
                                                             subdir)
