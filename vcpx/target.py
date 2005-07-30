@@ -350,12 +350,13 @@ class SyncronizableTargetWorkingDir(object):
             log = None
         else:
             author = "%s@%s" % (AUTHOR, HOST)
-            remark = BOOTSTRAP_PATCHNAME % module
+            remark = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
         self._commit(root, changeset.date, author, remark, log,
                      entries=[subdir])
 
-    def _initializeWorkingDir(self, root, repository, module, subdir):
+    def _initializeWorkingDir(self, root, source_repository, source_module,
+                              subdir):
         """
         Assuming the ``root`` directory contains a working copy ``module``
         extracted from some VC repository, add it and all its content

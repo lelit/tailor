@@ -390,7 +390,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if renamed:
                 rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
 
-    def _initializeWorkingDir(self, root, repository, module, subdir):
+    def _initializeWorkingDir(self, root, source_repository, source_module,
+                              subdir):
         """
         Execute ``darcs initialize`` and tweak the default settings of
         the repository, then add the whole subtree.
@@ -408,7 +409,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 "%s returned status %s" % (str(init), init.exit_status))
 
         motd = open(join(root, '_darcs/prefs/motd'), 'w')
-        motd.write(MOTD % (repository, module))
+        motd.write(MOTD % (source_repository, source_module))
         motd.close()
 
         # Remove .cvsignore from default boring file
@@ -426,5 +427,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         boring.close()
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            repository, module,
+                                                            source_repository,
+                                                            source_module,
                                                             subdir)

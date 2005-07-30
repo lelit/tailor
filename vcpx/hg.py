@@ -108,7 +108,8 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         else:
             copy.execute(oldname, newname)
 
-    def _initializeWorkingDir(self, root, repository, module, subdir):
+    def _initializeWorkingDir(self, root, source_repository, source_module,
+                              subdir):
         """
         Execute ``hg init``.
         """

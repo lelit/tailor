@@ -388,7 +388,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             self._removePathnames(root, [oldname])
             self._addPathnames(root, [newname])
 
-    def _initializeWorkingDir(self, root, repository, module, subdir):
+    def _initializeWorkingDir(self, root, source_repository, source_module,
+                              subdir):
         """
         Add the given directory to an already existing svn working tree.
         """
@@ -399,5 +400,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % root)
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            repository, module,
+                                                            source_repository,
+                                                            source_module,
                                                             subdir)
