@@ -58,7 +58,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
                "--date", date.isoformat(),
                "--message-file", rontf.name]
         commit = ExternalCommit(cwd=root, command=cmd)
-        
+
         if not entries:
             entries = ['.']
 
@@ -74,7 +74,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
                     "%s returned status %s" % (str(commit),commit.exit_status))
             else:
                 stderr.write("No changes to commit - changeset ignored\n")
-        
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -96,7 +96,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Setup the monotone working copy
-        
+
         The user must setup a monotone working directory himself. Then
         we simply use 'monotone commit', without having to specify a database
         file or branch. Monotone looks up the database and branch in it's MT
