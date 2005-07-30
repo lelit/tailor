@@ -3,7 +3,7 @@
 # :Creato:   dom 20 giu 2004 11:02:01 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 The easiest way to propagate changes from one VC control system to one
@@ -46,23 +46,23 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             self.source = globs[source_kind.capitalize() + 'WorkingDir']()
         except KeyError, exp:
             raise InvocationError("Unhandled source VCS kind: " + source_kind)
-            
+
         try:
             self.target = globs[target_kind.capitalize() + 'WorkingDir']()
         except KeyError, exp:
             raise InvocationError("Unhandled target VCS kind: " + target_kind)
-            
+
         # UpdatableSourceWorkingDir
-        
+
         self.getUpstreamChangesets = self.source.getUpstreamChangesets
         self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
-        
+
         # SyncronizableTargetWorkingDir
-    
+
         self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
         self.commitDelayedChangesets = self.target.commitDelayedChangesets
         self.replayChangeset = self.target.replayChangeset
-        
+
     def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
