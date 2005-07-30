@@ -3,7 +3,7 @@
 # :Creato:   gio 05 mag 2005 23:47:45 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 This module implements the backends for Codeville.
@@ -15,7 +15,7 @@ from shwrap import ExternalCommand, PIPE
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 CODEVILLE_CMD = 'cdv'
-    
+
 class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -34,25 +34,25 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-        
+
         logmessage = []
         if remark:
             logmessage.append(remark.encode(encoding))
         if changelog:
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
         logmessage.append('')
-        
+
         cmd = [CODEVILLE_CMD, "-u", author.encode(encoding), "commit",
                "-m", '\n'.join(logmessage),
                "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC')]
-        
+
         if not entries:
             entries = ['.']
 
         ExternalCommand(cwd=root, command=cmd).execute(entries)
-        
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -78,7 +78,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
              BOOTSTRAP_CHANGELOG
-        
+
         self._initializeWorkingDir(root, repository, module, subdir)
         revision = changeset.revision
         if initial:
@@ -106,11 +106,11 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         if init.exit_status:
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
- 
+
         cmd = [CODEVILLE_CMD, "set", "user"]
         user = getenv('CDV_USER') or getenv('LOGNAME')
         ExternalCommand(cwd=root, command=cmd).execute(user)
-        
+
         SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
                                                             repository, module,
                                                             subdir)
