@@ -111,15 +111,13 @@ Examples
              put the original author and timestamp in the proper
              svn metadata instead of appending them to the changelog.
 
-             Beware: there is a note__ that revisions have to be
-             sorted in date order! This means that, if you have an
-             existing subversion repository, you can't really add in
-             another project.  The dates would all be interwined.
-             You would basically have to recreate the repo.  You can
-             work around this by using separate repos.
+             Other than the annoying repository manual intervention,
+             this thread__ and this other__ explain why using
+             ``-r{DATE}`` may produce strange results with this setup.
 
-__ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
-__ http://svn.haxx.se/users/archive-2004-05/0245.shtml
+__ http://svn.haxx.se/users/archive-2005-07/0605.shtml
+__ http://svn.haxx.se/users/archive-2005-03/0596.shtml
+
 
 3. Showing each command bootstrap a new DARCS repos in
    "~/darcs/cmftopic" under which the upstream module will be
