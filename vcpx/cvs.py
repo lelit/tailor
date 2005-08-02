@@ -108,7 +108,7 @@ class ChangeSetCollector(object):
         a *serial* number, simply emit a (hopefully) unique signature...
         """
 
-        # NB: the getUpstreamChangesets() below depends on this format
+        # NB: the _getUpstreamChangesets() below depends on this format
 
         return "%s by %s" % (timestamp, author)
 
@@ -288,7 +288,7 @@ class CvsWorkingDir(CvspsWorkingDir):
     CVS commits.
     """
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
+    def _getUpstreamChangesets(self, root, repository, module, sincerev=None,
                               branch=None):
         from os.path import join, exists
         from datetime import timedelta

@@ -128,7 +128,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def _getUpstreamChangesets(self, root, repository, module, sincerev=None):
         """
         Do the actual work of fetching the upstream changeset.
         """
@@ -155,7 +155,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if l <> 'No remote changes to pull in!\n':
             ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
-            ##   * Refix getUpstreamChangesets for darcs
+            ##   * Refix _getUpstreamChangesets for darcs
 
             l = output.readline()
             while not l.startswith('Making no changes:  this is a dry run.'):

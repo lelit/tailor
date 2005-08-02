@@ -140,7 +140,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## UpdatableSourceWorkingDir
     
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None,
+    def _getUpstreamChangesets(self, root, repository, module, sincerev=None,
                               branch=None):
         from os.path import join, exists
 
@@ -282,7 +282,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 revision, timestamp = revision.split(' ', 1)
 
         wdir = join(basedir, subdir)
-        csets = self.getUpstreamChangesets(wdir, repository, module,
+        csets = self._getUpstreamChangesets(wdir, repository, module,
                                            branch=revision or 'HEAD')
         csets.reverse()
 

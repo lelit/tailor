@@ -414,7 +414,7 @@ class TailorizedProject(object):
 
         try:
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            changesets = dwd.getUpstreamChangesets(proj,
+            changesets = dwd._getUpstreamChangesets(proj,
                                                    self.upstream_repos,
                                                    self.upstream_module,
                                                    self.upstream_revision)

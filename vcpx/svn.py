@@ -175,7 +175,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def _getUpstreamChangesets(self, root, repository, module, sincerev=None):
         if sincerev:
             sincerev = int(sincerev)
         else:

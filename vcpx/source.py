@@ -46,7 +46,7 @@ class UpdatableSourceWorkingDir(object):
 
     It has three main functionalities:
 
-    getUpstreamChangesets
+    _getUpstreamChangesets
         to query the upstream server about new changesets
 
     applyUpstreamChangesets
@@ -128,7 +128,7 @@ class UpdatableSourceWorkingDir(object):
         else:
             return True
 
-    def getUpstreamChangesets(self, root, repository, module, sincerev):
+    def _getUpstreamChangesets(self, root, repository, module, sincerev):
         """
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets

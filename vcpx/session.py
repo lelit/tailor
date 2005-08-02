@@ -612,7 +612,7 @@ class Session(Cmd):
 
         if not self.changesets:
             try:
-                self.changesets = dwd.getUpstreamChangesets(
+                self.changesets = dwd._getUpstreamChangesets(
                                            repodir,
                                            self.source_repository,
                                            self.source_module,
