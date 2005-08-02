@@ -26,17 +26,17 @@ with a Ctrl-Z and a few "svn resolved". What would you like to do?
 
 class GetUpstreamChangesetsFailure(Exception):
     "Failure getting upstream changes"
-    
+
     pass
 
 class ChangesetApplicationFailure(Exception):
     "Failure applying upstream changes"
-    
+
     pass
 
 class InvocationError(Exception):
     "Bad invocation, use --help for details"
-    
+
     pass
 
 class UpdatableSourceWorkingDir(object):
@@ -48,14 +48,14 @@ class UpdatableSourceWorkingDir(object):
 
     getUpstreamChangesets
         to query the upstream server about new changesets
-    
+
     applyUpstreamChangesets
         to apply them to the working directory
 
     checkoutUpstreamRevision
         to extract a new copy of the sources, actually initializing
         the mechanism.
-      
+
     Subclasses MUST override at least the _underscoredMethods.
     """
 
@@ -82,7 +82,7 @@ class UpdatableSourceWorkingDir(object):
         for c in changesets:
             if not self._willApplyChangeset(root, c, applyable):
                 continue
-            
+
             if logger:
                 logger.info("Applying changeset %s", c.revision)
 
@@ -94,7 +94,7 @@ class UpdatableSourceWorkingDir(object):
                                     c.revision, exc_info=True)
                     logger.debug(str(c))
                 raise
-            
+
             if res:
                 conflicts.append((c, res))
                 try:
@@ -106,12 +106,12 @@ class UpdatableSourceWorkingDir(object):
             if replay:
                 replay(root, module, c, delayed_commit=delayed_commit,
                        logger=logger)
-            
+
             if applied:
                 applied(root, c)
 
             last = c
-            
+
         return last, conflicts
 
     def _willApplyChangeset(self, root, changeset, applyable=None):
@@ -133,12 +133,12 @@ class UpdatableSourceWorkingDir(object):
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets
         instances.
-        
+
         This method must be overridden by subclasses.
         """
 
         raise "%s should override this method" % self.__class__
-        
+
     def _applyChangeset(self, root, changeset, logger=None):
         """
         Do the actual work of applying the changeset to the working copy.
@@ -163,7 +163,7 @@ class UpdatableSourceWorkingDir(object):
                      the actual method used by the subclass)
 
         :module: the name of the module to extract
-        
+
         :revision: extract that revision/branch
 
         Return the last applied changeset.
@@ -173,15 +173,15 @@ class UpdatableSourceWorkingDir(object):
             raise InvocationError("Must specify a root directory")
         if not repository:
             raise InvocationError("Must specify an upstream repository")
-        
+
         return self._checkoutUpstreamRevision(root, repository,
                                               module, revision,
                                               **kwargs)
-        
+
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None, **kwargs):
         """
         Concretely do the checkout of the upstream revision.
         """
-        
+
         raise "%s should override this method" % self.__class__
