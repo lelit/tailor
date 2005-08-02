@@ -155,7 +155,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if l <> 'No remote changes to pull in!\n':
             ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
-            ##   * Refix _getUpstreamChangesets for darcs
+            ##   * Refix getUpstreamChangesets for darcs
 
             l = output.readline()
             while not l.startswith('Making no changes:  this is a dry run.'):
