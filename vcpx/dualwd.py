@@ -54,7 +54,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # UpdatableSourceWorkingDir
 
-        self.getUpstreamChangesets = self.source.getUpstreamChangesets
+        self.getPendingChangesets = self.source.getPendingChangesets
         self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
 
         # SyncronizableTargetWorkingDir
@@ -64,12 +64,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.commitDelayedChangesets = self.target.commitDelayedChangesets
         self.replayChangeset = self.target.replayChangeset
 
-    def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
+    def applyPendingChangesets(self, root, module, applyable=None,
                                 replay=None, applied=None, logger=None,
                                 delayed_commit=False):
-        return self.source.applyUpstreamChangesets(root, module, changesets,
-                                                   replay=self.replayChangeset,
-                                                   applyable=applyable,
-                                                   applied=applied,
-                                                   logger=logger,
-                                                   delayed_commit=delayed_commit)
+        return self.source.applyPendingChangesets(root, module,
+                                                  replay=self.replayChangeset,
+                                                  applyable=applyable,
+                                                  applied=applied,
+                                                  logger=logger,
+                                                  delayed_commit=delayed_commit)
