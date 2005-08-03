@@ -11,5 +11,6 @@ from cvs import *
 from darcs import *
 from svn import *
 from tailor import *
+from config import *
 
 ExternalCommand.VERBOSE = False
