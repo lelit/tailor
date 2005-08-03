@@ -414,10 +414,9 @@ class TailorizedProject(object):
 
         try:
             dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            changesets = dwd._getUpstreamChangesets(proj,
-                                                   self.upstream_repos,
-                                                   self.upstream_module,
-                                                   self.upstream_revision)
+            changesets = dwd.getPendingChangesets(proj,
+                                                  self.upstream_repos,
+                                                  self.upstream_module)
         except KeyboardInterrupt:
             print "Leaving '%s' unchanged" % proj
             self.logger.info("Leaving '%s' unchanged, stopped by user" % proj)
@@ -432,8 +431,8 @@ class TailorizedProject(object):
                 print "Applying %d upstream changesets" % nchanges
 
             try:
-                last, conflicts = dwd.applyUpstreamChangesets(
-                    proj, self.upstream_module, changesets,
+                last, conflicts = dwd.applyPendingChangesets(
+                    proj, self.upstream_module,
                     applyable=self.applyable,
                     applied=self.applied, logger=self.logger,
                     delayed_commit=single_commit)
