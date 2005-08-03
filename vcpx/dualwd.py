@@ -19,16 +19,8 @@ __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir, InvocationError
 from target import SyncronizableTargetWorkingDir
-from svn import SvnWorkingDir
-from cvs import CvsWorkingDir
-from cvsps import CvspsWorkingDir
-from darcs import DarcsWorkingDir
-from monotone import MonotoneWorkingDir
-from cdv import CdvWorkingDir
-from bzr import BzrWorkingDir
-from hg import HgWorkingDir
 
-IGNORED_METADIRS = ['.svn', '_darcs', 'CVS', '.cdv', 'MT', '.hg', '.bzr']
+IGNORED_METADIRS = []
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """
@@ -39,21 +31,17 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     to the right backend.
     """
 
-    def __init__(self, source_kind, target_kind):
-        globs = globals()
+    def __init__(self, source_repo, target_repo):
+        global IGNORED_METADIRS
 
-        try:
-            self.source = globs[source_kind.capitalize() + 'WorkingDir']()
-        except KeyError, exp:
-            raise InvocationError("Unhandled source VCS kind: " + source_kind)
+        self.source = source_repo.workingDir()
+        self.target = target_repo.workingDir()
 
-        try:
-            self.target = globs[target_kind.capitalize() + 'WorkingDir']()
-        except KeyError, exp:
-            raise InvocationError("Unhandled target VCS kind: " + target_kind)
+        IGNORED_METADIRS = [source_repo.METADIR, target_repo.METADIR]
 
         # UpdatableSourceWorkingDir
 
+        self.setStateFile = self.source.setStateFile
         self.getPendingChangesets = self.source.getPendingChangesets
         self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
 
