@@ -36,7 +36,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     the same time.
 
     This class reimplements the two interfaces, dispatching the right method
-    to the right instance.
+    to the right backend.
     """
 
     def __init__(self, source_kind, target_kind):
