@@ -320,8 +320,11 @@ class SyncronizableTargetWorkingDir(object):
         Do anything required to setup the hosting working directory.
         """
 
-        self._prepareTargetRepository(root, target_repository, target_module)
-        self._prepareWorkingDirectory(root, target_repository, target_module)
+        if target_repository:
+            self._prepareTargetRepository(root, target_repository,
+                                          target_module)
+            self._prepareWorkingDirectory(root, target_repository,
+                                          target_module)
 
     def _prepareTargetRepository(self, root, target_repository, target_module):
         """
