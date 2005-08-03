@@ -3,7 +3,7 @@
 # :Creato:   dom 11 lug 2004 18:21:11 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase, TestSuite
 from datetime import datetime
@@ -17,14 +17,14 @@ class CvsEntryTest(TestCase):
         """Verify CvsEntry parser"""
 
         from datetime import datetime, timedelta
-        
+
         tagline = "/version.txt/1.16.2.1/Tue Jul 13 12:49:02 2004//T1.16.2.1"
         e = CvsEntry(tagline)
         self.assertEqual(e.filename, 'version.txt')
         self.assertEqual(e.cvs_version, '1.16.2.1')
         self.assertEqual(e.timestamp, datetime(2004, 7, 13, 12, 49, 2))
         self.assertEqual(e.cvs_tag, 'T1.16.2.1')
-        
+
         tagline = "/Validator.py/1.31.2.5/Result of merge+Tue Jul 13 13:43:06 2004//T1.31.2.5"
         e = CvsEntry(tagline)
         self.assertEqual(e.filename, 'Validator.py')
@@ -38,7 +38,7 @@ class CvsEntryTest(TestCase):
         self.assertEqual(e.cvs_version, '1.55')
         self.assert_((datetime.today() - e.timestamp) < timedelta(seconds=1))
         self.assertEqual(e.cvs_tag, 'T1.55')
-        
+
 
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""
@@ -73,7 +73,7 @@ Added to project (exctracted from HISTORY.txt)
         csets = changesets_from_cvslog(log, 'docutils')
 
         self.assertEqual(len(csets), 2)
-        
+
         cset = csets[0]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
@@ -83,16 +83,16 @@ Added to project (exctracted from HISTORY.txt)
         self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
-        self.assertEqual(cset.log, "") 
+        self.assertEqual(cset.log, "")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.new_revision, '1.2')
         self.assertEqual(entry.action_kind, entry.UPDATED)
-       
+
     DOUBLE_TEST = """\
 cvs rlog: Logging docutils/docutils
 
@@ -178,11 +178,11 @@ updated
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'docutils/statemachine.py')
         self.assertEqual(entry.new_revision, '1.16')
-        
+
         entry = cset.entries[1]
         self.assertEqual(entry.name, 'docutils/utils.py')
         self.assertEqual(entry.new_revision, '1.34')
-        
+
         cset = csets[4]
         self.assertEqual(cset.author, "felixwiemann")
         self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
@@ -221,7 +221,7 @@ Added to project (exctracted from HISTORY.txt)
         cset = csets[0]
         entry = cset.entries[0]
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'THANKS.txt')
@@ -229,7 +229,7 @@ Added to project (exctracted from HISTORY.txt)
 
     COLLAPSE_TEST = """\
 cvs rlog: Logging PyObjC/Doc
-    
+
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
 head: 1.4
 branch:
@@ -294,23 +294,23 @@ Fake changelog 4
         cset = csets[0]
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 12))
-        
+
         cset = csets[1]
         self.assertEqual(len(cset.entries), 1)
         self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')       
-        
+        self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')
+
         cset = csets[2]
         self.assertEqual(len(cset.entries), 1)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'Doc/libPyObjC.tex')       
-        
+        self.assertEqual(entry.name, 'Doc/libPyObjC.tex')
+
         cset = csets[3]
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 45))
-        
+
     BRANCHES_TEST = """\
 cvs rlog: Logging Archetypes/tests
 
@@ -337,7 +337,7 @@ branches:  1.18.14.3.2;
 Fixed deepcopy problem in validations
 =============================================================================
 """
-    
+
     def testBranchesInLog(self):
         """Verify the parser groks with the branches info on revision"""
 
@@ -348,7 +348,7 @@ Fixed deepcopy problem in validations
 
         cset = csets[0]
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations")
-        
+
     REPOSPATH_TEST = """\
 cvs rlog: Logging Zope/spurious/dummy/dir
 cvs rlog: Logging Zope/lib/python/DateTime
@@ -623,7 +623,7 @@ Something went wrong ...
 =============================================================================
 cvs rlog: Logging ATContentTypes/types/criteria
 """
-    
+
     def testLongLog(self):
         """Stress the parser with a very long changelog"""
 
@@ -631,7 +631,7 @@ cvs rlog: Logging ATContentTypes/types/criteria
         csets = changesets_from_cvslog(log, 'ATContentTypes')
 
         self.assertEqual(len(csets), 6)
-        
+
         cset = csets[0]
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 6, 20, 13, 30))
@@ -640,7 +640,7 @@ cvs rlog: Logging ATContentTypes/types/criteria
         self.assertEqual(entry.name, 'docs/ExtendingType.txt')
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9))
@@ -650,7 +650,7 @@ to make them much more memory efficient. Rewritten folder migration to
 use the depth inside the folder structur instead of recursing into the
 full side. Added a findStaledObjects external method to ATCT to find
 staled objects. It is very useful to clean up a site before running
-the migration.""") 
+the migration.""")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Extensions/batchCreate.py')
         self.assertEqual(entry.new_revision, '1.2')
@@ -679,12 +679,12 @@ the migration.""")
         self.assertEqual(entry.name, 'customconfig.py.example')
         self.assertEqual(entry.new_revision, '1.7')
         self.assertEqual(entry.action_kind, entry.UPDATED)
-        
+
     SILLY_TEST = """\
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
 head: 1.2
 """
-    
+
     def testDirectoryMissing(self):
         """Verify how parser reacts on bad input"""
 
@@ -749,7 +749,7 @@ Persistent server script
 =============================================================================
 cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/ZServer/Attic/zope_handler.py,v'
 """
-    
+
     def testDescriptionPresent(self):
         """Verify cvs log parser handle eventual description"""
 
@@ -793,10 +793,10 @@ date: 2004-03-23 19:20:02 +0000;  author: mdlavin;  state: Exp;
 *** empty log message ***
 =============================================================================
 """
-    
+
     def testAddDelAddAgain(self):
         """Verify add->delete->add/modify->modify CVS case"""
-        
+
         log = StringIO(self.ADD_DEL_ADD_AGAIN_TEST)
         csets = changesets_from_cvslog(log, 'test')
 
@@ -807,19 +807,19 @@ date: 2004-03-23 19:20:02 +0000;  author: mdlavin;  state: Exp;
         self.assertEqual(entry.name, 'file')
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'file')
         self.assertEqual(entry.new_revision, '1.2')
         self.assertEqual(entry.action_kind, entry.DELETED)
-        
+
         cset = csets[2]
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'file')
         self.assertEqual(entry.new_revision, '1.3')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
     MULTI_MODULE_TEST = """\
 cvs rlog: Logging apache-1.3/src/test/vhtest/logs
 
@@ -860,10 +860,9 @@ date: 1997/12/21 00:22:00;  author: dgaudet;  state: Exp;
 I'm tired of cvs complaining about all my debugging files.  We're not likely
 to be changing this directory much, so ignore any non-cvs files in it.
 """
-    
+
     def testModules(self):
         """Verify the parser correctly handle multimodules"""
 
         log = StringIO(self.MULTI_MODULE_TEST)
         csets = changesets_from_cvslog(log, 'apache-1.3')
-        
