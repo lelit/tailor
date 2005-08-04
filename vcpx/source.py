@@ -46,10 +46,10 @@ class UpdatableSourceWorkingDir(object):
 
     It has three main functionalities:
 
-    _getUpstreamChangesets
+    getPendingChangesets
         to query the upstream server about new changesets
 
-    applyUpstreamChangesets
+    applyPendingChangesets
         to apply them to the working directory
 
     checkoutUpstreamRevision
@@ -59,9 +59,16 @@ class UpdatableSourceWorkingDir(object):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def applyUpstreamChangesets(self, root, module, changesets, applyable=None,
-                                replay=None, applied=None, logger=None,
-                                delayed_commit=False):
+    def setStateFile(self, state_file):
+        """
+        Set the state file used to store the revision and pending changesets.
+        """
+
+        self.state_file = state_file
+
+    def applyPendingChangesets(self, root, module, applyable=None,
+                               replay=None, applied=None, logger=None,
+                               delayed_commit=False):
         """
         Apply the collected upstream changes.
 
@@ -79,7 +86,12 @@ class UpdatableSourceWorkingDir(object):
         c = None
         last = None
         conflicts = []
-        for c in changesets:
+
+        if not self.pending:
+            return last, conflicts
+
+        remaining = self.pending[:]
+        for c in self.pending:
             if not self._willApplyChangeset(root, c, applyable):
                 continue
 
@@ -107,11 +119,15 @@ class UpdatableSourceWorkingDir(object):
                 replay(root, module, c, delayed_commit=delayed_commit,
                        logger=logger)
 
+            remaining.remove(c)
+            self.state_file.write(c.revision, remaining)
+
             if applied:
                 applied(root, c)
 
             last = c
 
+        self.pending = remaining
         return last, conflicts
 
     def _willApplyChangeset(self, root, changeset, applyable=None):
@@ -127,6 +143,18 @@ class UpdatableSourceWorkingDir(object):
             return applyable(root, changeset)
         else:
             return True
+
+    def getPendingChangesets(self,  root, repository, module):
+        """
+        Load the pending changesets from the state file, or query the
+        upstream repository if there's none.
+        """
+
+        revision, self.pending = self.state_file.load()
+        if not self.pending:
+            self.pending = self._getUpstreamChangesets(root, repository, module,
+                                                       revision)
+        return self.pending
 
     def _getUpstreamChangesets(self, root, repository, module, sincerev):
         """
@@ -174,9 +202,12 @@ class UpdatableSourceWorkingDir(object):
         if not repository:
             raise InvocationError("Must specify an upstream repository")
 
-        return self._checkoutUpstreamRevision(root, repository,
+        last = self._checkoutUpstreamRevision(root, repository,
                                               module, revision,
                                               **kwargs)
+        self.state_file.write(last.revision, None)
+
+        return last
 
     def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
                                   subdir=None, logger=None, **kwargs):
