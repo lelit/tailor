@@ -324,7 +324,7 @@ class Session(Cmd):
 
     def do_target_kind(self, arg):
         """
-        Usage: target_kind [svn|darcs|cvs|monotone|cdv|bzr]
+        Usage: target_kind [svn|darcs|cvs|monotone|cdv|bzr|arx]
 
         Print or set the target repository kind.
         """
