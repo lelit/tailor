@@ -101,6 +101,8 @@ class SvnRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.use_propset = config.get(self.name, 'use-propset', False)
+        if not self.module.startswith('/'):
+            self.module = '/' + self.module
 
     def workingDir(self):
         wd = Repository.workingDir(self)
