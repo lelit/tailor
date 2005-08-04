@@ -79,24 +79,71 @@ class Project(object):
         """
 
         from os import getcwd
+        import logging
 
         self.root = self.config.get(self.name, 'root', getcwd())
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
         self.state_file = StateFile(self.config.get(self.name, 'state-file'),
                                     self.config)
+
         before = self.config.getTuple(self.name, 'before-commit')
         try:
             self.before_commit = [self.config.namespace[f] for f in before]
         except KeyError, e:
             raise ConfigurationError('Project %s before-commit references '
-                                     'unknown function: '%self.name + str(e))
+                                     'unknown function: %s' %
+                                     (self.name, str(e)))
+
         after = self.config.getTuple(self.name, 'after-commit')
         try:
             self.after_commit = [self.config.namespace[f] for f in after]
         except KeyError, e:
             raise ConfigurationError('Project %s after-commit references '
-                                     'unknown function: '%self.name + str(e))
+                                     'unknown function: %s' %
+                                     (self.name, str(e)))
+
+        self.verbose = self.config.get(self.name, 'verbose', False)
+
+        self.logger = logging.getLogger('tailor.%s' % self.name)
+        logfile = self.config.get(self.name, 'logfile', 'tailor.log')
+        hdlr = logging.FileHandler(join(self.root, logfile))
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+        hdlr.setFormatter(formatter)
+        self.logger.addHandler(hdlr)
+        self.logger.setLevel(logging.INFO)
+
+    def log_info(self, what):
+        """
+        Print some info on the log and, in verbose mode, to stdout as well.
+        """
+
+        if self.logger:
+            self.logger.info(what)
+
+        if self.verbose:
+            print what
+
+    def log_error(self, what, exc=False):
+        """
+        Print an error message, possibly with an exception traceback,
+        to the log and to stdout as well.
+        """
+
+        if self.logger:
+            if exc:
+                self.logger.exception(what)
+            else:
+                self.logger.error(what)
+
+        print "Error:", what,
+        if exc:
+            from sys import exc_info
+
+            ei = exc_info()
+            print ' -- Exception %s: %s' % ei[0:2])
+        else:
+            print
 
     def __loadRepository(self, which):
         """
