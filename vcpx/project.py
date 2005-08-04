@@ -107,7 +107,7 @@ class Project(object):
                                      (self.name, str(e)))
 
         self.verbose = self.config.get(self.name, 'verbose', False)
-
+        self.single_commit = self.config.get(self.name, 'single-commit', False)
         self.logger = logging.getLogger('tailor.%s' % self.name)
         logfile = self.config.get(self.name, 'logfile', 'tailor.log')
         hdlr = logging.FileHandler(join(self.root, logfile))
