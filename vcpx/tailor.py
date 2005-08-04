@@ -15,7 +15,7 @@ unversioned file named ``tailor.info`` at the root.
 
 __docformat__ = 'reStructuredText'
 
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 from optparse import OptionParser, OptionGroup, make_option
 from config import Config
