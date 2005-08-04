@@ -60,6 +60,9 @@ class Repository(object):
         return workingdir()
 
 
+class ArxRepository(Repository):
+    METADIR = '_arx'
+
 class BzrRepository(Repository):
     METADIR = '.bzr'
 

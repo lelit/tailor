@@ -2,7 +2,7 @@ About
 =====
 
 Tailor is a tool to migrate changesets between CVS, Subversion_,
-darcs_, monotone_, Codeville_, Mercurial_ and `Baazar-NG`_ [#]_
+darcs_, ArX_, monotone_, Codeville_, Mercurial_ and `Baazar-NG`_ [#]_
 repositories.
 
 This script makes it easier to keep the upstream changes merged in
@@ -37,7 +37,7 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] Monotone, Codeville, Mercurial and Baazar-NG systems may be
+.. [#] ArX, Monotone, Codeville, Mercurial and Baazar-NG systems may be
        used only as the `target` backend, since the `source` support
        isn't coded yet. Contributions on these backends will be very
        appreciated, since I do not use them enough to figure out the
@@ -49,7 +49,7 @@ two way sync::
 .. _codeville: http://www.codeville.org/
 .. _baazar-ng: http://www.bazaar-ng.org/
 .. _mercurial: http://www.selenic.com/mercurial/
-
+.. _arx: http://www.nongnu.org/arx/
 
 Installation
 ============

@@ -19,16 +19,8 @@ __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir, InvocationError
 from target import SyncronizableTargetWorkingDir
-from svn import SvnWorkingDir
-from cvs import CvsWorkingDir
-from cvsps import CvspsWorkingDir
-from darcs import DarcsWorkingDir
-from monotone import MonotoneWorkingDir
-from cdv import CdvWorkingDir
-from bzr import BzrWorkingDir
-from hg import HgWorkingDir
 
-IGNORED_METADIRS = ['.svn', '_darcs', 'CVS', '.cdv', 'MT', '.hg', '.bzr']
+IGNORED_METADIRS = []
 
 class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     """

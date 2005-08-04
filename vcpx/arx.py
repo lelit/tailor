@@ -1,9 +1,9 @@
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- Mercurial stuff
+# :Progetto: vcpx -- ArX stuff
 # :Creato:   ven 24 giu 2005 20:42:46 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 # Modified 2005 by Walter Landry for ArX
 
 """
@@ -38,7 +38,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
         from time import mktime
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = ""
@@ -57,7 +57,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
                "--date", date.isoformat()]
         c = ExternalCommand(cwd=root, command=cmd)
         c.execute()
-        
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem object.
@@ -73,11 +73,11 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [ARX_CMD, "copy"]
         rename = ExternalCommand(cwd=root, command=cmd)
         rename.execute(oldname,newname)
-            
+
     def _initializeWorkingDir(self, root, repository, module, subdir):
         """
         Setup the ArX working copy
-        
+
         The user must setup a ArX working directory himself. Then
         we simply use 'arx commit', without having to specify an archive
         or branch. ArX looks up the archive and branch in it's _arx
@@ -106,4 +106,3 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
                     dirs.remove(metadir)
             for d in dirs:
                 add_path.execute(join(root,d))
-
