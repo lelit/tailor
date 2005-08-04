@@ -14,9 +14,7 @@ __docformat__ = 'reStructuredText'
 from ConfigParser import SafeConfigParser
 
 class ConfigurationError(Exception):
-    """
-    Raised on invalid configuration.
-    """
+    """Configuration error"""
 
 
 class Config(SafeConfigParser):

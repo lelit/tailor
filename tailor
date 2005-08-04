@@ -28,6 +28,7 @@ if __name__ == '__main__':
         from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
              ChangesetApplicationFailure
         from vcpx.cvs import EmptyRepositoriesFoolsMe
+        from vcpx.config import ConfigurationError
 
         if len(sys.argv) == 1:
             sys.argv.append('--help')
@@ -37,7 +38,7 @@ if __name__ == '__main__':
         except (ExistingProjectError, ProjectNotTailored,
                 TargetInitializationFailure, EmptyRepositoriesFoolsMe,
                 InvocationError, GetUpstreamChangesetsFailure,
-                ChangesetApplicationFailure), exc:
+                ChangesetApplicationFailure, ConfigurationError), exc:
             print "%s: %s" % (exc.__doc__, exc)
         except UnicodeEncodeError, exc:
             print exc
