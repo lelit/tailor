@@ -94,6 +94,9 @@ class Changeset(object):
     This is a container of each file affected by this revision of the tree.
     """
 
+    ANONYMOUS_USER = "anonymous"
+    """Author name when it is not known"""
+
     REFILL_MESSAGE = True
     """Refill changelogs"""
     
@@ -104,7 +107,9 @@ class Changeset(object):
         
         self.revision = revision
         self.date = date
-        self.author = author
+        # Author name may be missing, to mean a check in made by an
+        # anonymous user.
+        self.author = author or self.ANONYMOUS_USER
         if self.REFILL_MESSAGE:
             self.log = refill(log)
         else:

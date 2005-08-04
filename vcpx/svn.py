@@ -128,7 +128,7 @@ def changesets_from_svnlog(log, url, repository, module):
 
                 changeset = Changeset(self.current['revision'],
                                       timestamp,
-                                      self.current['author'],
+                                      self.current.get('author'),
                                       self.current['msg'],
                                       entries)
                 self.changesets.append(changeset)
