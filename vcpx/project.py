@@ -81,7 +81,9 @@ class Project(object):
         self.root = self.config.get(self.name, 'root', getcwd())
         if not exists(self.root):
             makedirs(self.root)
-        self.subdir = self.config.get(self.name, 'subdir', '.')
+        self.subdir = self.config.get(self.name, 'subdir')
+        if not self.subdir:
+            self.subdir = '.'
 
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
