@@ -171,6 +171,8 @@ class Project(object):
         Return a DualWorkingDir instance, ready to work.
         """
 
+        from dualwd import DualWorkingDir
+
         if self.dwd is None:
             self.dwd = DualWorkingDir(self.source, self.target)
             self.dwd.setStateFile(self.state_file)
