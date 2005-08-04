@@ -232,9 +232,12 @@ class Project(object):
         Apply pending changesets, eventually fetching latest from upstream.
         """
 
+        from os.path import join
+
+        wdir = join(self.root, self.subdir)
         dwd = self.workingDir()
         try:
-            pendings = dwd.getPendingChangesets(self.root,
+            pendings = dwd.getPendingChangesets(wdir,
                                                 self.source.repository,
                                                 self.source.module)
         except KeyboardInterrupt:
@@ -251,7 +254,7 @@ class Project(object):
 
             try:
                 last, conflicts = dwd.applyPendingChangesets(
-                    self.root, self.source.module,
+                    wdir, self.source.module,
                     applyable=self._applyable, applied=self._applied,
                     logger=self.logger, delayed_commit=self.single_commit)
             except:
