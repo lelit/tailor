@@ -18,437 +18,70 @@ __docformat__ = 'reStructuredText'
 __version__ = '0.9.1'
 
 from optparse import OptionParser, OptionGroup, make_option
-from dualwd import DualWorkingDir
+from config import Config
 from source import InvocationError
 from session import interactive
-from svn import SvnWorkingDir
 
-STATUS_FILENAME = 'tailor.info'
-LOG_FILENAME = 'tailor.log'
-
-def relpathto(source, dest):
+class Tailorizer(object):
     """
-    Compute the relative path needed to point ``source`` from ``dest``.
-
-    Warning: ``dest`` is assumed to be a directory.
-    """
-
-    from os.path import abspath, split, commonprefix
-
-    source = abspath(source)
-    dest = abspath(dest)
-
-    if source.startswith(dest):
-        return source[len(dest)+1:]
-
-    prefix = commonprefix([source, dest])
-
-    source = source[len(prefix):]
-    dest = dest[len(prefix):]
-
-    return '../' * len(dest.split('/')) + source
-
-
-class TailorConfig(object):
-    """
-    Configuration of a set of tailorized projects.
-
-    The configuration is stored in a persistent dictionary keyed on the
-    relative path of each project. The information about a single project
-    is another dictionary.
-    """
-
-    def __init__(self, options):
-        from os.path import abspath, split
-
-        self.options = options
-        self.configfile = abspath(options.configfile)
-        self.basedir = split(self.configfile)[0]
-
-    def __call__(self, args):
-        from os.path import join, exists, split
-        from source import ChangesetApplicationFailure
-
-        self.__load()
-
-        if len(args) == 0:
-            fromconfig = True
-            if self.options.bootstrap:
-                f = lambda x: not exists(x)
-            else:
-                f = exists
-
-            args = [p for p in [join(self.basedir, r)
-                                for r in self.config.keys()] if f(p)]
-            args.sort()
-        else:
-            fromconfig = False
-
-        try:
-            for root in args:
-                if self.options.bootstrap:
-                    if not (fromconfig or self.options.source_repository):
-                        raise InvocationError('Need a repository to bootstrap '
-                                              '%r' % root, '--bootstrap')
-                else:
-                    if not self.config.has_key(relpathto(root, self.basedir)):
-                        raise UnknownProjectError("Project %r does not exist" %
-                                                  root)
-
-                tailored = TailorizedProject(root, self.options.verbose, self)
-
-                if self.options.bootstrap:
-                    if fromconfig:
-                        info = self.loadProject(root=root)
-                        self.options.source_kind = info['source_kind']
-                        self.options.target_kind = info['target_kind']
-                        self.options.source_repository = info['upstream_repos']
-                        self.options.source_module = info['module']
-                        self.options.subdir = info.get('subdir',
-                                                       split(info['module'])[1])
-                        self.options.revision = info['upstream_revision']
-
-                    tailored.bootstrap(self.options.source_kind,
-                                       self.options.target_kind,
-                                       self.options.source_repository,
-                                       self.options.source_module,
-                                       self.options.revision,
-                                       self.options.target_repository,
-                                       self.options.target_module,
-                                       self.options.subdir)
-                elif self.options.migrate:
-                    tailored.migrateConfiguration()
-                elif self.options.update:
-                    try:
-                        tailored.update(self.options.single_commit,
-                                        self.options.concatenate_logs)
-                    except ChangesetApplicationFailure, e:
-                        print "Skipping '%s' because of errors:" % root, e
-        finally:
-            self.__save()
-
-    def __save(self):
-        from pprint import pprint
-
-        configfile = open(self.configfile, 'w')
-        pprint(self.config, configfile)
-        configfile.close()
-
-    def __load(self):
-        from os.path import exists
-
-        if exists(self.options.configfile):
-            configfile = open(self.configfile)
-            self.config = eval(configfile.read())
-            configfile.close()
-        else:
-            self.config = {}
-
-    def loadProject(self, project=None, root=None):
-        from os.path import split
-
-        relpath = relpathto(project and project.root or root, self.basedir)
-
-        info = self.config.get(relpath)
-        if info and project:
-            project.source_kind = info['source_kind']
-            project.target_kind = info['target_kind']
-            project.upstream_module = info['module']
-            project.subdir = info.get('subdir',
-                                      split(project.upstream_module)[1])
-            project.upstream_repos = info['upstream_repos']
-            project.upstream_revision = info['upstream_revision']
-
-        return info
-
-    def saveProject(self, project):
-        relpath = relpathto(project.root, self.basedir)
-
-        self.config[relpath] = {
-            'source_kind': project.source_kind,
-            'target_kind': project.target_kind,
-            'module': project.upstream_module,
-            'subdir': project.subdir,
-            'upstream_repos': project.upstream_repos,
-            'upstream_revision': project.upstream_revision,
-            }
-
-
-class TailorizedProject(object):
-    """
-    A TailorizedProject has two main capabilities: it may be bootstrapped
-    from an upstream repository or brought in sync with current upstream
+    A Tailorizer has two main capabilities: its able to bootstrap a
+    new Project, or brought it in sync with its current upstream
     revision.
     """
 
-    def __init__(self, root, verbose=False, config=None):
-        import logging
-        from os import makedirs
-        from os.path import join, exists, split
+    def __init__(self, project):
+        self.project = project
 
-        self.root = root
-        if not exists(root):
-            makedirs(root)
-
-        self.verbose = verbose
-        self.logger = logging.getLogger('tailor.%s' % split(root)[1])
-        hdlr = logging.FileHandler(join(root, LOG_FILENAME))
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-        hdlr.setFormatter(formatter)
-        self.logger.addHandler(hdlr)
-        self.logger.setLevel(logging.INFO)
-
-        self.source_kind = self.target_kind = None
-
-        self.config = config
-
-    def migrateConfiguration(self):
-        self.__loadOldStatus()
-        self.__saveStatus()
-
-    def __saveOldStatus(self):
-        from os.path import join
-
-        statusfilename = join(self.root, STATUS_FILENAME)
-        f = open(statusfilename, 'w')
-        print >>f, self.source_kind
-        print >>f, self.target_kind
-        print >>f, self.upstream_module
-        print >>f, self.upstream_repos
-        print >>f, self.upstream_revision
-        print >>f, self.subdir
-        f.close()
-
-    def __saveStatus(self):
-        """
-        Save relevant project information in a persistent way.
-        """
-
-        if self.config:
-            self.config.saveProject(self)
-        else:
-            self.__saveOldStatus()
-
-    def __loadOldStatus(self):
-        from os.path import join, split
-
-        statusfilename = join(self.root, STATUS_FILENAME)
-        f = open(statusfilename)
-        self.source_kind = f.readline()[:-1]
-        self.target_kind = f.readline()[:-1]
-        self.upstream_module = f.readline()[:-1]
-        self.upstream_repos = f.readline()[:-1]
-        self.upstream_revision = f.readline()[:-1]
-        subdir = f.readline()
-        if subdir:
-            self.subdir = subdir[:-1]
-        else:
-            self.subdir = split(self.upstream_module)[1]
-        f.close()
-
-    def __loadStatus(self):
-        """
-        Load relevant project information.
-        """
-
-        if self.config:
-            self.config.loadProject(self)
-        else:
-            self.__loadOldStatus()
-
-        # Fix old configs
-
-        if self.source_kind == 'svn' and not '/' in self.upstream_module:
-            self.logger.warning('OLD config values for SVN')
-            print "The project at '%s' contains old values for" % self.root
-            print "the upstream repository (%s)" % self.upstream_repos
-            print "and module (%s)." % self.upstream_module
-            print "Please correct them, specifying the exact URL of the"
-            print "root of the SVN repository and then the prefix path up"
-            print "to the point you want, that must start with a slash."
-            print "This usually means splitting the repository URL above in"
-            print "two parts. For example, that could be"
-
-            crepo = self.upstream_repos
-            example_split = crepo.rfind('/', 6, crepo.rfind('/'))
-            if example_split > 0:
-                example_repo = crepo[:example_split]
-                example_module = crepo[example_split:]
-            else:
-                example_repo = 'http://svn.plone.org/collective'
-                example_module = '/ATContentTypes/trunk'
-
-            print "  Repository=%s" % example_repo
-            print "  Module=%s" % example_module
-            print "but your situation may vary, that's just an example!"
-            print
-            try:
-                self.repository = raw_input('Repository: ')
-                self.upstream_module = raw_input('Module/prefix: ')
-            except KeyboardInterrupt:
-                self.logger.warning("Leaving old config values, stopped by user")
-                raise
-
-    def bootstrap(self, source_kind, target_kind,
-                  source_repository, source_module, revision,
-                  target_repository, target_module, subdir):
+    def bootstrap(self):
         """
         Bootstrap a new tailorized module.
 
-        First of all prepare the target system working directory such that
-        it can host the upstream source tree. This is backend specific.
+        First of all prepare the target system working directory such
+        that it can host the upstream source tree. This is backend
+        specific.
 
-        Extract a copy of the ``repository`` at given ``revision`` in the
-        ``root`` directory and initialize a target repository with its content.
-
-        The actual information on the project are stored in a text file.
+        Then extract a copy of the upstream repository and import its
+        content into the target repository.
         """
 
-        from os.path import split
-
-        if source_kind == 'svn':
-            if not (source_module and source_module.startswith('/')):
-                raise InvocationError('With SVN the module argument is '
-                                      'mandatory and must start with a "/"')
-
-        if source_repository.endswith('/'):
-            source_repository = source_repository[:-1]
-
-        if source_module and source_module.endswith('/'):
-            source_module = source_module[:-1]
-
-        if not subdir:
-            subdir = split(source_module or source_repository)[1] or ''
-
-        self.logger.info("Bootstrapping '%s'" % (self.root,))
-
-        dwd = DualWorkingDir(source_kind, target_kind)
-        self.logger.info("getting %s revision '%s' of '%s' from '%s'" % (
-            source_kind, revision, source_module, source_repository))
+        self.project.log_info("Bootstrapping '%s'" % self.project.root)
 
         try:
-            dwd.prepareWorkingDirectory(self.root,
-                                        target_repository, target_module)
+            self.project.prepareWorkingDirectory()
         except:
-            self.logger.exception('Cannot prepare working directory!')
+            self.project.log_error('Cannot prepare working directory!', True)
             raise
 
         try:
-            actual = dwd.checkoutUpstreamRevision(self.root, source_repository,
-                                                  source_module, revision,
-                                                  subdir=subdir,
-                                                  logger=self.logger)
+            self.project.checkoutUpstreamRevision()
         except:
-            self.logger.exception('Checkout failed!')
+            self.project.log_error("Checkout of '%s' failed!" %
+                                   self.project.name, True)
             raise
 
-        # the above machinery checked out a copy under of the wc
-        # in the directory named as the last component of the module's name
+        self.project.log_info("Bootstrap completed")
 
-        if not source_module:
-            source_module = split(source_repository)[1]
-
-        try:
-            dwd.initializeNewWorkingDir(self.root, source_repository,
-                                        source_module, subdir,
-                                        actual, revision=='INITIAL')
-        except:
-            self.logger.exception('Working copy initialization failed!')
-            raise
-
-        self.source_kind = source_kind
-        self.target_kind = target_kind
-        self.upstream_repos = source_repository
-        self.upstream_module = source_module
-        self.subdir = subdir
-        self.upstream_revision = actual.revision
-
-        self.__saveStatus()
-
-        self.logger.info("Bootstrap completed")
-
-    def applyable(self, root, changeset):
-        """
-        Print the changeset being applied.
-        """
-
-        if self.verbose:
-            print "Changeset %s:" % changeset.revision
-            try:
-                print changeset.log
-            except UnicodeEncodeError:
-                print ">>> Non-printable changelog <<<"
-
-        return True
-
-    def applied(self, root, changeset):
-        """
-        Save current status.
-        """
-
-        self.upstream_revision = changeset.revision
-        self.__saveStatus()
-        if self.verbose:
-            print
-
-    def update(self, single_commit, concatenate_logs):
+    def update(self):
         """
         Update an existing tailorized project.
-
-        Fetch the upstream changesets and apply them to the working copy.
-        Use the information stored in the ``tailor.info`` file to ask just
-        the new changeset since last bootstrap/synchronization.
         """
 
-        from os.path import join
-
-        self.__loadStatus()
-        proj = join(self.root, self.subdir)
-
-        self.logger.info("Updating '%s' from revision '%s'" % (
-            self.upstream_module, self.upstream_revision))
-
-        if self.verbose:
-            print "\nUpdating '%s' from revision '%s'" % (
-                self.upstream_module, self.upstream_revision)
+        self.project.log_info("Updating '%s'" % self.project.name)
 
         try:
-            dwd = DualWorkingDir(self.source_kind, self.target_kind)
-            changesets = dwd.getPendingChangesets(proj,
-                                                  self.upstream_repos,
-                                                  self.upstream_module)
-        except KeyboardInterrupt:
-            print "Leaving '%s' unchanged" % proj
-            self.logger.info("Leaving '%s' unchanged, stopped by user" % proj)
-            return
+            self.project.applyPendingChangesets()
         except:
-            self.logger.exception("Unable to get changes for '%s'" % proj)
+            self.project.log_error("Cannot update '%s'!" % self.project.name,
+                                   True)
             raise
 
-        nchanges = len(changesets)
-        if nchanges:
-            if self.verbose:
-                print "Applying %d upstream changesets" % nchanges
+        self.project.log_info("Update completed")
 
-            try:
-                last, conflicts = dwd.applyPendingChangesets(
-                    proj, self.upstream_module,
-                    applyable=self.applyable,
-                    applied=self.applied, logger=self.logger,
-                    delayed_commit=single_commit)
-            except:
-                self.logger.exception('Upstream change application failed')
-                raise
-
-            if last:
-                if single_commit:
-                    dwd.commitDelayedChangesets(proj, concatenate_logs)
-
-                self.logger.info("Update completed, now at revision '%s'" % (
-                    self.upstream_revision,))
+    def __call__(self, options):
+        if options.bootstrap:
+            self.bootstrap()
         else:
-            self.logger.info("Update completed with no upstream changes")
-
+            self.update()
 
 GENERAL_OPTIONS = [
     make_option("-i", "--interactive", default=False, action="store_true",
@@ -634,14 +267,22 @@ def main():
     SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
     Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
 
-    SvnWorkingDir.USE_PROPSET = options.use_svn_propset
-
     if options.interactive:
         interactive(options, args)
     elif options.configfile:
-        config = TailorConfig(options)
+        defaults = {}
+        for k,v in options.__dict__.items():
+            defaults[k.replace('_', '-')] = v
 
-        config(map(abspath, args))
+        config = Config(open(options.configfile), defaults)
+
+        if not args:
+            args = config.projects()
+
+        for projname in args:
+            project = config[projname]
+            tailorizer = Tailorizer(project)
+            tailorizer(options)
     else:
         # Good (?) old way
 
