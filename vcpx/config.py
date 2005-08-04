@@ -81,4 +81,8 @@ class Config(SafeConfigParser):
 
     def __getitem__(self, name):
         from project import Project
+
+        if not self.has_section(name):
+            raise ConfigurationError("'%s' is not a known project" % name)
+
         return Project(name, self)
