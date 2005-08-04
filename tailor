@@ -28,7 +28,7 @@ if __name__ == '__main__':
         from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
              ChangesetApplicationFailure
         from vcpx.cvs import EmptyRepositoriesFoolsMe
-        
+
         if len(sys.argv) == 1:
             sys.argv.append('--help')
 
