@@ -249,6 +249,7 @@ def main():
     default) execute the tailorization steps.
     """
 
+    import sys
     from os import getcwd
 
     parser = OptionParser(usage='%prog [options] [project ...]',
@@ -278,7 +279,14 @@ def main():
             if k not in ['interactive', 'bootstrap', 'configfile']:
                 defaults[k.replace('_', '-')] = str(v)
 
-        if options.configfile:
+        if options.configfile or (len(sys.argv)==2 and len(args)==1):
+            # Either we have a --configfile, or there are no options
+            # and a single argument (to support shebang style scripts)
+
+            if not options.configfile:
+                options.configfile = sys.argv[1]
+                args = None
+
             config = Config(open(options.configfile), defaults)
 
             if not args:
