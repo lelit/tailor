@@ -67,8 +67,8 @@ class UpdatableSourceWorkingDir(object):
         self.state_file = state_file
 
     def applyPendingChangesets(self, root, module, applyable=None,
-                               replay=None, applied=None, logger=None,
-                               delayed_commit=False):
+                               replayable=None, replay=None, applied=None,
+                               logger=None, delayed_commit=False):
         """
         Apply the collected upstream changes.
 
@@ -115,6 +115,9 @@ class UpdatableSourceWorkingDir(object):
                     if logger: logger.info("INTERRUPTED BY THE USER!")
                     return last, conflicts
 
+            if not self._didApplyChangeset(root, c, replayable):
+                continue
+
             if replay:
                 replay(root, module, c, delayed_commit=delayed_commit,
                        logger=logger)
@@ -141,6 +144,21 @@ class UpdatableSourceWorkingDir(object):
 
         if applyable:
             return applyable(root, changeset)
+        else:
+            return True
+
+    def _didApplyChangeset(self, root, changeset, replayable=None):
+        """
+        This gets called right after changeset application.  The final
+        commit on the target system won't be carried out if this
+        returns False.
+
+        Subclasses may use this to alter the changeset in any way, before
+        committing its changes to the target system.
+        """
+
+        if replayable:
+            return replayable(root, changeset)
         else:
             return True
 
