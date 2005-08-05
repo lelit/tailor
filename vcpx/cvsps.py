@@ -3,7 +3,7 @@
 # :Creato:   mer 16 giu 2004 00:46:12 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 This module contains supporting classes for CVS. To get a
@@ -19,7 +19,7 @@ from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
 CVS_CMD = 'cvs'
-CVSPS_CMD = 'cvsps'   
+CVSPS_CMD = 'cvsps'
 
 def changesets_from_cvsps(log, sincerev=None):
     """
@@ -29,7 +29,7 @@ def changesets_from_cvsps(log, sincerev=None):
     from changes import Changeset, ChangesetEntry
     from datetime import datetime
     from cvs import compare_cvs_revs
-    
+
     # cvsps output sample:
     ## ---------------------
     ## PatchSet 1500
@@ -139,7 +139,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     """
 
     ## UpdatableSourceWorkingDir
-    
+
     def _getUpstreamChangesets(self, root, repository, module, sincerev=None,
                               branch=None):
         from os.path import join, exists
@@ -154,13 +154,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         if sincerev:
             sincerev = int(sincerev)
-            
+
         changesets = []
         cmd = [CVSPS_CMD, "--cvs-direct", "-u", "-b", branch,
                "--root", repository]
         cvsps = ExternalCommand(command=cmd)
         log = cvsps.execute(module, stdout=PIPE, TZ='UTC')
-        
+
         for cs in changesets_from_cvsps(log, sincerev):
             changesets.append(cs)
 
@@ -169,7 +169,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
     def __maybeDeleteDirectory(self, root, entrydir, changeset):
         from os.path import join, exists
         from os import listdir
-        
+
         if not entrydir:
             return
 
@@ -177,14 +177,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
             deldir = changeset.addEntry(entrydir, None)
             deldir.action_kind = deldir.DELETED
-        
+
     def _applyChangeset(self, root, changeset, logger=None):
         from os.path import join, exists, dirname, split
         from os import makedirs, listdir
         from shutil import rmtree
         from cvs import CvsEntries
         from time import sleep
-        
+
         entries = CvsEntries(root)
 
         for e in changeset.entries:
@@ -218,7 +218,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             # in some cases does not what one would expect. Instead,
             # remove it with everything it contains (that should be
             # just a single "CVS" subdir, btw)
-            
+
             if e.action_kind == e.DELETED and e.new_revision is None:
                 assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
                 rmtree(join(root, e.name))
@@ -228,7 +228,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 retry = 0
                 while True:
                     cvsup.execute(e.name, stdout=PIPE)
-            
+
                     if cvsup.exit_status:
                         retry += 1
                         if retry>3:
@@ -242,7 +242,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                         sleep(retry)
                     else:
                         break
-                    
+
                 if cvsup.exit_status:
                     raise ChangesetApplicationFailure(
                         "%s returned status %s" % (str(cvsup),
@@ -288,7 +288,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         if timestamp == 'INITIAL':
             timestamp = csets[-1].date.isoformat(sep=' ')
-            
+
         if not exists(join(wdir, 'CVS')):
             cmd = [CVS_CMD, "-q", "-d", repository, "checkout",
                    "-d", subdir]
@@ -296,21 +296,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cmd.extend(["-r", revision])
             if timestamp:
                 cmd.extend(["-D", "%s UTC" % timestamp])
-            
+
             checkout = ExternalCommand(cwd=basedir, command=cmd)
             checkout.execute(module)
-            
+
             if checkout.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(checkout),
                                                checkout.exit_status))
         else:
             if logger: logger.info("Using existing %s", wdir)
-            
+
         self.__forceTagOnEachEntry(wdir)
-        
+
         entries = CvsEntries(wdir)
-        
+
         # update cvsps cache, then loop over the changesets and find the
         # last applied, to find out the actual cvsps revision
 
@@ -323,7 +323,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     found = compare_cvs_revs(actualversion,m.new_revision)>=0
                     if not found:
                         break
-                
+
             if found:
                 last = cset
                 break
@@ -335,13 +335,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         else:
             if logger: logger.info("working copy up to cvsps revision %s",
                                    last.revision)
-            
+
         return last
-    
+
     def _willApplyChangeset(self, root, changeset, applyable=None):
         """
         This gets called just before applying each changeset.
-        
+
         Since CVS has no "createdir" event, we have to take care
         of new directories, creating empty-but-reasonable CVS dirs.
         """
@@ -351,11 +351,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             for m in changeset.entries:
                 if m.action_kind == m.ADDED:
                     self.__createParentCVSDirectories(changeset, root, m.name)
-            
+
             return True
         else:
             return False
-        
+
     def __createParentCVSDirectories(self, changeset, root, entry):
         """
         Verify that the hierarchy down to the entry is under CVS.
@@ -364,7 +364,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         create it and make it appear as under CVS so that succeding
         'cvs update' will work.
         """
-        
+
         from os.path import split, join, exists
         from os import mkdir
 
@@ -372,15 +372,15 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if path:
             basedir = join(root, path)
         else:
-            basedir = root            
+            basedir = root
         cvsarea = join(basedir, 'CVS')
-        
+
         if path and not exists(cvsarea):
             parentcvs = self.__createParentCVSDirectories(changeset,
                                                           root, path)
 
             assert exists(parentcvs), "Uhm, strange things happen"
-            
+
             if not exists(basedir):
                 mkdir(basedir)
 
@@ -412,9 +412,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
             entry = changeset.addEntry(path, None)
             entry.action_kind = entry.ADDED
-            
+
         return cvsarea
-    
+
     ## SyncronizableTargetWorkingDir
 
     def _addPathnames(self, root, names):
@@ -433,7 +433,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         This is to prevent silly errors such those that could arise
         after a manual ``cvs update`` in the working directory.
         """
-        
+
         from os import walk, rename
         from os.path import join
 
@@ -444,7 +444,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 entries = f.readlines()
                 f.close()
                 rename(efn, efn+'.old')
-                
+
                 newentries = []
                 for e in entries:
                     if e.startswith('/'):
@@ -458,7 +458,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 f = open(efn, 'w')
                 f.writelines(newentries)
                 f.close()
-    
+
     def _getCommitEntries(self, changeset):
         """
         Extract the names of the entries for the commit phase.  Since CVS
@@ -471,7 +471,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         entries.extend([e.old_name for e in changeset.renamedEntries()])
 
         return entries
-        
+
     def _commit(self,root, date, author, remark, changelog=None, entries=None):
         """
         Commit the changeset.
@@ -479,9 +479,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         from shwrap import ReopenableNamedTemporaryFile
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-        
+
         logmessage = []
         if remark:
             logmessage.append(remark.encode(encoding))
@@ -495,14 +495,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
         log = open(rontf.name, "w")
         log.write('\n'.join(log))
-        log.close()            
+        log.close()
 
         cmd = [CVS_CMD, "-q", "ci", "-F", rontf.name]
         if not entries:
             entries = ['.']
-          
+
         ExternalCommand(cwd=root, command=cmd).execute(entries)
-       
+
     def _removePathnames(self, root, names):
         """
         Remove some filesystem objects.
