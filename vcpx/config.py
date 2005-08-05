@@ -16,6 +16,8 @@ from ConfigParser import SafeConfigParser
 class ConfigurationError(Exception):
     """Configuration error"""
 
+class UnknownProjectError(Exception):
+    "Project does not exist"
 
 class Config(SafeConfigParser):
     """
@@ -83,6 +85,6 @@ class Config(SafeConfigParser):
         from project import Project
 
         if not self.has_section(name):
-            raise ConfigurationError("'%s' is not a known project" % name)
+            raise UnknownProjectError("'%s' is not a known project" % name)
 
         return Project(name, self)

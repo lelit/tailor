@@ -211,9 +211,6 @@ VC_SPECIFIC_OPTIONS = [
 class ExistingProjectError(Exception):
     "Project seems already tailored"
 
-class UnknownProjectError(Exception):
-    "Project does not exist"
-
 class ProjectNotTailored(Exception):
     "Not a tailored project"
 
