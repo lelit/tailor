@@ -83,7 +83,7 @@ class Tailorizer(object):
         from changes import Changeset
 
         def pconfig(option):
-            return self.project.config(self.project.name, option)
+            return self.project.config.get(self.project.name, option)
 
         ExternalCommand.VERBOSE = pconfig('debug')
         encoding = pconfig('encoding')
