@@ -164,7 +164,7 @@ class Project(object):
             klass = getattr(repository, klassname)
         except AttributeError:
             klass = repository.Repository
-        return klass(repname, kind, self.config, which)
+        return klass(repname, kind, self, which)
 
     def workingDir(self):
         """

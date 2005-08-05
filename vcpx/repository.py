@@ -17,10 +17,11 @@ class Repository(object):
     Collector for the configuration of a single repository.
     """
 
-    def __init__(self, name, kind, config, which):
+    def __init__(self, name, kind, project, which):
         self.name = name
         self.kind = kind
-        self._load(config, which)
+        self.project = project
+        self._load(project.config, which)
 
     def __str__(self):
         return "%s repository at %s" % (self.kind, self.repository)
