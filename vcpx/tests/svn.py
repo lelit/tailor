@@ -3,7 +3,7 @@
 # :Creato:   gio 11 nov 2004 19:09:06 CET
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase, TestSuite
 from datetime import datetime
@@ -44,7 +44,7 @@ class SvnLogParserTest(TestCase):
 </logentry>
 </log>
 """
-   
+
     def testRenameBehaviour(self):
         """Verify svn log parser behaves correctly on renames"""
 
@@ -64,11 +64,11 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'dir')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         entry = cset.entries[1]
         self.assertEqual(entry.name, 'dir/a.txt')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         self.assertEqual(cset.author, 'lele')
         self.assertEqual(cset.date, datetime(2004,11,12,15,06,04,193650))
@@ -79,7 +79,7 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'new')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'dir')
-        
+
     RENAME_OUT_TEST = """\
 <?xml version="1.0" encoding="utf-8"?>
 <log>
@@ -193,7 +193,7 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'file2.txt')
         self.assertEqual(entry.action_kind, entry.ADDED)
         self.assertEqual(entry.old_name, 'file1.txt')
-        
+
         cset = csets[2]
         self.assertEqual(cset.date, datetime(2005,1,8, 17,42,41,347315))
         self.assertEqual(cset.log, 'Remove')
@@ -252,7 +252,7 @@ class SvnLogParserTest(TestCase):
 </logentry>
 </log>
 """
-   
+
     def testREvent(self):
         """Verify how tailor handle svn "R" event"""
 
@@ -362,7 +362,7 @@ class SvnLogParserTest(TestCase):
                                        'svn+ssh://caia/tmp/svn',
                                        '/')
         self.assertEqual(len(csets), 4)
-        
+
         cset = csets[1]
         self.assertEqual(len(cset.entries), 3)
 
@@ -414,7 +414,7 @@ class SvnLogParserTest(TestCase):
                                        '/py/dist')
 
         self.assertEqual(len(csets), 1)
-        
+
         cset = csets[0]
         self.assertEqual(len(cset.entries), 3)
 
@@ -422,7 +422,7 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'py/documentation/example')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'example')
-        
+
         entry = cset.entries[1]
         self.assertEqual(entry.name, 'py/documentation/example/test')
         self.assertEqual(entry.action_kind, entry.ADDED)
@@ -430,7 +430,7 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'py/documentation/test.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
-        
+
         log = StringIO(self.PYDIST_STRANGE_CASE)
         csets = changesets_from_svnlog(log, 'http://codespeak.net/svn/py/dist',
                                        'http://codespeak.net/svn',
@@ -444,7 +444,7 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'documentation/example')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         entry = cset.entries[1]
         self.assertEqual(entry.name, 'documentation/example/test')
         self.assertEqual(entry.action_kind, entry.ADDED)
@@ -452,4 +452,3 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'documentation/test.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
-        
