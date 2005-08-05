@@ -60,7 +60,11 @@ class Config(SafeConfigParser):
         Return the requested option value if present, otherwise the default.
         """
         if self.has_option(section, option):
-            return SafeConfigParser.get(self, section, option)
+            value = SafeConfigParser.get(self, section, option)
+            if value == 'None':
+                return default
+            else:
+                return value
         else:
             return default
 
