@@ -41,7 +41,7 @@ class Repository(object):
                           config.get(self.name, '%s-repository' % which)
         self.module = config.get(self.name, 'module') or \
                       config.get(self.name, '%s-module' % which)
-        if not self.module:
+        if not self.module and self.repository:
             self.module = split(self.repository)[1]
 
     def workingDir(self):
