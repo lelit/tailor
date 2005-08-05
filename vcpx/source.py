@@ -93,7 +93,7 @@ class UpdatableSourceWorkingDir(object):
         remaining = self.pending[:]
         for c in self.pending:
             if not self._willApplyChangeset(root, c, applyable):
-                continue
+                break
 
             if logger:
                 logger.info("Applying changeset %s", c.revision)
@@ -132,11 +132,11 @@ class UpdatableSourceWorkingDir(object):
 
     def _willApplyChangeset(self, root, changeset, applyable=None):
         """
-        This gets called just before applying each changeset.  The action
-        won't be carried out if this returns False.
+        This gets called just before applying each changeset.  The whole
+        process will be stopped if this returns False.
 
-        Subclasses may use this to skip some changeset, or to do whatever
-        before application.
+        Subclasses may use this to stop the process on some conditions,
+        or to do whatever before application.
         """
 
         if applyable:
