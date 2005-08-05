@@ -230,7 +230,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if svnlog.exit_status:
                 raise ChangesetApplicationFailure(
                     "%s returned status %d saying \"%s\"" %
-                    (str(changes), changes.exit_status, output.read()))
+                    (str(output), changes.exit_status, output.read()))
 
             csets = changesets_from_svnlog(output, repository, module)
             revision = escape(csets[0].revision)
