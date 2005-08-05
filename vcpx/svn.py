@@ -19,7 +19,7 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 SVN_CMD = "svn"
 SVNADMIN_CMD = "svnadmin"
 
-def changesets_from_svnlog(log, url, repository, module):
+def changesets_from_svnlog(log, repository, module):
     from xml.sax import parseString
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
@@ -189,27 +189,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if svnlog.exit_status:
             return []
 
-        info = self.__getSvnInfo(root)
-
-        return changesets_from_svnlog(log, info['URL'], repository, module)
-
-    def __getSvnInfo(self, root):
-        cmd = [SVN_CMD, "info"]
-        svninfo = ExternalCommand(cwd=root, command=cmd)
-        output = svninfo.execute('.', stdout=PIPE, LANG='')
-
-        if svninfo.exit_status:
-            raise GetUpstreamChangesetsFailure(
-                "%s returned status %d" % (str(svninfo), svninfo.exit_status))
-
-        info = {}
-        for l in output:
-            l = l[:-1]
-            if l:
-                key, value = l.split(':', 1)
-                info[key] = value[1:]
-
-        return info
+        return changesets_from_svnlog(log, repository, module)
 
     def _applyChangeset(self, root, changeset, logger=None):
         cmd = [SVN_CMD, "update", "--revision", changeset.revision, "."]
@@ -252,8 +232,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                     "%s returned status %d saying \"%s\"" %
                     (str(changes), changes.exit_status, output.read()))
 
-            csets = changesets_from_svnlog(output, info['URL'], repository,
-                                           module)
+            csets = changesets_from_svnlog(output, repository, module)
             revision = escape(csets[0].revision)
         else:
             initial = False
@@ -271,8 +250,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if logger: logger.info("%s already exists, assuming it's a svn working dir" % wdir)
 
         if not initial:
-            info = self.__getSvnInfo(wdir)
-
             cmd = [SVN_CMD, "log", "--verbose", "--xml", "--revision", revision]
             svnlog = ExternalCommand(cwd=wdir, command=cmd)
             output = svnlog.execute(stdout=PIPE)
@@ -282,8 +259,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                     "%s returned status %d saying \"%s\"" %
                     (str(changes), changes.exit_status, output.read()))
 
-            csets = changesets_from_svnlog(output, info['URL'], repository,
-                                           module)
+            csets = changesets_from_svnlog(output, repository, module)
 
         last = csets[0]
 

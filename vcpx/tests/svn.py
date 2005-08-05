@@ -50,7 +50,6 @@ class SvnLogParserTest(TestCase):
 
         log = StringIO(self.SIMPLE_RENAME_TEST)
         csets = changesets_from_svnlog(log,
-                                       'file:///tmp/t/repo/trunk',
                                        'file:///tmp/t/repo',
                                        '/trunk')
         self.assertEqual(len(csets), 2)
@@ -106,7 +105,6 @@ class SvnLogParserTest(TestCase):
 
         log = StringIO(self.RENAME_OUT_TEST)
         csets = changesets_from_svnlog(log,
-                                       'http://server/svn/Shtoom/trunk',
                                        'http://server/svn/Shtoom',
                                        '/trunk')
         self.assertEqual(len(csets), 1)
@@ -178,7 +176,6 @@ class SvnLogParserTest(TestCase):
 
         log = StringIO(self.COPY_AND_RENAME_TEST)
         csets = changesets_from_svnlog(log,
-                                       'file:///tmp/rep/test',
                                        'file:///tmp/rep',
                                        '/test')
         self.assertEqual(len(csets), 4)
@@ -257,7 +254,7 @@ class SvnLogParserTest(TestCase):
         """Verify how tailor handle svn "R" event"""
 
         log = StringIO(self.SVN_R_EVENT_TEST)
-        csets = changesets_from_svnlog(log, 'file:///tmp/rep/trunk',
+        csets = changesets_from_svnlog(log,
                                        'file:///tmp/rep',
                                        '/trunk')
         self.assertEqual(len(csets), 2)
@@ -358,7 +355,7 @@ class SvnLogParserTest(TestCase):
         """Verify we are able to track the root of the repository"""
 
         log = StringIO(self.SVN_REPOS_ROOT_TEST)
-        csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn/repo',
+        csets = changesets_from_svnlog(log,
                                        'svn+ssh://caia/tmp/svn',
                                        '/')
         self.assertEqual(len(csets), 4)
@@ -409,7 +406,7 @@ class SvnLogParserTest(TestCase):
         """Verify we are able to groke with svn 'R' strangeness"""
 
         log = StringIO(self.PYDIST_STRANGE_CASE)
-        csets = changesets_from_svnlog(log, 'http://codespeak.net/svn/py/dist',
+        csets = changesets_from_svnlog(log,
                                        'http://codespeak.net/svn',
                                        '/py/dist')
 
@@ -432,7 +429,7 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
         log = StringIO(self.PYDIST_STRANGE_CASE)
-        csets = changesets_from_svnlog(log, 'http://codespeak.net/svn/py/dist',
+        csets = changesets_from_svnlog(log,
                                        'http://codespeak.net/svn',
                                        '/py/dist/py')
 
