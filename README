@@ -51,6 +51,7 @@ two way sync::
 .. _mercurial: http://www.selenic.com/mercurial/
 .. _arx: http://www.nongnu.org/arx/
 
+
 Installation
 ============
 
@@ -165,7 +166,27 @@ __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
     /tmp/wc/tailor $ darcs changes --last 1 --xml-output [Ok]
     /tmp/wc $ svn add --quiet --no-auto-props --non-recursive tailor [Ok]
     ...
-    
+
+9. Given the configuration file shown below in `Config file format`_,
+   the following command::
+
+    $ tailor --configfile example.tailor --bootstrap
+
+   is equivalent to this one::
+
+    $ tailor --configfile example.tailor --bootstrap tailor
+
+   in that they bootstrap respectively the default project(s) or
+   the ones specified on the command line (and in this case there
+   is just a single default project, tailor).
+
+   This one instead::
+
+    $ tailor --configfile example.tailor tailor tailor-reverse
+
+   executes an update on both projects.
+
+
 Resolving conflicts
 ===================
 
@@ -201,61 +222,55 @@ short :-)
 .. _subprocess: http://www.lysator.liu.se/~astrand/popen5/
 
 
-Tailor's metadata
-=================
-
-To do its work, tailor needs some information about your source tree,
-such as the upstream repository URL and the current revision of the
-sources on your harddisk.
-
-In the simpler case, tailor keeps this information in a file called
-`tailor.info`, one for each tailored project, that is a very simple
-text document, with the following information, one per line:
-
-1. Upstream repository kind (either "cvs", "darcs" or "svn)
-2. Target repository kind (the same as above)
-3. The name of the "module" that's been tailored
-4. The URL of the upstream repository (that may not be an URL, for cvs...)
-5. The current revision, from the upstream point of view, of the sources
-6. The subdirectory that contains the checked out upstream tree,
-   either that given with with the `--subdir` option or computed
-   taking the last part of the module name. 
-
-This is everything tailor needs, to be able to keep going from where it
-left last time.
-
-
 Config file format
-------------------
+==================
 
 When your project is composed by multiple upstream modules, it is
 easier to collect such information in a single file. This is done by
 specifying the `--configfile` option with a file name as argument. In
-this case, tailor will read/write the above information from a
-standard Python dictionary stored in the given file. 
+this case, tailor will read the above information from a
+standard Python ConfigParser file. 
 
-The dictionary is keyed on the relative position of each project, and
-each entry carries the same information described above.
+For example::
 
-Here's an example config file entry::
+    [DEFAULT]
+    verbose = Yes
+    target-module = None
+    projects = tailor
 
- {'plone/atcontenttypes': {'module': 'ATContentTypes',
-                           'source_kind': 'cvs',
-                           'subdir': 'ATContentTypes',
-                           'target_kind': 'darcs',
-                           'upstream_repos': ':ext:cvs.sourceforge.net:/cvsroot/collective',
-                           'upstream_revision': '2004-11-24 19:42:06 by ctheune'}}
+    [tailor]
+    root = /tmp/n9
+    source = darcs:tailor
+    target = svn:tailor
+    refill-changelogs = Yes
+    state-file = tailor.state
 
-By convention, config files are named with the extension ".tailor",
-but this is not enforced.
+    [tailor-reverse]
+    root = /tmp/n9
+    source = svn:tailor
+    target = darcs:tailor
+    refill-changelogs = Yes
+    state-file = reverse.state
+    
+    [svn:tailor]
+    repository = file:///tmp/testtai
+    module = /project1
 
-In the example above, 'plone/atcontenttypes' is a directory where the
-target source will be stored. The keys such 'module', 'source_kind',
-etc correspond to options of the same name.
+    [darcs:tailor]
+    repository = /home/lele/WiP/cvsync
 
-When using a config file, tailor will perform its job on each project
-contained in the dictionary.
+.. hint:: If you execute the examples above with ``--verbose --debug``
+          **and without** ``--configfile``, tailor will write a
+          template config filled with the values specified by the
+          other options. You can redirect 
 
+State file
+----------
+
+The state file stores two things: the last upstream revision that
+has been applied to the tree, and a sequence of pending (not yet
+applied) changesets, that may be empty. In the latter case, tailor
+will fetch latest changes from the upstream repository.
 
 Interactive sessions
 --------------------
