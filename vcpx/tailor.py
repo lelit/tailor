@@ -272,63 +272,61 @@ def main():
 
     if options.interactive:
         interactive(options, args)
-    elif options.configfile:
+    else:
         defaults = {}
         for k,v in options.__dict__.items():
-            defaults[k.replace('_', '-')] = v
+            if k not in ['interactive', 'bootstrap', 'configfile']:
+                defaults[k.replace('_', '-')] = v
 
-        config = Config(open(options.configfile), defaults)
+        if options.configfile:
+            config = Config(open(options.configfile), defaults)
 
-        if not args:
-            args = config.projects()
+            if not args:
+                args = config.projects()
 
-        for projname in args:
-            project = config[projname]
-            tailorizer = Tailorizer(project)
-            tailorizer(options)
-    else:
-        # Good (?) old way
+            for projname in args:
+                project = config[projname]
+                tailorizer = Tailorizer(project)
+                tailorizer(options)
+        else:
+            config = Config(None, defaults)
 
-        config = None
+            config.add_section('project')
+            source = options.source_kind + ':source'
+            config.set('project', 'source', source)
+            target = options.target_kind + ':target'
+            config.set('project', 'target', target)
+            config.set('project', 'root', getcwd())
+            config.set('project', 'subdir', options.subdir or '.')
+            config.set('project', 'state-file', 'tailor.state')
+            config.set('project', 'start-revision', options.start_revision)
 
-        base = getcwd()
+            config.add_section(source)
+            if options.bootstrap and not options.source_repository:
+                raise InvocationError('Need a source repository to bootstrap')
 
-        if len(args) == 0:
-            args.append(base)
+            config.set(source, 'repository', options.source_repository)
+            if options.source_module:
+                config.set(source, 'module', options.source_module)
 
-        while args:
-            chdir(base)
+            config.add_section(target)
+            if options.target_repository:
+                config.set(target, 'repository', options.target_repository)
+            if options.target_module:
+                config.set(target, 'module', options.target_module)
 
-            proj = args.pop(0)
-            root = abspath(proj)
+            if options.verbose:
+                import sys
 
-            if options.bootstrap:
-                if exists(join(root, STATUS_FILENAME)):
-                    raise ExistingProjectError(
-                        "Project %r cannot be bootstrapped twice" % proj)
+                sys.stderr.write("You should put the following configuration "
+                                 "in some file, adjust it as needed\n"
+                                 "and use --configfile option with that "
+                                 "file as argument:\n")
+                config.write(sys.stdout)
 
-                if not options.source_repository:
-                    raise InvocationError('Need a repository to bootstrap %r' %
-                                          proj)
+            if not options.debug:
+                project = config['project']
+                tailorizer = Tailorizer(project)
+                tailorizer(options)
             else:
-                if not exists(proj):
-                    raise UnknownProjectError("Project %r does not exist" %
-                                              proj)
-
-                if not exists(join(root, STATUS_FILENAME)):
-                    raise UnknownProjectError(
-                        "%r is not a tailorized project" % proj)
-
-            tailored = TailorizedProject(root, options.verbose, config)
-
-            if options.bootstrap:
-                tailored.bootstrap(options.source_kind, options.target_kind,
-                                   options.source_repository,
-                                   options.source_module,
-                                   options.revision,
-                                   options.target_repository,
-                                   options.target_module,
-                                   options.subdir)
-            elif options.update:
-                tailored.update(options.single_commit,
-                                options.concatenate_logs)
+                sys.stderr.write("Operation not performed, given --debug\n")
