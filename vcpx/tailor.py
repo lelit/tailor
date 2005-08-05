@@ -78,6 +78,31 @@ class Tailorizer(object):
         self.project.log_info("Update completed")
 
     def __call__(self, options):
+        from shwrap import ExternalCommand
+        from target import SyncronizableTargetWorkingDir
+        from changes import Changeset
+
+        def pconfig(option):
+            return self.project.config(self.project.name, option)
+
+        ExternalCommand.VERBOSE = pconfig('debug')
+        encoding = pconfig('encoding')
+        if encoding:
+            ExternalCommand.FORCE_ENCODING = encoding
+
+            # Make printouts be encoded as well. A better solution would be
+            # using the replace mechanism of the encoder, and keep printing
+            # in the user LC_CTYPE/LANG setting.
+
+            import codecs, sys
+            sys.stdout = codecs.getwriter(encoding)(sys.stdout)
+
+        pname_format = pconfig('patch-name-format')
+        if pname_format is not None:
+            SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
+        SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
+        Changeset.REFILL_MESSAGE = not pconfig('dont-refill-changelogs')
+
         if options.bootstrap:
             self.bootstrap()
         else:
@@ -224,11 +249,7 @@ def main():
     default) execute the tailorization steps.
     """
 
-    from os import getcwd, chdir
-    from os.path import abspath, exists, join
-    from shwrap import ExternalCommand
-    from target import SyncronizableTargetWorkingDir
-    from changes import Changeset
+    from os import getcwd
 
     parser = OptionParser(usage='%prog [options] [project ...]',
                           version=__version__,
@@ -248,22 +269,6 @@ def main():
     parser.add_option_group(vcoptions)
 
     options, args = parser.parse_args()
-
-    ExternalCommand.VERBOSE = options.debug
-    if options.encoding:
-        ExternalCommand.FORCE_ENCODING = options.encoding
-
-        # Make printouts be encoded as well. A better solution would be
-        # using the replace mechanism of the encoder, and keep printing
-        # in the user LC_CTYPE/LANG setting.
-
-        import codecs, sys
-        sys.stdout = codecs.getwriter(options.encoding)(sys.stdout)
-
-    if options.patch_name_format is not None:
-        SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = options.patch_name_format
-    SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = options.remove_first_log_line
-    Changeset.REFILL_MESSAGE = not options.dont_refill_changelogs
 
     if options.interactive:
         interactive(options, args)
