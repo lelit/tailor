@@ -64,6 +64,10 @@ class Config(SafeConfigParser):
             value = SafeConfigParser.get(self, section, option)
             if value == 'None':
                 return default
+            elif value == 'True':
+                return True
+            elif value == 'False':
+                return False
             else:
                 return value
         else:

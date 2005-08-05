@@ -276,7 +276,7 @@ def main():
         defaults = {}
         for k,v in options.__dict__.items():
             if k not in ['interactive', 'bootstrap', 'configfile']:
-                defaults[k.replace('_', '-')] = v
+                defaults[k.replace('_', '-')] = str(v)
 
         if options.configfile:
             config = Config(open(options.configfile), defaults)
