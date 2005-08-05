@@ -172,7 +172,8 @@ BOOTSTRAP_OPTIONS = [
                      "with a slash. Since it's used in the description of the "
                      "target repository, you may want to give it a value with "
                      "darcs too even if it is otherwise ignored."),
-    make_option("-r", "--revision", dest="revision", metavar="REV",
+    make_option("-r", "--revision", "--start-revision", dest="start_revision",
+                metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "
                      "version control kind. For CVS it may be either a branch "
