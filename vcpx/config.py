@@ -37,14 +37,15 @@ class Config(SafeConfigParser):
 
         SafeConfigParser.__init__(self, defaults)
         self.namespace = {}
-        if fp.read(2) == '#!':
-            fp.seek(0)
-            exec fp.read() in globals(), self.namespace
-            config = StringIO(self.namespace['__doc__'])
-            self.readfp(config)
-        else:
-            fp.seek(0)
-            self.readfp(fp)
+        if fp:
+            if fp.read(2) == '#!':
+                fp.seek(0)
+                exec fp.read() in globals(), self.namespace
+                config = StringIO(self.namespace['__doc__'])
+                self.readfp(config)
+            else:
+                fp.seek(0)
+                self.readfp(fp)
 
     def projects(self):
         """
