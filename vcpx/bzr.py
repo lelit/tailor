@@ -3,7 +3,7 @@
 # :Creato:   ven 20 mag 2005 08:15:02 CEST
 # :Autore:   Johan Rydberg <jrydberg@gnu.org>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 This module implements the backends for Bazaar-NG.
@@ -15,7 +15,7 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from shwrap import ExternalCommand
 
 BAZAAR_CMD = 'bzr'
-    
+
 class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -34,9 +34,9 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from sys import getdefaultencoding
-        
+
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-        
+
         logmessage = []
         if patchname:
             logmessage.append(patchname.encode(encoding))
@@ -52,7 +52,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
             entries = ['.']
 
         ExternalCommand(cwd=root, command=cmd).execute(entries)
-        
+
     def _removeEntries(self, root, entries):
         """
         Remove a sequence of entries.
