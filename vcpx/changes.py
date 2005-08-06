@@ -1,9 +1,9 @@
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- Changesets 
+# :Progetto: vcpx -- Changesets
 # :Creato:   ven 11 giu 2004 15:31:18 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 Changesets are an object representation of a set of changes to some files.
@@ -20,7 +20,7 @@ class ChangesetEntry(object):
     ``action_kind`` to denote the kind of change, and finally a ``status``
     to indicate possible conflicts.
     """
-    
+
     ADDED = 'ADD'
     DELETED = 'DEL'
     UPDATED = 'UPD'
@@ -28,7 +28,7 @@ class ChangesetEntry(object):
 
     APPLIED = 'APPLIED'
     CONFLICT = 'CONFLICT'
-    
+
     def __init__(self, name):
         self.name = name
         self.old_name = None
@@ -52,7 +52,7 @@ class ChangesetEntry(object):
 
 from textwrap import TextWrapper
 from re import compile, MULTILINE
-    
+
 itemize_re = compile('^[ ]*[-*] ', MULTILINE)
 
 def refill(msg):
@@ -63,21 +63,21 @@ def refill(msg):
     spaces, recognizing common form of ``bullet lists``, that is paragraphs
     starting with either a dash "-" or an asterisk "*".
     """
-    
+
     wrapper = TextWrapper()
     res = []
     items = itemize_re.split(msg.strip())
-    
+
     if len(items)>1:
         # Remove possible first empty split, when the message immediately
         # starts with a bullet
         if not items[0]:
             del items[0]
-            
+
         if len(items)>1:
             wrapper.initial_indent = '- '
             wrapper.subsequent_indent = ' '*2
-                
+
     for item in items:
         if item:
             words = filter(None, item.strip().replace('\n', ' ').split(' '))
@@ -99,12 +99,12 @@ class Changeset(object):
 
     REFILL_MESSAGE = True
     """Refill changelogs"""
-    
+
     def __init__(self, revision, date, author, log, entries=None, **other):
         """
         Initialize a new Changeset.
         """
-        
+
         self.revision = revision
         self.date = date
         # Author name may be missing, to mean a check in made by an
@@ -126,7 +126,7 @@ class Changeset(object):
         e.new_revision = revision
         self.entries.append(e)
         return e
-    
+
     def __str__(self):
         s = []
         s.append('Revision: %s' % self.revision)
@@ -148,7 +148,7 @@ class Changeset(object):
         """
         Apply the changeset using ``patch(1)`` to a given directory.
         """
-        
+
         from shwrap import ExternalCommand
         from source import ChangesetApplicationFailure
 
@@ -162,16 +162,16 @@ class Changeset(object):
 
             patch = ExternalCommand(cwd=working_dir, command=cmd)
             patch.execute(input=self.unidiff)
-            
+
             if patch.exit_status:
                 raise ChangesetApplicationFailure(
                     "%s returned status %s" % (str(patch), patch.exit_status))
-        
+
     def addedEntries(self):
         """
         Facility to extract a list of added entries.
         """
-        
+
         return [e for e in self.entries if e.action_kind == e.ADDED]
 
     def modifiedEntries(self):
