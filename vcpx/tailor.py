@@ -143,7 +143,7 @@ UPDATE_OPTIONS = [
                      "to compute the patch name.  The prototype may contain "
                      "%(keyword)s such as 'author', 'date', "
                      "'revision', 'firstlogline', 'remaininglog'. It "
-                     "defaults to '%(module)s: changeset %(revision)s'; "
+                     "defaults to 'Tailorized \"%(revision)s\"'; "
                      "setting it to the empty string means that tailor will "
                      "simply use the original changelog."),
     make_option("-1", "--remove-first-log-line", action="store_true",

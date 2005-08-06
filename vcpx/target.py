@@ -49,7 +49,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    PATCH_NAME_FORMAT = '%(module)s: changeset %(revision)s'
+    PATCH_NAME_FORMAT = 'Tailorized "%(revision)s"'
     """
     The format string used to compute the patch name, used by underlying VCS.
     """
