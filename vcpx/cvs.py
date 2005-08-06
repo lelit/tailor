@@ -12,7 +12,7 @@ Given `cvsps` shortcomings, this backend uses CVS only.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, STDOUT, PIPE
-from cvsps import CvspsWorkingDir, CVS_CMD
+from cvsps import CvspsWorkingDir
 from source import GetUpstreamChangesetsFailure
 
 class EmptyRepositoriesFoolsMe(Exception):
@@ -312,7 +312,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             # Assume this is from __getGlobalRevision()
             since, author = sincerev.split(' by ')
 
-        cmd = [CVS_CMD, "-f", "-d", "%(repository)s", "rlog", "-N",
+        cmd = [self.repository.cvs, "-f", "-d", "%(repository)s", "rlog", "-N",
                "-r:%(branch)s"]
         if since:
             cmd.extend(["-d", "%(since)s UTC<"])

@@ -15,8 +15,6 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-ARX_CMD = "arx"
-
 class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -28,7 +26,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
         from os.path import join, isdir
 
-        cmd = [ARX_CMD, "add"]
+        cmd = [self.repository.ARX_CMD, "add"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _commit(self,root, date, author, patchname, changelog=None, entries=None):
@@ -53,7 +51,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         if logmessage=="":
             logmessage=" "
 
-        cmd = [ARX_CMD, "commit", "-s", logmessage, "--author", author,
+        cmd = [self.repository.ARX_CMD, "commit", "-s", logmessage, "--author", author,
                "--date", date.isoformat()]
         c = ExternalCommand(cwd=root, command=cmd)
         c.execute()
@@ -62,7 +60,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         """
         Remove some filesystem object.
         """
-        cmd = [ARX_CMD, "rm"]
+        cmd = [self.repository.ARX_CMD, "rm"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _renamePathname(self, root, oldname, newname):
@@ -70,7 +68,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [ARX_CMD, "copy"]
+        cmd = [self.repository.ARX_CMD, "copy"]
         rename = ExternalCommand(cwd=root, command=cmd)
         rename.execute(oldname,newname)
 
@@ -94,7 +92,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
         self._addPathnames(root, [subdir])
 
-        cmd = [ARX_CMD, "add"]
+        cmd = [self.repository.ARX_CMD, "add"]
         add_path = ExternalCommand(cwd=root, command=cmd)
 
         for root, dirs, files in walk(root):

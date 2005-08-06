@@ -14,8 +14,6 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-HG_CMD = "hg"
-
 class HgWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -32,7 +30,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(root, n))]
         if notdirs:
-            cmd = [HG_CMD, "add"]
+            cmd = [self.repository.HG_CMD, "add"]
             ExternalCommand(cwd=root, command=cmd).execute(notdirs)
 
     def _commit(self,root, date, author, patchname, changelog=None, entries=None):
@@ -53,7 +51,8 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
             logmessage.append(changelog.encode(encoding))
         logmessage.append('')
 
-        cmd = [HG_CMD, "commit", "-u", author, "-l", "%(logfile)s",
+        cmd = [self.repository.HG_CMD, "commit", "-u", author,
+               "-l", "%(logfile)s",
                "-d", "%(time)s UTC"]
         c = ExternalCommand(cwd=root, command=cmd)
 
@@ -76,7 +75,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(root, n))]
         if notdirs:
-            cmd = [HG_CMD, "remove"]
+            cmd = [self.repository.HG_CMD, "remove"]
             ExternalCommand(cwd=root, command=cmd).execute(notdirs)
 
     def _renamePathname(self, root, oldname, newname):
@@ -88,7 +87,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
-        cmd = [HG_CMD, "copy"]
+        cmd = [self.repository.HG_CMD, "copy"]
         copy = ExternalCommand(cwd=root, command=cmd)
         if isdir(join(root, newname)):
             # Given lack of support for directories in current HG,
@@ -119,7 +118,8 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from re import escape
         from dualwd import IGNORED_METADIRS
 
-        init = ExternalCommand(cwd=root, command=[HG_CMD, "init"])
+        init = ExternalCommand(cwd=root,
+                               command=[self.repository.HG_CMD, "init"])
         init.execute()
 
         if init.exit_status:
@@ -134,4 +134,5 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         ignore.write('\n^tailor.log$\n^tailor.info$\n')
         ignore.close()
 
-        ExternalCommand(cwd=root, command=[HG_CMD, "addremove"]).execute()
+        ExternalCommand(cwd=root,
+                        command=[self.repository.HG_CMD, "addremove"]).execute()

@@ -17,8 +17,6 @@ from source import UpdatableSourceWorkingDir, \
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from sys import stderr
 
-MONOTONE_CMD = "monotone"
-
 class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -28,7 +26,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [MONOTONE_CMD, "add"]
+        cmd = [self.repository.MONOTONE_CMD, "add"]
         add = ExternalCommand(cwd=root, command=cmd)
         add.execute(names)
 
@@ -54,7 +52,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = [MONOTONE_CMD, "commit", "--author", author,
+        cmd = [self.repository.MONOTONE_CMD, "commit", "--author", author,
                "--date", date.isoformat(),
                "--message-file", rontf.name]
         commit = ExternalCommit(cwd=root, command=cmd)
@@ -80,7 +78,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        cmd = [MONOTONE_CMD, "drop"]
+        cmd = [self.repository.MONOTONE_CMD, "drop"]
         drop = ExternalCommand(cwd=root, command=cmd)
         drop.execute(names)
 
@@ -89,7 +87,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [MONOTONE_CMD, "rename"]
+        cmd = [self.repository.MONOTONE_CMD, "rename"]
         rename = ExternalCommand(cwd=root, command=cmd)
         rename.execute(oldname, newname)
 

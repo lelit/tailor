@@ -18,9 +18,6 @@ from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-CVS_CMD = 'cvs'
-CVSPS_CMD = 'cvsps'
-
 def changesets_from_cvsps(log, sincerev=None):
     """
     Parse CVSps log.
@@ -156,7 +153,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             sincerev = int(sincerev)
 
         changesets = []
-        cmd = [CVSPS_CMD, "--cvs-direct", "-u", "-b", branch,
+        cmd = [self.repository.CVSPS_CMD, "--cvs-direct", "-u", "-b", branch,
                "--root", repository]
         cvsps = ExternalCommand(command=cmd)
         log = cvsps.execute(module, stdout=PIPE, TZ='UTC')
@@ -223,7 +220,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
                 rmtree(join(root, e.name))
             else:
-                cmd = [CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
+                cmd = [self.repository.CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
                 cvsup = ExternalCommand(cwd=root, command=cmd)
                 retry = 0
                 while True:
@@ -290,7 +287,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             timestamp = csets[-1].date.isoformat(sep=' ')
 
         if not exists(join(wdir, 'CVS')):
-            cmd = [CVS_CMD, "-q", "-d", repository, "checkout",
+            cmd = [self.repository.CVS_CMD, "-q", "-d", repository, "checkout",
                    "-d", subdir]
             if revision:
                 cmd.extend(["-r", revision])
@@ -422,7 +419,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Add some new filesystem objects.
         """
 
-        cmd = [CVS_CMD, "-q", "add"]
+        cmd = [self.repository.CVS_CMD, "-q", "add"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def __forceTagOnEachEntry(self, root):
@@ -497,7 +494,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         log.write('\n'.join(log))
         log.close()
 
-        cmd = [CVS_CMD, "-q", "ci", "-F", rontf.name]
+        cmd = [self.repository.CVS_CMD, "-q", "ci", "-F", rontf.name]
         if not entries:
             entries = ['.']
 
@@ -508,7 +505,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Remove some filesystem objects.
         """
 
-        cmd = [CVS_CMD, "-q", "remove"]
+        cmd = [self.repository.CVS_CMD, "-q", "remove"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _renamePathname(self, root, oldname, newname):

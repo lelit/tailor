@@ -14,8 +14,6 @@ __docformat__ = 'reStructuredText'
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from shwrap import ExternalCommand
 
-BAZAAR_CMD = 'bzr'
-
 class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -25,7 +23,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Add a sequence of entries.
         """
 
-        cmd = [BAZAAR_CMD, "add"]
+        cmd = [self.repository.BZR_CMD, "add"]
         ExternalCommand(cwd=root, command=cmd).execute(entries)
 
     def _commit(self,root, date, author, patchname, changelog=None, entries=None):
@@ -47,7 +45,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         logmessage.append('Date: %s' % date)
         logmessage.append('')
 
-        cmd = [BAZAAR_CMD, "commit", "-m", '\n'.join(logmessage)]
+        cmd = [self.repository.BZR_CMD, "commit", "-m", '\n'.join(logmessage)]
         if not entries:
             entries = ['.']
 
@@ -58,7 +56,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Remove a sequence of entries.
         """
 
-        cmd = [BAZAAR_CMD, "remove"]
+        cmd = [self.repository.BZR_CMD, "remove"]
         ExternalCommand(cwd=root, command=cmd).execute(entries)
 
     def _renameEntry(self, root, oldentry, newentry):
@@ -66,7 +64,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Rename an entry.
         """
 
-        cmd = [BAZAAR_CMD, "rename"]
+        cmd = [self.repository.BZR_CMD, "rename"]
         ExternalCommand(cwd=root, command=cmd).execute(old, new)
 
     def initializeNewWorkingDir(self, root, source_repository,
@@ -103,7 +101,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         from os.path import join
         from dualwd import IGNORED_METADIRS
 
-        cmd = [BAZAAR_CMD, "init"]
+        cmd = [self.repository.BZR_CMD, "init"]
         init = ExternalCommand(cwd=root, command=cmd)
         init.execute()
 

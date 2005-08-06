@@ -14,8 +14,6 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-CODEVILLE_CMD = 'cdv'
-
 class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
@@ -25,7 +23,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [CODEVILLE_CMD, "add"]
+        cmd = [self.repository.CDV_CMD, "add"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _commit(self,root, date, author, patchname, changelog=None, entries=None):
@@ -44,7 +42,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
         logmessage.append('')
 
-        cmd = [CODEVILLE_CMD, "-u", author.encode(encoding), "commit",
+        cmd = [self.repository.CDV_CMD, "-u", author.encode(encoding), "commit",
                "-m", '\n'.join(logmessage),
                "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC')]
 
@@ -58,7 +56,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        cmd = [CODEVILLE_CMD, "remove"]
+        cmd = [self.repository.CDV_CMD, "remove"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
     def _renamePathname(self, root, oldname, newname):
@@ -66,7 +64,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [CODEVILLE_CMD, "rename"]
+        cmd = [self.repository.CDV_CMD, "rename"]
         ExternalCommand(cwd=root, command=cmd).execute(oldname, newname)
 
     def initializeNewWorkingDir(self, root, source_repository, source_module,
@@ -102,14 +100,14 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         from os import getenv
         from os.path import join
 
-        init = ExternalCommand(cwd=root, command=[CODEVILLE_CMD, "init"])
+        init = ExternalCommand(cwd=root, command=[self.repository.CDV_CMD, "init"])
         init.execute()
 
         if init.exit_status:
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
 
-        cmd = [CODEVILLE_CMD, "set", "user"]
+        cmd = [self.repository.CDV_CMD, "set", "user"]
         user = getenv('CDV_USER') or getenv('LOGNAME')
         ExternalCommand(cwd=root, command=cmd).execute(user)
 

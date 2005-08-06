@@ -63,44 +63,87 @@ class Repository(object):
 
 class ArxRepository(Repository):
     METADIR = '_arx'
+    ARX_CMD = "arx"
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.ARX_CMD = config.get(self.name, 'arx-command', self.ARX_CMD)
+
 
 class BzrRepository(Repository):
     METADIR = '.bzr'
+    BZR_CMD = 'bzr'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.BZR_CMD = config.get(self.name, 'bzr-command', self.BZR_CMD)
 
 
 class CdvRepository(Repository):
     METADIR = '.cdv'
+    CDV_CMD = 'cdv'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.CDV_CMD = config.get(self.name, 'cdv-command', self.CDV_CMD)
 
 
 class CvsRepository(Repository):
     METADIR = 'CVS'
+    CVS_CMD = 'cvs'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.CVS_CMD = config.get(self.name, 'cvs-command', self.CVS_CMD)
 
 
 class CvspsRepository(CvsRepository):
-    pass
+    CVSPS_CMD = 'cvsps'
+
+    def _load(self, config, which):
+        CvsRepository._load(self, config, which)
+        self.CVSPS_CMD = config.get(self.name, 'cvsps-command', self.CVSPS_CMD)
 
 
 class DarcsRepository(Repository):
     METADIR = '_darcs'
+    DARCS_CMD = 'darcs'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.DARCS_CMD = config.get(self.name, 'darcs-command', self.DARCS_CMD)
 
 
 class HgRepository(Repository):
     METADIR = '.hg'
+    HG_CMD = "hg"
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.HG_CMD = config.get(self.name, 'hg-command', self.HG_CMD)
 
 
 class MonotoneRepository(Repository):
     METADIR = 'MT'
+    MONOTONE_CMD = "monotone"
 
     def _load(self, config, which):
         Repository._load(self, config, which)
+        self.MONOTONE_CMD = config.get(self.name,
+                                       'monotone-command', self.MONOTONE_CMD)
         self.passphrase = config.get(self.name, 'passphrase')
 
 
 class SvnRepository(Repository):
     METADIR = '.svn'
+    SVN_CMD = "svn"
+    SVNADMIN_CMD = "svnadmin"
 
     def _load(self, config, which):
         Repository._load(self, config, which)
+        self.SVN_CMD = config.get(self.name, 'svn-command', self.SVN_CMD)
+        self.SVNADMIN_CMD = config.get(self.name,
+                                       'svnadmin-command', self.SVNADMIN_CMD)
         self.use_propset = config.get(self.name, 'use-propset', False)
         if not self.module.startswith('/'):
             self.module = '/' + self.module
