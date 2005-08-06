@@ -32,7 +32,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         add = ExternalCommand(cwd=root, command=cmd)
         add.execute(names)
 
-    def _commit(self,root, date, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -42,8 +42,8 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = []
-        if remark:
-            logmessage.append(remark.encode(encoding))
+        if patchname:
+            logmessage.append(patchname.encode(encoding))
         if changelog:
             logmessage.append('')
             logmessage.append(changelog.encode(encoding))

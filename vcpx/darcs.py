@@ -321,7 +321,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [DARCS_CMD, "add", "--case-ok", "--recursive", "--quiet"]
         ExternalCommand(cwd=root, command=cmd).execute(subdir)
 
-    def _commit(self, root, date, author, remark, changelog=None, entries=None):
+    def _commit(self, root, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -334,7 +334,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
         logmessage.append(author.encode(encoding))
-        logmessage.append(remark and remark.encode(encoding) or 'Unnamed patch')
+        logmessage.append(patchname and patchname.encode(encoding) or 'Unnamed patch')
         logmessage.append(changelog and changelog.encode(encoding) or '')
         logmessage.append('')
 

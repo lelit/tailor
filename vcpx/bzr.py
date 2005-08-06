@@ -28,7 +28,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [BAZAAR_CMD, "add"]
         ExternalCommand(cwd=root, command=cmd).execute(entries)
 
-    def _commit(self,root, date, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -38,8 +38,8 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
         
         logmessage = []
-        if remark:
-            logmessage.append(remark.encode(encoding))
+        if patchname:
+            logmessage.append(patchname.encode(encoding))
         if changelog:
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
         logmessage.append('')
@@ -84,13 +84,13 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         revision = changeset.revision
         if initial:
             author = changeset.author
-            remark = changeset.log
+            patchname = changeset.log
             log = None
         else:
             author = "%s@%s" % (AUTHOR, HOST)
-            remark = BOOTSTRAP_PATCHNAME % source_module
+            patchname = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, changeset.date, author, remark, log,
+        self._commit(root, changeset.date, author, patchname, log,
                      entries=[subdir, '%s/...' % subdir])
 
     def _initializeWorkingDir(self, root, source_repository, source_module,

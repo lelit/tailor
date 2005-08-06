@@ -83,7 +83,7 @@ class SyncronizableTargetWorkingDir(object):
                 firstlogline = changeset.log
                 remaininglog = ''
 
-        remark = self.PATCH_NAME_FORMAT % {
+        patchname = self.PATCH_NAME_FORMAT % {
             'revision': changeset.revision,
             'author': changeset.author,
             'date': changeset.date,
@@ -95,7 +95,7 @@ class SyncronizableTargetWorkingDir(object):
             changelog = changeset.log
         entries = self._getCommitEntries(changeset)
         self._commit(root, changeset.date, changeset.author,
-                     remark, changelog, entries)
+                     patchname, changelog, entries)
 
     def _getCommitEntries(self, changeset):
         """
@@ -187,7 +187,7 @@ class SyncronizableTargetWorkingDir(object):
             if subdirs or files:
                 self._addPathnames(dir, subdirs + files)
 
-    def _commit(self, root, date, author, remark,
+    def _commit(self, root, date, author, patchname,
                 changelog=None, entries=None):
         """
         Commit the changeset.
@@ -273,13 +273,13 @@ class SyncronizableTargetWorkingDir(object):
         revision = changeset.revision
         if initial:
             author = changeset.author
-            remark = changeset.log
+            patchname = changeset.log
             log = None
         else:
             author = "%s@%s" % (AUTHOR, HOST)
-            remark = BOOTSTRAP_PATCHNAME % source_module
+            patchname = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, changeset.date, author, remark, log,
+        self._commit(root, changeset.date, author, patchname, log,
                      entries=[subdir])
 
     def _initializeWorkingDir(self, root, source_repository, source_module,

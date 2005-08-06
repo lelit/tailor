@@ -31,7 +31,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [ARX_CMD, "add"]
         ExternalCommand(cwd=root, command=cmd).execute(names)
 
-    def _commit(self,root, date, author, remark, changelog=None, entries=None):
+    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -42,8 +42,8 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = ""
-        if remark:
-            logmessage=remark.encode(encoding)
+        if patchname:
+            logmessage=patchname.encode(encoding)
         if changelog:
             if logmessage!="":
                 logmessage+="\n\n"+changelog.encode(encoding)
