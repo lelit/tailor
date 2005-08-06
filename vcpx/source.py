@@ -12,6 +12,8 @@ directory under some kind of version control system.
 
 __docformat__ = 'reStructuredText'
 
+from workdir import WorkingDir
+
 CONFLICTS_PROMPT = """
 The changeset
 
@@ -33,7 +35,7 @@ class ChangesetApplicationFailure(Exception):
 class InvocationError(Exception):
     "Bad invocation, use --help for details"
 
-class UpdatableSourceWorkingDir(object):
+class UpdatableSourceWorkingDir(WorkingDir):
     """
     This is an abstract working dir able to follow an upstream
     source of ``changesets``.

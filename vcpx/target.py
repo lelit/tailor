@@ -13,6 +13,7 @@ working directory under two different version control systems.
 __docformat__ = 'reStructuredText'
 
 import socket
+from workdir import WorkingDir
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
@@ -28,7 +29,7 @@ Import of the upstream sources from
 class TargetInitializationFailure(Exception):
     "Failure initializing the target VCS"
 
-class SyncronizableTargetWorkingDir(object):
+class SyncronizableTargetWorkingDir(WorkingDir):
     """
     This is an abstract working dir usable as a *shadow* of another
     kind of VC, sharing the same working directory.
