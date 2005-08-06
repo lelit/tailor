@@ -28,8 +28,6 @@ Import of the upstream sources from
 class TargetInitializationFailure(Exception):
     "Failure initializing the target VCS"
 
-    pass
-
 class SyncronizableTargetWorkingDir(object):
     """
     This is an abstract working dir usable as a *shadow* of another

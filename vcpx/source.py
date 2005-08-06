@@ -27,17 +27,11 @@ with a Ctrl-Z and a few "svn resolved". What would you like to do?
 class GetUpstreamChangesetsFailure(Exception):
     "Failure getting upstream changes"
 
-    pass
-
 class ChangesetApplicationFailure(Exception):
     "Failure applying upstream changes"
 
-    pass
-
 class InvocationError(Exception):
     "Bad invocation, use --help for details"
-
-    pass
 
 class UpdatableSourceWorkingDir(object):
     """

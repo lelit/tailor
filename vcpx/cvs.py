@@ -22,8 +22,6 @@ class EmptyRepositoriesFoolsMe(Exception):
     # repository. This is more a shortcoming of tailor, rather than a
     # real problem with those repositories.
 
-    pass
-
 def compare_cvs_revs(rev1, rev2):
     """Compare two CVS revision numerically, not alphabetically."""
 
