@@ -3,7 +3,7 @@
 # :Creato:   dom 11 lug 2004 01:59:36 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 """
 Given `cvsps` shortcomings, this backend uses CVS only.
@@ -17,11 +17,11 @@ from source import GetUpstreamChangesetsFailure
 
 class EmptyRepositoriesFoolsMe(Exception):
     "Cannot handle empty repositories. Maybe wrong module/repository?"
-    
+
     # This is the exception raised when we try to tailor an empty CVS
     # repository. This is more a shortcoming of tailor, rather than a
     # real problem with those repositories.
-    
+
     pass
 
 def compare_cvs_revs(rev1, rev2):
@@ -32,7 +32,7 @@ def compare_cvs_revs(rev1, rev2):
 
     r1 = [int(n) for n in rev1.split('.')]
     r2 = [int(n) for n in rev2.split('.')]
-    
+
     return cmp(r1, r2)
 
 
@@ -48,10 +48,10 @@ def changesets_from_cvslog(log, module):
 
     threshold = timedelta(seconds=180)
     last = None
-    
+
     for cs in collected:
-        if (last and last.author == cs.author and  last.log == cs.log and 
-            abs(lastts - cs.date) < threshold and 
+        if (last and last.author == cs.author and  last.log == cs.log and
+            abs(lastts - cs.date) < threshold and
             not [e for e in cs.entries
                  if e.name in [n.name for n in last.entries]]):
             last.entries.extend(cs.entries)
@@ -66,14 +66,14 @@ def changesets_from_cvslog(log, module):
 
     return collapsed
 
-        
+
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
 
     # Some string constants we look for in CVS output.
     intra_sep = '-' * 28 + '\n'
     inter_sep = '=' * 77 + '\n'
-    
+
     def __init__(self, log, module):
         """
         Initialize a ChangeSetCollector instance.
@@ -86,17 +86,17 @@ class ChangeSetCollector(object):
 
         self.log = log
         """The log to be parsed."""
-        
+
         self.module = module
         """The CVS module name."""
-        
+
         self.__parseCvsLog()
 
     def __iter__(self):
         keys = self.changesets.keys()
         keys.sort()
         return iter([self.changesets[k] for k in keys])
-    
+
     def __getGlobalRevision(self, timestamp, author, changelog):
         """
         CVS does not have the notion of a repository-wide revision number,
@@ -116,7 +116,7 @@ class ChangeSetCollector(object):
         """Register a change set about an entry."""
 
         from changes import Changeset
-        
+
         key = (timestamp, author, changelog)
         if self.changesets.has_key(key):
             return self.changesets[key].addEntry(entry, revision)
@@ -148,7 +148,7 @@ class ChangeSetCollector(object):
             l = self.log.readline()
 
         return l
-    
+
     def __parseRevision(self, entry):
         """
         Parse a single revision log, extracting the needed information.
@@ -158,7 +158,7 @@ class ChangeSetCollector(object):
         """
 
         from datetime import datetime
-        
+
         revision = self.__readline()
         if not revision or not revision.startswith('revision '):
             return None
@@ -173,7 +173,7 @@ class ChangeSetCollector(object):
         # 2004-04-19 14:45:42 +0000, the timezone may be missing
         dateparts = info[0][6:].split(' ')
         assert len(dateparts) >= 2, `dateparts`
-        
+
         day = dateparts[0]
         time = dateparts[1]
         y,m,d = map(int, day.split(day[4]))
@@ -187,13 +187,13 @@ class ChangeSetCollector(object):
         assert info[2].strip()[:7] == 'state: ', infoline
 
         state = info[2].strip()[7:]
-        
+
         # Fourth element, if present and like "lines +x -y", indicates
         # this is a change to an existing file. Otherwise its a new
         # one.
 
         newentry = not info[3].strip().startswith('lines: ')
-        
+
         # The next line may be either the first of the changelog or a
         # continuation (?) of the preceeding info line with the
         # "branches"
@@ -203,7 +203,7 @@ class ChangeSetCollector(object):
             infoline = infoline[:-1] + ';' + l
             # read the effective first line of log
             l = self.__readline()
-            
+
         mesg = []
         while l not in (None, '', self.inter_sep, self.intra_sep):
             mesg.append(l[:-1])
@@ -213,9 +213,9 @@ class ChangeSetCollector(object):
             changelog = ''
         else:
             changelog = '\n'.join(mesg)
-            
+
         return (date, author, changelog, entry, rev, state, newentry)
-    
+
     def __parseCvsLog(self):
         """Parse a complete CVS log."""
 
@@ -225,18 +225,18 @@ class ChangeSetCollector(object):
         revcount_regex = sre.compile('\\bselected revisions:\\s*(\\d+)\\b')
 
         self.__currentdir = None
-        
+
         while 1:
             l = self.__readline()
             while l and not l.startswith('RCS file: '):
                 l = self.__readline()
-            
+
             if not l.startswith('RCS file: '):
                 break
 
             assert self.__currentdir is not None, \
                    "Missed 'cvs rlog: Logging XX' line"
-            
+
             entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
 
             expected_revisions = None
@@ -274,13 +274,13 @@ class ChangeSetCollector(object):
                     previous.action_kind = previous.ADDED
 
                 previous = last
-                
+
             if expected_revisions <> found_revisions:
                 print 'warning: expecting %s revisions, read %s revisions' % \
                       ( expected_revisions, found_revisions )
 
     # end of __parseCvsLog()
-        
+
 
 class CvsWorkingDir(CvspsWorkingDir):
     """
@@ -320,7 +320,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             cmd.extend(["-d", "%(since)s UTC<"])
 
         cvslog = ExternalCommand(command=cmd)
-        
+
         log = cvslog.execute(module, stdout=PIPE, stderr=STDOUT,
                              repository=repository, since=since,
                              branch=branch or 'HEAD', TZ='UTC')
@@ -328,13 +328,13 @@ class CvsWorkingDir(CvspsWorkingDir):
         if cvslog.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
-                
+
         return changesets_from_cvslog(log, module)
-    
+
 
 class CvsEntry(object):
     """Collect the info about a file in a CVS working dir."""
-    
+
     __slots__ = ('filename', 'cvs_version', 'timestamp', 'cvs_tag')
 
     def __init__(self, entry):
@@ -342,7 +342,7 @@ class CvsEntry(object):
 
         from datetime import datetime
         from time import strptime
-        
+
         dummy, fn, rev, ts, dummy, tag = entry.split('/')
 
         self.filename = fn
@@ -368,7 +368,7 @@ class CvsEntries(object):
     """Collection of CvsEntry."""
 
     __slots__ = ('files', 'directories', 'deleted')
-    
+
     def __init__(self, root):
         """Parse CVS/Entries file.
 
@@ -377,17 +377,17 @@ class CvsEntries(object):
 
         from os.path import join, exists, isdir
         from os import listdir
-        
+
         self.files = {}
         """Dict of `CvsEntry`, keyed on each file under revision control."""
-        
+
         self.directories = {}
         """Dict of `CvsEntries`, keyed on subdirectories under revision
            control."""
 
         self.deleted = False
         """Flag to denote that this directory was removed."""
-        
+
         entries = join(root, 'CVS', 'Entries')
         if exists(entries):
             for entry in open(entries).readlines():
@@ -404,22 +404,22 @@ class CvsEntries(object):
                     subdir = CvsEntries(join(root, d))
                     self.directories[d] = subdir
                 elif entry == 'D':
-                    self.deleted = True 
+                    self.deleted = True
 
             # Sometimes the Entries file does not contain the directories:
             # crawl the current directory looking for missing ones.
 
             for entry in listdir(root):
                 if entry == '.svn':
-                    continue                
+                    continue
                 dir = join(root, entry)
                 if (isdir(dir) and exists(join(dir, 'CVS', 'Entries'))
                     and not self.directories.has_key(entry)):
                     self.directories[entry] = CvsEntries(dir)
-                    
+
             if self.deleted:
                 self.deleted = not self.files and not self.directories
-            
+
     def __str__(self):
         return "CvsEntries(%d files, %d subdirectories)" % (
             len(self.files), len(self.directories))
@@ -438,9 +438,9 @@ class CvsEntries(object):
 
     def getYoungestEntry(self):
         """Find and return the most recently changed entry."""
-        
+
         latest = None
-        
+
         for e in self.files.values():
             if not latest or e.timestamp > latest.timestamp:
                 latest = e
@@ -451,7 +451,7 @@ class CvsEntries(object):
             # skip if there are no entries in the directory
             if not e:
                 continue
-            
+
             if not latest or e.timestamp > latest.timestamp:
                 latest = e
 
