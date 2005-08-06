@@ -141,7 +141,7 @@ UPDATE_OPTIONS = [
     make_option("-F", "--patch-name-format", metavar="FORMAT",
                 help="Specify the prototype that will be used "
                      "to compute the patch name.  The prototype may contain "
-                     "%(keyword)s such as 'module', 'author', 'date', "
+                     "%(keyword)s such as 'author', 'date', "
                      "'revision', 'firstlogline', 'remaininglog'. It "
                      "defaults to '%(module)s: changeset %(revision)s'; "
                      "setting it to the empty string means that tailor will "

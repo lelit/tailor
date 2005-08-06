@@ -84,7 +84,6 @@ class SyncronizableTargetWorkingDir(object):
                 remaininglog = ''
 
         remark = self.PATCH_NAME_FORMAT % {
-            'module': module,
             'revision': changeset.revision,
             'author': changeset.author,
             'date': changeset.date,
