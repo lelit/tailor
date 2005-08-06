@@ -648,7 +648,7 @@ class Session(Cmd):
                     last, conflicts = dwd.applyUpstreamChangesets(
                         repodir, self.source_module, changesets,
                         applyable=applyable, applied=self.applied,
-                        logger=self.logger) # , delayed_commit=single_commit)
+                        logger=self.logger)
                 except StopIteration, KeyboardInterrupt:
                     if self.logger:
                         self.logger.warning("Stopped by user")

@@ -58,17 +58,11 @@ class SyncronizableTargetWorkingDir(object):
     When true, remove the first line from the upstream changelog.
     """
 
-    def replayChangeset(self, root, module, changeset,
-                        delayed_commit=False, logger=None):
+    def replayChangeset(self, root, module, changeset, logger=None):
         """
         Do whatever is needed to replay the changes under the target
         VC, to register the already applied (under the other VC)
         changeset.
-
-        If ``delayed_commit`` is not True, the changeset is committed
-        to the target VC right after a successful application; otherwise
-        the various information get registered and will be reused later,
-        by commitDelayedChangesets().
         """
 
         try:
@@ -77,88 +71,32 @@ class SyncronizableTargetWorkingDir(object):
             if logger: logger.critical(str(changeset))
             raise
 
-        if delayed_commit:
-            self.__registerAppliedChangeset(changeset)
+        if changeset.log == '':
+            firstlogline = 'Empty log message'
+            remaininglog = ''
         else:
-            if changeset.log == '':
-                firstlogline = 'Empty log message'
+            loglines = changeset.log.split('\n')
+            if len(loglines)>1:
+                firstlogline = loglines[0]
+                remaininglog = '\n'.join(loglines[1:])
+            else:
+                firstlogline = changeset.log
                 remaininglog = ''
-            else:
-                loglines = changeset.log.split('\n')
-                if len(loglines)>1:
-                    firstlogline = loglines[0]
-                    remaininglog = '\n'.join(loglines[1:])
-                else:
-                    firstlogline = changeset.log
-                    remaininglog = ''
 
-            remark = self.PATCH_NAME_FORMAT % {
-                'module': module,
-                'revision': changeset.revision,
-                'author': changeset.author,
-                'date': changeset.date,
-                'firstlogline': firstlogline,
-                'remaininglog': remaininglog}
-            if self.REMOVE_FIRST_LOG_LINE:
-                changelog = remaininglog
-            else:
-                changelog = changeset.log
-            entries = self._getCommitEntries(changeset)
-            self._commit(root, changeset.date, changeset.author,
-                         remark, changelog, entries)
-
-    def commitDelayedChangesets(self, root, concatenate_logs=True):
-        """
-        If there are changesets pending to be committed, do a single
-        commit of all changed entries.
-
-        With ``concatenate_logs`` there's control over the folded
-        changesets message log: if True every changelog is appended in
-        order of application, otherwise it will contain just the name
-        of the patches.
-        """
-
-        from datetime import datetime
-
-        if not hasattr(self, '_registered_cs'):
-            return
-
-        mindate = maxdate = None
-        combined_entries = {}
-        combined_log = []
-        combined_authors = {}
-        for cs in self._registered_cs:
-            if not mindate or mindate>cs.date:
-                mindate = cs.date
-            if not maxdate or maxdate<cs.date:
-                maxdate = cs.date
-
-            if concatenate_logs:
-                msg = 'changeset %s by %s' % (cs.revision, cs.author)
-                combined_log.append(msg)
-                combined_log.append('=' * len(msg))
-                combined_log.append(cs.log)
-            else:
-                combined_log.append('* changeset %s by %s' % (cs.revision,
-                                                              cs.author))
-            combined_authors[cs.author] = True
-
-            for e in self._getCommitEntries(cs):
-                combined_entries[e] = True
-
-        authors = ', '.join(combined_authors.keys())
-        remark = (self.PATCH_NAME_FORMAT or
-                  'Merged %(nchangesets) changesets '
-                  'from %(mindate)s to %(maxdate)s') % {
+        remark = self.PATCH_NAME_FORMAT % {
             'module': module,
-            'nchangesets': len(self._registered_cs),
-            'authors': authors,
-            'mindate': mindate,
-            'maxdate': maxdate}
-        changelog = '\n'.join(combined_log)
-        entries = combined_entries.keys()
-        self._commit(root, datetime.now(), authors,
-                         remark, changelog, entries)
+            'revision': changeset.revision,
+            'author': changeset.author,
+            'date': changeset.date,
+            'firstlogline': firstlogline,
+            'remaininglog': remaininglog}
+        if self.REMOVE_FIRST_LOG_LINE:
+            changelog = remaininglog
+        else:
+            changelog = changeset.log
+        entries = self._getCommitEntries(changeset)
+        self._commit(root, changeset.date, changeset.author,
+                     remark, changelog, entries)
 
     def _getCommitEntries(self, changeset):
         """
@@ -202,17 +140,6 @@ class SyncronizableTargetWorkingDir(object):
             if isdir(join(root, subdir)):
                 self._addSubtree(root, subdir)
                 added = [e for e in added if not e.name.startswith(subdir)]
-
-    def __registerAppliedChangeset(self, changeset):
-        """
-        Remember about an already applied but not committed changeset,
-        to be done later.
-        """
-
-        if not hasattr(self, '_registered_cs'):
-            self._registered_cs = []
-
-        self._registered_cs.append(changeset)
 
     def _addEntries(self, root, entries):
         """

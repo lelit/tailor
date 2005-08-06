@@ -62,7 +62,7 @@ class UpdatableSourceWorkingDir(object):
 
     def applyPendingChangesets(self, root, module, applyable=None,
                                replayable=None, replay=None, applied=None,
-                               logger=None, delayed_commit=False):
+                               logger=None):
         """
         Apply the collected upstream changes.
 
@@ -113,8 +113,7 @@ class UpdatableSourceWorkingDir(object):
                 continue
 
             if replay:
-                replay(root, module, c, delayed_commit=delayed_commit,
-                       logger=logger)
+                replay(root, module, c, logger=logger)
 
             remaining.remove(c)
             self.state_file.write(c.revision, remaining)

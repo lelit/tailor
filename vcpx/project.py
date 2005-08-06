@@ -256,15 +256,12 @@ class Project(object):
                 last, conflicts = dwd.applyPendingChangesets(
                     wdir, self.source.module,
                     applyable=self._applyable, applied=self._applied,
-                    logger=self.logger, delayed_commit=self.single_commit)
+                    logger=self.logger)
             except:
                 self.log_error('Upstream change application failed', True)
                 raise
 
             if last:
-                if single_commit:
-                    dwd.commitDelayedChangesets(proj, concatenate_logs)
-
                 self.log_info("Update completed, now at revision '%s'" %
                               self.upstream_revision)
         else:

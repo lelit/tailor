@@ -138,21 +138,11 @@ UPDATE_OPTIONS = [
                 help="Update the given repositories, fetching upstream "
                      "changesets, applying and re-registering each one. "
                      "This is the default behaviour."),
-    make_option("-S", "--single-commit", action="store_true", default=False,
-                help="Do a single, final commit on the target VC, effectively "
-                     "grouping together all upstream changeset into a single "
-                     "one, from the target VC point of view."),
-    make_option("-C", "--concatenate-logs", action="store_true", default=False,
-                help="With --single-commit, concatenate each changeset "
-                     "message log to the final changelog, instead of just "
-                     "the name of the patch."),
     make_option("-F", "--patch-name-format", metavar="FORMAT",
                 help="Specify the prototype that will be used "
                      "to compute the patch name.  The prototype may contain "
                      "%(keyword)s such as 'module', 'author', 'date', "
-                     "'revision', 'firstlogline', 'remaininglog' for normal "
-                     "updates, otherwise 'module', 'authors', 'nchangesets', "
-                     "'mindate' and 'maxdate' when using --single-commit. It "
+                     "'revision', 'firstlogline', 'remaininglog'. It "
                      "defaults to '%(module)s: changeset %(revision)s'; "
                      "setting it to the empty string means that tailor will "
                      "simply use the original changelog."),

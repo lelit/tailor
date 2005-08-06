@@ -49,15 +49,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
         self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
-        self.commitDelayedChangesets = self.target.commitDelayedChangesets
         self.replayChangeset = self.target.replayChangeset
 
     def applyPendingChangesets(self, root, module, applyable=None,
-                                replay=None, applied=None, logger=None,
-                                delayed_commit=False):
+                                replay=None, applied=None, logger=None):
         return self.source.applyPendingChangesets(root, module,
                                                   replay=self.replayChangeset,
                                                   applyable=applyable,
                                                   applied=applied,
-                                                  logger=logger,
-                                                  delayed_commit=delayed_commit)
+                                                  logger=logger)
