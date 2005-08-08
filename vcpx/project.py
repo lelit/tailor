@@ -75,7 +75,7 @@ class Project(object):
         """
 
         from os import getcwd, makedirs
-        from os.path import join, exists
+        from os.path import join, exists, expanduser
         import logging
 
         self.root = self.config.get(self.name, 'root', getcwd())
@@ -87,8 +87,9 @@ class Project(object):
 
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
-        self.state_file = StateFile(self.config.get(self.name, 'state-file'),
-                                    self.config)
+        sfpath = join(self.rootdir,
+                      expanduser(self.config.get(self.name, 'state-file')))
+        self.state_file = StateFile(sfpath, self.config)
 
         before = self.config.getTuple(self.name, 'before-commit')
         try:

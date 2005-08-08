@@ -87,6 +87,7 @@ def checkpoint(context, changeset):
         self.assertEqual(p2.source.repository, expanduser('~/darcs/project1'))
         self.assertEqual(p2.target.repository, 'svn://some.server/svn')
         self.assertEqual(len(p2.before_commit), 1)
+        self.assertEqual(p2.state_file.filename, '/tmp/test/project2.state')
         p1 = config['project1']
         self.assertEqual(p1.source.repository, 'svn://some.server/svn')
         self.assertEqual(p1.target.repository, expanduser('~/darcs/project1'))
