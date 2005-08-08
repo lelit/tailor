@@ -266,7 +266,7 @@ def main():
     else:
         defaults = {}
         for k,v in options.__dict__.items():
-            if k not in ['interactive', 'bootstrap', 'configfile']:
+            if k not in ['interactive', 'bootstrap', 'configfile', 'migrate']:
                 defaults[k.replace('_', '-')] = str(v)
 
         if options.configfile or (len(sys.argv)==2 and len(args)==1):
