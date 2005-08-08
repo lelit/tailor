@@ -200,8 +200,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             selector = '--tags'
             revtag = changeset.revision[7:]
         else:
-            selector = '--patches'
-            revtag = escape(changeset.revision)
+            selector = '--match'
+            revtag = 'date "%s" && author "%s" && exact "%s"' % (
+                changeset.date.strftime("%a %b %d %H:%M:%S UTC %Y"),
+                changeset.author,
+                changeset.revision)
 
         cmd = [self.repository.DARCS_CMD, "pull", "--all", selector, revtag]
         pull = ExternalCommand(cwd=root, command=cmd)
@@ -243,7 +246,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     (str(changes), changes.exit_status, output.read()))
 
             csets = changesets_from_darcschanges(output)
-            revision = escape(csets[0].revision)
+            changeset = csets[0]
+            revision = 'date "%s" && author "%s" && exact "%s"' % (
+                changeset.date.strftime("%a %b %d %H:%M:%S UTC %Y"),
+                changeset.author,
+                changeset.revision)
         else:
             initial = False
 
