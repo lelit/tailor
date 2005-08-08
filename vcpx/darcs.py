@@ -74,10 +74,16 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
             if name == 'patch':
                 # Sort the paths to make tests easier
                 self.current['entries'].sort(lambda x,y: cmp(x.name, y.name))
-                cset = Changeset(self.current['name'],
+                name = self.current['name']
+                log = self.current['comment']
+                if log:
+                    changelog = name + '\n' + log
+                else:
+                    changelog = name
+                cset = Changeset(name,
                                  self.current['date'],
                                  self.current['author'],
-                                 self.current['comment'],
+                                 changelog,
                                  self.current['entries'])
 
                 if self.darcsdiff:
