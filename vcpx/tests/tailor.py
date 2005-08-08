@@ -26,7 +26,6 @@ state-file = tailor.state
 start-revision = Almost arbitrarily tagging this as version 0.8
 
 [darcs2hg]
-start-revision = INITIAL
 target = hg:tailor
 root-directory = /tmp/tailor-tests/darcs2hg
 source = darcs:tailor
