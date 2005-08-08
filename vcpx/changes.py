@@ -97,7 +97,7 @@ class Changeset(object):
     ANONYMOUS_USER = "anonymous"
     """Author name when it is not known"""
 
-    REFILL_MESSAGE = True
+    REFILL_MESSAGE = False
     """Refill changelogs"""
 
     def __init__(self, revision, date, author, log, entries=None, **other):

@@ -76,7 +76,9 @@ class DarcsChangesParserTest(TestCase):
                          "Fix the CVS parser to omit already seen changesets")
         self.assertEqual(cset.author, "lele@nautilus.homeip.net")
         self.assertEqual(cset.date, datetime(2004, 7, 16, 12, 37, 37))
-        self.assertEqual(cset.log, "For some unknown reasons....")
+        self.assertEqual(cset.log,
+                         "Fix the CVS parser to omit already seen changesets\n"
+                         "For some unknown reasons....")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'vcpx/cvs.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)

@@ -57,8 +57,8 @@ Members:
         self.assertEqual(cset.author, "grubert")
         self.assertEqual(cset.date, datetime(2004, 5, 9, 17, 54, 22))
         self.assertEqual(cset.log, "Tell the reason for using mbox "
-                                   "(not wrapping long lines).")
-        
+                                   "(not wrapping long lines).\n\n")
+
     def testDoubleEntry(self):
         """Verify the cvsps log parser recognizes double entries"""
 

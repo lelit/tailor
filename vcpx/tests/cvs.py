@@ -645,12 +645,11 @@ cvs rlog: Logging ATContentTypes/types/criteria
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9))
         self.assertEqual(cset.log, """\
-Recoded migration walkers to use a generator instead returning a list
-to make them much more memory efficient. Rewritten folder migration to
-use the depth inside the folder structur instead of recursing into the
-full side. Added a findStaledObjects external method to ATCT to find
-staled objects. It is very useful to clean up a site before running
-the migration.""")
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.""")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Extensions/batchCreate.py')
         self.assertEqual(entry.new_revision, '1.2')
