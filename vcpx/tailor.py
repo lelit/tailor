@@ -294,7 +294,7 @@ def main():
             config.set('project', 'source', source)
             target = options.target_kind + ':target'
             config.set('project', 'target', target)
-            config.set('project', 'root', getcwd())
+            config.set('project', 'root-directory', getcwd())
             config.set('project', 'subdir', options.subdir or '.')
             config.set('project', 'state-file', 'tailor.state')
             config.set('project', 'start-revision', options.start_revision)

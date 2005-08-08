@@ -40,7 +40,7 @@ repository = /tmp/db
 passphrase = simba
 
 [project2]
-root = /tmp/test
+root-directory = /tmp/test
 source = darcs:project1repo
 target = svn:project1repo
 refill-changelogs = Yes
