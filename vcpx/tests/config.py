@@ -78,14 +78,16 @@ def checkpoint(context, changeset):
     def testBasicConfig(self):
         """Verify the configuration mechanism"""
 
+        from os.path import expanduser
+
         config = Config(StringIO(self.BASIC_TEST), {})
         self.assertEqual(config.projects(), ['project2'])
         p2 = config[config.projects()[0]]
-        self.assertEqual(p2.root, '/tmp/test')
-        self.assertEqual(p2.source.repository, '~/darcs/project1')
+        self.assertEqual(p2.rootdir, '/tmp/test')
+        self.assertEqual(p2.source.repository, expanduser('~/darcs/project1'))
         self.assertEqual(p2.target.repository, 'svn://some.server/svn')
         self.assertEqual(len(p2.before_commit), 1)
         p1 = config['project1']
         self.assertEqual(p1.source.repository, 'svn://some.server/svn')
-        self.assertEqual(p1.target.repository, '~/darcs/project1')
+        self.assertEqual(p1.target.repository, expanduser('~/darcs/project1'))
         self.assertEqual(len(p1.before_commit), 3)

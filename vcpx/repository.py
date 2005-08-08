@@ -36,10 +36,12 @@ class Repository(object):
         section.
         """
 
-        from os.path import split
+        from os.path import split, expanduser
 
         self.repository = config.get(self.name, 'repository') or \
                           config.get(self.name, '%s-repository' % which)
+        if self.repository:
+            self.repository = expanduser(self.repository)
         self.module = config.get(self.name, 'module') or \
                       config.get(self.name, '%s-module' % which)
         if not self.module and self.repository:
