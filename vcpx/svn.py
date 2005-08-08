@@ -172,7 +172,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
-    def _getUpstreamChangesets(self, root, repository, module, sincerev=None):
+    def _getUpstreamChangesets(self, sincerev=None):
         if sincerev:
             sincerev = int(sincerev)
         else:
@@ -180,38 +180,39 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
                "--revision", "%d:HEAD" % (sincerev+1)]
-        svnlog = ExternalCommand(cwd=root, command=cmd)
+        svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
         log = svnlog.execute('.', stdout=PIPE, TZ='UTC')
 
         if svnlog.exit_status:
             return []
 
-        return changesets_from_svnlog(log, repository, module)
+        return changesets_from_svnlog(log,
+                                      self.repository.repository,
+                                      self.repository.module)
 
-    def _applyChangeset(self, root, changeset, logger=None):
+    def _applyChangeset(self, changeset):
         cmd = [self.repository.SVN_CMD, "update",
                "--revision", changeset.revision, "."]
-        svnup = ExternalCommand(cwd=root, command=cmd)
+        svnup = ExternalCommand(cwd=self.basedir, command=cmd)
         out = svnup.execute(stdout=PIPE)
 
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
                 "%s returned status %s" % (str(svnup), svnup.exit_status))
 
-        if logger: logger.info("%s updated to %s" % (
+        self.log_info("%s updated to %s" % (
             ','.join([e.name for e in changeset.entries]),
             changeset.revision))
 
         result = []
         for line in out:
             if len(line)>2 and line[0] == 'C' and line[1] == ' ':
-                logger.warn("Conflict after 'svn update': '%s'" % line)
+                self.log_info("Conflict after 'svn update': '%s'" % line)
                 result.append(line[2:-1])
 
         return result
 
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None, **kwargs):
+    def _checkoutUpstreamRevision(self, revision):
         """
         Concretely do the checkout of the upstream revision.
         """
@@ -223,35 +224,39 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
                    "--limit", "1", "--revision", "1:HEAD"]
             svnlog = ExternalCommand(command=cmd)
-            output = svnlog.execute("%s%s" % (repository, module), stdout=PIPE)
+            output = svnlog.execute("%s%s" % (self.repository.repository,
+                                              self.repository.module),
+                                    stdout=PIPE)
 
             if svnlog.exit_status:
                 raise ChangesetApplicationFailure(
                     "%s returned status %d saying \"%s\"" %
                     (str(output), changes.exit_status, output.read()))
 
-            csets = changesets_from_svnlog(output, repository, module)
+            csets = changesets_from_svnlog(output,
+                                           self.repository.repository,
+                                           self.repository.module)
             revision = escape(csets[0].revision)
         else:
             initial = False
 
-        wdir = join(basedir, subdir)
-        if not exists(join(wdir, '.svn')):
-            if logger: logger.info("checking out a working copy")
+        if not exists(join(self.basedir, '.svn')):
+            self.log_info("checking out a working copy")
             cmd = [self.repository.SVN_CMD, "co", "--quiet",
                    "--revision", revision]
-            svnco = ExternalCommand(cwd=basedir, command=cmd)
-            svnco.execute("%s%s" % (repository, module), subdir)
+            svnco = ExternalCommand(command=cmd)
+            svnco.execute("%s%s" % (self.repository.repository,
+                                    self.repository.module), self.basedir)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(svnco), svnco.exit_status))
         else:
-            if logger: logger.info("%s already exists, assuming it's a svn working dir" % wdir)
+            self.log_info("%s already exists, assuming it's a svn working dir" % self.basedir)
 
         if not initial:
             cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
                    "--revision", revision]
-            svnlog = ExternalCommand(cwd=wdir, command=cmd)
+            svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
             output = svnlog.execute(stdout=PIPE)
 
             if svnlog.exit_status:
@@ -259,25 +264,26 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                     "%s returned status %d saying \"%s\"" %
                     (str(changes), changes.exit_status, output.read()))
 
-            csets = changesets_from_svnlog(output, repository, module)
+            csets = changesets_from_svnlog(output,
+                                           self.repository.repository,
+                                           self.repository.module)
 
         last = csets[0]
 
-        if logger: logger.info("working copy up to svn revision %s",
-                               last.revision)
+        self.log_info("working copy up to svn revision %s", last.revision)
 
         return last
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
         cmd = [self.repository.SVN_CMD, "add", "--quiet", "--no-auto-props",
                "--non-recursive"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _getCommitEntries(self, changeset):
         """
@@ -292,7 +298,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         return entries
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -325,7 +331,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         cmd = [self.repository.SVN_CMD, "commit", "--quiet",
                "--file", rontf.name]
-        commit = ExternalCommand(cwd=root, command=cmd)
+        commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
             entries = ['.']
@@ -335,27 +341,27 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if self.USE_PROPSET:
             cmd = [self.repository.SVN_CMD, "propset", "%(propname)s",
                    "--quiet", "--revprop", "-rHEAD"]
-            propset = ExternalCommand(cwd=root, command=cmd)
+            propset = ExternalCommand(cwd=self.basedir, command=cmd)
 
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(author, propname='svn:author')
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem objects.
         """
 
         cmd = [self.repository.SVN_CMD, "remove", "--quiet", "--force"]
-        remove = ExternalCommand(cwd=root, command=cmd)
+        remove = ExternalCommand(cwd=self.basedir, command=cmd)
         remove.execute(names)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
 
         cmd = [self.repository.SVN_CMD, "mv", "--quiet"]
-        move = ExternalCommand(cwd=root, command=cmd)
+        move = ExternalCommand(cwd=self.basedir, command=cmd)
         move.execute(oldname, newname)
         if move.exit_status:
             # Subversion does not seem to allow
@@ -364,8 +370,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             # Here we are in this situation, since upstream VCS already
             # moved the item. OTOH, svn really treats "mv" as "cp+rm",
             # so we do the same here
-            self._removePathnames(root, [oldname])
-            self._addPathnames(root, [newname])
+            self._removePathnames([oldname])
+            self._addPathnames([newname])
 
     def __createRepository(self, target_repository, target_module):
         """
@@ -394,46 +400,44 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                                   "one level directory?" %
                                                   target_module)
 
-    def _prepareTargetRepository(self, root, target_repository, target_module):
+    def _prepareTargetRepository(self):
         """
         Check for target repository existence, eventually create it.
         """
 
         cmd = [self.repository.SVN_CMD, "info"]
         svninfo = ExternalCommand(command=cmd)
-        svninfo.execute(target_repository, stdout=PIPE, stderr=STDOUT)
+        svninfo.execute(self.repository.repository, stdout=PIPE, stderr=STDOUT)
 
         if svninfo.exit_status:
-            if target_repository.startswith('file:///'):
-                self.__createRepository(target_repository, target_module)
+            if self.repository.repository.startswith('file:///'):
+                self.__createRepository(self.repository.repository,
+                                        self.repository.module)
             else:
                 raise TargetInitializationFailure("%r does not exist and "
                                                   "cannot be created since "
                                                   "it's not a local (file:///) "
                                                   "repository" %
-                                                  target_repository)
+                                                  self.repository.repository)
 
-    def _prepareWorkingDirectory(self, root, target_repository, target_module):
+    def _prepareWorkingDirectory(self):
         """
         Checkout a working copy of the target SVN repository.
         """
 
         cmd = [self.repository.SVN_CMD, "co", "--quiet"]
         svnco = ExternalCommand(command=cmd)
-        svnco.execute(target_repository + target_module, root)
+        svnco.execute("%s%s" % (self.repository.repository,
+                                self.repository.module), self.basedir)
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
         Add the given directory to an already existing svn working tree.
         """
 
         from os.path import exists, join
 
-        if not exists(join(root, '.svn')):
-            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % root)
+        if not exists(join(self.basedir, '.svn')):
+            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % self.basedir)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            source_repository,
-                                                            source_module,
-                                                            subdir)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self)

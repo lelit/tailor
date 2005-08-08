@@ -44,7 +44,7 @@ class Tailorizer(object):
         content into the target repository.
         """
 
-        self.project.log_info("Bootstrapping '%s'" % self.project.root)
+        self.project.log_info("Bootstrapping '%s'" % self.project.rootdir)
 
         try:
             self.project.prepareWorkingDirectory()

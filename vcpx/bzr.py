@@ -18,15 +18,15 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addEntries(self, root, entries):
+    def _addEntries(self, entries):
         """
         Add a sequence of entries.
         """
 
         cmd = [self.repository.BZR_CMD, "add"]
-        ExternalCommand(cwd=root, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -49,26 +49,25 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=root, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _removeEntries(self, root, entries):
+    def _removeEntries(self, entries):
         """
         Remove a sequence of entries.
         """
 
         cmd = [self.repository.BZR_CMD, "remove"]
-        ExternalCommand(cwd=root, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _renameEntry(self, root, oldentry, newentry):
+    def _renameEntry(self, oldentry, newentry):
         """
         Rename an entry.
         """
 
         cmd = [self.repository.BZR_CMD, "rename"]
-        ExternalCommand(cwd=root, command=cmd).execute(old, new)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(old, new)
 
-    def initializeNewWorkingDir(self, root, source_repository,
-                                source_module, subdir, changeset, initial):
+    def initializeNewWorkingDir(self, source_repo, changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
@@ -77,9 +76,10 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
              BOOTSTRAP_CHANGELOG
 
-        self._initializeWorkingDir(root, source_repository, source_module,
-                                   subdir)
+        self._initializeWorkingDir()
         revision = changeset.revision
+        source_repository = source_repo.repository
+        source_module = source_repo.module
         if initial:
             author = changeset.author
             patchname = changeset.log
@@ -88,11 +88,10 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
             author = "%s@%s" % (AUTHOR, HOST)
             patchname = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, changeset.date, author, patchname, log,
-                     entries=[subdir, '%s/...' % subdir])
+        self._commit(changeset.date, author, patchname, log,
+                     entries=['%s/...' % self.basedir])
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
         Execute ``bzr init``.
         """
@@ -102,7 +101,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         from dualwd import IGNORED_METADIRS
 
         cmd = [self.repository.BZR_CMD, "init"]
-        init = ExternalCommand(cwd=root, command=cmd)
+        init = ExternalCommand(cwd=self.basedir, command=cmd)
         init.execute()
 
         if init.exit_status:
@@ -111,13 +110,10 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
         # Create the .bzrignore file, that contains a glob per line,
         # with all known VCs metadirs to be skipped.
-        ignore = open(join(root, '.hgignore'), 'w')
+        ignore = open(join(self.basedir, '.hgignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % md
                                 for md in IGNORED_METADIRS]))
         ignore.write('\ntailor.log\ntailor.info\n')
         ignore.close()
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            source_repository,
-                                                            source_module,
-                                                            subdir)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self)

@@ -286,23 +286,21 @@ class CvsWorkingDir(CvspsWorkingDir):
     CVS commits.
     """
 
-    def _getUpstreamChangesets(self, root, repository, module, sincerev=None,
-                              branch=None):
+    def _getUpstreamChangesets(self, sincerev):
         from os.path import join, exists
         from datetime import timedelta
 
-        if branch is None:
-            entries = CvsEntries(root)
-            youngest_entry = entries.getYoungestEntry()
-            if youngest_entry is None:
-                raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % root)
+        entries = CvsEntries(self.basedir)
+        youngest_entry = entries.getYoungestEntry()
+        if youngest_entry is None:
+            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % self.basedir)
 
-            branch = ''
-            fname = join(root, 'CVS', 'Tag')
-            if exists(fname):
-                tag = open(fname).read()
-                if tag[0] in 'NT':
-                    branch=tag[1:-1]
+        branch = ''
+        fname = join(self.basedir, 'CVS', 'Tag')
+        if exists(fname):
+            tag = open(fname).read()
+            if tag[0] in 'NT':
+                branch=tag[1:-1]
 
         if not sincerev:
             # We are bootstrapping, trying to collimate the

@@ -59,7 +59,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
     When true, remove the first line from the upstream changelog.
     """
 
-    def replayChangeset(self, root, module, changeset, logger=None):
+    def replayChangeset(self, changeset):
         """
         Do whatever is needed to replay the changes under the target
         VC, to register the already applied (under the other VC)
@@ -67,9 +67,9 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         """
 
         try:
-            self._replayChangeset(root, changeset, logger)
+            self._replayChangeset(changeset)
         except:
-            if logger: logger.critical(str(changeset))
+            self.log_error(str(changeset), exc=True)
             raise
 
         if changeset.log == '':
@@ -95,7 +95,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         else:
             changelog = changeset.log
         entries = self._getCommitEntries(changeset)
-        self._commit(root, changeset.date, changeset.author,
+        self._commit(changeset.date, changeset.author,
                      patchname, changelog, entries)
 
     def _getCommitEntries(self, changeset):
@@ -105,7 +105,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         return [e.name for e in changeset.entries]
 
-    def _replayChangeset(self, root, changeset, logger):
+    def _replayChangeset(self, changeset):
         """
         Replicate the actions performed by the changeset on the tree of
         files.
@@ -127,9 +127,9 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         # Replay the actions
 
-        if renamed: self._renameEntries(root, renamed)
-        if removed: self._removeEntries(root, removed)
-        if added: self._addEntries(root, added)
+        if renamed: self._renameEntries(renamed)
+        if removed: self._removeEntries(removed)
+        if added: self._addEntries(added)
 
         # Finally, deal with "copied" directories. The simple way is
         # executing an _addSubtree on each of them, evenif this may
@@ -137,25 +137,25 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         while added:
             subdir = added.pop(0).name
-            if isdir(join(root, subdir)):
-                self._addSubtree(root, subdir)
+            if isdir(join(self.basedir, subdir)):
+                self._addSubtree(subdir)
                 added = [e for e in added if not e.name.startswith(subdir)]
 
-    def _addEntries(self, root, entries):
+    def _addEntries(self, entries):
         """
         Add a sequence of entries
         """
 
-        self._addPathnames(root, [e.name for e in entries])
+        self._addPathnames([e.name for e in entries])
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
         raise "%s should override this method" % self.__class__
 
-    def _addSubtree(self, root, subdir):
+    def _addSubtree(self, subdir):
         """
         Add a whole subtree.
 
@@ -172,10 +172,10 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
-        if subdir<>'.':
-            self._addPathnames(root, [subdir])
+        if subdir and subdir<>'.':
+            self._addPathnames([subdir])
 
-        for dir, subdirs, files in walk(join(root, subdir)):
+        for dir, subdirs, files in walk(join(self.basedir, subdir)):
             for excd in IGNORED_METADIRS:
                 if excd in subdirs:
                     subdirs.remove(excd)
@@ -186,31 +186,31 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                     files.remove(excf)
 
             if subdirs or files:
-                self._addPathnames(dir, subdirs + files)
+                self._addPathnames([join(dir, df)[len(self.basedir)+1:]
+                                    for df in subdirs + files])
 
-    def _commit(self, root, date, author, patchname,
-                changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
 
         raise "%s should override this method" % self.__class__
 
-    def _removeEntries(self, root, entries):
+    def _removeEntries(self, entries):
         """
         Remove a sequence of entries.
         """
 
-        self._removePathnames(root, [e.name for e in entries])
+        self._removePathnames([e.name for e in entries])
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem object.
         """
 
         raise "%s should override this method" % self.__class__
 
-    def _renameEntries(self, root, entries):
+    def _renameEntries(self, entries):
         """
         Rename a sequence of entries, adding all the parent directories
         of each entry.
@@ -229,49 +229,47 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 parent = split(parent)[0]
             if parents:
                 parents.reverse()
-                self._addPathnames(root, parents)
+                self._addPathnames(parents)
 
-            self._renamePathname(root, e.old_name, e.name)
+            self._renamePathname(e.old_name, e.name)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object to some other name/location.
         """
 
         raise "%s should override this method" % self.__class__
 
-    def prepareWorkingDirectory(self, root, target_repository, target_module):
+    def prepareWorkingDirectory(self):
         """
         Do anything required to setup the hosting working directory.
         """
 
-        if target_repository:
-            self._prepareTargetRepository(root, target_repository,
-                                          target_module)
-            self._prepareWorkingDirectory(root, target_repository,
-                                          target_module)
+        if self.repository.repository:
+            self._prepareTargetRepository()
+            self._prepareWorkingDirectory()
 
-    def _prepareTargetRepository(self, root, target_repository, target_module):
+    def _prepareTargetRepository(self):
         """
         Possibly create the repository, when overriden by subclasses.
         """
 
-    def _prepareWorkingDirectory(self, root, target_repository, target_module):
+    def _prepareWorkingDirectory(self):
         """
         Possibly checkout a working copy of the target VC, that will host the
         upstream source tree, when overriden by subclasses.
         """
 
-    def initializeNewWorkingDir(self, root, source_repository,
-                                source_module, subdir, changeset, initial):
+    def initializeNewWorkingDir(self, source_repo, changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
         """
 
-        self._initializeWorkingDir(root, source_repository, source_module,
-                                   subdir)
+        self._initializeWorkingDir()
         revision = changeset.revision
+        source_repository = source_repo.repository
+        source_module = source_repo.module
         if initial:
             author = changeset.author
             patchname = changeset.log
@@ -280,13 +278,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             author = "%s@%s" % (AUTHOR, HOST)
             patchname = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, changeset.date, author, patchname, log,
-                     entries=[subdir])
+        self._commit(changeset.date, author, patchname, log)
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
-        Assuming the ``root`` directory contains a working copy ``module``
+        Assuming the ``basedir`` directory contains a working copy ``module``
         extracted from some VC repository, add it and all its content
         to the target repository.
 
@@ -295,4 +291,4 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         appropriate for the backend.
         """
 
-        self._addSubtree(root, subdir)
+        self._addSubtree('.')

@@ -62,9 +62,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         self.state_file = state_file
 
-    def applyPendingChangesets(self, root, module, applyable=None,
-                               replayable=None, replay=None, applied=None,
-                               logger=None):
+    def applyPendingChangesets(self, applyable=None, replayable=None,
+                               replay=None, applied=None):
         """
         Apply the collected upstream changes.
 
@@ -88,19 +87,16 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         remaining = self.pending[:]
         for c in self.pending:
-            if not self._willApplyChangeset(root, c, applyable):
+            if not self._willApplyChangeset(c, applyable):
                 break
 
-            if logger:
-                logger.info("Applying changeset %s", c.revision)
+            self.log_info("Applying changeset %s" % c.revision)
 
             try:
-                res = self._applyChangeset(root, c, logger=logger)
+                res = self._applyChangeset(c)
             except:
-                if logger:
-                    logger.critical("Couldn't apply changeset %s",
-                                    c.revision, exc_info=True)
-                    logger.debug(str(c))
+                self.log_error("Couldn't apply changeset %s" % c.revision,
+                               exc=True)
                 raise
 
             if res:
@@ -108,27 +104,27 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 try:
                     raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
                 except KeyboardInterrupt:
-                    if logger: logger.info("INTERRUPTED BY THE USER!")
+                    self.log_info("INTERRUPTED BY THE USER!")
                     return last, conflicts
 
-            if not self._didApplyChangeset(root, c, replayable):
+            if not self._didApplyChangeset(c, replayable):
                 continue
 
             if replay:
-                replay(root, module, c, logger=logger)
+                replay(c)
 
             remaining.remove(c)
             self.state_file.write(c.revision, remaining)
 
             if applied:
-                applied(root, c)
+                applied(c)
 
             last = c
 
         self.pending = remaining
         return last, conflicts
 
-    def _willApplyChangeset(self, root, changeset, applyable=None):
+    def _willApplyChangeset(self, changeset, applyable=None):
         """
         This gets called just before applying each changeset.  The whole
         process will be stopped if this returns False.
@@ -138,11 +134,11 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         if applyable:
-            return applyable(root, changeset)
+            return applyable(changeset)
         else:
             return True
 
-    def _didApplyChangeset(self, root, changeset, replayable=None):
+    def _didApplyChangeset(self, changeset, replayable=None):
         """
         This gets called right after changeset application.  The final
         commit on the target system won't be carried out if this
@@ -153,11 +149,11 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         if replayable:
-            return replayable(root, changeset)
+            return replayable(changeset)
         else:
             return True
 
-    def getPendingChangesets(self,  root, repository, module):
+    def getPendingChangesets(self):
         """
         Load the pending changesets from the state file, or query the
         upstream repository if there's none.
@@ -165,11 +161,10 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         revision, self.pending = self.state_file.load()
         if not self.pending:
-            self.pending = self._getUpstreamChangesets(root, repository, module,
-                                                       revision)
+            self.pending = self._getUpstreamChangesets(revision)
         return self.pending
 
-    def _getUpstreamChangesets(self, root, repository, module, sincerev):
+    def _getUpstreamChangesets(self, sincerev):
         """
         Query the upstream repository about what happened on the
         sources since last sync, returning a sequence of Changesets
@@ -180,7 +175,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         raise "%s should override this method" % self.__class__
 
-    def _applyChangeset(self, root, changeset, logger=None):
+    def _applyChangeset(self, changeset):
         """
         Do the actual work of applying the changeset to the working copy.
 
@@ -191,39 +186,19 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         raise "%s should override this method" % self.__class__
 
-    def checkoutUpstreamRevision(self, root, repository, module, revision,
-                                 **kwargs):
+    def checkoutUpstreamRevision(self, revision):
         """
-        Extract a working copy from a repository.
-
-        :root: the name of the directory (that **must** exists)
-               that will contain the working copy of the sources under the
-               *module* subdirectory
-
-        :repository: the address of the repository (the format depends on
-                     the actual method used by the subclass)
-
-        :module: the name of the module to extract
-
-        :revision: extract that revision/branch
+        Extract a working copy of the given revision from a repository.
 
         Return the last applied changeset.
         """
 
-        if not root:
-            raise InvocationError("Must specify a root directory")
-        if not repository:
-            raise InvocationError("Must specify an upstream repository")
-
-        last = self._checkoutUpstreamRevision(root, repository,
-                                              module, revision,
-                                              **kwargs)
+        last = self._checkoutUpstreamRevision(revision)
         self.state_file.write(last.revision, None)
 
         return last
 
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None, **kwargs):
+    def _checkoutUpstreamRevision(self, revision):
         """
         Concretely do the checkout of the upstream revision.
         """

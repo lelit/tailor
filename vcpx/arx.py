@@ -19,17 +19,15 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
-        from os.path import join, isdir
-
         cmd = [self.repository.ARX_CMD, "add"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -51,28 +49,30 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         if logmessage=="":
             logmessage=" "
 
-        cmd = [self.repository.ARX_CMD, "commit", "-s", logmessage, "--author", author,
+        cmd = [self.repository.ARX_CMD, "commit", "-s", logmessage,
+               "--author", author,
                "--date", date.isoformat()]
-        c = ExternalCommand(cwd=root, command=cmd)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
         c.execute()
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem object.
         """
-        cmd = [self.repository.ARX_CMD, "rm"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
 
-    def _renamePathname(self, root, oldname, newname):
+        cmd = [self.repository.ARX_CMD, "rm"]
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
 
         cmd = [self.repository.ARX_CMD, "copy"]
-        rename = ExternalCommand(cwd=root, command=cmd)
-        rename.execute(oldname,newname)
+        rename = ExternalCommand(cwd=self.basedir, command=cmd)
+        rename.execute(oldname, newname)
 
-    def _initializeWorkingDir(self, root, repository, module, subdir):
+    def _initializeWorkingDir(self):
         """
         Setup the ArX working copy
 
@@ -87,20 +87,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         from dualwd import IGNORED_METADIRS
         from os import walk
 
-        if not exists(join(root, '_arx')):
-            raise TargetInitializationFailure("Please setup '%s' as an ArX working directory" % root)
+        if not exists(join(self.basedir, '_arx')):
+            raise TargetInitializationFailure("Please setup '%s' as an ArX working directory" % self.basedir)
 
-        self._addPathnames(root, [subdir])
-
-        cmd = [self.repository.ARX_CMD, "add"]
-        add_path = ExternalCommand(cwd=root, command=cmd)
-
-        for root, dirs, files in walk(root):
-            for f in files:
-                if f!="tailor.log" and f!="tailor.info":
-                    add_path.execute(join(root,f))
-            for metadir in IGNORED_METADIRS:
-                if metadir in dirs:
-                    dirs.remove(metadir)
-            for d in dirs:
-                add_path.execute(join(root,d))
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self)

@@ -18,7 +18,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
@@ -28,12 +28,12 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         # Currently hg does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(root, n))]
+        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
             cmd = [self.repository.HG_CMD, "add"]
-            ExternalCommand(cwd=root, command=cmd).execute(notdirs)
+            ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -54,7 +54,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.HG_CMD, "commit", "-u", author,
                "-l", "%(logfile)s",
                "-d", "%(time)s UTC"]
-        c = ExternalCommand(cwd=root, command=cmd)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
         log = open(rontf.name, "w")
@@ -63,7 +63,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem object.
         """
@@ -73,12 +73,12 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         # Currently hg does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(root, n))]
+        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
             cmd = [self.repository.HG_CMD, "remove"]
-            ExternalCommand(cwd=root, command=cmd).execute(notdirs)
+            ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
@@ -88,13 +88,13 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from dualwd import IGNORED_METADIRS
 
         cmd = [self.repository.HG_CMD, "copy"]
-        copy = ExternalCommand(cwd=root, command=cmd)
-        if isdir(join(root, newname)):
+        copy = ExternalCommand(cwd=self.basedir, command=cmd)
+        if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current HG,
             # loop over all files under the new directory and
             # do a copy on them.
-            skip = len(root)+len(newname)+2
-            for dir, subdirs, files in walk(join(root, newname)):
+            skip = len(self.basedir)+len(newname)+2
+            for dir, subdirs, files in walk(join(self.basedir, newname)):
                 prefix = dir[skip:]
 
                 for excd in IGNORED_METADIRS:
@@ -107,8 +107,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         else:
             copy.execute(oldname, newname)
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
         Execute ``hg init``.
         """
@@ -118,7 +117,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from re import escape
         from dualwd import IGNORED_METADIRS
 
-        init = ExternalCommand(cwd=root,
+        init = ExternalCommand(cwd=self.basedir,
                                command=[self.repository.HG_CMD, "init"])
         init.execute()
 
@@ -128,11 +127,11 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         # Create the .hgignore file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
-        ignore = open(join(root, '.hgignore'), 'w')
+        ignore = open(join(self.basedir, '.hgignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n^tailor.log$\n^tailor.info$\n')
         ignore.close()
 
-        ExternalCommand(cwd=root,
+        ExternalCommand(cwd=self.basedir,
                         command=[self.repository.HG_CMD, "addremove"]).execute()

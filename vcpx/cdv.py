@@ -18,15 +18,15 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
         cmd = [self.repository.CDV_CMD, "add"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -49,26 +49,25 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=root, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem object.
         """
 
         cmd = [self.repository.CDV_CMD, "remove"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
 
         cmd = [self.repository.CDV_CMD, "rename"]
-        ExternalCommand(cwd=root, command=cmd).execute(oldname, newname)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
-    def initializeNewWorkingDir(self, root, source_repository, source_module,
-                                subdir, changeset, initial):
+    def initializeNewWorkingDir(self, source_repo, changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.
@@ -77,9 +76,10 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
              BOOTSTRAP_CHANGELOG
 
-        self._initializeWorkingDir(root, source_repository, source_module,
-                                   subdir)
+        self._initializeWorkingDir()
         revision = changeset.revision
+        source_repository = source_repo.repository
+        source_module = source_repo.module
         if initial:
             author = changeset.author
             patchname = changeset.log
@@ -88,11 +88,10 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
             author = "%s@%s" % (AUTHOR, HOST)
             patchname = BOOTSTRAP_PATCHNAME % source_module
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(root, changeset.date, author, patchname, log,
-                     entries=[subdir, '%s/...' % subdir])
+        self._commit(changeset.date, author, patchname, log,
+                     entries=['%s/...' % self.basedir])
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
         Execute ``cdv init``.
         """
@@ -100,7 +99,8 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         from os import getenv
         from os.path import join
 
-        init = ExternalCommand(cwd=root, command=[self.repository.CDV_CMD, "init"])
+        init = ExternalCommand(cwd=self.basedir,
+                               command=[self.repository.CDV_CMD, "init"])
         init.execute()
 
         if init.exit_status:
@@ -109,9 +109,6 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         cmd = [self.repository.CDV_CMD, "set", "user"]
         user = getenv('CDV_USER') or getenv('LOGNAME')
-        ExternalCommand(cwd=root, command=cmd).execute(user)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(user)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self, root,
-                                                            source_repository,
-                                                            source_module,
-                                                            subdir)
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self)

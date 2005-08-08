@@ -21,16 +21,16 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
         cmd = [self.repository.MONOTONE_CMD, "add"]
-        add = ExternalCommand(cwd=root, command=cmd)
+        add = ExternalCommand(cwd=self.basedir, command=cmd)
         add.execute(names)
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -55,7 +55,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.MONOTONE_CMD, "commit", "--author", author,
                "--date", date.isoformat(),
                "--message-file", rontf.name]
-        commit = ExternalCommit(cwd=root, command=cmd)
+        commit = ExternalCommit(cwd=self.basedir, command=cmd)
 
         if not entries:
             entries = ['.']
@@ -73,26 +73,25 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
             else:
                 stderr.write("No changes to commit - changeset ignored\n")
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem object.
         """
 
         cmd = [self.repository.MONOTONE_CMD, "drop"]
-        drop = ExternalCommand(cwd=root, command=cmd)
+        drop = ExternalCommand(cwd=self.basedir, command=cmd)
         drop.execute(names)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
 
         cmd = [self.repository.MONOTONE_CMD, "rename"]
-        rename = ExternalCommand(cwd=root, command=cmd)
+        rename = ExternalCommand(cwd=self.basedir, command=cmd)
         rename.execute(oldname, newname)
 
-    def _initializeWorkingDir(self, root, source_repository, source_module,
-                              subdir):
+    def _initializeWorkingDir(self):
         """
         Setup the monotone working copy
 
@@ -104,7 +103,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
         from os.path import exists, join
 
-        if not exists(join(root, 'MT')):
-            raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % root)
+        if not exists(join(self.basedir, 'MT')):
+            raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % self.basedir)
 
-        self._addPathnames(root, [subdir])
+        self._addPathnames([self.repository.subdir])

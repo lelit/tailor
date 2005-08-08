@@ -65,7 +65,7 @@ class Project(object):
         self._load()
 
     def __str__(self):
-        return "Project %s at %s:\n\t" % (self.name, self.root) + \
+        return "Project %s at %s:\n\t" % (self.name, self.rootdir) + \
                "\n\t".join(['%s = %s' % (v, getattr(self, v))
                             for v in ('source', 'target', 'state_file')])
 
@@ -78,9 +78,9 @@ class Project(object):
         from os.path import join, exists, expanduser
         import logging
 
-        self.root = self.config.get(self.name, 'root', getcwd())
-        if not exists(self.root):
-            makedirs(self.root)
+        self.rootdir = self.config.get(self.name, 'root-directory', getcwd())
+        if not exists(self.rootdir):
+            makedirs(self.rootdir)
         self.subdir = self.config.get(self.name, 'subdir')
         if not self.subdir:
             self.subdir = '.'
@@ -111,7 +111,7 @@ class Project(object):
         self.single_commit = self.config.get(self.name, 'single-commit', False)
         self.logger = logging.getLogger('tailor.%s' % self.name)
         logfile = self.config.get(self.name, 'logfile', 'tailor.log')
-        hdlr = logging.FileHandler(join(self.root, logfile))
+        hdlr = logging.FileHandler(join(self.rootdir, logfile))
         formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
@@ -185,9 +185,7 @@ class Project(object):
         """
 
         dwd = self.workingDir()
-        dwd.prepareWorkingDirectory(self.root,
-                                    self.target.repository,
-                                    self.target.module)
+        dwd.prepareWorkingDirectory()
 
     def checkoutUpstreamRevision(self):
         """
@@ -197,16 +195,10 @@ class Project(object):
 
         dwd = self.workingDir()
         revision = self.config.get(self.name, 'start-revision', 'INITIAL')
-        actual = dwd.checkoutUpstreamRevision(self.root,
-                                            self.source.repository,
-                                            self.source.module, revision,
-                                            subdir=self.subdir,
-                                            logger=self.logger)
-        dwd.initializeNewWorkingDir(self.root, self.source.repository,
-                                    self.source.module, self.subdir,
-                                    actual, revision=='INITIAL')
+        actual = dwd.checkoutUpstreamRevision(revision)
+        dwd.initializeNewWorkingDir(self.source, actual, revision=='INITIAL')
 
-    def _applyable(self, root, changeset):
+    def _applyable(self, changeset):
         """
         Print the changeset being applied.
         """
@@ -220,7 +212,7 @@ class Project(object):
 
         return True
 
-    def _applied(self, root, changeset):
+    def _applied(self, changeset):
         """
         Save current status.
         """
@@ -233,14 +225,9 @@ class Project(object):
         Apply pending changesets, eventually fetching latest from upstream.
         """
 
-        from os.path import join
-
-        wdir = join(self.root, self.subdir)
         dwd = self.workingDir()
         try:
-            pendings = dwd.getPendingChangesets(wdir,
-                                                self.source.repository,
-                                                self.source.module)
+            pendings = dwd.getPendingChangesets()
         except KeyboardInterrupt:
             self.log_info("Leaving '%s' unchanged, stopped by user" % self.name)
             return
@@ -255,15 +242,13 @@ class Project(object):
 
             try:
                 last, conflicts = dwd.applyPendingChangesets(
-                    wdir, self.source.module,
-                    applyable=self._applyable, applied=self._applied,
-                    logger=self.logger)
+                    applyable=self._applyable, applied=self._applied)
             except:
                 self.log_error('Upstream change application failed', True)
                 raise
 
             if last:
                 self.log_info("Update completed, now at revision '%s'" %
-                              self.upstream_revision)
+                              last.revision)
         else:
             self.log_info("Update completed with no upstream changes")

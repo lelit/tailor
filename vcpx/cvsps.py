@@ -137,73 +137,68 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## UpdatableSourceWorkingDir
 
-    def _getUpstreamChangesets(self, root, repository, module, sincerev=None,
-                              branch=None):
+    def _getUpstreamChangesets(self, sincerev=None):
         from os.path import join, exists
 
-        if branch is None:
-            branch="HEAD"
-            fname = join(root, 'CVS', 'Tag')
-            if exists(fname):
-                tag = open(fname).read()
-                if tag.startswith('T'):
-                    branch=tag[1:-1]
+        branch="HEAD"
+        fname = join(self.basedir, 'CVS', 'Tag')
+        if exists(fname):
+            tag = open(fname).read()
+            if tag.startswith('T'):
+                branch=tag[1:-1]
 
         if sincerev:
             sincerev = int(sincerev)
 
         changesets = []
         cmd = [self.repository.CVSPS_CMD, "--cvs-direct", "-u", "-b", branch,
-               "--root", repository]
+               "--root", self.repository.repository]
         cvsps = ExternalCommand(command=cmd)
-        log = cvsps.execute(module, stdout=PIPE, TZ='UTC')
+        log = cvsps.execute(self.repository.module, stdout=PIPE, TZ='UTC')
 
         for cs in changesets_from_cvsps(log, sincerev):
             changesets.append(cs)
 
         return changesets
 
-    def __maybeDeleteDirectory(self, root, entrydir, changeset):
+    def __maybeDeleteDirectory(self, entrydir, changeset):
         from os.path import join, exists
         from os import listdir
 
         if not entrydir:
             return
 
-        absentrydir = join(root, entrydir)
+        absentrydir = join(self.basedir, entrydir)
         if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
             deldir = changeset.addEntry(entrydir, None)
             deldir.action_kind = deldir.DELETED
 
-    def _applyChangeset(self, root, changeset, logger=None):
+    def _applyChangeset(self, changeset):
         from os.path import join, exists, dirname, split
         from os import makedirs, listdir
         from shutil import rmtree
         from cvs import CvsEntries
         from time import sleep
 
-        entries = CvsEntries(root)
+        entries = CvsEntries(self.basedir)
 
         for e in changeset.entries:
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
                 if not info:
-                    if logger: logger.info("promoting '%s' to ADDED at "
-                                           "revision %s", e.name,
-                                           e.new_revision)
+                    self.log_info("promoting '%s' to ADDED at "
+                                  "revision %s", e.name, e.new_revision)
                     e.action_kind = e.ADDED
-                    self.__createParentCVSDirectories(changeset, root, e.name)
+                    self.__createParentCVSDirectories(changeset, e.name)
                 elif info.cvs_version == e.new_revision:
-                    if logger: logger.debug("skipping '%s' since it's already "
-                                            "at revision %s", e.name,
-                                            e.new_revision)
+                    self.log_info("skipping '%s' since it's already "
+                                  "at revision %s", e.name, e.new_revision)
                     continue
             elif e.action_kind == e.DELETED:
-                if not exists(join(root, e.name)):
-                    if logger: logger.debug("skipping '%s' since it's already "
-                                            "deleted", e.name)
-                    self.__maybeDeleteDirectory(root, split(e.name)[0],
-                                                changeset)
+                if not exists(join(self.basedir, e.name)):
+                    self.log_info("skipping '%s' since it's already "
+                                  "deleted", e.name)
+                    self.__maybeDeleteDirectory(split(e.name)[0], changeset)
                     continue
             elif e.action_kind == e.ADDED and e.new_revision is None:
                 # This is a new directory entry, there is no need to update it
@@ -217,11 +212,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             # just a single "CVS" subdir, btw)
 
             if e.action_kind == e.DELETED and e.new_revision is None:
-                assert listdir(join(root, e.name)) == ['CVS'], '%s should be empty' % e.name
-                rmtree(join(root, e.name))
+                assert listdir(join(self.basedir, e.name)) == ['CVS'], '%s should be empty' % e.name
+                rmtree(join(self.basedir, e.name))
             else:
                 cmd = [self.repository.CVS_CMD, "-q", "update", "-d", "-r", e.new_revision]
-                cvsup = ExternalCommand(cwd=root, command=cmd)
+                cvsup = ExternalCommand(cwd=self.basedir, command=cmd)
                 retry = 0
                 while True:
                     cvsup.execute(e.name, stdout=PIPE)
@@ -231,11 +226,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                         if retry>3:
                             break
                         delay = 2**retry
-                        if logger:
-                            logger.warning("%s returned status %s, "
-                                           "retrying in %d seconds..." %
-                                           (str(cvsup), cvsup.exit_status,
-                                            delay))
+                        self.log_info("%s returned status %s, "
+                                      "retrying in %d seconds..." %
+                                      (str(cvsup), cvsup.exit_status,
+                                       delay))
                         sleep(retry)
                     else:
                         break
@@ -245,14 +239,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                         "%s returned status %s" % (str(cvsup),
                                                    cvsup.exit_status))
 
-                if logger: logger.info("%s updated to %s" % (e.name,
-                                                             e.new_revision))
+                self.log_info("%s updated to %s" % (e.name, e.new_revision))
 
             if e.action_kind == e.DELETED:
-                self.__maybeDeleteDirectory(root, split(e.name)[0], changeset)
+                self.__maybeDeleteDirectory(split(e.name)[0], changeset)
 
-    def _checkoutUpstreamRevision(self, basedir, repository, module, revision,
-                                  subdir=None, logger=None, **kwargs):
+    def _checkoutUpstreamRevision(self, revision):
         """
         Concretely do the checkout of the upstream sources. Use `revision` as
         the name of the tag to get, or as a date if it starts with a number.
@@ -278,23 +270,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             elif ' ' in revision:
                 revision, timestamp = revision.split(' ', 1)
 
-        wdir = join(basedir, subdir)
-        csets = self._getUpstreamChangesets(wdir, repository, module,
-                                           branch=revision or 'HEAD')
+        csets = self._getUpstreamChangesets(revision)
         csets.reverse()
 
         if timestamp == 'INITIAL':
             timestamp = csets[-1].date.isoformat(sep=' ')
 
-        if not exists(join(wdir, 'CVS')):
+        if not exists(join(self.basedir, 'CVS')):
             cmd = [self.repository.CVS_CMD, "-q", "-d", repository, "checkout",
-                   "-d", subdir]
+                   "-d", self.basedir]
             if revision:
                 cmd.extend(["-r", revision])
             if timestamp:
                 cmd.extend(["-D", "%s UTC" % timestamp])
 
-            checkout = ExternalCommand(cwd=basedir, command=cmd)
+            checkout = ExternalCommand(command=cmd)
             checkout.execute(module)
 
             if checkout.exit_status:
@@ -302,9 +292,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     "%s returned status %s" % (str(checkout),
                                                checkout.exit_status))
         else:
-            if logger: logger.info("Using existing %s", wdir)
+            self.log_info("Using existing %s", self.basedir)
 
-        self.__forceTagOnEachEntry(wdir)
+        self.__forceTagOnEachEntry(self.basedir)
 
         entries = CvsEntries(wdir)
 
@@ -330,12 +320,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 "Something went wrong: unable to determine the exact upstream "
                 "revision of the checked out tree in '%s'" % wdir)
         else:
-            if logger: logger.info("working copy up to cvsps revision %s",
-                                   last.revision)
+            self.log_info("working copy up to cvsps revision %s", last.revision)
 
         return last
 
-    def _willApplyChangeset(self, root, changeset, applyable=None):
+    def _willApplyChangeset(self, changeset, applyable=None):
         """
         This gets called just before applying each changeset.
 
@@ -343,17 +332,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         of new directories, creating empty-but-reasonable CVS dirs.
         """
 
-        if UpdatableSourceWorkingDir._willApplyChangeset(self, root, changeset,
+        if UpdatableSourceWorkingDir._willApplyChangeset(self, changeset,
                                                          applyable):
             for m in changeset.entries:
                 if m.action_kind == m.ADDED:
-                    self.__createParentCVSDirectories(changeset, root, m.name)
+                    self.__createParentCVSDirectories(changeset, m.name)
 
             return True
         else:
             return False
 
-    def __createParentCVSDirectories(self, changeset, root, entry):
+    def __createParentCVSDirectories(self, changeset, entry):
         """
         Verify that the hierarchy down to the entry is under CVS.
 
@@ -367,14 +356,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         path = split(entry)[0]
         if path:
-            basedir = join(root, path)
+            basedir = join(self.basedir, path)
         else:
-            basedir = root
+            basedir = self.basedir
         cvsarea = join(basedir, 'CVS')
 
         if path and not exists(cvsarea):
-            parentcvs = self.__createParentCVSDirectories(changeset,
-                                                          root, path)
+            parentcvs = self.__createParentCVSDirectories(changeset, path)
 
             assert exists(parentcvs), "Uhm, strange things happen"
 
@@ -414,15 +402,15 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## SyncronizableTargetWorkingDir
 
-    def _addPathnames(self, root, names):
+    def _addPathnames(self, names):
         """
         Add some new filesystem objects.
         """
 
         cmd = [self.repository.CVS_CMD, "-q", "add"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def __forceTagOnEachEntry(self, root):
+    def __forceTagOnEachEntry(self):
         """
         Massage each CVS/Entries file, locking (ie, tagging) each
         entry to its current CVS version.
@@ -434,7 +422,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os import walk, rename
         from os.path import join
 
-        for dir, subdirs, files in walk(root):
+        for dir, subdirs, files in walk(self.basedir):
             if dir[-3:] == 'CVS':
                 efn = join(dir, 'Entries')
                 f = open(efn)
@@ -469,7 +457,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         return entries
 
-    def _commit(self,root, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.
         """
@@ -498,20 +486,20 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=root, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _removePathnames(self, root, names):
+    def _removePathnames(self, names):
         """
         Remove some filesystem objects.
         """
 
         cmd = [self.repository.CVS_CMD, "-q", "remove"]
-        ExternalCommand(cwd=root, command=cmd).execute(names)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def _renamePathname(self, root, oldname, newname):
+    def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
         """
 
-        self._removePathnames(root, [oldname])
-        self._addPathnames(root, [newname])
+        self._removePathnames([oldname])
+        self._addPathnames([newname])

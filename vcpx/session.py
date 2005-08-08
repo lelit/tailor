@@ -519,7 +519,7 @@ class Session(Cmd):
             self.__err('Working copy initialization failed', True)
             return
 
-    def willApply(self, root, changeset):
+    def willApply(self, changeset):
         """
         Print the changeset being applied.
         """
@@ -532,7 +532,7 @@ class Session(Cmd):
                                               ">>Non-printable changelog<<"))
         return True
 
-    def shouldApply(self, root, changeset):
+    def shouldApply(self, changeset):
         """
         Ask weather a changeset should be applied.
         """
@@ -560,7 +560,7 @@ class Session(Cmd):
             else:
                 self.stdout.write(str(changeset) + '\n')
 
-    def applied(self, root, changeset):
+    def applied(self, changeset):
         """
         Save current status.
         """

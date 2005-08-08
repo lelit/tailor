@@ -51,10 +51,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
         self.replayChangeset = self.target.replayChangeset
 
-    def applyPendingChangesets(self, root, module, applyable=None,
-                                replay=None, applied=None, logger=None):
-        return self.source.applyPendingChangesets(root, module,
-                                                  replay=self.replayChangeset,
+    def applyPendingChangesets(self, applyable=None, replay=None, applied=None):
+        return self.source.applyPendingChangesets(replay=self.replayChangeset,
                                                   applyable=applyable,
-                                                  applied=applied,
-                                                  logger=logger)
+                                                  applied=applied)

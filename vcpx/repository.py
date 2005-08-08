@@ -34,6 +34,9 @@ class Repository(object):
         can be specified either on the specific slot in the config file, or
         as ``source-repository`` (or ``target-repository``) in its [DEFAULT]
         section.
+
+        If the configuration does not specify a specific ``root-directory``
+        take the one from the project.
         """
 
         from os.path import split, expanduser
@@ -44,14 +47,39 @@ class Repository(object):
             self.repository = expanduser(self.repository)
         self.module = config.get(self.name, 'module') or \
                       config.get(self.name, '%s-module' % which)
-        if not self.module and self.repository:
-            self.module = split(self.repository)[1]
+        self.rootdir = config.get(self.name, 'root-directory',
+                                  self.project.rootdir)
+        self.subdir = config.get(self.name, 'subdir', self.project.subdir)
+
+    def _validateConfiguration(self):
+        """
+        Validate the configuration, possibly altering/completing it.
+        """
+
+    def log_info(self, what):
+        """
+        Print some info on the log and, in verbose mode, to stdout as well.
+        """
+
+        self.project.log_info(what)
+
+    def log_error(self, what, exc=False):
+        """
+        Print an error message, possibly with an exception traceback,
+        to the log and to stdout as well.
+        """
+
+        self.project.log_error(what, exc)
 
     def workingDir(self):
         """
         Return an instance of the specific WorkingDir for this kind of
         repository.
         """
+
+        from source import InvocationError
+
+        self._validateConfiguration()
 
         wdname = self.kind.capitalize() + 'WorkingDir'
         modname = 'vcpx.' + self.kind
@@ -60,7 +88,8 @@ class Repository(object):
             workingdir = getattr(wdmod, wdname)
         except (AttributeError, ImportError):
             raise InvocationError("Unhandled source VCS kind: " + self.kind)
-        return workingdir()
+
+        return workingdir(self)
 
 
 class ArxRepository(Repository):
@@ -70,6 +99,7 @@ class ArxRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.ARX_CMD = config.get(self.name, 'arx-command', self.ARX_CMD)
+
 
 
 class BzrRepository(Repository):
@@ -98,6 +128,16 @@ class CvsRepository(Repository):
         Repository._load(self, config, which)
         self.CVS_CMD = config.get(self.name, 'cvs-command', self.CVS_CMD)
 
+    def _validateConfiguration(self):
+        from os.path import split
+        from config import ConfigurationError
+
+
+        if not self.module and self.repository:
+            self.module = split(self.repository)[1]
+
+        if not self.module:
+            raise ConfigurationError("Must specify a repository and maybe a module also")
 
 class CvspsRepository(CvsRepository):
     CVSPS_CMD = 'cvsps'
@@ -147,7 +187,14 @@ class SvnRepository(Repository):
         self.SVNADMIN_CMD = config.get(self.name,
                                        'svnadmin-command', self.SVNADMIN_CMD)
         self.use_propset = config.get(self.name, 'use-propset', False)
+
+    def _validateConfiguration(self):
+        if not self.module:
+            raise ConfigurationError("Must the path within the "
+                                     "Subversion repository")
+
         if not self.module.startswith('/'):
+            self.project.log_info("Prepending '/' to module")
             self.module = '/' + self.module
 
     def workingDir(self):
