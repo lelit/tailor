@@ -3,7 +3,7 @@
 # :Creato:   sab 17 lug 2004 02:33:41 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase, TestSuite
 from datetime import datetime
@@ -24,7 +24,7 @@ class DarcsChangesParserTest(TestCase):
     <modify_file>vcpx/cvs.py<removed_lines num='4'/><added_lines num='11'/></modify_file>
     <modify_file>vcpx/tests/cvs.py<removed_lines num='14'/><added_lines num='32'/></modify_file>
     </summary>
-    
+
 </patch>
 
 <patch author='lele@nautilus.homeip.net' date='20040601140559' local_date='Tue Jun  1 16:05:59 CEST 2004' inverted='False' hash='20040601140559-97f81-b669594864cb35290fbe4848e6645e73057a8caf.gz'>
@@ -36,7 +36,7 @@ class DarcsChangesParserTest(TestCase):
     <add_file>cvsync/tests/svn.py</add_file>
     <add_file>cvsync/tests/testrepo.dump</add_file>
     </summary>
-    
+
 </patch>
 
 </changelog>
@@ -57,7 +57,7 @@ class DarcsChangesParserTest(TestCase):
         self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59))
         self.assertEqual(cset.revision, "Svn log parser with test")
         self.assertEqual(len(cset.entries), 4)
-        
+
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'cvsync/svn.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
@@ -70,7 +70,7 @@ class DarcsChangesParserTest(TestCase):
         entry = cset.entries[3]
         self.assertEqual(entry.name, 'cvsync/tests/testrepo.dump')
         self.assertEqual(entry.action_kind, entry.ADDED)
-        
+
         cset = csets[1]
         self.assertEqual(cset.revision,
                          "Fix the CVS parser to omit already seen changesets")
@@ -80,7 +80,7 @@ class DarcsChangesParserTest(TestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'vcpx/cvs.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
-        
+
     def testOnTailorOwnRepo(self):
         """Verify fetching unidiff of a darcs patch"""
 
