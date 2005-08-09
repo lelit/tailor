@@ -55,13 +55,6 @@ class UpdatableSourceWorkingDir(WorkingDir):
     Subclasses MUST override at least the _underscoredMethods.
     """
 
-    def setStateFile(self, state_file):
-        """
-        Set the state file used to store the revision and pending changesets.
-        """
-
-        self.state_file = state_file
-
     def applyPendingChangesets(self, applyable=None, replayable=None,
                                replay=None, applied=None):
         """

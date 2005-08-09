@@ -39,3 +39,11 @@ class WorkingDir(object):
         """
 
         self.repository.log_error(what, exc)
+
+    def setStateFile(self, state_file):
+        """
+        Set the state file used to store the revision and pending changesets.
+        """
+
+        self.state_file = state_file
+
