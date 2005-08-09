@@ -405,6 +405,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Check for target repository existence, eventually create it.
         """
 
+        if not self.repository.repository:
+            return
+
         cmd = [self.repository.SVN_CMD, "info"]
         svninfo = ExternalCommand(command=cmd)
         svninfo.execute(self.repository.repository, stdout=PIPE, stderr=STDOUT)
@@ -424,6 +427,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         Checkout a working copy of the target SVN repository.
         """
+
+        if not self.repository.repository:
+            return
 
         cmd = [self.repository.SVN_CMD, "co", "--quiet"]
         svnco = ExternalCommand(command=cmd)
