@@ -110,8 +110,10 @@ class Project(object):
         self.verbose = self.config.get(self.name, 'verbose', False)
         self.single_commit = self.config.get(self.name, 'single-commit', False)
         self.logger = logging.getLogger('tailor.%s' % self.name)
-        logfile = self.config.get(self.name, 'logfile', 'tailor.log')
-        hdlr = logging.FileHandler(join(self.rootdir, logfile))
+        self.logfile = join(self.rootdir,
+                            expanduser(self.config.get(self.name, 'logfile',
+                                                       'tailor.log')))
+        hdlr = logging.FileHandler(self.logfile)
         formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
@@ -177,6 +179,7 @@ class Project(object):
         if self.dwd is None:
             self.dwd = DualWorkingDir(self.source, self.target)
             self.dwd.setStateFile(self.state_file)
+            self.dwd.setLogfile(self.logfile)
         return self.dwd
 
     def prepareWorkingDirectory(self):
