@@ -175,7 +175,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     def _applyChangeset(self, changeset):
         from os.path import join, exists, dirname, split
-        from os import makedirs, listdir
+        from os import listdir
         from shutil import rmtree
         from cvs import CvsEntries
         from time import sleep
