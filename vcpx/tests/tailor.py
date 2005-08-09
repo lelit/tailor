@@ -25,6 +25,16 @@ verbose = True
 state-file = tailor.state
 start-revision = Almost arbitrarily tagging this as version 0.8
 
+[darcs2bzr]
+target = bzr:tailor
+root-directory = /tmp/tailor-tests/darcs2bzr
+source = darcs:tailor
+
+[darcs2cdv]
+target = cdv:tailor
+root-directory = /tmp/tailor-tests/darcs2cdv
+source = darcs:tailor
+
 [darcs2hg]
 target = hg:tailor
 root-directory = /tmp/tailor-tests/darcs2hg
@@ -37,6 +47,11 @@ source = darcs:tailor
 
 [darcs:tailor]
 repository = ~/WiP/cvsync
+
+[bzr:tailor]
+bzr-command = /opt/src/bzr.dev/bzr
+
+[cdv:tailor]
 
 [hg:tailor]
 
@@ -63,23 +78,23 @@ class TailorTest(TestCase):
         from os.path import exists
         from atexit import register
         from shutil import rmtree
-        
+
         self.config = Config(StringIO(__doc__), {})
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')
 
-    def testDarcsToSubversionBootstrap(self):
-        "Test darcs to subversion bootstrap"
+    def testDarcsToBazaarngBootstrap(self):
+        "Test darcs to BazaarNG bootstrap"
 
-        project = self.config['darcs2svn']
+        project = self.config['darcs2bzr']
         tailorizer = Tailorizer(project)
         tailorizer(BootstrapOptions())
 
-    def testDarcsToSubversionUpdate(self):
-        "Test darcs to subversion update"
+    def testDarcsToBazaarngUpdate(self):
+        "Test darcs to BazaarNG update"
 
-        project = self.config['darcs2svn']
+        project = self.config['darcs2bzr']
         tailorizer = Tailorizer(project)
         tailorizer(UpdateOptions())
 
@@ -94,5 +109,33 @@ class TailorTest(TestCase):
         "Test darcs to mercurial update"
 
         project = self.config['darcs2hg']
+        tailorizer = Tailorizer(project)
+        tailorizer(UpdateOptions())
+
+    def testDarcsToCodevilleBootstrap(self):
+        "Test darcs to codeville bootstrap"
+
+        project = self.config['darcs2cdv']
+        tailorizer = Tailorizer(project)
+        tailorizer(BootstrapOptions())
+
+    def testDarcsToCodevilleUpdate(self):
+        "Test darcs to codeville update"
+
+        project = self.config['darcs2cdv']
+        tailorizer = Tailorizer(project)
+        tailorizer(UpdateOptions())
+
+    def testDarcsToSubversionBootstrap(self):
+        "Test darcs to subversion bootstrap"
+
+        project = self.config['darcs2svn']
+        tailorizer = Tailorizer(project)
+        tailorizer(BootstrapOptions())
+
+    def testDarcsToSubversionUpdate(self):
+        "Test darcs to subversion update"
+
+        project = self.config['darcs2svn']
         tailorizer = Tailorizer(project)
         tailorizer(UpdateOptions())
