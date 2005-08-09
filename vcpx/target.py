@@ -240,21 +240,20 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         raise "%s should override this method" % self.__class__
 
-    def prepareWorkingDirectory(self):
+    def prepareWorkingDirectory(self, source_repo):
         """
         Do anything required to setup the hosting working directory.
         """
 
-        if self.repository.repository:
-            self._prepareTargetRepository()
-            self._prepareWorkingDirectory()
+        self._prepareTargetRepository(source_repo)
+        self._prepareWorkingDirectory(source_repo)
 
-    def _prepareTargetRepository(self):
+    def _prepareTargetRepository(self, source_repo):
         """
         Possibly create the repository, when overriden by subclasses.
         """
 
-    def _prepareWorkingDirectory(self):
+    def _prepareWorkingDirectory(self, source_repo):
         """
         Possibly checkout a working copy of the target VC, that will host the
         upstream source tree, when overriden by subclasses.

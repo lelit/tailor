@@ -185,7 +185,7 @@ class Project(object):
         """
 
         dwd = self.workingDir()
-        dwd.prepareWorkingDirectory()
+        dwd.prepareWorkingDirectory(self.source)
 
     def checkoutUpstreamRevision(self):
         """
