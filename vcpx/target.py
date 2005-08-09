@@ -17,12 +17,11 @@ from workdir import WorkingDir
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"
-BOOTSTRAP_PATCHNAME = 'Tailorization of %s'
+BOOTSTRAP_PATCHNAME = 'Tailorization'
 BOOTSTRAP_CHANGELOG = """\
 Import of the upstream sources from
 
-  Repository: %(source_repository)s
-  Module:     %(source_module)s
+  Repository: %(source_repository)s%(source_module)s
   Revision:   %(revision)s
 """
 
@@ -268,14 +267,14 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         self._initializeWorkingDir()
         revision = changeset.revision
         source_repository = source_repo.repository
-        source_module = source_repo.module
+        source_module = source_repo.module or ''
         if initial:
             author = changeset.author
             patchname = changeset.log
             log = None
         else:
             author = "%s@%s" % (AUTHOR, HOST)
-            patchname = BOOTSTRAP_PATCHNAME % source_module
+            patchname = BOOTSTRAP_PATCHNAME
             log = BOOTSTRAP_CHANGELOG % locals()
         self._commit(changeset.date, author, patchname, log)
 
