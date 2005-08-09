@@ -41,7 +41,6 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # UpdatableSourceWorkingDir
 
-        self.setStateFile = self.source.setStateFile
         self.getPendingChangesets = self.source.getPendingChangesets
         self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
 
@@ -50,6 +49,21 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
         self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
         self.replayChangeset = self.target.replayChangeset
+
+    def setStateFile(self, state_file):
+        """
+        Set the state file used to store the revision and pending changesets.
+        """
+
+        self.source.setStateFile(state_file)
+        self.target.setStateFile(state_file)
+
+    def setLogfile(self, logfile):
+        """
+        Set the name of the logfile, just to ignore it.
+        """
+
+        self.target.logfile = logfile
 
     def applyPendingChangesets(self, applyable=None, replay=None, applied=None):
         return self.source.applyPendingChangesets(replay=self.replayChangeset,
