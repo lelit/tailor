@@ -113,7 +113,13 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         ignore = open(join(self.basedir, '.hgignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % md
                                 for md in IGNORED_METADIRS]))
-        ignore.write('\ntailor.log\ntailor.info\n')
+        ignore.write('\n')
+        if self.logfile.startswith(self.basedir):
+            ignore.write(self.logfile[len(self.basedir)+1:])
+            ignore.write('$\n')
+        if self.state_file.filename.startswith(self.basedir):
+            ignore.write(self.state_file.filename[len(self.basedir)+1:])
+            ignore.write('\n')
         ignore.close()
 
         SyncronizableTargetWorkingDir._initializeWorkingDir(self)

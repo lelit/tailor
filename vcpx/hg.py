@@ -130,7 +130,15 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         ignore = open(join(self.basedir, '.hgignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
-        ignore.write('\n^tailor.log$\n^tailor.info$\n')
+        ignore.write('\n')
+        if self.logfile.startswith(self.basedir):
+            ignore.write('^')
+            ignore.write(self.logfile[len(self.basedir)+1:])
+            ignore.write('$\n')
+        if self.state_file.filename.startswith(self.basedir):
+            ignore.write('^')
+            ignore.write(self.state_file.filename[len(self.basedir)+1:])
+            ignore.write('$\n')
         ignore.close()
 
         ExternalCommand(cwd=self.basedir,

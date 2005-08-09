@@ -171,6 +171,14 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
+        exclude = []
+
+        if self.state_file.filename.startswith(self.basedir):
+            exclude.append(self.state_file.filename[len(self.basedir)+1:])
+
+        if self.logfile.startswith(self.basedir):
+            exclude.append(self.logfile[len(self.basedir)+1:])
+
         if subdir and subdir<>'.':
             self._addPathnames([subdir])
 
@@ -179,8 +187,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 if excd in subdirs:
                     subdirs.remove(excd)
 
-            # Uhm, is this really desiderable?
-            for excf in ['tailor.info', 'tailor.log']:
+            for excf in exclude:
                 if excf in files:
                     files.remove(excf)
 

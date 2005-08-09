@@ -452,5 +452,13 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         boring.write(''.join(ignored))
         boring.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
-        boring.write('\n^tailor.log$\n')
+        boring.write('\n')
+        if self.logfile.startswith(self.basedir):
+            boring.write('^')
+            boring.write(self.logfile[len(self.basedir)+1:])
+            boring.write('$\n')
+        if self.state_file.filename.startswith(self.basedir):
+            boring.write('^')
+            boring.write(self.state_file.filename[len(self.basedir)+1:])
+            boring.write('$\n')
         boring.close()
