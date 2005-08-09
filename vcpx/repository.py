@@ -24,7 +24,8 @@ class Repository(object):
         self._load(project.config, which)
 
     def __str__(self):
-        return "%s repository at %s" % (self.kind, self.repository)
+        return "%s repository at %s%s" % (self.kind, self.repository,
+                                          self.module or '')
 
     def _load(self, config, which):
         """
