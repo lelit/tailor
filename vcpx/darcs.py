@@ -19,7 +19,7 @@ from xml.sax import SAXException
 
 MOTD = """\
 This is the Darcs equivalent of
-%s/%s
+%s
 """
 
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
@@ -408,15 +408,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if renamed:
                 rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
 
-    def _initializeWorkingDir(self):
+    def _prepareTargetRepository(self, source_repo):
         """
-        Execute ``darcs initialize`` and tweak the default settings of
-        the repository, then add the whole subtree.
+        Execute ``darcs initialize``.
         """
 
-        from os.path import join
-        from re import escape
-        from dualwd import IGNORED_METADIRS
+        from os import makedirs
+        from os.path import exists
+
+        if not exists(self.basedir):
+            makedirs(self.basedir)
 
         init = ExternalCommand(cwd=self.basedir,
                                command=[self.repository.DARCS_CMD,
@@ -427,8 +428,17 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
 
+    def _prepareWorkingDirectory(self, source_repo):
+        """
+        Tweak the default settings of the repository.
+        """
+
+        from os.path import join
+        from re import escape
+        from dualwd import IGNORED_METADIRS
+
         motd = open(join(self.basedir, '_darcs/prefs/motd'), 'w')
-        motd.write(MOTD % (source_repository, source_module))
+        motd.write(MOTD % str(source_repo))
         motd.close()
 
         # Remove .cvsignore from default boring file
@@ -442,7 +452,5 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         boring.write(''.join(ignored))
         boring.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
-        boring.write('\n^tailor.log$\n^tailor.info$\n')
+        boring.write('\n^tailor.log$\n')
         boring.close()
-
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
