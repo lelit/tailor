@@ -45,6 +45,12 @@ target = svn:tailor
 root-directory = /tmp/tailor-tests/darcs2svn
 source = darcs:tailor
 
+[svn2darcs]
+target = darcs:svntailor
+root-directory = /tmp/tailor-tests/svn2darcs
+source = svn:tailor
+start-revision = 1
+
 [darcs:tailor]
 repository = ~/WiP/cvsync
 
@@ -139,3 +145,20 @@ class TailorTest(TestCase):
         project = self.config['darcs2svn']
         tailorizer = Tailorizer(project)
         tailorizer(UpdateOptions())
+
+    ## The other way
+
+    def testSubversionToDarcsBootstrap(self):
+        "Test reversed darcs to subversion bootstrap"
+
+        project = self.config['svn2darcs']
+        tailorizer = Tailorizer(project)
+        tailorizer(BootstrapOptions())
+
+    def testSubversionToDarcsUpdate(self):
+        "Test reversed darcs to subversion update"
+
+        project = self.config['svn2darcs']
+        tailorizer = Tailorizer(project)
+        tailorizer(UpdateOptions())
+
