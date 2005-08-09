@@ -18,13 +18,13 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
-    def _addEntries(self, entries):
+    def _addPathnames(self, names):
         """
-        Add a sequence of entries.
+        Add some new filesystem objects.
         """
 
         cmd = [self.repository.BZR_CMD, "add"]
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -51,21 +51,21 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
         ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
 
-    def _removeEntries(self, entries):
+    def _removePathnames(self, names):
         """
-        Remove a sequence of entries.
+        Remove some filesystem objects.
         """
 
         cmd = [self.repository.BZR_CMD, "remove"]
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
-    def _renameEntry(self, oldentry, newentry):
+    def _renamePathname(self, oldname, newname):
         """
-        Rename an entry.
+        Rename a filesystem object to some other name/location.
         """
 
         cmd = [self.repository.BZR_CMD, "rename"]
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(old, new)
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
     def initializeNewWorkingDir(self, source_repo, changeset, initial):
         """
