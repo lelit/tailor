@@ -270,7 +270,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         last = csets[0]
 
-        self.log_info("working copy up to svn revision %s", last.revision)
+        self.log_info("working copy up to svn revision %s" % last.revision)
 
         return last
 
