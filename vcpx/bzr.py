@@ -73,38 +73,10 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.BZR_CMD, "rename"]
         ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
-    def initializeNewWorkingDir(self, source_repo, changeset, initial):
-        """
-        Initialize a new working directory, just extracted from
-        some other VC system, importing everything's there.
-        """
-
-        from target import AUTHOR, HOST, BOOTSTRAP_PATCHNAME, \
-             BOOTSTRAP_CHANGELOG
-
-        self._initializeWorkingDir()
-        revision = changeset.revision
-        source_repository = source_repo.repository
-        source_module = source_repo.module or ''
-        if initial:
-            author = changeset.author
-            patchname = changeset.log
-            log = None
-        else:
-            author = "%s@%s" % (AUTHOR, HOST)
-            patchname = BOOTSTRAP_PATCHNAME
-            log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(changeset.date, author, patchname, log,
-                     entries=['%s/...' % self.basedir])
-
-    def _initializeWorkingDir(self):
+    def _prepareTargetRepository(self, source_repo):
         """
         Execute ``bzr init``.
         """
-
-        from os import getenv
-        from os.path import join
-        from dualwd import IGNORED_METADIRS
 
         cmd = [self.repository.BZR_CMD, "init"]
         init = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -114,18 +86,26 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
 
+    def _prepareWorkingDirectory(self, source_repo):
+        """
+        Create the .bzrignore.
+        """
+
+        from os.path import join
+        from dualwd import IGNORED_METADIRS
+
         # Create the .bzrignore file, that contains a glob per line,
         # with all known VCs metadirs to be skipped.
-        ignore = open(join(self.basedir, '.hgignore'), 'w')
+        ignore = open(join(self.basedir, '.bzrignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % md
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n')
         if self.logfile.startswith(self.basedir):
+            ignore.write('^')
             ignore.write(self.logfile[len(self.basedir)+1:])
             ignore.write('$\n')
         if self.state_file.filename.startswith(self.basedir):
+            ignore.write('^')
             ignore.write(self.state_file.filename[len(self.basedir)+1:])
             ignore.write('\n')
         ignore.close()
-
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
