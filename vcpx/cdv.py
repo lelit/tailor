@@ -18,6 +18,17 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
 
+    def _replayChangeset(self, changeset):
+        """
+        Under Codeville, it's safer to explicitly edit modified items.
+        """
+
+        SyncronizableTargetWorkingDir._replayChangeset(self, changeset)
+
+        names = [e.name for e in changeset.modifiedEntries()]
+        cmd = [self.repository.CDV_CMD, "edit"]
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+
     def _addPathnames(self, names):
         """
         Add some new filesystem objects.
