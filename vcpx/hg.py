@@ -13,6 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from source import ChangesetApplicationFailure
 
 class HgWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -62,6 +63,10 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         log.close()
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
 
     def _removePathnames(self, names):
         """

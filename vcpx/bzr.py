@@ -12,6 +12,7 @@ This module implements the backends for Bazaar-NG.
 __docformat__ = 'reStructuredText'
 
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from source import ChangesetApplicationFailure
 from shwrap import ExternalCommand
 
 class BzrWorkingDir(SyncronizableTargetWorkingDir):
@@ -49,7 +50,12 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c.execute(entries)
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
 
     def _removePathnames(self, names):
         """

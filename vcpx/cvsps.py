@@ -486,7 +486,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c.execute(entries)
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
 
     def _removePathnames(self, names):
         """

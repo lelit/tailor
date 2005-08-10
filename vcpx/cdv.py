@@ -13,6 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, PIPE
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from source import ChangesetApplicationFailure
 
 class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -60,7 +61,12 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(entries)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c.execute(entries)
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
 
     def _removePathnames(self, names):
         """

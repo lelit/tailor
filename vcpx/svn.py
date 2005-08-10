@@ -338,6 +338,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         commit.execute(entries)
 
+        if commit.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(commit), commit.exit_status))
+
         if self.USE_PROPSET:
             cmd = [self.repository.SVN_CMD, "propset", "%(propname)s",
                    "--quiet", "--revprop", "-rHEAD"]

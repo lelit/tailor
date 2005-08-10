@@ -68,7 +68,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
             text = output.read()
             if text.find("monotone: misuse: no changes to commit") == -1:
                 stderr.write(text)
-                raise TargetInitializationFailure(
+                raise ChangesetApplicationFailure(
                     "%s returned status %s" % (str(commit),commit.exit_status))
             else:
                 stderr.write("No changes to commit - changeset ignored\n")

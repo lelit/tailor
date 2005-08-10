@@ -14,6 +14,7 @@ __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from source import ChangesetApplicationFailure
 
 class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -54,6 +55,10 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
                "--date", date.isoformat()]
         c = ExternalCommand(cwd=self.basedir, command=cmd)
         c.execute()
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
 
     def _removePathnames(self, names):
         """
