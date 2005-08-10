@@ -112,15 +112,10 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         else:
             copy.execute(oldname, newname)
 
-    def _initializeWorkingDir(self):
+    def _prepareTargetRepository(self, source_repo):
         """
         Execute ``hg init``.
         """
-
-        from os import getenv
-        from os.path import join
-        from re import escape
-        from dualwd import IGNORED_METADIRS
 
         init = ExternalCommand(cwd=self.basedir,
                                command=[self.repository.HG_CMD, "init"])
@@ -129,6 +124,15 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         if init.exit_status:
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
+
+    def _prepareWorkingDirectory(self, source_repo):
+        """
+        Create the .hgignore.
+        """
+
+        from os.path import join
+        from re import escape
+        from dualwd import IGNORED_METADIRS
 
         # Create the .hgignore file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
@@ -145,6 +149,11 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
             ignore.write(self.state_file.filename[len(self.basedir)+1:])
             ignore.write('$\n')
         ignore.close()
+
+    def _initializeWorkingDir(self):
+        """
+        Use ``hg addremove`` to import initial version of the tree.
+        """
 
         ExternalCommand(cwd=self.basedir,
                         command=[self.repository.HG_CMD, "addremove"]).execute()
