@@ -62,9 +62,8 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 self.current['date'] = timestamp
                 self.current['comment'] = ''
                 self.current['entries'] = []
-            elif name in ['name', 'comment',
-                          'add_file', 'add_directory',
-                          'modify_file', 'remove_file']:
+            elif name in ['name', 'comment', 'add_file', 'add_directory',
+                          'modify_file', 'remove_file', 'remove_directory']:
                 self.current_field = []
             elif name == 'move':
                 self.old_name = attributes['from']
@@ -99,14 +98,14 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 entry.action_kind = entry.RENAMED
                 entry.old_name = self.old_name
                 self.current['entries'].append(entry)
-            elif name in ['add_file', 'add_directory',
-                          'modify_file', 'remove_file']:
+            elif name in ['add_file', 'add_directory', 'modify_file',
+                          'remove_file', 'remove_directory']:
                 entry = ChangesetEntry(''.join(self.current_field).strip())
                 entry.action_kind = { 'add_file': entry.ADDED,
                                       'add_directory': entry.ADDED,
                                       'modify_file': entry.UPDATED,
                                       'remove_file': entry.DELETED,
-                                      'rename_file': entry.RENAMED
+                                      'remove_directory': entry.DELETED
                                     }[name]
 
                 self.current['entries'].append(entry)

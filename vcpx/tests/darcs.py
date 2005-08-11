@@ -96,3 +96,92 @@ class DarcsChangesParserTest(TestCase):
         unidiff = csets[0].unidiff
         head = unidiff.split('\n')[0]
         self.assertEqual(head, 'Thu Jun  9 22:17:11 CEST 2005  zooko@zooko.com')
+
+    ALL_ACTIONS_TEST = """\
+<changelog>
+<patch author='' date='20050811140203' local_date='Thu Aug 11 16:02:03 CEST 2005' inverted='False' hash='20050811140203-da39a-0a36c886b2479b20ab9188781fe2e51f9a50a175.gz'>
+        <name>first</name>
+    <summary>
+    <add_file>
+    a.txt
+    </add_file>
+    <add_directory>
+    dir
+    </add_directory>
+    </summary>
+</patch>
+<patch author='' date='20050811140254' local_date='Thu Aug 11 16:02:54 CEST 2005' inverted='False' hash='20050811140254-da39a-b2ad279f1d7edae8e07b7b1ea8f3e63dbb242bf0.gz'>
+        <name>removed</name>
+    <summary>
+    <remove_directory>
+    dir
+    </remove_directory>
+    </summary>
+</patch>
+<patch author='' date='20050811140314' local_date='Thu Aug 11 16:03:14 CEST 2005' inverted='False' hash='20050811140314-da39a-de701bff466827b91e51658e411c768f43abc1b0.gz'>
+        <name>moved</name>
+    <summary>
+    <move from="bdir" to="dir"/>
+    <add_directory>
+    bdir
+    </add_directory>
+    </summary>
+</patch>
+<patch author='lele@metapensiero.it' date='20050811143245' local_date='Thu Aug 11 16:32:45 CEST 2005' inverted='False' hash='20050811143245-7a6fb-663bb3085e9b7996f554e4bd9d2f0b13208d65e0.gz'>
+        <name>modified</name>
+    <summary>
+    <modify_file>
+    a.txt<added_lines num='3'/>
+    </modify_file>
+    </summary>
+</patch>
+</changelog>
+"""
+
+    def testAllActions(self):
+        """Verify darcs changes parser understand all actions"""
+
+        log = StringIO(self.ALL_ACTIONS_TEST)
+
+        csets = changesets_from_darcschanges(log)
+
+        self.assertEqual(len(csets), 4)
+
+        cset = csets[0]
+        self.assertEqual(cset.revision, 'first')
+        self.assertEqual(len(cset.entries), 2)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'a.txt')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'dir')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        cset = csets[1]
+        self.assertEqual(cset.revision, 'removed')
+        self.assertEqual(len(cset.entries), 1)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'dir')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+
+        cset = csets[2]
+        self.assertEqual(cset.revision, 'moved')
+        self.assertEqual(len(cset.entries), 2)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'bdir')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'dir')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+
+        cset = csets[3]
+        self.assertEqual(cset.revision, 'modified')
+        self.assertEqual(len(cset.entries), 1)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'a.txt')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
