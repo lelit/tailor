@@ -55,7 +55,6 @@ class DarcsChangesParserTest(TestCase):
         self.assertEqual(cset.revision,
                          "Svn log parser with test")
         self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59))
-        self.assertEqual(cset.revision, "Svn log parser with test")
         self.assertEqual(len(cset.entries), 4)
 
         entry = cset.entries[0]
