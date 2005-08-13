@@ -136,7 +136,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 os.rmdir(tempdir)
             except:
                 pass
-        return self.__parse_revision_logs([fqrev])[0]
+        return self.__parse_revision_logs([fqrev], False)[0]
 
     ## TlaWorkingDir private helper functions
 
@@ -172,7 +172,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             revision = out.readline().strip()
         return '--'.join([fqversion, revision])
 
-    def __parse_revision_logs(self, fqrevlist):
+    def __parse_revision_logs(self, fqrevlist, update=True):
         changesets = []
         logparser = Parser()
         c = ExternalCommand(cwd=self.basedir,
@@ -191,7 +191,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 pass
             if not err and msg.is_multipart():
                 err = "unable to parse 'tla' log description"
-            if not err and msg.has_key('Continuation-of'):
+            if not err and update and msg.has_key('Continuation-of'):
                 err = "tla in-version continuations not supported"
             if err:
                 raise GetUpstreamChangesetsFailure(str(err))
