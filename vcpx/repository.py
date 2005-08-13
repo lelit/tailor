@@ -202,3 +202,12 @@ class SvnRepository(Repository):
         wd = Repository.workingDir(self)
         wd.USE_PROPSET = self.use_propset
         return wd
+
+
+class TlaRepository(Repository):
+    METADIR = '{arch}'
+    TLA_CMD = "tla"
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.TLA_CMD = config.get(self.name, 'tla-command', self.TLA_CMD)
