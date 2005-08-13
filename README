@@ -1,9 +1,9 @@
 About
 =====
 
-Tailor is a tool to migrate changesets between CVS, Subversion_,
-darcs_, ArX_, monotone_, Codeville_, Mercurial_ and `Baazar-NG`_ [#]_
-repositories.
+Tailor is a tool to migrate changesets between ArX_, `Baazar-NG`_
+CVS_, Codeville_, Darcs_, Mercurial_, Monotone_, Tla_ and Subversion_
+[#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
@@ -44,12 +44,16 @@ two way sync::
        best way to get pending changes and build tailor ChangeSets out
        of them.
 
-.. _subversion: http://subversion.tigris.org/
-.. _darcs: http://www.darcs.net/
-.. _codeville: http://www.codeville.org/
-.. _baazar-ng: http://www.bazaar-ng.org/
-.. _mercurial: http://www.selenic.com/mercurial/
+       To the opposite, Tla is supported only as a source system.
+
 .. _arx: http://www.nongnu.org/arx/
+.. _baazar-ng: http://www.bazaar-ng.org/
+.. _codeville: http://www.codeville.org/
+.. _cvs: http://www.nongnu.org/cvs/
+.. _darcs: http://www.darcs.net/
+.. _mercurial: http://www.selenic.com/mercurial/
+.. _subversion: http://subversion.tigris.org/
+.. _tla: http://www.gnuarch.org/arch/index.html
 
 
 Installation
@@ -116,6 +120,7 @@ Examples
              this thread__ and this other__ explain why using
              ``-r{DATE}`` may produce strange results with this setup.
 
+__ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
 __ http://svn.haxx.se/users/archive-2005-07/0605.shtml
 __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
 
@@ -209,8 +214,8 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
 b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
-c) Monotone, Codeville and Baazar-NG are (currently) only supported as
-   *target*
+c) ArX, Monotone, Codeville and Baazar-NG are (currently) only
+   supported as *target*; Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
    with remote CVS repositories (it does when the CVS repository is
@@ -450,16 +455,27 @@ Author
 
 Lele Gaifax <lele@nautilus.homeip.net>
 
+Since I'm not currently using all the supported systems (so little
+time, so many VCSs...) I'm not in position to test them out properly,
+but I'll do my best to keep them in sync, maybe with your support :-)
+
+ArX support
+-----------
+
+ArX_ support was contributed by `Walter Landry <wlandry@ucsd.edu>`_.
 
 Monotone support
 ----------------
 
 Monotone_ support was kindly contributed by `Markus Schiltknecht
 <markus@bluegap.ch>`_ and further developed by `rghetta
-<birrachiara@tin.it>`_.  Since I'm not currently using monotone (so
-little time, so many VCSs...) I'm not in position to test it out
-properly, but I'll do my best to keep it in sync, maybe with your
-support :-)
+<birrachiara@tin.it>`_.
+
+Tla support
+-----------
+
+Tla_ support was contributed by `Robin Farine
+<robin.farine@terminus.org>`_.
 
 .. _monotone: http://www.venge.net/monotone/
 
