@@ -15,13 +15,6 @@ from shwrap import ExternalCommand, STDOUT, PIPE
 from cvsps import CvspsWorkingDir
 from source import GetUpstreamChangesetsFailure
 
-class EmptyRepositoriesFoolsMe(Exception):
-    "Cannot handle empty repositories. Maybe wrong module/repository?"
-
-    # This is the exception raised when we try to tailor an empty CVS
-    # repository. This is more a shortcoming of tailor, rather than a
-    # real problem with those repositories.
-
 def compare_cvs_revs(rev1, rev2):
     """Compare two CVS revision numerically, not alphabetically."""
 
@@ -289,11 +282,6 @@ class CvsWorkingDir(CvspsWorkingDir):
     def _getUpstreamChangesets(self, sincerev):
         from os.path import join, exists
         from datetime import timedelta
-
-        entries = CvsEntries(self.basedir)
-        youngest_entry = entries.getYoungestEntry()
-        if youngest_entry is None:
-            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the CVS repository seems empty, don't know how to deal with that." % self.basedir)
 
         branch = ''
         fname = join(self.basedir, 'CVS', 'Tag')

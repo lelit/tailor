@@ -18,6 +18,13 @@ from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
+class EmptyRepositoriesFoolsMe(Exception):
+    "Cannot handle empty repositories. Maybe wrong module/repository?"
+
+    # This is the exception raised when we try to tailor an empty CVS
+    # repository. This is more a shortcoming of tailor, rather than a
+    # real problem with those repositories.
+
 def changesets_from_cvsps(log, sincerev=None):
     """
     Parse CVSps log.
@@ -297,6 +304,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         self.__forceTagOnEachEntry(self.basedir)
 
         entries = CvsEntries(wdir)
+        youngest_entry = entries.getYoungestEntry()
+        if youngest_entry is None:
+            raise EmptyRepositoriesFoolsMe("The working copy '%s' of the "
+                                           "CVS repository seems empty, "
+                                           "don't know how to deal with "
+                                           "that." % self.basedir)
 
         # update cvsps cache, then loop over the changesets and find the
         # last applied, to find out the actual cvsps revision

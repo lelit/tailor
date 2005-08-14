@@ -27,7 +27,7 @@ if __name__ == '__main__':
         from vcpx.target import TargetInitializationFailure
         from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
              ChangesetApplicationFailure
-        from vcpx.cvs import EmptyRepositoriesFoolsMe
+        from vcpx.cvsps import EmptyRepositoriesFoolsMe
         from vcpx.config import ConfigurationError
 
         if len(sys.argv) == 1:
