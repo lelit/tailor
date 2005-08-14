@@ -146,7 +146,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         else:
             return True
 
-    def getPendingChangesets(self):
+    def getPendingChangesets(self, sincerev=None):
         """
         Load the pending changesets from the state file, or query the
         upstream repository if there's none.
@@ -154,7 +154,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
         revision, self.pending = self.state_file.load()
         if not self.pending:
-            self.pending = self._getUpstreamChangesets(revision)
+            self.pending = self._getUpstreamChangesets(revision or sincerev)
         return self.pending
 
     def _getUpstreamChangesets(self, sincerev):
