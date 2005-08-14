@@ -413,10 +413,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         from os import makedirs
-        from os.path import exists
+        from os.path import join, exists
 
         if not exists(self.basedir):
             makedirs(self.basedir)
+        elif exists(join(self.basedir, self.repository.METADIR)):
+            return
 
         init = ExternalCommand(cwd=self.basedir,
                                command=[self.repository.DARCS_CMD,

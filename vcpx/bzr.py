@@ -78,6 +78,15 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Execute ``bzr init``.
         """
 
+        from os.path import join, exists
+        from os import makedirs
+        from os.path import join, exists
+
+        if not exists(self.basedir):
+            makedirs(self.basedir)
+        elif exists(join(self.basedir, self.repository.METADIR)):
+            return
+
         cmd = [self.repository.BZR_CMD, "init"]
         init = ExternalCommand(cwd=self.basedir, command=cmd)
         init.execute()
