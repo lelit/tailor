@@ -329,9 +329,9 @@ def main():
                                  "file as argument:\n")
                 config.write(sys.stdout)
 
-            if not options.debug:
+            if options.debug:
                 project = config['project']
                 tailorizer = Tailorizer(project)
                 tailorizer(options)
-            else:
-                sys.stderr.write("Operation not performed, given --debug\n")
+            elif not options.verbose:
+                sys.stderr.write("Operation not performed, try --verbose\n")
