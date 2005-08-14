@@ -287,6 +287,13 @@ def main():
                 tailorizer = Tailorizer(project)
                 tailorizer(options)
         else:
+            for omit in ['source-kind', 'target-kind',
+                         'source-module', 'target-module',
+                         'source-repository', 'target-repository',
+                         'start-revision', 'subdir']:
+                if omit in defaults:
+                    del defaults[omit]
+
             config = Config(None, defaults)
 
             config.add_section('project')
