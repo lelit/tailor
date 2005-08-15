@@ -78,37 +78,79 @@ There's even a standard setup.py that you may use to install the
 script using Python conventional distutils.
 
 
+Testing
+=======
+
+You can run the test suite with the following command line::
+
+ $ tailor test -v
+
+that runs all the tests in sequence, or::
+
+ $ tailor test -v TailorTest
+
+to trigger just a subset of them.
+
+
+Operation
+=========
+
+tailor needs now a configuration file that collects the various bits
+of information it needs to do it's job.
+
+The simplest way of starting out a new configuration is by omitting
+the --configfile command line option, and specifying the other as
+needed plus --verbose: in this situation, tailor will print out an
+equivalent configuration that you can redirect to a file, that you
+later will pass as --configfile.
+
+
 Examples
-========
+--------
 
-1. Bootstrap a new tailored project, starting at upstream revision 10::
+1. Bootstrap a new tailored project, starting at upstream revision 10
 
-    $ tailor -b -s svn -R http://svn.server/path/to/svnrepo \
-      --module /Product/trunk -r 10 --subdir Product ~/darcs/MyProduct 
+   a. First create a config file::
+   
+       $ tailor --verbose -s svn -R http://svn.server/path/to/svnrepo \
+                --module /Product/trunk -r 10 --subdir Product \
+                ~/darcs/MyProduct > myproject.tailor
+
+   b. Modify it as you like (mostly adjusting root-directories and the
+      like)::
+      
+       $ emacs myproject.tailor
+
+   c. Run tailor on it::
+   
+       $ tailor --configfile myproject.tailor
 
 2. Bootstrap a new product, fetching its whole CVS repository and
    storing under SVN
 
-   a. First create a SVN repository and extract a working copy out of
-      it. This is needed also when using a CVS or a Monotone target::
+   a. First create a config file::
 
-       $ cd $HOME
-       $ svnadmin create --fs-type fsfs svn_repo
-       $ svn co file://$HOME/svn_repo svnwc
-
-   b. Then run tailor once to set up the repository::
-
-       $ cd $HOME/svnwc
-       $ tailor --source-kind cvs --target-kind svn --bootstrap \
+       $ tailor --verbose --source-kind cvs --target-kind svn \
                 --repository :pserver:cvs.zope.org:/cvs-repository \
-                --module CMF/CMFCore --revision INITIAL cmfcore
+                --module CMF/CMFCore --revision INITIAL \
+                --target-repository file:///some/where/svnrepo \
+                --target-module / cmfcore > cmfcore.tailor
 
-   c. Finally run it again without --bootstrap to bring the repository
-      in sync with latest CVS version::
+   b. Modify it as you like (mostly adjusting root-directories and the
+      like)::
+      
+       $ emacs myproject.tailor
 
-      $ tailor -D -v $HOME/svnwc/cmfcore
+   c. Run tailor on it once, to bootstrap the project::
+   
+       $ tailor -D -v --configfile myproject.tailor
 
-   .. note:: In the step a) above, you may want to install an
+      If the target repository is on the local filesystem (ie, it
+      starts with ``file:///``) and it does not exist, tailor
+      creates a new empty Subversion repository at the specified
+      location.
+      
+   .. note:: Before step d) below, you may want to install an
              appropriate hook in the repository to enable the
              propset command to operate on unversioned properties,
              as described in the `svn manual`__. Then you can
@@ -120,68 +162,25 @@ Examples
              this thread__ and this other__ explain why using
              ``-r{DATE}`` may produce strange results with this setup.
 
+   d. Run tailor again and again, to sync up with latest changes::
+
+       $ tailor -D -v --configfile myproject.tailor
+   
 __ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
 __ http://svn.haxx.se/users/archive-2005-07/0605.shtml
 __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
 
 
-3. Showing each command bootstrap a new DARCS repos in
-   "~/darcs/cmftopic" under which the upstream module will be
-   extracted as "CMFTopic" (ie, the last component of the module
-   name)::
-
-    $ tailor -D -b -R :pserver:anonymous@cvs.zope.org:/cvs-repository/ \
-                -m CMF/CMFTopic ~/darcs/cmftopic
-              
-4. Merge upstream changes since last update/bootstrap::
-
-    $ tailor ~/svnwc/MyProduct
-
-5. Migrate a whole SVN repository, starting from the beginning::
-
-    $ tailor -b -s svn -R svn+ssh://caia/tmp/svn/repo --module / \
-      --subdir testsvn --revision 1 testdir
-
-   .. warning:: When using --revision with a SVN source repository, be
-                sure that the path your are tracking was there at that
-                revision, otherwise svn will exit with an error.
-
-6. Bootstrap from a CVS branch, starting from a given point in time::
-
-    $ tailor -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
-                --revision 'unstable-branch 2001-12-25 23:26:48 UTC' \
-                --module something new-darcs-repository
-
-7. Bootstrap from a CVS branch, starting from the beginning of time::
-
-    $ tailor.py -b -s cvs -R :pserver:anonymous@server.org:/cvsroot/ \
-                --revision 'unstable-branch INITIAL' \
-                --module something new-darcs-repository
-
-8. Bootstrap a new SVN repository with tailor's master one. This
-   demonstrate the new --target-repository feature::
-
-    $ tailor -D -v -b -R http://nautilus.homeip.net/~lele/projects/tailor \
-            -s darcs -t svn --target-repository file:///tmp/svnrepo \
-            --target-module / /tmp/wc
-    $ svn info file:///tmp/svnrepo [Status 1]
-    $ svnadmin create --fs-type fsfs /tmp/svnrepo [Ok]
-    $ svn co --quiet file:///tmp/svnrepo/ /tmp/wc [Ok]
-    /tmp/wc $ darcs get --partial --verbose http://.../tailor tailor [Ok]
-    /tmp/wc/tailor $ darcs changes --last 1 --xml-output [Ok]
-    /tmp/wc $ svn add --quiet --no-auto-props --non-recursive tailor [Ok]
-    ...
-
-9. Given the configuration file shown below in `Config file format`_,
+3. Given the configuration file shown below in `Config file format`_,
    the following command::
 
-    $ tailor --configfile example.tailor --bootstrap
+    $ tailor --configfile example.tailor
 
    is equivalent to this one::
 
-    $ tailor --configfile example.tailor --bootstrap tailor
+    $ tailor --configfile example.tailor tailor
 
-   in that they bootstrap respectively the default project(s) or
+   in that they operate respectively on the default project(s) or
    the ones specified on the command line (and in this case there
    is just a single default project, tailor).
 
@@ -189,7 +188,17 @@ __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
 
     $ tailor --configfile example.tailor tailor tailor-reverse
 
-   executes an update on both projects.
+   operates on both projects.
+
+
+CVS start-revision
+------------------
+
+With CVS, you can specify a particular *point in time* specifying
+a `start-revision` with a timestamp like ``2001-12-25 23:26:48 UTC``.
+
+To specify also a particular `branch`, prepend it before the
+timestamp, as in ``unstable-branch 2001-12-25 23:26:48 UTC``.
 
 
 Resolving conflicts
@@ -233,28 +242,26 @@ Config file format
 When your project is composed by multiple upstream modules, it is
 easier to collect such information in a single file. This is done by
 specifying the `--configfile` option with a file name as argument. In
-this case, tailor will read the above information from a
-standard Python ConfigParser file. 
+this case, tailor will read the above information from a standard
+Python ConfigParser file.
 
 For example::
 
     [DEFAULT]
-    verbose = Yes
-    target-module = None
+    verbose = True
     projects = tailor
 
     [tailor]
     root = /tmp/n9
     source = darcs:tailor
     target = svn:tailor
-    refill-changelogs = Yes
+    dont-refill-changelogs = True
     state-file = tailor.state
 
     [tailor-reverse]
     root = /tmp/n9
     source = svn:tailor
     target = darcs:tailor
-    refill-changelogs = Yes
     state-file = reverse.state
     
     [svn:tailor]
@@ -262,7 +269,7 @@ For example::
     module = /project1
 
     [darcs:tailor]
-    repository = /home/lele/WiP/cvsync
+    repository = ~/WiP/cvsync
 
 .. hint:: If you execute the examples above with ``--verbose --debug``
           **and without** ``--configfile``, tailor will write a
