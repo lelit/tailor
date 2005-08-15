@@ -248,7 +248,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if changes.exit_status:
                 raise ChangesetApplicationFailure(
                     "%s returned status %d saying \"%s\"" %
-                    (str(changes), changes.exit_status, output.read()))
+                    (str(changes), changes.exit_status,
+                     output and output.read() or ''))
 
             csets = changesets_from_darcschanges(output)
             changeset = csets[0]
