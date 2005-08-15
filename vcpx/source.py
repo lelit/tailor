@@ -187,8 +187,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         last = self._checkoutUpstreamRevision(revision)
-        self.state_file.write(last.revision, None)
-
+        self.state_file.write(last.revision, self.pending)
         return last
 
     def _checkoutUpstreamRevision(self, revision):
