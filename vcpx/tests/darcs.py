@@ -56,6 +56,8 @@ class DarcsChangesParserTest(TestCase):
                          "Svn log parser with test")
         self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59))
         self.assertEqual(len(cset.entries), 4)
+        self.assertEqual(cset.darcs_hash,
+                         '20040601140559-97f81-b669594864cb35290fbe4848e6645e73057a8caf.gz')
 
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'cvsync/svn.py')

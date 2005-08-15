@@ -61,6 +61,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 timestamp = datetime(y, m, d, hh, mm, ss)
                 self.current['date'] = timestamp
                 self.current['comment'] = ''
+                self.current['hash'] = attributes['hash']
                 self.current['entries'] = []
             elif name in ['name', 'comment', 'add_file', 'add_directory',
                           'modify_file', 'remove_file', 'remove_directory']:
@@ -84,7 +85,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                                  self.current['author'],
                                  changelog,
                                  self.current['entries'])
-
+                cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(
                         stdout=PIPE, patchname=cset.revision).read()
@@ -202,17 +203,32 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from re import escape
 
-        if changeset.revision.startswith('tagged '):
-            selector = '--tags'
+        needspatchesopt = False
+        if hasattr(changeset, 'darcs_hash'):
+            selector = '--match'
+            revtag = 'hash ' + changeset.darcs_hash
+        elif changeset.revision.startswith('tagged '):
+            selector = '--tag'
             revtag = changeset.revision[7:]
         else:
             selector = '--match'
-            revtag = 'date "%s" && author "%s" && exact "%s"' % (
+            revtag = 'date "%s" && author "%s"' % (
                 changeset.date.strftime("%a %b %d %H:%M:%S UTC %Y"),
-                changeset.author,
-                changeset.revision)
+                changeset.author)
+            # The 'exact' matcher doesn't groke double quotes:
+            # """currently there is no provision for escaping a double
+            # quote, so you have to choose between matching double
+            # quotes and matching spaces"""
+            if not '"' in changeset.revision:
+                revtag += '&& exact "%s"' % changeset.revision
+            else:
+                needspatchesopt = True
 
         cmd = [self.repository.DARCS_CMD, "pull", "--all", selector, revtag]
+
+        if needspatchesopt:
+            cmd.extend(['--patches', escape(changeset.revision)])
+
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
         output = pull.execute(stdout=PIPE, stderr=STDOUT)
 
@@ -253,10 +269,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             csets = changesets_from_darcschanges(output)
             changeset = csets[0]
-            revision = 'date "%s" && author "%s" && exact "%s"' % (
-                changeset.date.strftime("%a %b %d %H:%M:%S UTC %Y"),
-                changeset.author,
-                changeset.revision)
+
+            revision = 'hash %s' % changeset.darcs_hash
         else:
             initial = False
 
