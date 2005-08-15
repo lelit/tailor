@@ -3,7 +3,7 @@
 # :Creato:   mar 20 apr 2004 16:49:23 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase, TestSuite
 from vcpx.shwrap import ExternalCommand, PIPE
@@ -52,7 +52,6 @@ class SystemCommandTest(TestCase):
         out = c.execute(stdout=PIPE)
         self.assertEqual(out.read(), "/tmp\n")
 
-
     def testStringification(self):
         """Verify the conversion from sequence of args to string"""
 
@@ -64,5 +63,3 @@ class SystemCommandTest(TestCase):
 
         c = ExternalCommand([r'a \" backslashed quote mark\\'])
         self.assertEqual(str(c), r'$ "a \\\" backslashed quote mark\\\\"')
-        
-        
