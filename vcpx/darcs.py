@@ -279,7 +279,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 cmd = [self.repository.DARCS_CMD, "pull", "--all", "--verbose"]
                 if revision and revision<>'HEAD':
-                    cmd.extend([initial and "--match" or "--tags", revision])
+                    cmd.extend([initial and "--match" or "--tag", revision])
                 dpull = ExternalCommand(cwd=self.basedir, command=cmd)
                 output = dpull.execute(self.repository.repository,
                                        stdout=PIPE, stderr=STDOUT)
