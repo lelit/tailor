@@ -7,8 +7,7 @@
 
 """
 [DEFAULT]
-dont-refill-changelogs = False
-target-kind = hg
+dont-refill-changelogs = True
 target-module = None
 source-repository = /home/lele/WiP/cvsync
 encoding = None
@@ -16,7 +15,6 @@ target-repository = None
 use-svn-propset = False
 source-module = None
 update = True
-source-kind = darcs
 subdir = .
 debug = True
 remove-first-log-line = False
@@ -44,6 +42,7 @@ source = darcs:tailor
 target = svn:tailor
 root-directory = /tmp/tailor-tests/darcs2svn
 source = darcs:tailor
+start-revision = INITIAL
 
 [svn2darcs]
 target = darcs:svntailor
