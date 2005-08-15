@@ -22,8 +22,15 @@ caused conflicts on the following files:
 
  * %s
 
+This is quite unusual, and most probably it means someone else has
+changed the working dir, beyond tailor control, or maybe a tailor bug
+is showing up.
+
 Either abort the session with Ctrl-C, or manually correct the situation
-with a Ctrl-Z and a few "svn resolved". What would you like to do?
+with a Ctrl-Z, explore and correct, and coming back from the shell with
+'fg'.
+
+What would you like to do?
 """
 
 class GetUpstreamChangesetsFailure(Exception):
