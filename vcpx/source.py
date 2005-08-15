@@ -85,43 +85,54 @@ class UpdatableSourceWorkingDir(WorkingDir):
         if not self.pending:
             return last, conflicts
 
-        remaining = self.pending[:]
-        for c in self.pending:
-            if not self._willApplyChangeset(c, applyable):
-                break
+        try:
+            while self.pending:
+                c = self.pending[0]
 
-            self.log_info("Applying changeset %s" % c.revision)
+                # Give the opportunity to subclasses to stop the application
+                # of the queue, before the application of the patch by the
+                # source backend.
+                if not self._willApplyChangeset(c, applyable):
+                    break
 
-            try:
-                res = self._applyChangeset(c)
-            except:
-                self.log_error("Couldn't apply changeset %s" % c.revision,
-                               exc=True)
-                raise
+                self.log_info("Applying changeset %s" % c.revision)
 
-            if res:
-                conflicts.append((c, res))
                 try:
-                    raw_input(CONFLICTS_PROMPT % (str(c), '\n * '.join(res)))
-                except KeyboardInterrupt:
-                    self.log_info("INTERRUPTED BY THE USER!")
-                    return last, conflicts
+                    res = self._applyChangeset(c)
+                except:
+                    self.log_error("Couldn't apply changeset %s" % c.revision,
+                                   exc=True)
+                    raise
 
-            if not self._didApplyChangeset(c, replayable):
-                continue
+                if res:
+                    # Uh, we have a conflict: this should not ever
+                    # happen, but the user may have manually tweaked
+                    # the working directory. Give her a chance of
+                    # fixing the situation, or abort with Ctrl-C, or
+                    # whatever the subclasses decide.
+                    try:
+                        self._handleConflict(c, conflicts, res)
+                    except KeyboardInterrupt:
+                        self.log_info("INTERRUPTED BY THE USER!")
+                        break
 
-            if replay:
-                replay(c)
+                # Give the opportunity to subclasses to skip the commit on
+                # the target backend.
+                if self._didApplyChangeset(c, replayable):
+                    if replay:
+                        replay(c)
 
-            remaining.remove(c)
-            self.state_file.write(c.revision, remaining)
+                # Remove it from the queue and remember it for the finally
+                # clause
+                last = self.pending.pop(0)
 
-            if applied:
-                applied(c)
+                # Another hook (last==c here)
+                if applied:
+                    applied(last)
+        finally:
+            # For whatever reason we exit the loop, save the last state
+            self.state_file.write(last.revision, self.pending)
 
-            last = c
-
-        self.pending = remaining
         return last, conflicts
 
     def _willApplyChangeset(self, changeset, applyable=None):
@@ -152,6 +163,18 @@ class UpdatableSourceWorkingDir(WorkingDir):
             return replayable(changeset)
         else:
             return True
+
+    def _handleConflict(self, changeset, conflicts, conflict):
+        """
+        Handle the conflict raised by the application of the upstream changeset.
+
+        This implementation just append a (changeset, conflict) to the
+        list of all conflicts, and present a prompt to the user that
+        may abort with Ctrl-C (that in turn generates a KeyboardInterrupt).
+        """
+
+        conflicts.append((changeset, conflict))
+        raw_input(CONFLICTS_PROMPT % (str(changeset), '\n * '.join(conflict)))
 
     def getPendingChangesets(self, sincerev=None):
         """
