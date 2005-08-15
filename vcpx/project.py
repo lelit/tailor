@@ -245,6 +245,10 @@ class Project(object):
             try:
                 last, conflicts = dwd.applyPendingChangesets(
                     applyable=self._applyable, applied=self._applied)
+            except KeyboardInterrupt:
+                self.log_info("Leaving '%s' incomplete, stopped by user" %
+                              self.name)
+                return
             except:
                 self.log_error('Upstream change application failed', True)
                 raise
