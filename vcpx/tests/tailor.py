@@ -9,7 +9,7 @@
 [DEFAULT]
 dont-refill-changelogs = True
 target-module = None
-source-repository = /home/lele/WiP/cvsync
+source-repository = ~/WiP/cvsync
 encoding = None
 target-repository = None
 use-svn-propset = False
@@ -160,4 +160,3 @@ class TailorTest(TestCase):
         project = self.config['svn2darcs']
         tailorizer = Tailorizer(project)
         tailorizer(UpdateOptions())
-
