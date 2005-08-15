@@ -11,7 +11,7 @@ This module implements the backends for Codeville.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE
+from shwrap import ExternalCommand
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 

@@ -12,7 +12,7 @@ This module implements the backends for ArX.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
