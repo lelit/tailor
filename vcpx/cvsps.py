@@ -278,6 +278,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 revision, timestamp = revision.split(' ', 1)
 
         csets = self.getPendingChangesets(revision)
+        if not csets:
+            raise TargetInitializationFailure(
+                "Something went wrong: there are no changesets since "
+                "revision '%s'" % revision)
 
         if timestamp == 'INITIAL':
             timestamp = csets[0].date.isoformat(sep=' ')
