@@ -312,15 +312,15 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         cvslog = ExternalCommand(command=cmd)
 
-        log = cvslog.execute(module, stdout=PIPE, stderr=STDOUT,
-                             repository=repository, since=since,
-                             branch=branch or 'HEAD', TZ='UTC')
+        log = cvslog.execute(self.repository.module, stdout=PIPE, stderr=STDOUT,
+                             repository=self.repository.repository,
+                             since=since, branch=branch or 'HEAD', TZ='UTC')
 
         if cvslog.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
-        return changesets_from_cvslog(log, module)
+        return changesets_from_cvslog(log, self.repository.module)
 
 
 class CvsEntry(object):

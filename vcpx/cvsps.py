@@ -262,7 +262,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists
         from cvs import CvsEntries, compare_cvs_revs
 
-        if not module:
+        if not self.repository.module:
             raise InvocationError("Must specify a module name")
 
         timestamp = None
@@ -283,15 +283,16 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             timestamp = csets[0].date.isoformat(sep=' ')
 
         if not exists(join(self.basedir, 'CVS')):
-            cmd = [self.repository.CVS_CMD, "-q", "-d", repository, "checkout",
-                   "-d", self.basedir]
+            cmd = [self.repository.CVS_CMD, "-q", "-d",
+                   self.repository.repository, "checkout",
+                   "-d", self.repository.subdir]
             if revision:
                 cmd.extend(["-r", revision])
             if timestamp:
                 cmd.extend(["-D", "%s UTC" % timestamp])
 
-            checkout = ExternalCommand(command=cmd)
-            checkout.execute(module)
+            checkout = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+            checkout.execute(self.repository.module)
 
             if checkout.exit_status:
                 raise TargetInitializationFailure(
@@ -300,9 +301,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         else:
             self.log_info("Using existing %s", self.basedir)
 
-        self.__forceTagOnEachEntry(self.basedir)
+        self.__forceTagOnEachEntry()
 
-        entries = CvsEntries(wdir)
+        entries = CvsEntries(self.basedir)
         youngest_entry = entries.getYoungestEntry()
         if youngest_entry is None:
             raise EmptyRepositoriesFoolsMe("The working copy '%s' of the "
@@ -331,9 +332,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not found:
             raise TargetInitializationFailure(
                 "Something went wrong: unable to determine the exact upstream "
-                "revision of the checked out tree in '%s'" % wdir)
+                "revision of the checked out tree in '%s'" % self.basedir)
         else:
-            self.log_info("working copy up to cvsps revision %s", last.revision)
+            self.log_info("working copy up to cvs revision %s" % last.revision)
 
         return last
 
