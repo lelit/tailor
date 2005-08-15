@@ -194,17 +194,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 info = entries.getFileInfo(e.name)
                 if not info:
                     self.log_info("promoting '%s' to ADDED at "
-                                  "revision %s", e.name, e.new_revision)
+                                  "revision %s" % (e.name, e.new_revision))
                     e.action_kind = e.ADDED
                     self.__createParentCVSDirectories(changeset, e.name)
                 elif info.cvs_version == e.new_revision:
                     self.log_info("skipping '%s' since it's already "
-                                  "at revision %s", e.name, e.new_revision)
+                                  "at revision %s" % (e.name, e.new_revision))
                     continue
             elif e.action_kind == e.DELETED:
                 if not exists(join(self.basedir, e.name)):
                     self.log_info("skipping '%s' since it's already "
-                                  "deleted", e.name)
+                                  "deleted" % e.name)
                     self.__maybeDeleteDirectory(split(e.name)[0], changeset)
                     continue
             elif e.action_kind == e.ADDED and e.new_revision is None:
@@ -299,7 +299,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     "%s returned status %s" % (str(checkout),
                                                checkout.exit_status))
         else:
-            self.log_info("Using existing %s", self.basedir)
+            self.log_info("Using existing %s" % self.basedir)
 
         self.__forceTagOnEachEntry()
 
