@@ -6,7 +6,7 @@
 #
 
 from unittest import TestCase, TestSuite
-from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 
 class SystemCommandTest(TestCase):
     """Perform some basic tests of the wrapper.
@@ -41,6 +41,19 @@ class SystemCommandTest(TestCase):
         c = ExternalCommand(['echo'])
         out = c.execute("ciao", stdout=PIPE)
         self.assertEqual(out.read(), "ciao\n")
+
+        out = c.execute('-n', stdout=PIPE)
+        self.assertEqual(out.read(), '')
+
+        out = c.execute("ciao")
+        self.assertEqual(out, None)
+
+    def testStandardError(self):
+        """Verify that ExternalCommand redirects stderr."""
+
+        c = ExternalCommand(['darcs', 'ciao'])
+        out = c.execute("ciao", stdout=PIPE, stderr=STDOUT)
+        self.assert_("darcs failed:  Invalid command 'ciao'!" in out.read())
 
     def testWorkingDir(self):
         """Verify that the given command is executed in the specified

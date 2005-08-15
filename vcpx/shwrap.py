@@ -171,7 +171,7 @@ class ExternalCommand:
             input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
 
         out = process.communicate(input=input)[0]
-        if out:
+        if out is not None:
             out = StringIO(out)
         self.exit_status = process.returncode
 
