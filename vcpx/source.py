@@ -131,7 +131,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     applied(last)
         finally:
             # For whatever reason we exit the loop, save the last state
-            self.state_file.write(last.revision, self.pending)
+            if last is not None:
+                self.state_file.write(last.revision, self.pending)
 
         return last, conflicts
 
