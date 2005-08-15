@@ -46,7 +46,8 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         logmessage.append('Date: %s' % date)
         logmessage.append('')
 
-        cmd = [self.repository.BZR_CMD, "commit", "-m", '\n'.join(logmessage)]
+        cmd = [self.repository.BZR_CMD, "commit", "--unchanged",
+               "-m", '\n'.join(logmessage)]
         if not entries:
             entries = ['.']
 
