@@ -277,11 +277,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             elif ' ' in revision:
                 revision, timestamp = revision.split(' ', 1)
 
-        csets = self._getUpstreamChangesets(revision)
-        csets.reverse()
+        csets = self.getPendingChangesets(revision)
 
         if timestamp == 'INITIAL':
-            timestamp = csets[-1].date.isoformat(sep=' ')
+            timestamp = csets[0].date.isoformat(sep=' ')
 
         if not exists(join(self.basedir, 'CVS')):
             cmd = [self.repository.CVS_CMD, "-q", "-d", repository, "checkout",
@@ -311,16 +310,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                            "don't know how to deal with "
                                            "that." % self.basedir)
 
-        # update cvsps cache, then loop over the changesets and find the
-        # last applied, to find out the actual cvsps revision
+        # loop over the changesets and find the last applied, to find
+        # out the actual cvsps revision
 
         found = False
-        for cset in csets:
+        while csets:
+            cset = csets.pop(0)
             for m in cset.entries:
                 info = entries.getFileInfo(m.name)
                 if info:
                     actualversion = info.cvs_version
-                    found = compare_cvs_revs(actualversion,m.new_revision)>=0
+                    found = compare_cvs_revs(actualversion,m.new_revision) == 0
                     if not found:
                         break
 
