@@ -103,7 +103,7 @@ class Tailorizer(object):
         SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
         Changeset.REFILL_MESSAGE = not pconfig('dont-refill-changelogs')
 
-        if options.bootstrap:
+        if not self.project.exists():
             self.bootstrap()
         else:
             self.update()
@@ -134,10 +134,6 @@ GENERAL_OPTIONS = [
 ]
 
 UPDATE_OPTIONS = [
-    make_option("--update", action="store_true", default=True,
-                help="Update the given repositories, fetching upstream "
-                     "changesets, applying and re-registering each one. "
-                     "This is the default behaviour."),
     make_option("-F", "--patch-name-format", metavar="FORMAT",
                 help="Specify the prototype that will be used "
                      "to compute the patch name.  The prototype may contain "
@@ -161,10 +157,6 @@ UPDATE_OPTIONS = [
 ]
 
 BOOTSTRAP_OPTIONS = [
-    make_option("-b", "--bootstrap", action="store_true", default=False,
-                help="Bootstrap mode, that is the initial copy of the "
-                     "upstream tree, given as an URI (see -R) and maybe "
-                     "a revision (-r).  This overrides --update."),
     make_option("-s", "--source-kind", dest="source_kind", metavar="VC-KIND",
                 help="Select the backend for the upstream source "
                      "version control VC-KIND. Default is 'cvs'.",
@@ -266,7 +258,7 @@ def main():
     else:
         defaults = {}
         for k,v in options.__dict__.items():
-            if k not in ['interactive', 'bootstrap', 'configfile', 'migrate']:
+            if k not in ['interactive', 'configfile', 'migrate']:
                 defaults[k.replace('_', '-')] = str(v)
 
         if options.configfile or (len(sys.argv)==2 and len(args)==1):
@@ -307,9 +299,6 @@ def main():
             config.set('project', 'start-revision', options.start_revision)
 
             config.add_section(source)
-            if options.bootstrap and not options.source_repository:
-                raise InvocationError('Need a source repository to bootstrap')
-
             config.set(source, 'repository', options.source_repository)
             if options.source_module:
                 config.set(source, 'module', options.source_module)

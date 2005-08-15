@@ -168,6 +168,17 @@ class Project(object):
             klass = repository.Repository
         return klass(repname, kind, self, which)
 
+    def exists(self):
+        """
+        Return True if the project exists, False otherwise.
+
+        Check for the existence of the state file to decide.
+        """
+
+        from os.path import exists
+
+        return exists(self.state_file.filename)
+
     def workingDir(self):
         """
         Return a DualWorkingDir instance, ready to work.
