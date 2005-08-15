@@ -29,12 +29,11 @@ class SystemCommandTest(TestCase):
         self.assertNotEqual(c.exit_status, 0)
 
     def testExitStatusUnknownCommand(self):
-        """Verify ExternalCommand exit_status for non existing command.
+        """Verify ExternalCommand raise OSError for non existing command.
         """
 
         c = ExternalCommand(['/does/not/exist'])
-        c.execute()
-        self.assertNotEqual(c.exit_status, 0)
+        self.assertRaises(OSError, c.execute)
 
     def testStandardOutput(self):
         """Verify that ExternalCommand redirects stdout."""

@@ -159,10 +159,13 @@ class ExternalCommand:
                             env=kwargs.get('env'),
                             cwd=kwargs.get('cwd'),
                             universal_newlines=True)
-        except OSError:
-            stderr.write("'%s' does not exist!" % self._last_command[0])
-            self.exit_status = -1
-            return
+        except OSError, e:
+            from errno import ENOENT
+
+            if e.errno == ENOENT:
+                raise OSError("'%s' does not exist!" % self._last_command[0])
+            else:
+                raise
 
         if input:
             input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
