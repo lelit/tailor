@@ -13,7 +13,7 @@ __docformat__ = 'reStructuredText'
 
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
-from shwrap import ExternalCommand
+from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
 
 class BzrWorkingDir(SyncronizableTargetWorkingDir):
 
@@ -46,8 +46,13 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         logmessage.append('Date: %s' % date)
         logmessage.append('')
 
+        rontf = ReopenableNamedTemporaryFile('bzr', 'tailor')
+        log = open(rontf.name, "w")
+        log.write('\n'.join(logmessage))
+        log.close()
+
         cmd = [self.repository.BZR_CMD, "commit", "--unchanged",
-               "-m", '\n'.join(logmessage)]
+               "--file", rontf.name]
         if not entries:
             entries = ['.']
 
