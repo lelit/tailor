@@ -115,7 +115,7 @@ class ExternalCommand:
         """Execute the command."""
 
         from sys import stderr, getdefaultencoding
-        from os import environ
+        import os
         from cStringIO import StringIO
 
         self.exit_status = None
@@ -137,19 +137,25 @@ class ExternalCommand:
 
         if not kwargs.has_key('env'):
             env = kwargs['env'] = {}
-            env.update(environ)
+            env.update(os.environ)
 
             for v in ['LANG', 'TZ', 'PATH']:
                 if kwargs.has_key(v):
                     env[v] = kwargs[v]
 
         input = kwargs.get('input')
-
+        output = kwargs.get('stdout')
+        error = kwargs.get('stderr')
+        devnull = getattr(os, 'devnull', '/dev/null')
+        if output is None:
+            output = open(devnull, 'w')
+        if error is None:
+            error = open(devnull, 'w')
         try:
             process = Popen(self._last_command,
                             stdin=input and PIPE or None,
-                            stdout=kwargs.get('stdout'),
-                            stderr=kwargs.get('stderr'),
+                            stdout=output,
+                            stderr=error,
                             env=kwargs.get('env'),
                             cwd=kwargs.get('cwd'),
                             universal_newlines=True)

@@ -269,7 +269,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 init = ExternalCommand(cwd=self.basedir,
                                        command=[self.repository.DARCS_CMD,
                                                 "initialize"])
-                init.execute(stdout=PIPE)
+                init.execute()
 
                 if init.exit_status:
                     raise TargetInitializationFailure(
@@ -358,7 +358,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             entries = ['.']
 
         record = ExternalCommand(cwd=self.basedir, command=cmd)
-        record.execute(entries, input='\n'.join(logmessage), stdout=PIPE)
+        record.execute(entries, input='\n'.join(logmessage))
 
         if record.exit_status:
             raise ChangesetApplicationFailure(
@@ -423,7 +423,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         init = ExternalCommand(cwd=self.basedir,
                                command=[self.repository.DARCS_CMD,
                                         "initialize"])
-        init.execute(stdout=PIPE)
+        init.execute()
 
         if init.exit_status:
             raise TargetInitializationFailure(

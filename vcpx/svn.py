@@ -414,7 +414,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         cmd = [self.repository.SVN_CMD, "info"]
         svninfo = ExternalCommand(command=cmd)
-        svninfo.execute(self.repository.repository, stdout=PIPE, stderr=STDOUT)
+        svninfo.execute(self.repository.repository)
 
         if svninfo.exit_status:
             if self.repository.repository.startswith('file:///'):

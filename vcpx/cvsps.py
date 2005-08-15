@@ -226,7 +226,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cvsup = ExternalCommand(cwd=self.basedir, command=cmd)
                 retry = 0
                 while True:
-                    cvsup.execute(e.name, stdout=PIPE)
+                    cvsup.execute(e.name)
 
                     if cvsup.exit_status:
                         retry += 1
