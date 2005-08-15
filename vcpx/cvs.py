@@ -290,18 +290,25 @@ class CvsWorkingDir(CvspsWorkingDir):
             if tag[0] in 'NT':
                 branch=tag[1:-1]
 
-        if not sincerev:
-            # We are bootstrapping, trying to collimate the
-            # actual revision on disk with the changesets.
+        cmd = [self.repository.CVS_CMD, "-f", "-d", "%(repository)s", "rlog",
+               "-N"]
+
+        if not sincerev or sincerev in ("INITIAL", "HEAD"):
+            # We are bootstrapping, trying to collimate the actual
+            # revision on disk with the changesets, or figuring out
+            # the first revision
             since = None
+            if sincerev == "HEAD":
+                if branch and branch<>'HEAD':
+                    cmd.append("-r%(branch)s.")
+                else:
+                    cmd.append("-rHEAD:HEAD")
+            else:
+                cmd.append("-r:HEAD")
         else:
             # Assume this is from __getGlobalRevision()
             since, author = sincerev.split(' by ')
-
-        cmd = [self.repository.cvs, "-f", "-d", "%(repository)s", "rlog", "-N",
-               "-r:%(branch)s"]
-        if since:
-            cmd.extend(["-d", "%(since)s UTC<"])
+            cmd.extend(["-d", "%(since)s UTC<", "-r:%(branch)s"])
 
         cvslog = ExternalCommand(command=cmd)
 
