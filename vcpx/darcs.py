@@ -291,7 +291,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                         "%s returned status %s" % (str(init),
                                                    init.exit_status))
 
-                cmd = [self.repository.DARCS_CMD, "pull", "--all", "--verbose"]
+                cmd = [self.repository.DARCS_CMD, "pull", "--all"]
                 if revision and revision<>'HEAD':
                     cmd.extend([initial and "--match" or "--tag", revision])
                 dpull = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -304,7 +304,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                         (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
-            cmd = [self.repository.DARCS_CMD, "get", "--partial", "--verbose"]
+            cmd = [self.repository.DARCS_CMD, "get", "--partial"]
             if revision and revision<>'HEAD':
                 cmd.extend([initial and "--to-match" or "--tag", revision])
             dget = ExternalCommand(command=cmd)
