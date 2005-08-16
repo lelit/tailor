@@ -201,9 +201,6 @@ GENERAL_OPTIONS = [
                 help="Centralized storage of projects info.  With this "
                      "option and no other arguments tailor will update "
                      "every project found in the config file."),
-    make_option("--migrate-config", dest="migrate",
-                action="store_true", default=False,
-                help="Migrate old configuration to new centralized storage."),
     make_option("--encoding", metavar="CHARSET", default=None,
                 help="Force the output encoding to given CHARSET, rather "
                      "then using the user default settings specified in the "
@@ -335,7 +332,7 @@ def main():
     else:
         defaults = {}
         for k,v in options.__dict__.items():
-            if k not in ['interactive', 'configfile', 'migrate']:
+            if k not in ['interactive', 'configfile']:
                 defaults[k.replace('_', '-')] = str(v)
 
         if options.configfile or (len(sys.argv)==2 and len(args)==1):
