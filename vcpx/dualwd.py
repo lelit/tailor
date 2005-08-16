@@ -47,7 +47,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # SyncronizableTargetWorkingDir
 
         self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
-        self.initializeNewWorkingDir = self.target.initializeNewWorkingDir
+        self.importFirstRevision = self.target.importFirstRevision
         self.replayChangeset = self.target.replayChangeset
 
     def setStateFile(self, state_file):

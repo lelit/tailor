@@ -510,7 +510,7 @@ class Session(Cmd):
         self.writeStateFile()
 
         try:
-            dwd.initializeNewWorkingDir(self.current_directory,
+            dwd.importFirstRevision(self.current_directory,
                                         self.source_repository,
                                         self.source_module,
                                         self.sub_directory,

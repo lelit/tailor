@@ -41,7 +41,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         renames, deletions and adds.  This is an useful argument to
         feed as ``replay`` to ``applyUpstreamChangesets``
 
-    initializeNewWorkingDir
+    importFirstRevision
         to initialize a pristine working directory tree under this VC
         system, possibly extracted under a different kind of VC
 
@@ -265,7 +265,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         upstream source tree, when overriden by subclasses.
         """
 
-    def initializeNewWorkingDir(self, source_repo, changeset, initial):
+    def importFirstRevision(self, source_repo, changeset, initial):
         """
         Initialize a new working directory, just extracted from
         some other VC system, importing everything's there.

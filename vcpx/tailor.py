@@ -81,7 +81,7 @@ class Tailorizer(Project):
             raise
 
         try:
-            dwd.initializeNewWorkingDir(self.source, actual,
+            dwd.importFirstRevision(self.source, actual,
                                         revision=='INITIAL')
         except:
             self.log_error('Could not import checked out tree!', True)
