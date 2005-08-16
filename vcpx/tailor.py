@@ -19,18 +19,94 @@ __version__ = '0.9.5'
 
 from optparse import OptionParser, OptionGroup, make_option
 from config import Config
+from project import Project
 from source import InvocationError
 from session import interactive
 
-class Tailorizer(object):
+class Tailorizer(Project):
     """
     A Tailorizer has two main capabilities: its able to bootstrap a
     new Project, or brought it in sync with its current upstream
     revision.
     """
 
-    def __init__(self, project):
-        self.project = project
+    def prepareWorkingDirectory(self):
+        """
+        Prepare the working directory before the bootstrap.
+        """
+
+        dwd = self.workingDir()
+        dwd.prepareWorkingDirectory(self.source)
+
+    def checkoutUpstreamRevision(self):
+        """
+        Checkout a working copy from the upstream repository and import
+        it in the target system.
+        """
+
+        dwd = self.workingDir()
+        revision = self.config.get(self.name, 'start-revision', 'INITIAL')
+        actual = dwd.checkoutUpstreamRevision(revision)
+        dwd.initializeNewWorkingDir(self.source, actual, revision=='INITIAL')
+
+    def _applyable(self, changeset):
+        """
+        Print the changeset being applied.
+        """
+
+        if self.verbose:
+            print "Changeset %s:" % changeset.revision
+            try:
+                print changeset.log
+            except UnicodeEncodeError:
+                print ">>> Non-printable changelog <<<"
+
+        return True
+
+    def _applied(self, changeset):
+        """
+        Save current status.
+        """
+
+        if self.verbose:
+            print
+
+    def applyPendingChangesets(self):
+        """
+        Apply pending changesets, eventually fetching latest from upstream.
+        """
+
+        dwd = self.workingDir()
+        try:
+            pendings = dwd.getPendingChangesets()
+        except KeyboardInterrupt:
+            self.log_info("Leaving '%s' unchanged, stopped by user" % self.name)
+            return
+        except:
+            self.log_error("Unable to get changes for '%s'" % self.name, True)
+            raise
+
+        nchanges = len(pendings)
+        if nchanges:
+            if self.verbose:
+                print "Applying %d upstream changesets" % nchanges
+
+            try:
+                last, conflicts = dwd.applyPendingChangesets(
+                    applyable=self._applyable, applied=self._applied)
+            except KeyboardInterrupt:
+                self.log_info("Leaving '%s' incomplete, stopped by user" %
+                              self.name)
+                return
+            except:
+                self.log_error('Upstream change application failed', True)
+                raise
+
+            if last:
+                self.log_info("Update completed, now at revision '%s'" %
+                              last.revision)
+        else:
+            self.log_info("Update completed with no upstream changes")
 
     def bootstrap(self):
         """
@@ -44,38 +120,38 @@ class Tailorizer(object):
         content into the target repository.
         """
 
-        self.project.log_info("Bootstrapping '%s'" % self.project.rootdir)
+        self.log_info("Bootstrapping '%s'" % self.rootdir)
 
         try:
-            self.project.prepareWorkingDirectory()
+            self.prepareWorkingDirectory()
         except:
-            self.project.log_error('Cannot prepare working directory!', True)
+            self.log_error('Cannot prepare working directory!', True)
             raise
 
         try:
-            self.project.checkoutUpstreamRevision()
+            self.checkoutUpstreamRevision()
         except:
-            self.project.log_error("Checkout of '%s' failed!" %
-                                   self.project.name, True)
+            self.log_error("Checkout of '%s' failed!" %
+                                   self.name, True)
             raise
 
-        self.project.log_info("Bootstrap completed")
+        self.log_info("Bootstrap completed")
 
     def update(self):
         """
         Update an existing tailorized project.
         """
 
-        self.project.log_info("Updating '%s'" % self.project.name)
+        self.log_info("Updating '%s'" % self.name)
 
         try:
-            self.project.applyPendingChangesets()
+            self.applyPendingChangesets()
         except:
-            self.project.log_error("Cannot update '%s'!" % self.project.name,
+            self.log_error("Cannot update '%s'!" % self.name,
                                    True)
             raise
 
-        self.project.log_info("Update completed")
+        self.log_info("Update completed")
 
     def __call__(self):
         from shwrap import ExternalCommand
@@ -83,7 +159,7 @@ class Tailorizer(object):
         from changes import Changeset
 
         def pconfig(option):
-            return self.project.config.get(self.project.name, option)
+            return self.config.get(self.name, option)
 
         ExternalCommand.VERBOSE = pconfig('verbose')
         ExternalCommand.DEBUG = pconfig('debug')
@@ -104,7 +180,7 @@ class Tailorizer(object):
         SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
         Changeset.REFILL_MESSAGE = not pconfig('dont-refill-changelogs')
 
-        if not self.project.exists():
+        if not self.exists():
             self.bootstrap()
         else:
             self.update()
@@ -276,8 +352,7 @@ def main():
                 args = config.projects()
 
             for projname in args:
-                project = config[projname]
-                tailorizer = Tailorizer(project)
+                tailorizer = Tailorizer(projname, config)
                 tailorizer(options)
         else:
             for omit in ['source-kind', 'target-kind',
@@ -320,8 +395,7 @@ def main():
                 config.write(sys.stdout)
 
             if options.debug:
-                project = config['project']
-                tailorizer = Tailorizer(project)
+                tailorizer = Tailorizer('project', config)
                 tailorizer(options)
             elif not options.verbose:
                 sys.stderr.write("Operation not performed, try --verbose\n")

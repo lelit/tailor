@@ -101,57 +101,49 @@ class TailorTest(TestCase):
     def testDarcsToBazaarngBootstrap(self):
         "Test darcs to BazaarNG bootstrap"
 
-        project = self.config['darcs2bzr']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2bzr', self.config)
         tailorizer()
 
     def testDarcsToBazaarngUpdate(self):
         "Test darcs to BazaarNG update"
 
-        project = self.config['darcs2bzr']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2bzr', self.config)
         tailorizer()
 
     def testDarcsToMercurialBootstrap(self):
         "Test darcs to mercurial bootstrap"
 
-        project = self.config['darcs2hg']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2hg', self.config)
         tailorizer()
 
     def testDarcsToMercurialUpdate(self):
         "Test darcs to mercurial update"
 
-        project = self.config['darcs2hg']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2hg', self.config)
         tailorizer()
 
     def testDarcsToCodevilleBootstrap(self):
         "Test darcs to codeville bootstrap"
 
-        project = self.config['darcs2cdv']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2cdv', self.config)
         tailorizer()
 
     def testDarcsToCodevilleUpdate(self):
         "Test darcs to codeville update"
 
-        project = self.config['darcs2cdv']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2cdv', self.config)
         tailorizer()
 
     def testDarcsToSubversionBootstrap(self):
         "Test darcs to subversion bootstrap"
 
-        project = self.config['darcs2svn']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2svn', self.config)
         tailorizer()
 
     def testDarcsToSubversionUpdate(self):
         "Test darcs to subversion update"
 
-        project = self.config['darcs2svn']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('darcs2svn', self.config)
         tailorizer()
 
     ## The other way
@@ -159,13 +151,11 @@ class TailorTest(TestCase):
     def testSubversionToDarcsBootstrap(self):
         "Test reversed darcs to subversion bootstrap"
 
-        project = self.config['svn2darcs']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('svn2darcs', self.config)
         tailorizer()
 
     def testSubversionToDarcsUpdate(self):
         "Test reversed darcs to subversion update"
 
-        project = self.config['svn2darcs']
-        tailorizer = Tailorizer(project)
+        tailorizer = Tailorizer('svn2darcs', self.config)
         tailorizer()

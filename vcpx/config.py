@@ -86,11 +86,3 @@ class Config(SafeConfigParser):
             return [i.strip() for i in items.split(',')]
         else:
             return []
-
-    def __getitem__(self, name):
-        from project import Project
-
-        if not self.has_section(name):
-            raise UnknownProjectError("'%s' is not a known project" % name)
-
-        return Project(name, self)
