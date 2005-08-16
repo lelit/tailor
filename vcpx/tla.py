@@ -47,16 +47,6 @@ from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
 from target import TargetInitializationFailure
 
 
-# Wrap ExternalCommand.execute to separate stderr from stdout.
-def _execute(extcmd, *args, **kwargs):
-    (pread, pwrite) = os.pipe()
-    out = extcmd.execute(stderr=pwrite, *args, **kwargs)
-    os.close(pwrite)
-    err = StringIO(os.read(pread, 1000000))
-    os.close(pread)
-    return out, err
-
-
 class TlaWorkingDir(UpdatableSourceWorkingDir):
     """
     A working directory under ``tla``.
@@ -74,7 +64,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                                    self.repository.module])
         c = ExternalCommand(cwd=self.basedir,
                             command=[self.repository.TLA_CMD, "missing", "-f"])
-        out, err = _execute(c, stdout=PIPE)
+        out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d saying \"%s\"" %
@@ -93,7 +83,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         try:
             c = ExternalCommand(cwd=self.basedir,
                                 command=[self.repository.TLA_CMD, "replay"])
-            out, err = _execute(c, changeset.revision, stdout=PIPE)
+            out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
             if not c.exit_status in [0, 1]:
                 raise ChangesetApplicationFailure(
                     "%s returned status %d saying \"%s\"" %
@@ -117,7 +107,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             c = ExternalCommand(cwd=os.path.join(self.basedir, tempdir),
                                 command=[self.repository.TLA_CMD, "get",
                                          "--no-pristine", fqrev, "t"])
-            out, err = _execute(c, stdout=PIPE)
+            out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
@@ -147,7 +137,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         if path.find("\(") != -1:
             c = ExternalCommand(command=[self.repository.TLA_CMD, "escape",
                                          "--unescaped", path])
-            out, err = _execute(c, stdout=PIPE)
+            out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
                     "%s returned status %d saying \"%s\"" %
@@ -164,7 +154,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 cmd.append("-r")
             cmd.append(fqversion)
             c = ExternalCommand(command=cmd)
-            out, err = _execute(c, stdout=PIPE)
+            out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
@@ -179,7 +169,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                             command=[self.repository.TLA_CMD,
                                      "cat-archive-log"])
         for fqrev in fqrevlist:
-            out, err = _execute(c, fqrev, stdout=PIPE)
+            out, err = c.execute(fqrev, stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
                     "%s returned status %d saying \"%s\"" %

@@ -170,9 +170,11 @@ class ExternalCommand:
         if input:
             input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
 
-        out = process.communicate(input=input)[0]
+        out, err = process.communicate(input=input)
         if out is not None:
             out = StringIO(out)
+        if err is not None:
+            err = StringIO(err)
         self.exit_status = process.returncode
 
         if self.VERBOSE:
@@ -181,4 +183,4 @@ class ExternalCommand:
             else:
                 stderr.write(" [Status %s]\n" % self.exit_status)
 
-        return out
+        return out, err

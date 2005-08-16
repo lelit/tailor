@@ -92,7 +92,7 @@ class DarcsChangesParserTest(TestCase):
         patchname = 'more detailed diags on SAXException'
         changes = ExternalCommand(command=["darcs", "changes", "--xml", "--summary",
                                            "--patches", patchname])
-        csets = changesets_from_darcschanges(changes.execute(stdout=PIPE),
+        csets = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0],
                                              unidiff=True,
                                              repodir=getcwd())
         unidiff = csets[0].unidiff

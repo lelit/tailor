@@ -696,7 +696,7 @@ class Session(Cmd):
         c = ExternalCommand(cwd=self.source_repository,
                             command=[DARCS_CMD, "changes", "--patches",
                                      arg, "--xml-output", "--summ"])
-        last = changesets_from_darcschanges(c.execute(output=PIPE),
+        last = changesets_from_darcschanges(c.execute(stdout=PIPE)[0],
                                             unidiff=True,
                                             repodir=self.source_repository)
 

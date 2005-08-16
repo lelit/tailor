@@ -181,7 +181,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
                "--revision", "%d:HEAD" % (sincerev+1)]
         svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
-        log = svnlog.execute('.', stdout=PIPE, TZ='UTC')
+        log = svnlog.execute('.', stdout=PIPE, TZ='UTC')[0]
 
         if svnlog.exit_status:
             return []
@@ -194,7 +194,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         cmd = [self.repository.SVN_CMD, "update",
                "--revision", changeset.revision, "."]
         svnup = ExternalCommand(cwd=self.basedir, command=cmd)
-        out = svnup.execute(stdout=PIPE)
+        out = svnup.execute(stdout=PIPE)[0]
 
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
@@ -226,7 +226,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             svnlog = ExternalCommand(command=cmd)
             output = svnlog.execute("%s%s" % (self.repository.repository,
                                               self.repository.module),
-                                    stdout=PIPE)
+                                    stdout=PIPE)[0]
 
             if svnlog.exit_status:
                 raise ChangesetApplicationFailure(
@@ -257,7 +257,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
                    "--revision", revision]
             svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
-            output = svnlog.execute(stdout=PIPE)
+            output = svnlog.execute(stdout=PIPE)[0]
 
             if svnlog.exit_status:
                 raise ChangesetApplicationFailure(

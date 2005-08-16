@@ -60,12 +60,12 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        output = commit.execute(entries, stdout=PIPE, stderr=STDOUT)
+        output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE)
 
         # monotone complaints if there are no changes from the last commit.
         # we ignore those errors ...
         if commit.exit_status:
-            text = output.read()
+            text = error.read()
             if text.find("monotone: misuse: no changes to commit") == -1:
                 stderr.write(text)
                 raise ChangesetApplicationFailure(

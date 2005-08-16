@@ -88,7 +88,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(
-                        stdout=PIPE, patchname=cset.revision).read()
+                        stdout=PIPE, patchname=cset.revision)[0].read()
 
                 self.changesets.append(cset)
                 self.current = None
@@ -144,7 +144,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [self.repository.DARCS_CMD, "pull", "--dry-run"]
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
-                              stdout=PIPE, stderr=STDOUT, TZ='UTC')
+                              stdout=PIPE, stderr=STDOUT, TZ='UTC')[0]
 
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(
@@ -230,7 +230,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             cmd.extend(['--patches', escape(changeset.revision)])
 
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
-        output = pull.execute(stdout=PIPE, stderr=STDOUT)
+        output = pull.execute(stdout=PIPE, stderr=STDOUT)[0]
 
         if pull.exit_status:
             raise ChangesetApplicationFailure(
@@ -240,7 +240,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [self.repository.DARCS_CMD, "changes", selector, revtag,
                "--xml-output", "--summ"]
         changes = ExternalCommand(cwd=self.basedir, command=cmd)
-        last = changesets_from_darcschanges(changes.execute(stdout=PIPE))
+        last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0])
         if last:
             changeset.entries.extend(last[0].entries)
 
@@ -259,7 +259,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             cmd = [self.repository.DARCS_CMD, "changes", "--xml-output",
                    "--repo", self.repository.repository]
             changes = ExternalCommand(command=cmd)
-            output = changes.execute(stdout=PIPE, stderr=STDOUT)
+            output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
             if changes.exit_status:
                 raise ChangesetApplicationFailure(
@@ -296,7 +296,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     cmd.extend([initial and "--match" or "--tag", revision])
                 dpull = ExternalCommand(cwd=self.basedir, command=cmd)
                 output = dpull.execute(self.repository.repository,
-                                       stdout=PIPE, stderr=STDOUT)
+                                       stdout=PIPE, stderr=STDOUT)[0]
 
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
@@ -309,7 +309,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 cmd.extend([initial and "--to-match" or "--tag", revision])
             dget = ExternalCommand(command=cmd)
             output = dget.execute(self.repository.repository, self.basedir,
-                                  stdout=PIPE, stderr=STDOUT)
+                                  stdout=PIPE, stderr=STDOUT)[0]
 
             if dget.exit_status:
                 raise TargetInitializationFailure(
@@ -319,7 +319,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = [self.repository.DARCS_CMD, "changes", "--last", "1",
                "--xml-output"]
         changes = ExternalCommand(cwd=self.basedir, command=cmd)
-        output = changes.execute(stdout=PIPE, stderr=STDOUT)
+        output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
         if changes.exit_status:
             raise ChangesetApplicationFailure(

@@ -39,21 +39,21 @@ class SystemCommandTest(TestCase):
         """Verify that ExternalCommand redirects stdout."""
 
         c = ExternalCommand(['echo'])
-        out = c.execute("ciao", stdout=PIPE)
+        out = c.execute("ciao", stdout=PIPE)[0]
         self.assertEqual(out.read(), "ciao\n")
 
-        out = c.execute('-n', stdout=PIPE)
+        out = c.execute('-n', stdout=PIPE)[0]
         self.assertEqual(out.read(), '')
 
-        out = c.execute("ciao")
+        out = c.execute("ciao")[0]
         self.assertEqual(out, None)
 
     def testStandardError(self):
         """Verify that ExternalCommand redirects stderr."""
 
         c = ExternalCommand(['darcs', 'ciao'])
-        out = c.execute("ciao", stdout=PIPE, stderr=STDOUT)
-        self.assert_("darcs failed:  Invalid command 'ciao'!" in out.read())
+        out, err = c.execute("ciao", stdout=PIPE, stderr=PIPE)
+        self.assert_("darcs failed:  Invalid command 'ciao'!" in err.read())
 
     def testWorkingDir(self):
         """Verify that the given command is executed in the specified
@@ -61,7 +61,7 @@ class SystemCommandTest(TestCase):
         """
 
         c = ExternalCommand(['pwd'], '/tmp')
-        out = c.execute(stdout=PIPE)
+        out = c.execute(stdout=PIPE)[0]
         self.assertEqual(out.read(), "/tmp\n")
 
     def testStringification(self):

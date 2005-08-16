@@ -314,7 +314,7 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         log = cvslog.execute(self.repository.module, stdout=PIPE, stderr=STDOUT,
                              repository=self.repository.repository,
-                             since=since, branch=branch or 'HEAD', TZ='UTC')
+                             since=since, branch=branch or 'HEAD', TZ='UTC')[0]
 
         if cvslog.exit_status:
             raise GetUpstreamChangesetsFailure(
