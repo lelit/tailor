@@ -46,6 +46,9 @@ class ExternalCommand:
     VERBOSE = True
     """Print the executed command on stderr, at each run."""
 
+    DEBUG = False
+    """Print the output of the command, when not PIPEd to the caller."""
+
     DRY_RUN = False
     """Don't really execute the command."""
 
@@ -146,11 +149,15 @@ class ExternalCommand:
         input = kwargs.get('input')
         output = kwargs.get('stdout')
         error = kwargs.get('stderr')
-        devnull = getattr(os, 'devnull', '/dev/null')
-        if output is None:
-            output = open(devnull, 'w')
-        if error is None:
-            error = open(devnull, 'w')
+
+        # When not in debug, redirect stderr and stdout to /dev/null
+        # when the caller didn't ask for them.
+        if not self.DEBUG:
+            devnull = getattr(os, 'devnull', '/dev/null')
+            if output is None:
+                output = open(devnull, 'w')
+            if error is None:
+                error = open(devnull, 'w')
         try:
             process = Popen(self._last_command,
                             stdin=input and PIPE or None,
@@ -171,16 +178,26 @@ class ExternalCommand:
             input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
 
         out, err = process.communicate(input=input)
-        if out is not None:
-            out = StringIO(out)
-        if err is not None:
-            err = StringIO(err)
-        self.exit_status = process.returncode
 
+        self.exit_status = process.returncode
         if self.VERBOSE:
             if not self.exit_status:
                 stderr.write(" [Ok]\n")
             else:
                 stderr.write(" [Status %s]\n" % self.exit_status)
+
+        # For debug purposes, copy the output to our stderr when hidden above
+        if self.DEBUG:
+            if out and output == PIPE:
+                stderr.write('Output stream:\n')
+                stderr.write(out)
+            if err and error == PIPE:
+                stderr.write('Error stream:\n')
+                stderr.write(err)
+
+        if out is not None:
+            out = StringIO(out)
+        if err is not None:
+            err = StringIO(err)
 
         return out, err
