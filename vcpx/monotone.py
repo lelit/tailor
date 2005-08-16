@@ -60,7 +60,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        output = commit.execute(entries, stdout=PIPE)
+        output = commit.execute(entries, stdout=PIPE, stderr=STDOUT)
 
         # monotone complaints if there are no changes from the last commit.
         # we ignore those errors ...
