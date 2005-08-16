@@ -30,25 +30,6 @@ class Tailorizer(Project):
     revision.
     """
 
-    def prepareWorkingDirectory(self):
-        """
-        Prepare the working directory before the bootstrap.
-        """
-
-        dwd = self.workingDir()
-        dwd.prepareWorkingDirectory(self.source)
-
-    def checkoutUpstreamRevision(self):
-        """
-        Checkout a working copy from the upstream repository and import
-        it in the target system.
-        """
-
-        dwd = self.workingDir()
-        revision = self.config.get(self.name, 'start-revision', 'INITIAL')
-        actual = dwd.checkoutUpstreamRevision(revision)
-        dwd.initializeNewWorkingDir(self.source, actual, revision=='INITIAL')
-
     def _applyable(self, changeset):
         """
         Print the changeset being applied.
@@ -65,16 +46,55 @@ class Tailorizer(Project):
 
     def _applied(self, changeset):
         """
-        Save current status.
+        Separate changesets with an empty line.
         """
 
         if self.verbose:
             print
 
-    def applyPendingChangesets(self):
+    def bootstrap(self):
         """
-        Apply pending changesets, eventually fetching latest from upstream.
+        Bootstrap a new tailorized module.
+
+        First of all prepare the target system working directory such
+        that it can host the upstream source tree. This is backend
+        specific.
+
+        Then extract a copy of the upstream repository and import its
+        content into the target repository.
         """
+
+        self.log_info("Bootstrapping '%s'" % self.rootdir)
+
+        dwd = self.workingDir()
+        try:
+            dwd.prepareWorkingDirectory(self.source)
+        except:
+            self.log_error('Cannot prepare working directory!', True)
+            raise
+
+        revision = self.config.get(self.name, 'start-revision', 'INITIAL')
+        try:
+            actual = dwd.checkoutUpstreamRevision(revision)
+        except:
+            self.log_error("Checkout of '%s' failed!" % self.name, True)
+            raise
+
+        try:
+            dwd.initializeNewWorkingDir(self.source, actual,
+                                        revision=='INITIAL')
+        except:
+            self.log_error('Could not import checked out tree!', True)
+            raise
+
+        self.log_info("Bootstrap completed")
+
+    def update(self):
+        """
+        Update an existing tailorized project.
+        """
+
+        self.log_info("Updating '%s'" % self.name)
 
         dwd = self.workingDir()
         try:
@@ -108,51 +128,6 @@ class Tailorizer(Project):
         else:
             self.log_info("Update completed with no upstream changes")
 
-    def bootstrap(self):
-        """
-        Bootstrap a new tailorized module.
-
-        First of all prepare the target system working directory such
-        that it can host the upstream source tree. This is backend
-        specific.
-
-        Then extract a copy of the upstream repository and import its
-        content into the target repository.
-        """
-
-        self.log_info("Bootstrapping '%s'" % self.rootdir)
-
-        try:
-            self.prepareWorkingDirectory()
-        except:
-            self.log_error('Cannot prepare working directory!', True)
-            raise
-
-        try:
-            self.checkoutUpstreamRevision()
-        except:
-            self.log_error("Checkout of '%s' failed!" %
-                                   self.name, True)
-            raise
-
-        self.log_info("Bootstrap completed")
-
-    def update(self):
-        """
-        Update an existing tailorized project.
-        """
-
-        self.log_info("Updating '%s'" % self.name)
-
-        try:
-            self.applyPendingChangesets()
-        except:
-            self.log_error("Cannot update '%s'!" % self.name,
-                                   True)
-            raise
-
-        self.log_info("Update completed")
-
     def __call__(self):
         from shwrap import ExternalCommand
         from target import SyncronizableTargetWorkingDir
@@ -184,6 +159,7 @@ class Tailorizer(Project):
             self.bootstrap()
         else:
             self.update()
+
 
 GENERAL_OPTIONS = [
     make_option("-i", "--interactive", default=False, action="store_true",
