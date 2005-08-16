@@ -55,7 +55,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.MONOTONE_CMD, "commit", "--author", author,
                "--date", date.isoformat(),
                "--message-file", rontf.name]
-        commit = ExternalCommit(cwd=self.basedir, command=cmd)
+        commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
             entries = ['.']
