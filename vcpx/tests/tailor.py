@@ -83,6 +83,19 @@ class TailorTest(TestCase):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')
 
+    def testConfiguration(self):
+        "Test basic configuration"
+
+        from os.path import expanduser
+
+        p = Tailorizer('darcs2svn', self.config)
+        self.assertEqual(p.rootdir, '/tmp/tailor-tests/darcs2svn')
+        self.assertEqual(p.source.repository, expanduser('~/WiP/cvsync'))
+        self.assertEqual(p.target.repository,
+                         'file:///tmp/tailor-tests/svnrepo')
+        self.assertEqual(p.state_file.filename,
+                         '/tmp/tailor-tests/darcs2svn/tailor.state')
+
     ## Beware: carefully selected docs, methods executed in alpha order!
 
     def testDarcsToBazaarngBootstrap(self):
