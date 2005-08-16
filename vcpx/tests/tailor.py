@@ -83,6 +83,8 @@ class TailorTest(TestCase):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')
 
+    ## Beware: carefully selected docs, methods executed in alpha order!
+
     def testDarcsToBazaarngBootstrap(self):
         "Test darcs to BazaarNG bootstrap"
 
