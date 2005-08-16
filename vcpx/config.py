@@ -16,9 +16,6 @@ from ConfigParser import SafeConfigParser
 class ConfigurationError(Exception):
     """Configuration error"""
 
-class UnknownProjectError(Exception):
-    "Project does not exist"
-
 class Config(SafeConfigParser):
     """
     Syntactic sugar around standard ConfigParser, for easier access to

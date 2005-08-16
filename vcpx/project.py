@@ -52,6 +52,10 @@ class StateFile(object):
         sf.close()
 
 
+class UnknownProjectError(Exception):
+    "Project does not exist"
+
+
 class Project(object):
     """
     This class collects the information related to a single project, such
@@ -59,6 +63,9 @@ class Project(object):
     """
 
     def __init__(self, name, config):
+        if not config.has_section(name):
+            raise UnknownProjectError("'%s' is not a known project" % name)
+
         self.config = config
         self.name = name
         self.dwd = None

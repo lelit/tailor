@@ -15,3 +15,17 @@ systems.
 """
 
 __docformat__ = 'reStructuredText'
+
+from vcpx.tailor import main, ExistingProjectError, ProjectNotTailored
+from vcpx.target import TargetInitializationFailure
+from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
+     ChangesetApplicationFailure
+from vcpx.cvsps import EmptyRepositoriesFoolsMe
+from vcpx.config import ConfigurationError
+from vcpx.project import UnknownProjectError
+
+TailorExceptions = (ExistingProjectError, ProjectNotTailored,
+                    TargetInitializationFailure, EmptyRepositoriesFoolsMe,
+                    InvocationError, GetUpstreamChangesetsFailure,
+                    ChangesetApplicationFailure, ConfigurationError,
+                    UnknownProjectError)
