@@ -384,16 +384,17 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        # Since the source VCS already deleted the entry, and given that
-        # darcs will do the right thing with it, do nothing here, instead
-        # of
-        #         c = ExternalCommand(cwd=self.basedir,
-        #                             command=[self.repository.DARCS_CMD,
-        #                                      "remove"])
-        #         c.execute(entries)
-        # that raises status 512 on darcs not finding the entry.
+        from os.path import join, exists
 
-        pass
+        # darcs raises status 512 when it does not finding the entry,
+        # removed by source. Since sometime a directory is left there
+        # because it's not empty, darcs fails. So, do an explicit
+        # remove on items that are still there.
+
+        c = ExternalCommand(cwd=self.basedir,
+                            command=[self.repository.DARCS_CMD, "remove"])
+        c.execute([n for n in names if exists(join(self.basedir, n))])
+
 
     def _renamePathname(self, oldname, newname):
         """
