@@ -77,7 +77,7 @@ class Tailorizer(object):
 
         self.project.log_info("Update completed")
 
-    def __call__(self, options):
+    def __call__(self):
         from shwrap import ExternalCommand
         from target import SyncronizableTargetWorkingDir
         from changes import Changeset

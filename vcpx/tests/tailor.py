@@ -70,12 +70,6 @@ from cStringIO import StringIO
 from vcpx.config import Config
 from vcpx.tailor import Tailorizer
 
-class BootstrapOptions:
-    bootstrap = True
-
-class UpdateOptions:
-    bootstrap = False
-
 class TailorTest(TestCase):
 
     def setUp(self):
@@ -94,56 +88,56 @@ class TailorTest(TestCase):
 
         project = self.config['darcs2bzr']
         tailorizer = Tailorizer(project)
-        tailorizer(BootstrapOptions())
+        tailorizer()
 
     def testDarcsToBazaarngUpdate(self):
         "Test darcs to BazaarNG update"
 
         project = self.config['darcs2bzr']
         tailorizer = Tailorizer(project)
-        tailorizer(UpdateOptions())
+        tailorizer()
 
     def testDarcsToMercurialBootstrap(self):
         "Test darcs to mercurial bootstrap"
 
         project = self.config['darcs2hg']
         tailorizer = Tailorizer(project)
-        tailorizer(BootstrapOptions())
+        tailorizer()
 
     def testDarcsToMercurialUpdate(self):
         "Test darcs to mercurial update"
 
         project = self.config['darcs2hg']
         tailorizer = Tailorizer(project)
-        tailorizer(UpdateOptions())
+        tailorizer()
 
     def testDarcsToCodevilleBootstrap(self):
         "Test darcs to codeville bootstrap"
 
         project = self.config['darcs2cdv']
         tailorizer = Tailorizer(project)
-        tailorizer(BootstrapOptions())
+        tailorizer()
 
     def testDarcsToCodevilleUpdate(self):
         "Test darcs to codeville update"
 
         project = self.config['darcs2cdv']
         tailorizer = Tailorizer(project)
-        tailorizer(UpdateOptions())
+        tailorizer()
 
     def testDarcsToSubversionBootstrap(self):
         "Test darcs to subversion bootstrap"
 
         project = self.config['darcs2svn']
         tailorizer = Tailorizer(project)
-        tailorizer(BootstrapOptions())
+        tailorizer()
 
     def testDarcsToSubversionUpdate(self):
         "Test darcs to subversion update"
 
         project = self.config['darcs2svn']
         tailorizer = Tailorizer(project)
-        tailorizer(UpdateOptions())
+        tailorizer()
 
     ## The other way
 
@@ -152,11 +146,11 @@ class TailorTest(TestCase):
 
         project = self.config['svn2darcs']
         tailorizer = Tailorizer(project)
-        tailorizer(BootstrapOptions())
+        tailorizer()
 
     def testSubversionToDarcsUpdate(self):
         "Test reversed darcs to subversion update"
 
         project = self.config['svn2darcs']
         tailorizer = Tailorizer(project)
-        tailorizer(UpdateOptions())
+        tailorizer()
