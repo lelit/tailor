@@ -67,6 +67,19 @@ subdir = svnside
 
 [darcs:svntailor]
 subdir = darcside
+
+[cvs2darcs]
+target = darcs:pxlib
+root-directory = /tmp/tailor-tests/cvs2darcs
+source = cvs:pxlib
+start-revision = INITIAL
+subdir = pxlib
+
+[darcs:pxlib]
+
+[cvs:pxlib]
+repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
+module = pxlib
 """
 
 from unittest import TestCase, TestSuite
@@ -138,6 +151,16 @@ class TailorTest(TestCase):
         "Test subversion to darcs"
 
         tailorizer = Tailorizer('svn2darcs', self.config)
+        tailorizer()
+        self.assert_(tailorizer.exists())
+        tailorizer()
+
+    def testCvsToDarcs(self):
+        "Test CVS to darcs"
+
+        tailorizer = Tailorizer('cvs2darcs', self.config)
+        self.assertEqual(tailorizer.subdir, 'pxlib')
+        self.assertEqual(tailorizer.source.subdir, 'pxlib')
         tailorizer()
         self.assert_(tailorizer.exists())
         tailorizer()
