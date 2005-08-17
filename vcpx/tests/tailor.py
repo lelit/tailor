@@ -100,66 +100,44 @@ class TailorTest(TestCase):
         self.assertEqual(p.state_file.filename,
                          '/tmp/tailor-tests/darcs2svn/tailor.state')
 
-    ## Beware: carefully selected docs, methods executed in alpha order!
-
-    def testDarcsToBazaarngBootstrap(self):
-        "Test darcs to BazaarNG bootstrap"
+    def testDarcsToBazaarng(self):
+        "Test darcs to BazaarNG"
 
         tailorizer = Tailorizer('darcs2bzr', self.config)
         tailorizer()
-
-    def testDarcsToBazaarngUpdate(self):
-        "Test darcs to BazaarNG update"
-
-        tailorizer = Tailorizer('darcs2bzr', self.config)
+        self.assert_(tailorizer.exists())
         tailorizer()
 
-    def testDarcsToMercurialBootstrap(self):
-        "Test darcs to mercurial bootstrap"
+    def testDarcsToMercurial(self):
+        "Test darcs to mercurial"
 
         tailorizer = Tailorizer('darcs2hg', self.config)
         tailorizer()
-
-    def testDarcsToMercurialUpdate(self):
-        "Test darcs to mercurial update"
-
-        tailorizer = Tailorizer('darcs2hg', self.config)
+        self.assert_(tailorizer.exists())
         tailorizer()
 
-    def testDarcsToCodevilleBootstrap(self):
-        "Test darcs to codeville bootstrap"
+    def testDarcsToCodeville(self):
+        "Test darcs to codeville"
 
         tailorizer = Tailorizer('darcs2cdv', self.config)
         tailorizer()
-
-    def testDarcsToCodevilleUpdate(self):
-        "Test darcs to codeville update"
-
-        tailorizer = Tailorizer('darcs2cdv', self.config)
+        self.assert_(tailorizer.exists())
         tailorizer()
 
-    def testDarcsToSubversionBootstrap(self):
-        "Test darcs to subversion bootstrap"
+    def testDarcsToSubversion(self):
+        "Test darcs to subversion"
 
         tailorizer = Tailorizer('darcs2svn', self.config)
         tailorizer()
-
-    def testDarcsToSubversionUpdate(self):
-        "Test darcs to subversion update"
-
-        tailorizer = Tailorizer('darcs2svn', self.config)
+        self.assert_(tailorizer.exists())
         tailorizer()
 
     ## The other way
 
-    def testSubversionToDarcsBootstrap(self):
-        "Test reversed darcs to subversion bootstrap"
+    def testSubversionToDarcs(self):
+        "Test subversion to darcs"
 
         tailorizer = Tailorizer('svn2darcs', self.config)
         tailorizer()
-
-    def testSubversionToDarcsUpdate(self):
-        "Test reversed darcs to subversion update"
-
-        tailorizer = Tailorizer('svn2darcs', self.config)
+        self.assert_(tailorizer.exists())
         tailorizer()
