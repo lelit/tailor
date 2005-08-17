@@ -41,7 +41,7 @@ source = darcs:tailor
 [darcs2svn]
 target = svn:tailor
 root-directory = /tmp/tailor-tests/darcs2svn
-source = darcs:tailor
+source = darcs:svntailor
 start-revision = INITIAL
 
 [svn2darcs]
@@ -63,6 +63,10 @@ bzr-command = /opt/src/bzr.dev/bzr
 [svn:tailor]
 repository = file:///tmp/tailor-tests/svnrepo
 module = tailor
+subdir = svnside
+
+[darcs:svntailor]
+subdir = darcside
 """
 
 from unittest import TestCase, TestSuite
