@@ -10,6 +10,9 @@ The easiest way to propagate changes from one VC control system to one
 of an another kind is having a single directory containing a live
 working copy shared between the two VC systems.
 
+In a slightly more elaborated way, the source and the target system may
+use separate directories, that gets rsynced when needed.
+
 This module implements `DualWorkingDir`, which instances have a
 `source` and `target` properties offering the right capabilities to do
 the job.
@@ -19,6 +22,7 @@ __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir, InvocationError
 from target import SyncronizableTargetWorkingDir
+from shwrap import ExternalCommand
 
 IGNORED_METADIRS = []
 
@@ -47,8 +51,6 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # SyncronizableTargetWorkingDir
 
         self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
-        self.importFirstRevision = self.target.importFirstRevision
-        self.replayChangeset = self.target.replayChangeset
 
     def setStateFile(self, state_file):
         """
@@ -69,3 +71,20 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         return self.source.applyPendingChangesets(replay=self.replayChangeset,
                                                   applyable=applyable,
                                                   applied=applied)
+
+    def importFirstRevision(self, source_repo, changeset, initial):
+        if self.source.basedir <> self.target.basedir:
+            self._syncTargetWithSource()
+        self.target.importFirstRevision(source_repo, changeset, initial)
+
+    def replayChangeset(self, changeset):
+        if self.source.basedir <> self.target.basedir:
+            self._syncTargetWithSource()
+        self.target.replayChangeset(changeset)
+
+    def _syncTargetWithSource(self):
+        cmd = ['rsync', '--delete', '--archive',
+               '--exclude', self.source.repository.METADIR,
+               '--exclude', self.target.repository.METADIR]
+        rsync = ExternalCommand(command=cmd)
+        rsync.execute(self.source.basedir+'/', self.target.basedir)
