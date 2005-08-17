@@ -49,8 +49,9 @@ class Repository(object):
         self.module = config.get(self.name, 'module') or \
                       config.get(self.name, '%s-module' % which)
         self.rootdir = config.get(self.name, 'root-directory',
-                                  self.project.rootdir)
-        self.subdir = config.get(self.name, 'subdir', self.project.subdir)
+                                  vars={'root-directory': self.project.rootdir})
+        self.subdir = config.get(self.name, 'subdir',
+                                 vars={'subdir': self.project.subdir})
 
     def _validateConfiguration(self):
         """

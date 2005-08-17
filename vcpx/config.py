@@ -53,12 +53,13 @@ class Config(SafeConfigParser):
         defaultp = self.getTuple('DEFAULT', 'projects')
         return defaultp or [s for s in self.sections() if not ':' in s]
 
-    def get(self, section, option, default=None):
+    def get(self, section, option, default=None, vars=None):
         """
         Return the requested option value if present, otherwise the default.
         """
-        if self.has_option(section, option):
-            value = SafeConfigParser.get(self, section, option)
+
+        if self.has_option(section, option) or (vars and option in vars):
+            value = SafeConfigParser.get(self, section, option, vars=vars)
             if value == 'None':
                 return default
             elif value == 'True':
