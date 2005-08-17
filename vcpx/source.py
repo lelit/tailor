@@ -220,11 +220,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         last = self._checkoutUpstreamRevision(revision)
+        # Notify the state file about latest applied changeset
         self.state_file.applied(last)
-        # Some backend may have already fetched the remaining history
-        pending = getattr(self, 'pending', None)
-        if pending:
-            self.state_file.setPendingChangesets(pending)
         return last
 
     def _checkoutUpstreamRevision(self, revision):
