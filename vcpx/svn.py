@@ -350,6 +350,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(author, propname='svn:author')
 
+        cmd = [self.repository.SVN_CMD, "update", "--quiet"]
+        ExternalCommand(cwd=self.basedir, command=cmd).execute()
+
     def _removePathnames(self, names):
         """
         Remove some filesystem objects.
