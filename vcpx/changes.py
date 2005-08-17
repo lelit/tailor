@@ -117,6 +117,16 @@ class Changeset(object):
         self.entries = entries or []
         self.unidiff = None        # This is the unidiff of the whole changeset
 
+    def __eq__(self, other):
+        return (self.revision == other.revision and
+                self.date == other.date and
+                self.author == other.author)
+
+    def __ne__(self, other):
+        return (self.revision <> other.revision or
+                self.date <> other.date or
+                self.author <> other.author)
+
     def addEntry(self, entry, revision):
         """
         Facility to add an entry.

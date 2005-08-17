@@ -82,13 +82,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
         last = None
         conflicts = []
 
-        if not self.pending:
-            return last, conflicts
-
         try:
-            while self.pending:
-                c = self.pending[0]
-
+            for c in self.state_file:
                 # Give the opportunity to subclasses to stop the application
                 # of the queue, before the application of the patch by the
                 # source backend.
@@ -122,17 +117,17 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     if replay:
                         replay(c)
 
-                # Remove it from the queue and remember it for the finally
-                # clause
-                last = self.pending.pop(0)
+                # Remember it for the finally clause and notify the state
+                # file so that it gets removed from the queue
+                last = c
+                self.state_file.applied()
 
                 # Another hook (last==c here)
                 if applied:
                     applied(last)
         finally:
             # For whatever reason we exit the loop, save the last state
-            if last is not None:
-                self.state_file.write(last.revision, self.pending)
+            self.state_file.finalize()
 
         return last, conflicts
 
@@ -180,13 +175,20 @@ class UpdatableSourceWorkingDir(WorkingDir):
     def getPendingChangesets(self, sincerev=None):
         """
         Load the pending changesets from the state file, or query the
-        upstream repository if there's none.
+        upstream repository if there's none. Return an iterator over
+        pending changesets.
         """
 
-        revision, self.pending = self.state_file.load()
-        if not self.pending:
-            self.pending = self._getUpstreamChangesets(revision or sincerev)
-        return self.pending
+        pending = len(self.state_file)
+        if pending == 0:
+            last = self.state_file.lastAppliedChangeset()
+            if last:
+                revision = last.revision
+            else:
+                revision = sincerev
+            changesets = self._getUpstreamChangesets(revision)
+            self.state_file.setPendingChangesets(changesets)
+        return self.state_file
 
     def _getUpstreamChangesets(self, sincerev):
         """
@@ -218,7 +220,11 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         last = self._checkoutUpstreamRevision(revision)
-        self.state_file.write(last.revision, getattr(self, 'pending', None))
+        self.state_file.applied(last)
+        # Some backend may have already fetched the remaining history
+        pending = getattr(self, 'pending', None)
+        if pending:
+            self.state_file.setPendingChangesets(pending)
         return last
 
     def _checkoutUpstreamRevision(self, revision):

@@ -284,7 +284,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 "revision '%s'" % revision)
 
         if timestamp == 'INITIAL':
-            timestamp = csets[0].date.isoformat(sep=' ')
+            cset = csets.next()
+            timestamp = cset.date.isoformat(sep=' ')
+        else:
+            cset = None
 
         if not exists(join(self.basedir, 'CVS')):
             cmd = [self.repository.CVS_CMD, "-q", "-d",
@@ -319,8 +322,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # out the actual cvsps revision
 
         found = False
-        while csets:
-            cset = csets.pop(0)
+        if cset is None:
+            try:
+                cset = csets.next()
+            except StopIteration:
+                cset = None
+        while cset is not None:
             for m in cset.entries:
                 info = entries.getFileInfo(m.name)
                 if info:
@@ -332,6 +339,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             if found:
                 last = cset
                 break
+
+            try:
+                cset = csets.next()
+            except StopIteration:
+                cset = None
 
         if not found:
             raise TargetInitializationFailure(
