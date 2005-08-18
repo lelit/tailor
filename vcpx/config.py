@@ -11,7 +11,7 @@ Handle the configuration details.
 
 __docformat__ = 'reStructuredText'
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoSectionError, DEFAULTSECT
 
 class ConfigurationError(Exception):
     """Configuration error"""
