@@ -260,6 +260,7 @@ BOOTSTRAP_OPTIONS = [
 
 VC_SPECIFIC_OPTIONS = [
     make_option("--use-svn-propset", action="store_true", default=False,
+                dest="use_propset",
                 help="Use 'svn propset' to set the real date and author of "
                      "each commit, instead of appending these information to "
                      "the changelog. This requires some tweaks on the SVN "
