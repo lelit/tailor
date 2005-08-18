@@ -415,9 +415,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not self.repository.repository:
             return
 
-        cmd = [self.repository.SVN_CMD, "info"]
-        svninfo = ExternalCommand(command=cmd)
-        svninfo.execute(self.repository.repository)
+        # Verify the existence of repository by listing its root
+        cmd = [self.repository.SVN_CMD, "ls"]
+        svnls = ExternalCommand(command=cmd)
+        svnls.execute(self.repository.repository)
 
         if svninfo.exit_status:
             if self.repository.repository.startswith('file:///'):
