@@ -420,7 +420,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         svnls = ExternalCommand(command=cmd)
         svnls.execute(self.repository.repository)
 
-        if svninfo.exit_status:
+        if svnls.exit_status:
             if self.repository.repository.startswith('file:///'):
                 self.__createRepository(self.repository.repository,
                                         self.repository.module)
