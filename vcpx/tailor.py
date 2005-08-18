@@ -326,7 +326,7 @@ def main():
 
             for projname in args:
                 tailorizer = Tailorizer(projname, config)
-                tailorizer(options)
+                tailorizer()
         else:
             for omit in ['source-kind', 'target-kind',
                          'source-module', 'target-module',
@@ -369,6 +369,6 @@ def main():
 
             if options.debug:
                 tailorizer = Tailorizer('project', config)
-                tailorizer(options)
+                tailorizer()
             elif not options.verbose:
                 sys.stderr.write("Operation not performed, try --verbose\n")
