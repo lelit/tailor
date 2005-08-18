@@ -130,40 +130,35 @@ class TailorTest(TestCase):
         "Test darcs to BazaarNG"
 
         tailorizer = Tailorizer('darcs2bzr', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     def testDarcsToBazaarngNative(self):
         "Test darcs to BazaarNG (native)"
 
         tailorizer = Tailorizer('darcs2bzrng', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     def testDarcsToMercurial(self):
         "Test darcs to mercurial"
 
         tailorizer = Tailorizer('darcs2hg', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     def testDarcsToCodeville(self):
         "Test darcs to codeville"
 
         tailorizer = Tailorizer('darcs2cdv', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     def testDarcsToSubversion(self):
         "Test darcs to subversion"
 
         tailorizer = Tailorizer('darcs2svn', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     ## The other way
@@ -172,14 +167,12 @@ class TailorTest(TestCase):
         "Test subversion to darcs"
 
         tailorizer = Tailorizer('svn2darcs', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()
 
     def testCvsToDarcs(self):
         "Test CVS to darcs"
 
         tailorizer = Tailorizer('cvs2darcs', self.config)
-        tailorizer()
-        self.assert_(tailorizer.exists())
+        self.assert_(not tailorizer.exists())
         tailorizer()

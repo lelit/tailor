@@ -157,8 +157,7 @@ class Tailorizer(Project):
 
         if not self.exists():
             self.bootstrap()
-        else:
-            self.update()
+        self.update()
 
 
 GENERAL_OPTIONS = [
