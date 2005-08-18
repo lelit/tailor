@@ -112,7 +112,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         else:
             copy.execute(oldname, newname)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
         Execute ``hg init``.
         """
@@ -122,16 +122,15 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         if not exists(self.basedir):
             makedirs(self.basedir)
-        elif exists(join(self.basedir, self.repository.METADIR)):
-            return
 
-        init = ExternalCommand(cwd=self.basedir,
-                               command=[self.repository.HG_CMD, "init"])
-        init.execute()
+        if not exists(join(self.basedir, self.repository.METADIR)):
+            init = ExternalCommand(cwd=self.basedir,
+                                   command=[self.repository.HG_CMD, "init"])
+            init.execute()
 
-        if init.exit_status:
-            raise TargetInitializationFailure(
-                "%s returned status %s" % (str(init), init.exit_status))
+            if init.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(init), init.exit_status))
 
     def _prepareWorkingDirectory(self, source_repo):
         """

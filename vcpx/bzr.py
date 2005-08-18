@@ -79,27 +79,27 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.BZR_CMD, "rename"]
         ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
-        Execute ``bzr init``.
+        Create the base directory if it doesn't exist, and the
+        repository as well in the new working directory, executing
+        ``bzr init``.
         """
 
         from os.path import join, exists
         from os import makedirs
-        from os.path import join, exists
 
         if not exists(self.basedir):
             makedirs(self.basedir)
-        elif exists(join(self.basedir, self.repository.METADIR)):
-            return
 
-        cmd = [self.repository.BZR_CMD, "init"]
-        init = ExternalCommand(cwd=self.basedir, command=cmd)
-        init.execute()
+        if not exists(join(self.basedir, self.repository.METADIR)):
+            cmd = [self.repository.BZR_CMD, "init"]
+            init = ExternalCommand(cwd=self.basedir, command=cmd)
+            init.execute()
 
-        if init.exit_status:
-            raise TargetInitializationFailure(
-                "%s returned status %s" % (str(init), init.exit_status))
+            if init.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(init), init.exit_status))
 
     def _prepareWorkingDirectory(self, source_repo):
         """

@@ -436,9 +436,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if renamed:
                 rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
-        Execute ``darcs initialize``.
+        Create the base directory if it doesn't exist, and execute
+        ``darcs initialize`` if needed.
         """
 
         from os import makedirs
@@ -446,17 +447,16 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if not exists(self.basedir):
             makedirs(self.basedir)
-        elif exists(join(self.basedir, self.repository.METADIR)):
-            return
 
-        init = ExternalCommand(cwd=self.basedir,
-                               command=[self.repository.DARCS_CMD,
-                                        "initialize"])
-        init.execute()
+        if not exists(join(self.basedir, self.repository.METADIR)):
+            init = ExternalCommand(cwd=self.basedir,
+                                   command=[self.repository.DARCS_CMD,
+                                            "initialize"])
+            init.execute()
 
-        if init.exit_status:
-            raise TargetInitializationFailure(
-                "%s returned status %s" % (str(init), init.exit_status))
+            if init.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(init), init.exit_status))
 
     def _prepareWorkingDirectory(self, source_repo):
         """

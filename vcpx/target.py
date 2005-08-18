@@ -251,12 +251,12 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         Do anything required to setup the hosting working directory.
         """
 
-        self._prepareTargetRepository(source_repo)
         self._prepareWorkingDirectory(source_repo)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
-        Possibly create the repository, when overriden by subclasses.
+        Possibly create or connect to the repository, when overriden
+        by subclasses.
         """
 
     def _prepareWorkingDirectory(self, source_repo):

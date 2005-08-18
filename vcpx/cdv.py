@@ -84,18 +84,27 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.CDV_CMD, "rename"]
         ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
-        Execute ``cdv init``.
+        Create the base directory if it doesn't exist, and the
+        repository as well in the new working directory, executing
+        a ``cdv init`` there.
         """
 
-        init = ExternalCommand(cwd=self.basedir,
-                               command=[self.repository.CDV_CMD, "init"])
-        init.execute()
+        from os.path import join, exists
+        from os import makedirs
 
-        if init.exit_status:
-            raise TargetInitializationFailure(
-                "%s returned status %s" % (str(init), init.exit_status))
+        if not exists(self.basedir):
+            makedirs(self.basedir)
+
+        if not exists(self.basedir, self.repository.METADIR):
+            init = ExternalCommand(cwd=self.basedir,
+                                   command=[self.repository.CDV_CMD, "init"])
+            init.execute()
+
+            if init.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(init), init.exit_status))
 
     def _prepareWorkingDirectory(self, source_repo):
         """

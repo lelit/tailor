@@ -407,7 +407,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                                   "one level directory?" %
                                                   target_module)
 
-    def _prepareTargetRepository(self, source_repo):
+    def _prepareTargetRepository(self):
         """
         Check for target repository existence, eventually create it.
         """
