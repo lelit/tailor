@@ -28,6 +28,11 @@ target = bzr:tailor
 root-directory = /tmp/tailor-tests/darcs2bzr
 source = darcs:tailor
 
+[darcs2bzrng]
+target = bzrng:tailor
+root-directory = /tmp/tailor-tests/darcs2bzrng
+source = darcs:tailor
+
 [darcs2cdv]
 target = cdv:tailor
 root-directory = /tmp/tailor-tests/darcs2cdv
@@ -55,6 +60,9 @@ repository = ~/WiP/cvsync
 
 [bzr:tailor]
 bzr-command = /opt/src/bzr.dev/bzr
+
+[bzrng:tailor]
+python-path = /opt/src/bzr.dev
 
 [cdv:tailor]
 
@@ -122,6 +130,14 @@ class TailorTest(TestCase):
         "Test darcs to BazaarNG"
 
         tailorizer = Tailorizer('darcs2bzr', self.config)
+        tailorizer()
+        self.assert_(tailorizer.exists())
+        tailorizer()
+
+    def testDarcsToBazaarngNative(self):
+        "Test darcs to BazaarNG (native)"
+
+        tailorizer = Tailorizer('darcs2bzrng', self.config)
         tailorizer()
         self.assert_(tailorizer.exists())
         tailorizer()

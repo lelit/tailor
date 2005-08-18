@@ -112,6 +112,18 @@ class BzrRepository(Repository):
         Repository._load(self, config, which)
         self.BZR_CMD = config.get(self.name, 'bzr-command', self.BZR_CMD)
 
+class BzrngRepository(Repository):
+    METADIR = '.bzr'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        ppath = config.get(self.name, 'python-path')
+        if ppath:
+            from sys import path
+
+            if ppath not in path:
+                path.insert(0, ppath)
+
 
 class CdvRepository(Repository):
     METADIR = '.cdv'
