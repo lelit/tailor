@@ -106,12 +106,17 @@ class TailorTest(TestCase):
         from os.path import expanduser
 
         p = Tailorizer('darcs2svn', self.config)
+        self.assertEqual(p.source.subdir, 'darcside')
         self.assertEqual(p.rootdir, '/tmp/tailor-tests/darcs2svn')
         self.assertEqual(p.source.repository, expanduser('~/WiP/cvsync'))
         self.assertEqual(p.target.repository,
                          'file:///tmp/tailor-tests/svnrepo')
         self.assertEqual(p.state_file.filename,
                          '/tmp/tailor-tests/darcs2svn/tailor.state')
+
+        tailorizer = Tailorizer('cvs2darcs', self.config)
+        self.assertEqual(tailorizer.subdir, 'pxlib')
+        self.assertEqual(tailorizer.source.subdir, 'pxlib')
 
     def testDarcsToBazaarng(self):
         "Test darcs to BazaarNG"
@@ -159,8 +164,6 @@ class TailorTest(TestCase):
         "Test CVS to darcs"
 
         tailorizer = Tailorizer('cvs2darcs', self.config)
-        self.assertEqual(tailorizer.subdir, 'pxlib')
-        self.assertEqual(tailorizer.source.subdir, 'pxlib')
         tailorizer()
         self.assert_(tailorizer.exists())
         tailorizer()
