@@ -230,3 +230,9 @@ class UpdatableSourceWorkingDir(WorkingDir):
         """
 
         raise "%s should override this method" % self.__class__
+
+    def _prepareSourceRepository(self):
+        """
+        Possibly connect to the source repository, when overriden
+        by subclasses.
+        """

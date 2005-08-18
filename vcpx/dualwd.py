@@ -39,6 +39,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         global IGNORED_METADIRS
 
         self.source = source_repo.workingDir()
+        self.source._prepareSourceRepository()
+
         self.target = target_repo.workingDir()
 
         IGNORED_METADIRS = [source_repo.METADIR, target_repo.METADIR]
