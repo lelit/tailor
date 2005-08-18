@@ -53,23 +53,48 @@ class Config(SafeConfigParser):
         defaultp = self.getTuple('DEFAULT', 'projects')
         return defaultp or [s for s in self.sections() if not ':' in s]
 
-    def get(self, section, option, default=None, vars=None):
-        """
-        Return the requested option value if present, otherwise the default.
+    def get(self, section, option, default=None, raw=False, vars=None):
+        """Get an option value for a given section or the default value.
+
+        All % interpolations are expanded in the return values, based on the
+        defaults passed into the constructor, unless the optional argument
+        `raw' is true.  Additional substitutions may be provided using the
+        `vars' argument, which must be a dictionary whose contents overrides
+        any pre-existing defaults, but not those in the given section.
+
+        The section DEFAULT is special.
         """
 
-        if self.has_option(section, option) or (vars and option in vars):
-            value = SafeConfigParser.get(self, section, option, vars=vars)
-            if value == 'None':
-                return default
-            elif value == 'True':
-                return True
-            elif value == 'False':
-                return False
-            else:
-                return value
-        else:
+        # Reimplement parent behaviour, that uses `vars` to override even
+        # the value in the specific section... Overriding the defaults
+        # seems a better idea
+
+        d = self._defaults.copy()
+        # Update with the entry specific variables
+        if vars is not None:
+            d.update(vars)
+        try:
+            d.update(self._sections[section])
+        except KeyError:
+            if section != DEFAULTSECT:
+                raise NoSectionError(section)
+        option = self.optionxform(option)
+        try:
+            value = d[option]
+        except KeyError:
+            value = default
+
+        if not raw:
+            value = self._interpolate(section, option, value, d)
+
+        if value == 'None':
             return default
+        elif value == 'True':
+            return True
+        elif value == 'False':
+            return False
+        else:
+            return value
 
     def getTuple(self, section, option, default=None):
         """
