@@ -202,7 +202,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         from re import escape
-        from os.path import join
 
         needspatchesopt = False
         if hasattr(changeset, 'darcs_hash'):
@@ -243,9 +242,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         line = output.readline()
         while line:
             if line.startswith('We have conflicts in the following files:'):
-                self.log_info("Conflict after 'darcs pull': '%s'" % line)
                 files = output.readline()[:-1].split('./')[1:]
-                conflicts.extend([join(self.basedir,f) for f in files])
+                self.log_info("Conflict after 'darcs pull': '%s'" %
+                              ' '.join(files))
+                conflicts.extend(['./' + f for f in files])
             line = output.readline()
 
         cmd = [self.repository.DARCS_CMD, "changes", selector, revtag,
@@ -256,6 +256,21 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             changeset.entries.extend(last[0].entries)
 
         return conflicts
+
+    def _handleConflict(self, changeset, conflicts, conflict):
+        """
+        Handle the conflict raised by the application of the upstream changeset.
+
+        Override parent behaviour: with darcs, we need to execute a revert
+        on the conflicted files, **trashing** local changes, but there should
+        be none of them in tailor context.
+        """
+
+        self.log_info("Reverting changes to '%s', to solve the conflict" %
+                      ' '.join(conflict))
+        cmd = [self.repository.DARCS_CMD, "revert", "--all"]
+        revert = ExternalCommand(cwd=self.basedir, command=cmd)
+        revert.execute(conflict)
 
     def _checkoutUpstreamRevision(self, revision):
         """
