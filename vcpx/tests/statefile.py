@@ -7,7 +7,7 @@
 
 from unittest import TestCase, TestSuite
 from cStringIO import StringIO
-from vcpx.project import StateFile
+from vcpx.statefile import StateFile
 
 class StateFileTest(TestCase):
 
