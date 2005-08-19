@@ -64,7 +64,7 @@ your system to use it.  It has been successfully used with Python 2.3
 and 2.4.
 
 Since it relies on external tools to do the real work such as `cvs`,
-`darcs` and `svn`, they need to be installed as well, although only
+`darcs` [#]_ and `svn`, they need to be installed as well, although only
 those you will actually use.
 
 Make tailor executable::
@@ -76,6 +76,10 @@ along with the vcpx directory to a location in your PATH.
 
 There's even a standard setup.py that you may use to install the
 script using Python conventional distutils.
+
+.. [#] Darcs 1.0.2 is too old, 1.0.3 is good, 1.0.4 (the fourth
+       release candidate is under final testing) is recommended since
+       it's faster in most operations!
 
 
 Testing
