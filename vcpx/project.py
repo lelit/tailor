@@ -23,7 +23,49 @@ class UnknownProjectError(Exception):
 class Project(object):
     """
     This class collects the information related to a single project, such
-    as its source and target repositories and state file.
+    as its source and target repositories and state file. All the setup
+    comes from a section in the configuration file (.ini-like format) with
+    the same name as the project.
+
+    Mandatory options are:
+
+    root-directory
+      This is where all the fun will happen: this directory will contain
+      the source and the target working copy, and usually the state and
+      the log file. It support the conventional `~user` to indicate user's
+      home directory.
+
+    subdir
+      This is the subdirectory, relative to the `root-directory`, where
+      tailor will extract the source working copy. It may be '.' for some
+      backend kinds.
+
+    state-file
+      Name of the state file needed to store tailor last activity.
+
+    source
+      The source repository: a repository name is something like
+      "darcs:somename", that will be loaded from the homonymous section
+      in the configuration.
+
+    target
+      The counterpart of `source`, the repository that will receive the
+      changes coming from there.
+
+    Non mandatory options:
+
+    before-commit
+      This is a function name, or a sequence of function names enclosed
+      by brackets, that will be executed on each changeset just before
+      it get replayed on the target system: this may be used to perform
+      any kind of alteration on the content of the changeset, or to skip
+      some of them.
+
+    after-commit
+      This is a function name, or a sequence of function names enclosed
+      by brackets, that will be executed on each changeset just after
+      the commit on the target system: this may be used for example to
+      create a tag.
     """
 
     def __init__(self, name, config):
