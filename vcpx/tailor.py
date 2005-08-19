@@ -17,7 +17,6 @@ from optparse import OptionParser, OptionGroup, make_option
 from config import Config
 from project import Project
 from source import InvocationError
-from session import interactive
 
 class Tailorizer(Project):
     """
@@ -157,8 +156,6 @@ class Tailorizer(Project):
 
 
 GENERAL_OPTIONS = [
-    make_option("-i", "--interactive", default=False, action="store_true",
-                help="Start an interactive session."),
     make_option("-D", "--debug", dest="debug",
                 action="store_true", default=False,
                 help="Print each executed command. This also keeps "
@@ -299,72 +296,69 @@ def main():
 
     options, args = parser.parse_args()
 
-    if options.interactive:
-        interactive(options, args)
+    defaults = {}
+    for k,v in options.__dict__.items():
+        if k <> 'configfile':
+            defaults[k.replace('_', '-')] = str(v)
+
+    if options.configfile or (len(sys.argv)==2 and len(args)==1):
+        # Either we have a --configfile, or there are no options
+        # and a single argument (to support shebang style scripts)
+
+        if not options.configfile:
+            options.configfile = sys.argv[1]
+            args = None
+
+        config = Config(open(options.configfile), defaults)
+
+        if not args:
+            args = config.projects()
+
+        for projname in args:
+            tailorizer = Tailorizer(projname, config)
+            tailorizer()
     else:
-        defaults = {}
-        for k,v in options.__dict__.items():
-            if k not in ['interactive', 'configfile']:
-                defaults[k.replace('_', '-')] = str(v)
+        for omit in ['source-kind', 'target-kind',
+                     'source-module', 'target-module',
+                     'source-repository', 'target-repository',
+                     'start-revision', 'subdir']:
+            if omit in defaults:
+                del defaults[omit]
 
-        if options.configfile or (len(sys.argv)==2 and len(args)==1):
-            # Either we have a --configfile, or there are no options
-            # and a single argument (to support shebang style scripts)
+        config = Config(None, defaults)
 
-            if not options.configfile:
-                options.configfile = sys.argv[1]
-                args = None
+        config.add_section('project')
+        source = options.source_kind + ':source'
+        config.set('project', 'source', source)
+        target = options.target_kind + ':target'
+        config.set('project', 'target', target)
+        config.set('project', 'root-directory', getcwd())
+        config.set('project', 'subdir', options.subdir or '.')
+        config.set('project', 'state-file', 'tailor.state')
+        config.set('project', 'start-revision', options.start_revision)
 
-            config = Config(open(options.configfile), defaults)
+        config.add_section(source)
+        config.set(source, 'repository', options.source_repository)
+        if options.source_module:
+            config.set(source, 'module', options.source_module)
 
-            if not args:
-                args = config.projects()
+        config.add_section(target)
+        if options.target_repository:
+            config.set(target, 'repository', options.target_repository)
+        if options.target_module:
+            config.set(target, 'module', options.target_module)
 
-            for projname in args:
-                tailorizer = Tailorizer(projname, config)
-                tailorizer()
-        else:
-            for omit in ['source-kind', 'target-kind',
-                         'source-module', 'target-module',
-                         'source-repository', 'target-repository',
-                         'start-revision', 'subdir']:
-                if omit in defaults:
-                    del defaults[omit]
+        if options.verbose:
+            import sys
 
-            config = Config(None, defaults)
+            sys.stderr.write("You should put the following configuration "
+                             "in some file, adjust it as needed\n"
+                             "and use --configfile option with that "
+                             "file as argument:\n")
+            config.write(sys.stdout)
 
-            config.add_section('project')
-            source = options.source_kind + ':source'
-            config.set('project', 'source', source)
-            target = options.target_kind + ':target'
-            config.set('project', 'target', target)
-            config.set('project', 'root-directory', getcwd())
-            config.set('project', 'subdir', options.subdir or '.')
-            config.set('project', 'state-file', 'tailor.state')
-            config.set('project', 'start-revision', options.start_revision)
-
-            config.add_section(source)
-            config.set(source, 'repository', options.source_repository)
-            if options.source_module:
-                config.set(source, 'module', options.source_module)
-
-            config.add_section(target)
-            if options.target_repository:
-                config.set(target, 'repository', options.target_repository)
-            if options.target_module:
-                config.set(target, 'module', options.target_module)
-
-            if options.verbose:
-                import sys
-
-                sys.stderr.write("You should put the following configuration "
-                                 "in some file, adjust it as needed\n"
-                                 "and use --configfile option with that "
-                                 "file as argument:\n")
-                config.write(sys.stdout)
-
-            if options.debug:
-                tailorizer = Tailorizer('project', config)
-                tailorizer()
-            elif not options.verbose:
-                sys.stderr.write("Operation not performed, try --verbose\n")
+        if options.debug:
+            tailorizer = Tailorizer('project', config)
+            tailorizer()
+        elif not options.verbose:
+            sys.stderr.write("Operation not performed, try --verbose\n")
