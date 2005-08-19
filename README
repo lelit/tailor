@@ -52,6 +52,7 @@ two way sync::
 .. _cvs: http://www.nongnu.org/cvs/
 .. _darcs: http://www.darcs.net/
 .. _mercurial: http://www.selenic.com/mercurial/
+.. _monotone: http://www.venge.net/monotone/
 .. _subversion: http://subversion.tigris.org/
 .. _tla: http://www.gnuarch.org/arch/index.html
 
@@ -493,8 +494,6 @@ Tla support
 
 Tla_ support was contributed by `Robin Farine
 <robin.farine@terminus.org>`_.
-
-.. _monotone: http://www.venge.net/monotone/
 
 
 License
