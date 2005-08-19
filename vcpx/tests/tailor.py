@@ -94,6 +94,7 @@ from unittest import TestCase, TestSuite
 from cStringIO import StringIO
 from vcpx.config import Config
 from vcpx.tailor import Tailorizer
+from vcpx.shwrap import ExternalCommand, PIPE
 
 class TailorTest(TestCase):
 
@@ -107,6 +108,21 @@ class TailorTest(TestCase):
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')
+
+    def diffWhenPossible(self, tailorizer):
+        "Diff the resulting sides"
+
+        dwd = tailorizer.workingDir()
+        if dwd.source.basedir <> dwd.target.basedir:
+            cmd = ["diff", "-r", "-u",
+                   "-x", tailorizer.source.METADIR,
+                   "-x", tailorizer.target.METADIR]
+            d = ExternalCommand(command=cmd)
+            out = d.execute(dwd.source.basedir, dwd.target.basedir,
+                            stdout=PIPE)[0]
+            return out.read()
+        else:
+            return ""
 
     def testConfiguration(self):
         "Test basic configuration"
@@ -132,6 +148,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('darcs2bzr', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     def testDarcsToBazaarngNative(self):
         "Test darcs to BazaarNG (native)"
@@ -139,6 +156,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('darcs2bzrng', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     def testDarcsToMercurial(self):
         "Test darcs to mercurial"
@@ -146,6 +164,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('darcs2hg', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     def testDarcsToCodeville(self):
         "Test darcs to codeville"
@@ -153,6 +172,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('darcs2cdv', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     def testDarcsToSubversion(self):
         "Test darcs to subversion"
@@ -160,6 +180,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('darcs2svn', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     ## The other way
 
@@ -169,6 +190,7 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('svn2darcs', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
     def testCvsToDarcs(self):
         "Test CVS to darcs"
@@ -176,3 +198,4 @@ class TailorTest(TestCase):
         tailorizer = Tailorizer('cvs2darcs', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
