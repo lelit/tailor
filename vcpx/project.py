@@ -14,6 +14,7 @@ update, layering on top of DualWorkingDir.
 __docformat__ = 'reStructuredText'
 
 from cPickle import load, dump
+from vcpx.config import ConfigurationError
 
 class StateFile(object):
     """
@@ -234,7 +235,7 @@ class Project(object):
         try:
             self.before_commit = [self.config.namespace[f] for f in before]
         except KeyError, e:
-            raise ConfigurationError('Project %s before-commit references '
+            raise ConfigurationError('Project "%s" before-commit references '
                                      'unknown function: %s' %
                                      (self.name, str(e)))
 
@@ -242,7 +243,7 @@ class Project(object):
         try:
             self.after_commit = [self.config.namespace[f] for f in after]
         except KeyError, e:
-            raise ConfigurationError('Project %s after-commit references '
+            raise ConfigurationError('Project "%s" after-commit references '
                                      'unknown function: %s' %
                                      (self.name, str(e)))
 
