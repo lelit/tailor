@@ -65,6 +65,10 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         changeset.
         """
 
+        changeset = self._adaptChangeset(changeset)
+        if changeset is None:
+            return
+
         try:
             self._replayChangeset(changeset)
         except:
@@ -96,6 +100,43 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         entries = self._getCommitEntries(changeset)
         self._commit(changeset.date, changeset.author,
                      patchname, changelog, entries)
+        self._dismissChangeset(changeset)
+
+    def _adaptChangeset(self, changeset):
+        """
+        Do whatever needed before replay the changeset.
+
+        This execute the adapters defined by before-commit on the project:
+        each adapter is run in turn, and may return False to indicate that
+        the changeset shouldn't be replayed at all. They are otherwise
+        free to alter the changeset in any meaningful way.
+        """
+
+        from copy import copy
+
+        if self.repository.project.before_commit:
+            adapted = copy(changeset)
+
+            for adapter in self.repository.project.before_commit:
+                if not adapter(self, adapted):
+                    return None
+
+            return adapted
+        else:
+            return changeset
+
+    def _dismissChangeset(self, changeset):
+        """
+        Do whatever needed after commit.
+
+        This execute the adapters defined by after-commit on the project,
+        for example tagging in some way the target repository upon some
+        particular kind of changeset.
+        """
+
+        if self.repository.project.after_commit:
+            for farewell in self.repository.project.after_commit:
+                farewell(self, changeset)
 
     def _getCommitEntries(self, changeset):
         """

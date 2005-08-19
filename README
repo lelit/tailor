@@ -304,20 +304,48 @@ A common usage of this functionality is to define so called `hooks`,
 sequences of functions that are executed at particular points in
 the tailorization process.
 
-For example::
+Just to illustrate the functionality, consider the following example::
 
-    #!/usr/bin/env /home/lele/WiP/tailor/tailor
+    #!/usr/bin/env tailor
+
     """
+    [DEFAULT]
+    debug = False
+    verbose = True
+
     [project]
-    source = svn:repository
-    target = darcs:repository
-    before-commit = transform_crlf_to_lf
-    ...
+    target = bzrng:target
+    root-directory = /tmp/prova
+    state-file = tailor.state
+    source = darcs:source
+    before-commit = before
+    after-commit = after
+    start-revision = Almost arbitrarily tagging this as version 0.8
+
+    [bzrng:target]
+    python-path = /opt/src/bzr.dev
+    subdir = bzrside
+
+    [darcs:source]
+    repository = /home/lele/WiP/cvsync
+    subdir = darcside
     """
 
-    def transform_crlf_to_lf(context, changeset):
-        for e in changeset.entries:
-            ....
+    def before(wd, changeset):
+        print "BEFORE", changeset
+        changeset.author = "LELE"
+        return changeset
+
+    def after(wd, changeset):
+        print "AFTER", changeset
+
+With the above in a `script` called say ``tester``, just doing::
+
+    $ chmod 755 tester
+    $ ./tester
+
+will migrate the history from a darcs repository to a bazaar-ng one,
+forcing the author to a well-known name :-)
 
 .. [#] Tailor does actually read just the first two bytes from the
        file, and compare them with "#!", so you are free to choose
