@@ -1,6 +1,8 @@
 Tailor 1.0
 ##########
 
+.. contents::
+
 About
 =====
 
@@ -147,11 +149,11 @@ Examples
    b. Modify it as you like (mostly adjusting root-directories and the
       like)::
       
-       $ emacs myproject.tailor
+       $ emacs cmfcore.tailor
 
    c. Run tailor on it once, to bootstrap the project::
    
-       $ tailor -D -v --configfile myproject.tailor
+       $ tailor -D -v --configfile cmfcore.tailor
 
       If the target repository is on the local filesystem (ie, it
       starts with ``file:///``) and it does not exist, tailor
@@ -260,14 +262,14 @@ For example::
     projects = tailor
 
     [tailor]
-    root = /tmp/n9
+    root-directory = /tmp/n9
     source = darcs:tailor
     target = svn:tailor
     dont-refill-changelogs = True
     state-file = tailor.state
 
     [tailor-reverse]
-    root = /tmp/n9
+    root-directory = /tmp/n9
     source = svn:tailor
     target = darcs:tailor
     state-file = reverse.state
@@ -275,14 +277,67 @@ For example::
     [svn:tailor]
     repository = file:///tmp/testtai
     module = /project1
-
+    subdir = svnside
+    
     [darcs:tailor]
     repository = ~/WiP/cvsync
+    subdir = darcside
 
-.. hint:: If you execute the examples above with ``--verbose --debug``
-          **and without** ``--configfile``, tailor will write a
-          template config filled with the values specified by the
-          other options. You can redirect 
+The configuration may hold one or more `projects` and two or more
+`repositories`: project names do not contains colons ":",
+repository names must and the first part of the name before the
+colon specify the kind of the repository.  So, the above example
+contains two projects, one that goes from `darcs` to `subversion`, the
+other in the opposite direction.
+
+The ``[DEFAULT]`` section contains the default values, that will be
+used when a specific setting is missing from the particular section.
+
+You can specify on which project tailor should operate by
+giving its name on the command line, even more than one. When not
+explicitly given, tailor will look at ``projects`` in the
+``[DEFAULT]`` section, and if its missing it will loop over all
+projects in the configuration.
+
+The following simpler config just go in one direction, for a single
+project, so no need neither for ``[DEFAULT].projects`` nor command
+line arguments::
+
+    [pxlib]
+    source = cvs:pxlib
+    target = hg:pxlib
+    root-directory = ~/mypxlib
+    start-revision = INITIAL
+    subdir = pxlib
+    
+    [cvs:pxlib]
+    repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
+    module = pxlib
+
+    [hg:pxlib]
+    hg-command = /usr/local/bin/hg
+
+This will use a single directory, ``pxlib`` to contain both the source
+and the target system. If you prefer keeping the separated, you just
+need to specify a different directory for each repository, as in::
+
+    [pxlib]
+    source = cvs:pxlib
+    target = hg:pxlib
+    root-directory = ~/mypxlib
+    start-revision = INITIAL
+    
+    [cvs:pxlib]
+    repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
+    module = pxlib
+    subdir = original
+
+    [hg:pxlib]
+    hg-command = /usr/local/bin/hg
+    subdir = migrated
+
+This will extract upstream CVS sources into ``~/mypxlib/original``,
+and create a new Mercurial repository in ``~/mypxlib/migrated``.
 
 
 Using a Python script as configuration file
