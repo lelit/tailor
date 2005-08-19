@@ -6,11 +6,7 @@
 #
 
 """
-Implement the basic capabilities of the frontend.
-
-This implementation stores the relevant project information, needed to
-keep the whole thing going on, such as the last synced revision, in a
-unversioned file named ``tailor.info`` at the root.
+Implement the frontend functionalities.
 """
 
 __docformat__ = 'reStructuredText'
