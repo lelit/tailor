@@ -174,7 +174,9 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         exclude = []
 
         if self.state_file.filename.startswith(self.basedir):
-            exclude.append(self.state_file.filename[len(self.basedir)+1:])
+            sfrelname = self.state_file.filename[len(self.basedir)+1:]
+            exclude.append(sfrelname)
+            exclude.append(sfrelname+'.journal')
 
         if self.logfile.startswith(self.basedir):
             exclude.append(self.logfile[len(self.basedir)+1:])

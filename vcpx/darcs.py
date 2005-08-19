@@ -503,7 +503,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             boring.write(self.logfile[len(self.basedir)+1:])
             boring.write('$\n')
         if self.state_file.filename.startswith(self.basedir):
+            sfrelname = self.state_file.filename[len(self.basedir)+1:]
             boring.write('^')
-            boring.write(self.state_file.filename[len(self.basedir)+1:])
+            boring.write(sfrelname)
+            boring.write('$\n')
+            boring.write('^')
+            boring.write(sfrelname+'.journal')
             boring.write('$\n')
         boring.close()

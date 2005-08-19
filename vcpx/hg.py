@@ -152,8 +152,12 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
             ignore.write(self.logfile[len(self.basedir)+1:])
             ignore.write('$\n')
         if self.state_file.filename.startswith(self.basedir):
+            sfrelname = self.state_file.filename[len(self.basedir)+1:]
             ignore.write('^')
-            ignore.write(self.state_file.filename[len(self.basedir)+1:])
+            ignore.write(sfrelname)
+            ignore.write('$\n')
+            ignore.write('^')
+            ignore.write(sfrelname+'.journal')
             ignore.write('$\n')
         ignore.close()
 
