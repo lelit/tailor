@@ -1,7 +1,7 @@
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, `Baazar-NG`_
+Tailor is a tool to migrate changesets between ArX_, `Bazaar-NG`_
 CVS_, Codeville_, Darcs_, Mercurial_, Monotone_, Tla_ and Subversion_
 [#]_ repositories.
 
@@ -47,7 +47,7 @@ two way sync::
        To the opposite, Tla is supported only as a source system.
 
 .. _arx: http://www.nongnu.org/arx/
-.. _baazar-ng: http://www.bazaar-ng.org/
+.. _bazaar-ng: http://www.bazaar-ng.org/
 .. _codeville: http://www.codeville.org/
 .. _cvs: http://www.nongnu.org/cvs/
 .. _darcs: http://www.darcs.net/
@@ -457,8 +457,8 @@ contact me either by email or chatting there.
        from suggestions to bug reporting and fixing.
 
 
-Author
-======
+Authors
+=======
 
 Lele Gaifax <lele@nautilus.homeip.net>
 
@@ -470,6 +470,12 @@ ArX support
 -----------
 
 ArX_ support was contributed by `Walter Landry <wlandry@ucsd.edu>`_.
+
+Bazaar-NG support
+-----------------
+
+`Bazaar-NG`_ support was contributed by `Johan Rydberg
+<jrydberg@gnu.org>`_.
 
 Monotone support
 ----------------
