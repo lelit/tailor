@@ -19,6 +19,30 @@ from sys import stderr
 from os.path import exists, join, isdir
 from os import renames, access, F_OK
 
+class ExternalCommandChain:
+    """
+    This class implements command piping, i.e. a chain of ExternalCommand, each feeding 
+    its stdout to the stdin of next command in the chain
+    If a command fails, the chain breaks and returns error.
+    Note:
+    This class implements only a subset of ExternalCommand functionality
+    """
+    def __init__(self, command, cwd=None):
+        self.commandchain =command
+        self.cwd = cwd
+        self.exit_status = 0
+        
+    def executeChain(self):
+        out = None
+        for cmd in self.commandchain:
+            input = out
+            exc = ExternalCommand(cwd=self.cwd, command=cmd)
+            out, err = exc.execute(input=input, stdout=PIPE, stderr=PIPE)
+            self.exit_status = exc.exit_status
+            if self.exit_status:
+                break
+        return out, err
+
 class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
 
     ## SyncronizableTargetWorkingDir
