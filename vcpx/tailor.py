@@ -11,7 +11,7 @@ Implement the frontend functionalities.
 
 __docformat__ = 'reStructuredText'
 
-__version__ = '0.9.7'
+__version__ = '0.9.8'
 
 from optparse import OptionParser, OptionGroup, make_option
 from config import Config
