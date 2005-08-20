@@ -32,7 +32,7 @@ class Config(SafeConfigParser):
     def __init__(self, fp, defaults):
         from cStringIO import StringIO
 
-        SafeConfigParser.__init__(self, defaults)
+        SafeConfigParser.__init__(self)
         self.namespace = {}
         if fp:
             if fp.read(2) == '#!':
@@ -43,6 +43,9 @@ class Config(SafeConfigParser):
             else:
                 fp.seek(0)
                 self.readfp(fp)
+        # Override the defaults with the command line options
+        if defaults:
+            self._defaults.update(defaults)
 
     def projects(self):
         """
