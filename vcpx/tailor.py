@@ -152,6 +152,8 @@ class Tailorizer(Project):
 
         if not self.exists():
             self.bootstrap()
+            if pconfig('start-revision') == 'HEAD':
+                return
         self.update()
 
 
