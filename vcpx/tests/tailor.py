@@ -9,7 +9,7 @@
 [DEFAULT]
 dont-refill-changelogs = True
 target-module = None
-source-repository = ~/WiP/cvsync
+source-repository = %(TAILOR_REPO)s
 encoding = None
 target-repository = None
 use-svn-propset = False
@@ -21,7 +21,7 @@ remove-first-log-line = False
 patch-name-format = None
 verbose = True
 state-file = tailor.state
-start-revision = Almost arbitrarily tagging this as version 0.8
+start-revision = Version 0.9.7
 
 [darcs2bzr]
 target = bzr:tailor
@@ -56,7 +56,6 @@ source = svn:tailor
 start-revision = 1
 
 [darcs:tailor]
-repository = ~/WiP/cvsync
 
 [bzr:tailor]
 bzr-command = /opt/src/bzr.dev/bzr
@@ -99,12 +98,16 @@ from vcpx.shwrap import ExternalCommand, PIPE
 class TailorTest(TestCase):
 
     def setUp(self):
-        from os import mkdir
-        from os.path import exists
+        from os import mkdir, getcwd
+        from os.path import exists, split, join
         from atexit import register
         from shutil import rmtree
 
-        self.config = Config(StringIO(__doc__), {})
+        tailor_repo = getcwd()
+        while not exists(join(tailor_repo, '_darcs')):
+            tailor_repo = split(tailor_repo)[0]
+        self.tailor_repo = tailor_repo
+        self.config = Config(StringIO(__doc__), {'TAILOR_REPO': tailor_repo})
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')
@@ -132,7 +135,7 @@ class TailorTest(TestCase):
         p = Tailorizer('darcs2svn', self.config)
         self.assertEqual(p.source.subdir, 'darcside')
         self.assertEqual(p.rootdir, '/tmp/tailor-tests/darcs2svn')
-        self.assertEqual(p.source.repository, expanduser('~/WiP/cvsync'))
+        self.assertEqual(p.source.repository, self.tailor_repo)
         self.assertEqual(p.target.repository,
                          'file:///tmp/tailor-tests/svnrepo')
         self.assertEqual(p.state_file.filename,
