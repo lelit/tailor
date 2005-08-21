@@ -213,7 +213,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         else:
             selector = '--match'
             revtag = 'date "%s" && author "%s"' % (
-                changeset.date.strftime("%a %b %d %H:%M:%S UTC %Y"),
+                changeset.date.strftime("%Y%m%d%H%M%S"),
                 changeset.author)
             # The 'exact' matcher doesn't groke double quotes:
             # """currently there is no provision for escaping a double
