@@ -66,6 +66,12 @@ class Project(object):
       by brackets, that will be executed on each changeset just after
       the commit on the target system: this may be used for example to
       create a tag.
+
+    start-revision
+      This identifies from when tailor should start the migration. It can
+      be either ``INITIAL``, to indicate the start of the history, or
+      ``HEAD`` to indicate the current latest changeset, or a backend
+      specific way of indicate a particular revision/tag in the history.
     """
 
     def __init__(self, name, config):

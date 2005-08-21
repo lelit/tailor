@@ -397,6 +397,13 @@ subdir
   The name of the subdirectory, under ``root-directory``, that will
   contain the source and target repositories/working directories.
 
+start-revision
+  This identifies from when tailor should start the migration. It can
+  be either ``INITIAL``, to indicate the start of the history, or
+  ``HEAD`` to indicate the current latest changeset, or a backend
+  specific way of indicate a particular revision/tag in the history.
+  See also `CVS start-revision`_ above.
+
 
 Repositories
 ~~~~~~~~~~~~
