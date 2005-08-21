@@ -87,6 +87,19 @@ subdir = pxlib
 [cvs:pxlib]
 repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
 module = pxlib
+
+[cvs2hg]
+root-directory = /tmp/cvs2hg
+source = cvs:cmsmini
+target = hg:cmsmini
+start-revision = HEAD
+subdir = cmsmini
+
+[cvs:cmsmini]
+repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
+module = cmsmini
+
+[hg:cmsmini]
 """
 
 from unittest import TestCase, TestSuite
@@ -199,6 +212,14 @@ class TailorTest(TestCase):
         "Test CVS to darcs"
 
         tailorizer = Tailorizer('cvs2darcs', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testCvsToMercurial(self):
+        "Test CVS to Mercurial"
+
+        tailorizer = Tailorizer('cvs2hg', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
