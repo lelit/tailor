@@ -343,6 +343,21 @@ and create a new Mercurial repository in ``~/mypxlib/migrated``.
 Configuration sections
 ----------------------
 
+Default
+~~~~~~~
+
+The ``[DEFAULT]`` section in the configuration file may set the
+default value for any of the recognized options: when a value is
+missing from a specific section it is looked up in this section.
+
+One particular option, ``projects``, is meaningful only in the
+``[DEFAULT]`` section: it's a comma separated list of project names,
+the one that will be operated on by tailor when no project is
+specified on the command line.  When the there are no ``projects``
+setting nor any on the command line, tailor activates all configured
+projects, in order of appearance in the config file.
+
+
 Projects
 ~~~~~~~~
 
