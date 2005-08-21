@@ -222,6 +222,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         last = self._checkoutUpstreamRevision(revision)
         # Notify the state file about latest applied changeset
         self.state_file.applied(last)
+        self.state_file.finalize()
         return last
 
     def _checkoutUpstreamRevision(self, revision):
