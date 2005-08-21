@@ -21,8 +21,8 @@ BOOTSTRAP_PATCHNAME = 'Tailorization'
 BOOTSTRAP_CHANGELOG = """\
 Import of the upstream sources from
 
-  Repository: %(source_repository)s%(source_module)s
-  Revision:   %(revision)s
+ Repository: %(source_repository)s%(source_module)s
+   Revision: %(revision)s
 """
 
 class TargetInitializationFailure(Exception):
@@ -318,6 +318,8 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         revision = changeset.revision
         source_repository = source_repo.repository
         source_module = source_repo.module or ''
+        if source_module:
+            source_module = "\n     Module: " + source_module
         if initial:
             author = changeset.author
             patchname = changeset.log
