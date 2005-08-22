@@ -37,9 +37,16 @@ class BzrngWorkingDir(SyncronizableTargetWorkingDir):
 
         # FIXME: maybe we should construct the revision id here instead?
         #revision_id = "%s-%d" % (author, timestamp)
+        logmessage = []
+        if patchname:
+            logmessage.append(patchname)
+        if changelog:
+            logmessage.append(changelog)
         timestamp = int(mktime(date.timetuple()))
-        self._b.commit(changelog, committer=author, specific_files=entries,
-                       verbose=False, timestamp=timestamp)
+        self._b.commit('\n'.join(logmessage), committer=author,
+                       specific_files=entries,
+                       verbose=self.repository.project.verbose,
+                       timestamp=timestamp)
 
     def _removePathnames(self, entries):
         """Remove a sequence of entries"""
