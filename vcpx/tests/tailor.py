@@ -32,6 +32,7 @@ source = darcs:tailor
 target = bzrng:tailor
 root-directory = /tmp/tailor-tests/darcs2bzrng
 source = darcs:tailor
+patch-name-format = %(revision)s
 
 [darcs2cdv]
 target = cdv:tailor

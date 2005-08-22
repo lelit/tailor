@@ -128,8 +128,8 @@ class Tailorizer(Project):
         from target import SyncronizableTargetWorkingDir
         from changes import Changeset
 
-        def pconfig(option):
-            return self.config.get(self.name, option)
+        def pconfig(option, raw=False):
+            return self.config.get(self.name, option, raw=raw)
 
         ExternalCommand.VERBOSE = pconfig('verbose')
         ExternalCommand.DEBUG = pconfig('debug')
@@ -144,7 +144,7 @@ class Tailorizer(Project):
             import codecs, sys
             sys.stdout = codecs.getwriter(encoding)(sys.stdout)
 
-        pname_format = pconfig('patch-name-format')
+        pname_format = pconfig('patch-name-format', raw=True)
         if pname_format is not None:
             SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
         SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
