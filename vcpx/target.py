@@ -20,8 +20,7 @@ AUTHOR = "tailor"
 BOOTSTRAP_PATCHNAME = 'Tailorization'
 BOOTSTRAP_CHANGELOG = """\
 Import of the upstream sources from
-
- Repository: %(source_repository)s%(source_module)s
+%(source_repository)s
    Revision: %(revision)s
 """
 
@@ -316,10 +315,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         self._initializeWorkingDir()
         revision = changeset.revision
-        source_repository = source_repo.repository
-        source_module = source_repo.module or ''
-        if source_module:
-            source_module = "\n     Module: " + source_module
+        source_repository = str(source_repo)
         if initial:
             author = changeset.author
             patchname = changeset.log

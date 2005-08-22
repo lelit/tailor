@@ -12,6 +12,10 @@ Tailor purposes.
 
 __docformat__ = 'reStructuredText'
 
+REPO_DESCRIPTION = """\
+ Repository: %s
+       Kind: %s"""
+
 class Repository(object):
     """
     Collector for the configuration of a single repository.
@@ -24,8 +28,11 @@ class Repository(object):
         self._load(project.config, which)
 
     def __str__(self):
-        return "%s repository at %s%s" % (self.kind, self.repository,
-                                          self.module or '')
+
+        s = REPO_DESCRIPTION % (self.repository, self.kind)
+        if self.module:
+            s += "\n     Module: %s" % self.module
+        return s
 
     def _load(self, config, which):
         """

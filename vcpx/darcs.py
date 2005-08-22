@@ -18,7 +18,7 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from xml.sax import SAXException
 
 MOTD = """\
-This is the Darcs equivalent of
+Tailorized equivalent of
 %s
 """
 
