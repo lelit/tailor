@@ -419,6 +419,23 @@ start-revision
   specific way of indicate a particular revision/tag in the history.
   See also `CVS start-revision`_ above.
 
+patch-name-format
+  Some backends have a distinct notion of `patch name` and `change
+  log`, others just suggest a policy that the first line of the
+  message is a summary, the rest if present is a more detailed
+  description of the change.  With this option you can control the
+  format of the name, or of the first line of the changelog.
+
+  The prototype may contain ``%(keyword)s`` such as 'author', 'date',
+  'revision', 'firstlogline', 'remaininglog'.  It defaults to
+  `Tailorized "%(revision)s"`; setting it to the empty string means
+  that tailor will simply use the original changelog.
+
+remove-first-log-line
+  Remove the first line of the upstream changelog. This is intended to
+  go in pair with ``patch-name-format``, when using it's 'firstlogline'
+  variable to build the name of the patch.  By default is ``False``.
+
 
 Repositories
 ~~~~~~~~~~~~
