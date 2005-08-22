@@ -90,7 +90,7 @@ repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
 module = pxlib
 
 [cvs2hg]
-root-directory = /tmp/cvs2hg
+root-directory = /tmp/tailor-tests/cvs2hg
 source = cvs:cmsmini
 target = hg:cmsmini
 start-revision = HEAD
