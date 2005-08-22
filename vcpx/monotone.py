@@ -12,9 +12,10 @@ This module contains supporting classes for Monotone.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile, STDOUT
-from source import UpdatableSourceWorkingDir, \
+from source import UpdatableSourceWorkingDir, InvocationError, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from changes import ChangesetEntry,Changeset
 from sys import stderr
 from os.path import exists, join, isdir
 from os import renames, access, F_OK
@@ -33,15 +34,16 @@ class ExternalCommandChain:
         self.cwd = cwd
         self.exit_status = 0
         
-    def executeChain(self):
-        out = None
+    def execute(self):
+        outstr = None
         for cmd in self.commandchain:
-            input = out
+            input = outstr
             exc = ExternalCommand(cwd=self.cwd, command=cmd)
             out, err = exc.execute(input=input, stdout=PIPE, stderr=PIPE)
             self.exit_status = exc.exit_status
             if self.exit_status:
                 break
+            outstr = out.getvalue()
         return out, err
 
 class MonotoneLogParser:
@@ -53,13 +55,13 @@ class MonotoneLogParser:
         """
         Helper class. Matches a prefix, allowing access to the text following
         """
-        def __init_(self, str):
+        def __init__(self, str):
             self.str = str
             self.value=""
             
         def __call__(self, prefix):
-            if str.startswith(prfx):
-                self.value = str[len(prfx):].strip()
+            if self.str.startswith(prefix):
+                self.value = self.str[len(prefix):].strip()
                 return True
             else:
                 return False
@@ -78,83 +80,90 @@ class MonotoneLogParser:
         self.repository = repository
 
     def parse(self, revision):
+        from datetime import datetime
+ 
         self.revision=""
         self.ancestors=[]
         self.authors=[]
         self.dates=[]
         self.changelog=""
 
-        cmd = [self.repository.MONOTONE_CMD, "log", "--db", self.repository, "--last", 1, "--revision", revision]
+        cmd = [self.repository.MONOTONE_CMD, "log", "--db", self.repository.repository, "--last", "1", "--revision", revision]
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(output=True)
+        outstr = mtl.execute(stdout=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure("monotone log returned status %d" % mtl.exit_status)
     
-        # chset variables
-        self.chset = Changeset(revision)
-        logmsg = ""
-
+        logs = ""
+        comments = ""
         state = self.SINGLE
-        loglines = outstr.getvalue().splitlines()
+        loglines = outstr[0].getvalue().splitlines()
         for curline in loglines:
             
-            pr = PrefixRemover(curline)
-            if len(curline.strip())==0:
-                # empty lines reset state
-                state = self.SINGLE
-            elif pr("Revision:"):
+            pr = self.PrefixRemover(curline)
+            if pr("Revision:"):
                 if pr.value != revision:
                     raise GetUpstreamChangesetsFailure("Revision doesn't match. Expected %s, found %s" % revision, pr.value)
                 state = self.SINGLE
             elif pr("Ancestor:"):
-                ancestors.append(pr.value) # cset could be a merge and have multiple ancestors
+                if pr.value:
+                    self.ancestors.append(pr.value) # cset could be a merge and have multiple ancestors
                 state = self.SINGLE
             elif pr("Author:"):
-                authors.append(pr.value)
+                self.authors.append(pr.value)
                 state = self.SINGLE
             elif pr("Date:"):
-                dates.append(pr.value)
-                state = self.SINGLE
+                    # monotone dates are expressed in ISO8601, always UTC
+                    dateparts = pr.value.split('T')
+                    assert len(dateparts) >= 2, `dateparts`
+                    day = dateparts[0]
+                    time = dateparts[1]
+                    y,m,d = map(int, day.split(day[4]))
+                    hh,mm,ss = map(int, time.split(':'))
+                    date = datetime(y,m,d,hh,mm,ss)
+                    self.dates.append(date)
+                    state = self.SINGLE
             elif pr("Branch:") or pr("Tag"):
                 # unused data, just resetting state
                 state = self.SINGLE
             elif pr("Deleted files:") or pr("Deleted directories:"):
-                mode=self.DEL
+                state=self.DEL
             elif pr("Renamed files:") or pr("Renamed directories:"):
-                mode=self.DEL
+                state=self.DEL
             elif pr("Added files:") or pr("Added directories:"):
-                mode=self.ADD
+                state=self.ADD
             elif pr("Modified files:") or pr("Modified directories:"):
-                mode=self.ADD
-            elif pr("Changelog:"):
-                mode=self.LOG
+                state=self.ADD
+            elif pr("ChangeLog:"):
+                state=self.LOG
             elif pr("Comments:"):
                 comments=comments + "Note:\n"
-                mode=self.CMT
+                state=self.CMT
             else:
                 # otherwise, it must be a log/comment/changeset entry, or an unknown cert line
-                if mode == self.SINGLE:
+                if state == self.SINGLE:
                     # line coming from an unknown cert
                     pass
-                elif mode == self.LOG:
+                elif state == self.LOG:
                     # log line, accumulate string
-                    logmsg = logmsg + curline + "\n"
-                elif mode == self.CMT:
+                    logs = logs + curline + "\n"
+                elif state == self.CMT:
                     # comment line, accumulate string
                     comments = comments + curline + "\n"
                 else:
                     # parse_cset_entry(mode, chset, curline.strip()) # cset entry, handle
                     pass # we ignore cset info
 
-            # parsing terminated, verify the data
-            if len(authors)<1 or len(dates)<1 or revision=="":
-                raise GetUpstreamChangesetsFailure("Error parsing log of revision %s. Missing data" % revision)
+        # parsing terminated, verify the data
+        if len(self.authors)<1 or len(self.dates)<1 or revision=="":
+            raise GetUpstreamChangesetsFailure("Error parsing log of revision %s. Missing data" % revision)
+        self.changelog = logs + comments
     
     def __call__(self, revision):
-        parse(revision)
+        self.parse(revision)
         
         chset = Changeset(revision=revision, date=self.dates[0], 
-                        author=self.authors.join(","), log=self.changelog)
+                        author=".".join(self.authors), log=self.changelog)
 
         chset.real_ancestors = self.ancestors
         chset.real_dates = self.dates
@@ -223,13 +232,13 @@ class MonotoneDiffParser:
                     continue  # skip spaces beetween tokens ...
                 elif ch == '"':
                     try:
-                        token = _string_token()
+                        token = self._string_token()
                         break
                     except StopIteration:
                         # end of stream reached while in a string: Error!!
                         raise GetUpstreamChangesetsFailure("diff end while in string parsing.")
                 else:
-                    token = _normal_token(ch)
+                    token = self._normal_token(ch)
                     break
             return token
     
@@ -239,17 +248,17 @@ class MonotoneDiffParser:
         
     def convertDiff(self, ancestor, revision, chset):
         # the order of revisions is very important. Monotone gives a diff from the first to the second
-        cmd = [self.repository.MONOTONE_CMD, "diff", "--db", self.repository, "--revision", ancestor, "--revision", revision]
+        cmd = [self.repository.MONOTONE_CMD, "diff", "--db", self.repository.repository, "--revision", ancestor, "--revision", revision]
 
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(output=True)
+        outstr = mtl.execute(stdout=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure("monotone diff returned status %d" % mtl.exit_status)
     
         # monotone diffs are prefixed by a section containing metainformations about files
         # The section terminates with the first file diff, and each line is prepended by the 
         # patch comment char (#). 
-        tk = BasicIOTokenizer(outstr.getvalue())
+        tk = self.BasicIOTokenizer(outstr[0].getvalue())
         tkiter = iter(tk)
         in_item = False
         try:
@@ -324,6 +333,7 @@ class MonotoneRevToCset:
     Changesets created by monotone will have additional fields with the original data:
         * real_ancestors: list of the real revision ancestor(s)
         * real_dates:     list with all date certs
+        * lin_ancestor:   linearized ancestor (i.e. previous revision in the linearized history)
     """
     def __init__(self, repository, working_dir):
         self.working_dir = working_dir
@@ -331,46 +341,151 @@ class MonotoneRevToCset:
         self.logparser = MonotoneLogParser(repository=repository, working_dir=working_dir)
         self.diffparser = MonotoneDiffParser(repository=repository, working_dir=working_dir)
     
-    def _cset_from_rev(ancestor, revision):
+    def _cset_from_rev(self, ancestor, revision, fillEntries):
         # Parsing the log gives a changeset from revision data
         chset = self.logparser(revision)
         
         # fills the cset with file/dir entries
-        self.diffparser.convertDiff(ancestor, revision, chset)
+        if ancestor and fillEntries:
+            self.diffparser.convertDiff(ancestor, revision, chset)
         
-    def __call__(self, revlist):
+        # the current ancestor is recorded in the patch 
+        chset.lin_ancestor = ancestor
+        
+        return chset
+        
+    def getCset(self, revlist, fillEntries):
         # receives a revlist, already toposorted (i.e. ordered by ancestry) and outputs a list of
         # changesets
         cslist=[]
-        anc=rev[0]
+        anc=revlist[0]
         for r in revlist[1:]:
-            cslist.append(_cset_from_rev(anc, r))
+            cslist.append(self._cset_from_rev(anc, r, fillEntries))
             anc=r
         return cslist
+    
+    def updateCset(self, anc, cset):
+        # updates the cset with revision data
+        cslist = self.getCset( [anc, cset.revision], True)
+        cset.date = cslist[0].date
+        cset.author = cslist[0].author
+        cset.log = cslist[0].log
+        cset.entries = cslist[0].entries
+        cset.unidiff = cslist[0].unidiff
+        cset.real_ancestors = cslist[0].real_ancestors
+        cset.real_dates = cslist[0].real_dates
+        cset.lin_ancestor = cslist[0].lin_ancestor
         
 class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
+    def convert_head_initial(self, repository, module, revision, working_dir):
+        """
+        This method handles HEAD and INITIAL pseudo-revisions, converting them to monotone revids
+        """
+        effective_rev = revision
+        if revision == 'HEAD' or revision=='INITIAL':
+            # in both cases we need the head(s) of the requested branch
+            cmd = [self.repository.MONOTONE_CMD, "automate","heads", "--db", repository, module]
+            mtl = ExternalCommand(cwd=working_dir, command=cmd)
+            outstr = mtl.execute(stdout=PIPE)
+            if mtl.exit_status:
+                raise InvocationError("The branch '%s' is empty" % module)
+
+            revision = outstr[0].getvalue().split()
+            if revision == 'HEAD':
+                if len(revision)>1:
+                    raise InvocationError("Branch '%s' has multiple heads. Please choose only one." % module)
+                effective_rev=revision[0]
+            else:
+                # INITIAL requested. We must get the ancestors of current head(s), topologically sort them
+                # and pick the first (i.e. the "older" revision). Unfortunately if the branch has multiple 
+                # heads then we could end up with only part of the ancestry graph.
+                if len(revision)>1:
+                    stderr.write("Branch '%s' has multiple heads. There is no guarantee to reconstruct the full history." % module)
+                cmd = [ [self.repository.MONOTONE_CMD, "automate","ancestors",
+                            "--db",repository],
+                        [self.repository.MONOTONE_CMD, "automate","toposort",
+                            "--db",repository, "-@-"]
+                        ]
+                cmd[0].extend(revision)
+                cld = ExternalCommandChain(cwd=working_dir, command=cmd)
+                outstr = cld.execute()
+                if cld.exit_status:
+                    raise InvocationError("Ancestor reading returned status %d" % cld.exit_status)
+                revision = outstr[0].getvalue().split()
+                effective_rev=revision[0]
+        return effective_rev
+        
     ## UpdatableSourceWorkingDir
     
-    def getUpstreamChangesets(self, root, repository, module, sincerev):
+    def _getUpstreamChangesets(self, sincerev=None):
         # monotone descendents returns results sorted in alpha order
         # here we want ancestry order, so descendents output is feed back to 
         # mtn for a toposort ...
-        cmd = [ [self.repository.MONOTONE_CMD, "automate descendents",
-                    "--db",repository, sincerev],
-                [self.repository.MONOTONE_CMD, "automate toposort",
-                    "--db",repository, "-@-"]
+        cmd = [ [self.repository.MONOTONE_CMD, "automate","descendents",
+                    "--db",self.repository.repository, sincerev],
+                [self.repository.MONOTONE_CMD, "automate","toposort",
+                    "--db",self.repository.repository, "-@-"]
                 ]
-        cld = ExternalCommandChain(cwd=root, command=cmd)
-        outstr = cld.execute(subdir)
+        cld = ExternalCommandChain(cwd=self.repository.rootdir, command=cmd)
+        outstr = cld.execute()
         if cld.exit_status:
             raise InvocationError("monotone descendents returned status %d" % cld.exit_status)
        
         # now childs is a list of revids, we must transform it in a list of changesets
-        childs = outstr.getvalue().split()
-        mtr = MonotoneRevToCset(repository=repository, working_dir=working_dir)
-        return mtr( [sincerev].append(childs) )
+        childs = outstr[0].getvalue().split()
+#        mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
+#        allrev = [sincerev]
+#        allrev.extend(childs)
+#        return mtr( allrev, False )
+        chlist = []
+        anc=sincerev
+        for r in childs:
+            ch = Changeset(r, None, None, "")
+            ch.lin_ancestor = anc
+            anc = r
+            chlist.append(ch)
+        return chlist
 
+    def _applyChangeset(self, changeset):
+        cmd = [self.repository.MONOTONE_CMD, "update", "--revision", changeset.revision]
+        mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+        mtl.execute()
+        if mtl.exit_status:
+            self.log_info("'mtn update' returned status %s" % mtl.exit_status)
+#            raise ChangesetApplicationFailure("'mtn update' returned status %s" % mtl.exit_status)
+        self.oldrev = changeset.lin_ancestor
+        mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
+        mtr.updateCset( self.oldrev, changeset )
+        
+        return False   # no conflicts
+    
+    def _checkoutUpstreamRevision(self, revision):
+        """
+        Concretely do the checkout of the upstream revision.
+        """
+        effrev = self.convert_head_initial(self.repository.repository, self.repository.module, revision, self.basedir)
+        if not exists(join(self.basedir, 'MT')):
+            self.log_info("checking out a working copy")
+            cmd = [self.repository.MONOTONE_CMD, "co", "--db", self.repository.repository, "--revision", effrev, 
+                    "--branch", self.repository.module, self.repository.subdir]
+            mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+            mtl.execute()
+            if mtl.exit_status:
+                raise TargetInitializationFailure(
+                    "'monotone co' returned status %s" % mtl.exit_status)
+        else:
+            self.log_info("%s already exists, assuming it's a monotone working dir" % self.basedir)
+        
+        # ok, now the workdir contains the checked out revision. We need to return a changeset
+        # describing it. 
+        if not hasattr(self, "oldrev"):
+            self.oldrev=None
+        mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
+        csetlist = mtr.getCset( [self.oldrev, effrev], True )
+        self.oldrev = effrev
+        return csetlist[0]
+            
     ## SyncronizableTargetWorkingDir
 
     def _addPathnames(self, names):
