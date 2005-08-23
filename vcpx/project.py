@@ -107,7 +107,9 @@ class Project(object):
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
         sfpath = join(self.rootdir,
-                      expanduser(self.config.get(self.name, 'state-file')))
+                      expanduser(self.config.get(self.name,
+                                                 'state-file',
+                                                 self.name + '.state')))
         self.state_file = StateFile(sfpath, self.config)
 
         before = self.config.getTuple(self.name, 'before-commit')
