@@ -58,6 +58,27 @@ def changesets_from_cvslog(log, module):
     return collapsed
 
 
+def _getGlobalCVSRevision(timestamp, author):
+    """
+    CVS does not have the notion of a repository-wide revision number,
+    since it tracks just single files.
+
+    Here we could "count" the grouped changesets ala `cvsps`,
+    but that's tricky because of branches.  Since right now there
+    is nothing that depends on this being a number, not to mention
+    a *serial* number, simply emit a (hopefully) unique signature...
+    """
+
+    return "%s by %s" % (timestamp, author)
+
+def _splitGlobalCVSRevision(revision):
+    """
+    Split what _getGlobalCVSRevision() returns into the two components.
+    """
+
+    assert ' by ' in revision, "Simple revision found, expected 'timestamp by author'"
+    return revision.split(' by ')
+
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
 
@@ -88,21 +109,6 @@ class ChangeSetCollector(object):
         keys.sort()
         return iter([self.changesets[k] for k in keys])
 
-    def __getGlobalRevision(self, timestamp, author, changelog):
-        """
-        CVS does not have the notion of a repository-wide revision number,
-        since it tracks just single files.
-
-        Here we could "count" the grouped changesets ala `cvsps`,
-        but that's tricky because of branches.  Since right now there
-        is nothing that depends on this being a number, not to mention
-        a *serial* number, simply emit a (hopefully) unique signature...
-        """
-
-        # NB: the _getUpstreamChangesets() below depends on this format
-
-        return "%s by %s" % (timestamp, author)
-
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
 
@@ -112,9 +118,7 @@ class ChangeSetCollector(object):
         if self.changesets.has_key(key):
             return self.changesets[key].addEntry(entry, revision)
         else:
-            cs = Changeset(self.__getGlobalRevision(timestamp,
-                                                    author,
-                                                    changelog),
+            cs = Changeset(_getGlobalCVSRevision(timestamp, author),
                            timestamp, author, changelog)
             self.changesets[key] = cs
             return cs.addEntry(entry, revision)
@@ -306,8 +310,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             else:
                 cmd.append("-r:HEAD")
         else:
-            # Assume this is from __getGlobalRevision()
-            since, author = sincerev.split(' by ')
+            since, author = _splitGlobalCVSRevision(sincerev)
             cmd.extend(["-d", "%(since)s UTC<", "-r:%(branch)s"])
 
         cvslog = ExternalCommand(command=cmd)
@@ -321,6 +324,16 @@ class CvsWorkingDir(CvspsWorkingDir):
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
         return changesets_from_cvslog(log, self.repository.module)
+
+    def _checkoutUpstreamRevision(self, revision):
+        """
+        Adjust the 'revision' slot of the changeset, to make it a
+        repository wide unique id.
+        """
+
+        last = CvspsWorkingDir._checkoutUpstreamRevision(self, revision)
+        last.revision = _getGlobalCVSRevision(last.date, last.author)
+        return last
 
 
 class CvsEntry(object):
