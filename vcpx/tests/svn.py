@@ -112,7 +112,7 @@ class SvnLogParserTest(TestCase):
         cset = csets[0]
         self.assertEqual(cset.author, 'anthony')
         self.assertEqual(cset.date, datetime(2004,11,9,6,54,20,709243))
-        self.assertEqual(cset.log, 'Moving to a /sandbox\n')
+        self.assertEqual(cset.log, 'Moving to a /sandbox')
         self.assertEqual(len(cset.entries), 1)
 
         entry = cset.entries[0]
