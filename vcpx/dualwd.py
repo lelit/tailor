@@ -44,6 +44,10 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.target = target_repo.workingDir()
         self.target._prepareTargetRepository()
 
+        self.shared_basedirs = self.source.shared_basedirs = \
+                               self.target.shared_basedirs = \
+                               self.source.basedir == self.target.basedir
+
         IGNORED_METADIRS = [source_repo.METADIR, target_repo.METADIR]
 
         # UpdatableSourceWorkingDir
@@ -76,12 +80,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                                   applied=applied)
 
     def importFirstRevision(self, source_repo, changeset, initial):
-        if self.source.basedir <> self.target.basedir:
+        if not self.shared_basedirs:
             self._syncTargetWithSource()
         self.target.importFirstRevision(source_repo, changeset, initial)
 
     def replayChangeset(self, changeset):
-        if self.source.basedir <> self.target.basedir:
+        if not self.shared_basedirs:
             self._syncTargetWithSource()
         self.target.replayChangeset(changeset)
 
