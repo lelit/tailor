@@ -191,10 +191,27 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                       self.repository.module)
 
     def _applyChangeset(self, changeset):
+        from time import sleep
+
         cmd = [self.repository.SVN_CMD, "update",
                "--revision", changeset.revision, "."]
         svnup = ExternalCommand(cwd=self.basedir, command=cmd)
-        out = svnup.execute(stdout=PIPE)[0]
+
+        retry = 0
+        while True:
+            out = svnup.execute(stdout=PIPE)[0]
+
+            if svnup.exit_status == 1:
+                retry += 1
+                if retry>3:
+                    break
+                delay = 2**retry
+                self.log_info("%s returned status %s, "
+                              "retrying in %d seconds..." %
+                              (str(svnup), svnup.exit_status, delay))
+                sleep(delay)
+            else:
+                break
 
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
