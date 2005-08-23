@@ -48,9 +48,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         if patchname:
             logmessage.append(patchname.encode(encoding))
         if changelog:
-            logmessage.append('')
             logmessage.append(changelog.encode(encoding))
-        logmessage.append('')
 
         cmd = [self.repository.HG_CMD, "commit", "-u", author,
                "-l", "%(logfile)s",

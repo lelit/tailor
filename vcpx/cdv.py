@@ -52,7 +52,6 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
             logmessage.append(patchname.encode(encoding))
         if changelog:
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
-        logmessage.append('')
 
         cmd = [self.repository.CDV_CMD, "-u", author.encode(encoding), "commit",
                "-m", '\n'.join(logmessage),

@@ -499,15 +499,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if patchname:
             logmessage.append(patchname.encode(encoding))
         if changelog:
-            logmessage.append(changelog.replace('%', '%%').encode(encoding))
+            logmessage.append(changelog.encode(encoding))
         logmessage.append('')
         logmessage.append('Original author: %s' % author.encode(encoding))
         logmessage.append('Date: %s' % date)
-        logmessage.append('')
 
         rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(log))
+        log.write('\n'.join(logmessage))
         log.close()
 
         cmd = [self.repository.CVS_CMD, "-q", "ci", "-F", rontf.name]

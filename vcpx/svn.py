@@ -311,9 +311,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if patchname:
             logmessage.append(patchname.encode(encoding))
         if changelog:
-            logmessage.append('')
             logmessage.append(changelog.encode(encoding))
-        logmessage.append('')
 
         # If we cannot use propset, fall back to old behaviour of
         # appending these info to the changelog
@@ -322,7 +320,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             logmessage.append('')
             logmessage.append('Original author: %s' % author.encode(encoding))
             logmessage.append('Date: %s' % date)
-            logmessage.append('')
 
         rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
         log = open(rontf.name, "w")

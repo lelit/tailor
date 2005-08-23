@@ -63,9 +63,7 @@ class MonotoneWorkingDir(SyncronizableTargetWorkingDir):
         if patchname:
             logmessage.append(patchname.encode(encoding))
         if changelog:
-            logmessage.append('')
             logmessage.append(changelog.encode(encoding))
-        logmessage.append('')
 
         rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
         log = open(rontf.name, "w")

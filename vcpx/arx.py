@@ -38,19 +38,13 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
 
         encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
-        logmessage = ""
+        logmessage = []
         if patchname:
-            logmessage=patchname.encode(encoding)
+            logmessage.append(patchname.encode(encoding))
         if changelog:
-            if logmessage!="":
-                logmessage+="\n\n"+changelog.encode(encoding)
-            else:
-                logmessage=changelog.encode(encoding)
+            logmessage.append(changelog.replace('%', '%%').encode(encoding))
 
-        if logmessage=="":
-            logmessage=" "
-
-        cmd = [self.repository.ARX_CMD, "commit", "-s", logmessage,
+        cmd = [self.repository.ARX_CMD, "commit", "-s", '\n'.join(logmessage),
                "--author", author,
                "--date", date.isoformat()]
         c = ExternalCommand(cwd=self.basedir, command=cmd)
