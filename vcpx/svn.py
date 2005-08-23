@@ -236,7 +236,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             csets = changesets_from_svnlog(output,
                                            self.repository.repository,
                                            self.repository.module)
-            revision = escape(csets[0].revision)
+            revision = csets[0].revision
         else:
             initial = False
 
