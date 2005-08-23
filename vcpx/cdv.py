@@ -96,7 +96,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         if not exists(self.basedir):
             makedirs(self.basedir)
 
-        if not exists(self.basedir, self.repository.METADIR):
+        if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
                                    command=[self.repository.CDV_CMD, "init"])
             init.execute()
