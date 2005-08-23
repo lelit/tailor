@@ -113,7 +113,7 @@ class Changeset(object):
         if self.REFILL_MESSAGE:
             self.log = refill(log)
         else:
-            self.log = log
+            self.log = log.strip()
         self.entries = entries or []
         self.unidiff = None        # This is the unidiff of the whole changeset
 
