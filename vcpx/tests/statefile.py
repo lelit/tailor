@@ -8,27 +8,27 @@
 from unittest import TestCase, TestSuite
 from cStringIO import StringIO
 from vcpx.statefile import StateFile
+from vcpx.shwrap import ReopenableNamedTemporaryFile
 
 class StateFileTest(TestCase):
 
     def testStateFile(self):
         """Verify the state file behaviour"""
 
-        from tempfile import mktemp
+        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
 
-        sfname = mktemp('sf', 'tailor')
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         sf.setPendingChangesets([1,2,3,4,5])
         self.assertEqual(len(sf), 5)
 
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), None)
         i = 1
         for cs in sf:
             self.assertEqual(cs, i)
             i += 1
 
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), None)
         cs = sf.next()
         sf.applied()
@@ -39,7 +39,7 @@ class StateFileTest(TestCase):
         self.assertEqual(len(sf), 3)
         sf.finalize()
 
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), 2)
         self.assertEqual(len(sf), 3)
         i = 3
@@ -50,15 +50,15 @@ class StateFileTest(TestCase):
     def testJournal(self):
         """Verify the state file journal"""
 
-        from tempfile import mktemp
         from os.path import exists
 
-        sfname = mktemp('sf', 'tailor')
-        sf = StateFile(sfname, None)
+        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
+
+        sf = StateFile(rontf.name, None)
         sf.setPendingChangesets([1,2,3,4,5])
         self.assertEqual(len(sf), 5)
 
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), None)
         cs = sf.next()
         sf.applied()
@@ -67,9 +67,9 @@ class StateFileTest(TestCase):
         sf.applied()
         self.assertEqual(sf.lastAppliedChangeset(), 2)
         self.assertEqual(len(sf), 3)
-        self.assert_(exists(sfname + '.journal'))
+        self.assert_(exists(rontf.name + '.journal'))
 
-        sf = StateFile(sfname, None)
+        sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), 2)
         self.assertEqual(len(sf), 3)
         i = 3
