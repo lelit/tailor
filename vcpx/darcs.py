@@ -220,7 +220,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             # quote, so you have to choose between matching double
             # quotes and matching spaces"""
             if not '"' in changeset.revision:
-                revtag += ' && exact "%s"' % changeset.revision
+                revtag += ' && exact "%s"' % changeset.revision.replace('%', '%%')
             else:
                 needspatchesopt = True
 
