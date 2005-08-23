@@ -236,9 +236,8 @@ BOOTSTRAP_OPTIONS = [
                      "a tag. Under Subversion, 'INITIAL' is the first patch "
                      "that touches given repos/module, otherwise it must be "
                      "an integer revision number. "
-                     "'HEAD', the default, means the latest version in all "
-                     "backends.",
-                default="HEAD"),
+                     "'HEAD' means the latest version in all backends.",
+                default="INITIAL"),
     make_option("-T", "--target-repository",
                 dest="target_repository", metavar="REPOS", default=None,
                 help="Specify the target repository, the one that will "
