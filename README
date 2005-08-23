@@ -463,6 +463,10 @@ A repository may also have it's own ``subdir``: when the `source` and
 ``rsync`` to copy the changes between the two after each applied
 changeset.
 
+CVS and CVSPS repositories may turn of automatic tagging of entries,
+that tailor does by default to prevent manual interventions in the
+CVS working copy, using ``tag_entries = False``.
+
 
 Using a Python script as configuration file
 -------------------------------------------

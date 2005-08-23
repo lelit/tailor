@@ -148,11 +148,11 @@ class CvsRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.CVS_CMD = config.get(self.name, 'cvs-command', self.CVS_CMD)
+        self.tag_entries = config.get(self.name, 'tag-entries', True)
 
     def _validateConfiguration(self):
         from os.path import split
         from config import ConfigurationError
-
 
         if not self.module and self.repository:
             self.module = split(self.repository)[1]
@@ -166,6 +166,7 @@ class CvspsRepository(CvsRepository):
     def _load(self, config, which):
         CvsRepository._load(self, config, which)
         self.CVSPS_CMD = config.get(self.name, 'cvsps-command', self.CVSPS_CMD)
+        self.tag_entries = config.get(self.name, 'tag-entries', True)
 
 
 class DarcsRepository(Repository):

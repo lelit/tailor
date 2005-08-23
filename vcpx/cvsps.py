@@ -309,7 +309,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         else:
             self.log_info("Using existing %s" % self.basedir)
 
-        self.__forceTagOnEachEntry()
+        if self.repository.tag_entries:
+            self.__forceTagOnEachEntry()
 
         entries = CvsEntries(self.basedir)
         youngest_entry = entries.getYoungestEntry()
