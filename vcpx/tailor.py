@@ -13,7 +13,7 @@ __docformat__ = 'reStructuredText'
 
 __version__ = '0.9.8'
 
-from optparse import OptionParser, OptionGroup, make_option
+from optparse import OptionParser, OptionGroup, Option
 from config import Config
 from project import Project
 from source import InvocationError
@@ -157,28 +157,39 @@ class Tailorizer(Project):
         self.update()
 
 
+class RecogOption(Option):
+    """
+    Make it possible to recognize an option explicitly given on the
+    command line from those simply coming out for their default value.
+    """
+
+    def process (self, opt, value, values, parser):
+        setattr(values, '__seen_' + self.dest, True)
+        return Option.process(self, opt, value, values, parser)
+
+
 GENERAL_OPTIONS = [
-    make_option("-D", "--debug", dest="debug",
+    RecogOption("-D", "--debug", dest="debug",
                 action="store_true", default=False,
                 help="Print each executed command. This also keeps "
                      "temporary files with the upstream logs, that are "
                      "otherwise removed after use."),
-    make_option("-v", "--verbose", dest="verbose",
+    RecogOption("-v", "--verbose", dest="verbose",
                 action="store_true", default=False,
                 help="Be verbose, echoing the changelog of each applied "
                      "changeset to stdout."),
-    make_option("--configfile", metavar="CONFNAME",
+    RecogOption("--configfile", metavar="CONFNAME",
                 help="Centralized storage of projects info.  With this "
                      "option and no other arguments tailor will update "
                      "every project found in the config file."),
-    make_option("--encoding", metavar="CHARSET", default=None,
+    RecogOption("--encoding", metavar="CHARSET", default=None,
                 help="Force the output encoding to given CHARSET, rather "
                      "then using the user default settings specified in the "
                      "environment."),
 ]
 
 UPDATE_OPTIONS = [
-    make_option("-F", "--patch-name-format", metavar="FORMAT",
+    RecogOption("-F", "--patch-name-format", metavar="FORMAT",
                 help="Specify the prototype that will be used "
                      "to compute the patch name.  The prototype may contain "
                      "%(keyword)s such as 'author', 'date', "
@@ -186,13 +197,13 @@ UPDATE_OPTIONS = [
                      "defaults to 'Tailorized \"%(revision)s\"'; "
                      "setting it to the empty string means that tailor will "
                      "simply use the original changelog."),
-    make_option("-1", "--remove-first-log-line", action="store_true",
+    RecogOption("-1", "--remove-first-log-line", action="store_true",
                 default=False,
                 help="Remove the first line of the upstream changelog. This "
                      "is intended to go in pair with --patch-name-format, "
                      "when using it's 'firstlogline' variable to build the "
                      "name of the patch."),
-    make_option("-N", "--dont-refill-changelogs", action="store_true",
+    RecogOption("-N", "--dont-refill-changelogs", action="store_true",
                 default=False,
                 help="Do not refill every changelog, but keep them as is. "
                      "This is usefull when using --patch-name-format, or "
@@ -201,20 +212,20 @@ UPDATE_OPTIONS = [
 ]
 
 BOOTSTRAP_OPTIONS = [
-    make_option("-s", "--source-kind", dest="source_kind", metavar="VC-KIND",
+    RecogOption("-s", "--source-kind", dest="source_kind", metavar="VC-KIND",
                 help="Select the backend for the upstream source "
                      "version control VC-KIND. Default is 'cvs'.",
                 default="cvs"),
-    make_option("-t", "--target-kind", dest="target_kind", metavar="VC-KIND",
+    RecogOption("-t", "--target-kind", dest="target_kind", metavar="VC-KIND",
                 help="Select VC-KIND as backend for the shadow repository, "
                      "with 'darcs' as default.",
                 default="darcs"),
-    make_option("-R", "--repository", "--source-repository",
+    RecogOption("-R", "--repository", "--source-repository",
                 dest="source_repository", metavar="REPOS",
                 help="Specify the upstream repository, from where bootstrap "
                      "will checkout the module.  REPOS syntax depends on "
                      "the source version control kind."),
-    make_option("-m", "--module", "--source-module", dest="source_module",
+    RecogOption("-m", "--module", "--source-module", dest="source_module",
                 metavar="MODULE",
                 help="Specify the module to checkout at bootstrap time. "
                      "This has different meanings under the various upstream "
@@ -223,7 +234,7 @@ BOOTSTRAP_OPTIONS = [
                      "with a slash. Since it's used in the description of the "
                      "target repository, you may want to give it a value with "
                      "darcs too even if it is otherwise ignored."),
-    make_option("-r", "--revision", "--start-revision", dest="start_revision",
+    RecogOption("-r", "--revision", "--start-revision", dest="start_revision",
                 metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "
                      "must be a valid 'name' for a revision in the upstream "
@@ -238,21 +249,21 @@ BOOTSTRAP_OPTIONS = [
                      "an integer revision number. "
                      "'HEAD' means the latest version in all backends.",
                 default="INITIAL"),
-    make_option("-T", "--target-repository",
+    RecogOption("-T", "--target-repository",
                 dest="target_repository", metavar="REPOS", default=None,
                 help="Specify the target repository, the one that will "
                      "receive the patches coming from the source one."),
-    make_option("-M", "--target-module", dest="target_module",
+    RecogOption("-M", "--target-module", dest="target_module",
                 metavar="MODULE",
                 help="Specify the module on the target repository that will "
                      "actually contain the upstream source tree."),
-    make_option("--subdir", metavar="DIR",
+    RecogOption("--subdir", metavar="DIR",
                 help="Force the subdirectory where the checkout will happen, "
                      "by default it's the tail part of the module name."),
 ]
 
 VC_SPECIFIC_OPTIONS = [
-    make_option("--use-svn-propset", action="store_true", default=False,
+    RecogOption("--use-svn-propset", action="store_true", default=False,
                 dest="use_propset",
                 help="Use 'svn propset' to set the real date and author of "
                      "each commit, instead of appending these information to "
@@ -299,7 +310,9 @@ def main():
 
     defaults = {}
     for k,v in options.__dict__.items():
-        if k <> 'configfile':
+        if k.startswith('__'):
+            continue
+        if k <> 'configfile' and hasattr(options, '__seen_' + k):
             defaults[k.replace('_', '-')] = str(v)
 
     if options.configfile or (len(sys.argv)==2 and len(args)==1):
