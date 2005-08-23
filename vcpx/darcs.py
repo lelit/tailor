@@ -439,9 +439,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         # (that will assume the move was already done manually) and
         # finally restore its name.
 
-        renamed = exists(join(self.basedir, oldname))
+        absold = join(self.basedir, oldname)
+        renamed = exists(absold)
         if renamed:
-            rename(oldname, oldname + '-TAILOR-HACKED-TEMP-NAME')
+            rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
 
         try:
             cmd = [self.repository.DARCS_CMD, "mv"]
@@ -449,7 +450,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                                                    newname)
         finally:
             if renamed:
-                rename(oldname + '-TAILOR-HACKED-TEMP-NAME', oldname)
+                rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
 
     def _prepareTargetRepository(self):
         """
