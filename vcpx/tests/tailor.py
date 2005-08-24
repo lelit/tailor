@@ -50,6 +50,11 @@ root-directory = /tmp/tailor-tests/darcs2svn
 source = darcs:svntailor
 start-revision = INITIAL
 
+[darcs2monotone]
+target = monotone:tailor
+root-directory = /tmp/tailor-tests/darcs2monotone
+source = darcs:tailor
+
 [svn2darcs]
 target = darcs:svntailor
 root-directory = /tmp/tailor-tests/svn2darcs
@@ -67,6 +72,10 @@ python-path = /opt/src/bzr.dev
 [cdv:tailor]
 
 [hg:tailor]
+
+[monotone:tailor]
+passphrase = fin che la barca va
+repository = /tmp/tailor-tests/tailor-mtn.db
 
 [svn:tailor]
 repository = file:///tmp/tailor-tests/svnrepo
@@ -195,6 +204,14 @@ class TailorTest(TestCase):
         "Test darcs to subversion"
 
         tailorizer = Tailorizer('darcs2svn', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testDarcsToMonotone(self):
+        "Test darcs to monotone"
+
+        tailorizer = Tailorizer('darcs2monotone', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")

@@ -196,6 +196,7 @@ class MonotoneRepository(Repository):
         self.MONOTONE_CMD = config.get(self.name,
                                        'monotone-command', self.MONOTONE_CMD)
         self.passphrase = config.get(self.name, 'passphrase')
+        self.keyfile = config.get(self.name, 'keyfile')
 
 
 class SvnRepository(Repository):

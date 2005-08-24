@@ -21,6 +21,12 @@ from os.path import exists, join, isdir
 from os import renames, access, F_OK
 from string import whitespace
 
+MONOTONERC = """\
+function get_passphrase(KEYPAIR_ID)
+  return "%s"
+end
+"""
+
 class ExternalCommandChain:
     """
     This class implements command piping, i.e. a chain of ExternalCommand, each feeding 
@@ -596,6 +602,75 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if rename.exit_status:
             raise ChangesetApplicationFailure("%s returned status %s" % (str(rename),rename.exit_status))
 
+    def __createRepository(self, target_repository):
+        """
+        Create a new monotone DB.
+        """
+
+        cmd = [self.repository.MONOTONE_CMD, "db", "init", "--db",
+               target_repository.repository]
+        init = ExternalCommand(command=cmd)
+        init.execute()
+
+        if init.exit_status:
+            raise TargetInitializationFailure("Was not able to initialize "
+                                              "the monotone db at %r" %
+                                              target_repository)
+
+        if target_repository.keyfile:
+            keyfile = file(target_repository.keyfile)
+            cmd = [self.repository.MONOTONE_CMD, "read", "--db",
+                   target_repository.repository]
+            regkey = ExternalCommand(command=cmd)
+            regkey.execute(input=keyfile)
+        else:
+            cmd = [self.repository.MONOTONE_CMD, "genkey", "--db",
+                   target_repository.repository]
+            regkey = ExternalCommand(command=cmd)
+            regkey.execute('tailor')
+
+        if regkey.exit_status:
+            raise TargetInitializationFailure("Was not able to setup "
+                                              "the monotone initial key at %r" %
+                                              target_repository)
+
+    def _prepareTargetRepository(self):
+        """
+        Check for target repository existence, eventually create it.
+        """
+
+        from os.path import exists
+
+        if not self.repository.repository:
+            return
+
+        if not exists(self.repository.repository):
+            self.__createRepository(self.repository)
+
+    def _prepareWorkingDirectory(self, source_repo):
+        """
+        Possibly checkout a working copy of the target VC, that will host the
+        upstream source tree, when overriden by subclasses.
+        """
+
+        from os.path import join, exists
+
+        if not self.repository.repository or exists(join(self.basedir, 'MT')):
+            return
+
+        cmd = [self.repository.MONOTONE_CMD, "setup",
+               "--db", self.repository.repository]
+        if self.repository.module:
+            cmd.extend(["--branch", self.repository.module])
+
+        setup = ExternalCommand(command=cmd)
+        setup.execute(self.basedir)
+
+        if self.repository.passphrase:
+            monotonerc = open(join(self.basedir, 'MT', 'monotonerc'), 'w')
+            monotonerc.write(MONOTONERC % self.repository.passphrase)
+            monotonerc.close()
+            
     def _initializeWorkingDir(self):
         """
         Setup the monotone working copy
