@@ -20,6 +20,7 @@ class Repository(object):
     """
     Collector for the configuration of a single repository.
     """
+    EXTRA_META = []
 
     def __init__(self, name, kind, project, which):
         self.name = name

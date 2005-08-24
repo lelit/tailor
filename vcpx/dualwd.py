@@ -49,6 +49,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                self.source.basedir == self.target.basedir
 
         IGNORED_METADIRS = [source_repo.METADIR, target_repo.METADIR]
+        IGNORED_METADIRS.extend(source_repo.EXTRA_META)
+        IGNORED_METADIRS.extend(target_repo.EXTRA_META)
 
         # UpdatableSourceWorkingDir
 
@@ -90,8 +92,9 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.target.replayChangeset(changeset)
 
     def _syncTargetWithSource(self):
-        cmd = ['rsync', '--delete', '--archive',
-               '--exclude', self.source.repository.METADIR,
-               '--exclude', self.target.repository.METADIR]
+        cmd = ['rsync', '--delete', '--archive']
+        for M in IGNORED_METADIRS:
+            cmd.extend(['--exclude', M])
+
         rsync = ExternalCommand(command=cmd)
         rsync.execute(self.source.basedir+'/', self.target.basedir)
