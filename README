@@ -42,7 +42,7 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] ArX, Monotone, Codeville, Mercurial and Baazar-NG systems may be
+.. [#] ArX, Codeville, Mercurial and Baazar-NG systems may be
        used only as the `target` backend, since the `source` support
        isn't coded yet. Contributions on these backends will be very
        appreciated, since I do not use them enough to figure out the
@@ -233,7 +233,7 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
 b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
-c) ArX, Monotone, Codeville and Baazar-NG are (currently) only
+c) ArX, Baazar-NG, Codeville and Mercurial are (currently) only
    supported as *target*; Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
@@ -597,7 +597,8 @@ Monotone support
 
 Monotone_ support was kindly contributed by `Markus Schiltknecht
 <markus@bluegap.ch>`_ and further developed by `rghetta
-<birrachiara@tin.it>`_.
+<birrachiara@tin.it>`_, that was able to linearize the multi-headed
+monotone history into something tailor groks. Kudos!
 
 Tla support
 -----------
