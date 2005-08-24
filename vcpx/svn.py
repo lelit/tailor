@@ -450,7 +450,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Checkout a working copy of the target SVN repository.
         """
 
-        if not self.repository.repository:
+        from os.path import join, exists
+
+        if not self.repository.repository or exists(join(self.basedir, '.svn')):
             return
 
         cmd = [self.repository.SVN_CMD, "co", "--quiet"]
