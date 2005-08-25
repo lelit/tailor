@@ -79,21 +79,15 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         in conflicts.
         """
 
-        tempdir = self.__hide_foreign_entries()
-        try:
-            c = ExternalCommand(cwd=self.basedir,
-                                command=[self.repository.TLA_CMD, "replay"])
-            out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
-            if not c.exit_status in [0, 1]:
-                raise ChangesetApplicationFailure(
-                    "%s returned status %d saying \"%s\"" %
-                    (str(c), c.exit_status, err.read()))
-            # drop initial line: "* patching for revision ..."
-            out.readline()
-            conflicts = self.__parse_apply_changeset_output(changeset, out)
-        finally:
-            if tempdir:
-                self.__restore_foreign_entries(tempdir)
+        if self.shared_basedirs:
+            tempdir = self.__hide_foreign_entries()
+            try:
+                conflicts = self.__apply_changeset(changeset)
+            finally:
+                if tempdir:
+                    self.__restore_foreign_entries(tempdir)
+        else:
+            conflicts = self.__apply_changeset(changeset)
         return conflicts
 
     def _checkoutUpstreamRevision(self, revision):
@@ -102,33 +96,48 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         """
 
         fqrev = self.__initial_revision(revision)
-        tempdir = mkdtemp("", ",,tailor-", self.basedir)
-        try:
-            c = ExternalCommand(cwd=os.path.join(self.basedir, tempdir),
-                                command=[self.repository.TLA_CMD, "get",
-                                         "--no-pristine", fqrev, "t"])
-            out, err = c.execute(stdout=PIPE, stderr=PIPE)
-            if c.exit_status:
-                raise TargetInitializationFailure(
-                    "%s returned status %d saying \"%s\"" %
-                    (str(c), c.exit_status, err.read()))
-            newtree = os.path.join(tempdir, "t")
-            for e in os.listdir(newtree):
-                os.rename(os.path.join(newtree, e),
-                          os.path.join(self.basedir,e))
-        finally:
+        if self.shared_basedirs:
+            tempdir = mkdtemp("", ",,tailor-", self.basedir)
             try:
-                for root, dirs, files in os.walk(tempdir, topdown=False):
-                    for name in files:
-                        os.remove(os.path.join(root, name))
-                    for name in dirs:
-                        os.rmdir(os.path.join(root, name))
+                self.__checkout_initial_revision(fqrev, tempdir, "t")
+            finally:
+                newtree = os.path.join(tempdir, "t")
+                if os.path.exists(newtree):
+                    for e in os.listdir(newtree):
+                        os.rename(os.path.join(newtree, e),
+                                  os.path.join(self.basedir, e))
+                    os.rmdir(newtree)
                 os.rmdir(tempdir)
-            except:
-                pass
+        else:
+            root, destdir = os.path.split(self.basedir)
+            self.__checkout_initial_revision(fqrev, root, destdir)
         return self.__parse_revision_logs([fqrev], False)[0]
 
     ## TlaWorkingDir private helper functions
+
+    def __checkout_initial_revision(self, fqrev, root, destdir):
+        if not os.path.exists(root):
+            os.makedirs(root)
+        c = ExternalCommand(cwd=root,
+                            command=[self.repository.TLA_CMD, "get",
+                                     "--no-pristine", fqrev, destdir])
+        out, err = c.execute(stdout=PIPE, stderr=PIPE)
+        if c.exit_status:
+            raise TargetInitializationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(c), c.exit_status, err.read()))
+
+    def __apply_changeset(self, changeset):
+        c = ExternalCommand(cwd=self.basedir,
+                            command=[self.repository.TLA_CMD, "replay"])
+        out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
+        if not c.exit_status in [0, 1]:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(c), c.exit_status, err.read()))
+        # drop initial line: "* patching for revision ..."
+        out.readline()
+        return self.__parse_apply_changeset_output(changeset, out)
 
     def __normalize_path(self, path):
         if len(path) > 2:
@@ -205,7 +214,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         c = ExternalCommand(cwd=self.basedir,
                             command=[self.repository.TLA_CMD,
                                      "tree-lint", "-tu"])
-        out = c.execute(stdout=PIPE)
+        out = c.execute(stdout=PIPE)[0]
         tempdir = None
         if c.exit_status:
             tempdir = mkdtemp("", "++tailor-", self.basedir)
