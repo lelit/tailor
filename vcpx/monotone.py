@@ -455,7 +455,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
     def _applyChangeset(self, changeset):
         cmd = [self.repository.MONOTONE_CMD, "update", "--revision", changeset.revision]
-        mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+        mtl = ExternalCommand(cwd=self.basedir, command=cmd)
         mtl.execute()
         if mtl.exit_status:
             self.log_info("'mtn update' returned status %s" % mtl.exit_status)
@@ -485,11 +485,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         
         # ok, now the workdir contains the checked out revision. We need to return a changeset
         # describing it. 
-        if not hasattr(self, "oldrev"):
-            self.oldrev=None
         mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
-        csetlist = mtr.getCset( [self.oldrev, effrev], True )
-        self.oldrev = effrev
+        csetlist = mtr.getCset( [None, effrev], True )
         return csetlist[0]
             
     ## SyncronizableTargetWorkingDir
@@ -659,9 +656,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             return
 
         cmd = [self.repository.MONOTONE_CMD, "setup",
-               "--db", self.repository.repository]
-        if self.repository.module:
-            cmd.extend(["--branch", self.repository.module])
+               "--db", self.repository.repository, "--branch", self.repository.module]
+        if !self.repository.module:
+            raise TargetInitializationFailure("Monotone needs a module defined (to be used as commit branch)")
 
         setup = ExternalCommand(command=cmd)
         setup.execute(self.basedir)
