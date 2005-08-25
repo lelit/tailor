@@ -269,6 +269,9 @@ VC_SPECIFIC_OPTIONS = [
                      "each commit, instead of appending these information to "
                      "the changelog. This requires some tweaks on the SVN "
                      "repository to enable revision propchanges."),
+    RecogOption("--ignore-arch-ids", action="store_true", default=False,
+                dest="ignore_ids",
+                help="Ignore .arch-ids directories when using a tla source."),
 ]
 
 class ExistingProjectError(Exception):
