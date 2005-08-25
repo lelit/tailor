@@ -187,6 +187,15 @@ class HgRepository(Repository):
         self.HG_CMD = config.get(self.name, 'hg-command', self.HG_CMD)
 
 
+class CgRepository(Repository):
+    METADIR = '.git'
+    CG_CMD = 'cg'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.CG_CMD = config.get(self.name, 'cg-command', self.CG_CMD)
+
+
 class MonotoneRepository(Repository):
     METADIR = 'MT'
     MONOTONE_CMD = "monotone"

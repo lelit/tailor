@@ -10,7 +10,7 @@ setup(name='tailor',
     packages=['vcpx'],
     scripts=['tailor'],
     description='A tool to migrate changesets between CVS, Subversion, '
-      'Darcs, Bazaar-ng, Codeville, Monotone and Mercurial repositories.',
+      'Darcs, Bazaar-ng, Codeville, Monotone, Mercurial and Git repositories.',
     long_description="""\
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream

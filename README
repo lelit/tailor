@@ -7,7 +7,7 @@ About
 =====
 
 Tailor is a tool to migrate changesets between ArX_, `Bazaar-NG`_
-CVS_, Codeville_, Darcs_, Mercurial_, Monotone_, Tla_ and Subversion_
+CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_, Tla_ and Subversion_
 [#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
@@ -42,7 +42,7 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] ArX, Codeville, Mercurial and Baazar-NG systems may be
+.. [#] ArX, Codeville, Git, Mercurial and Baazar-NG systems may be
        used only as the `target` backend, since the `source` support
        isn't coded yet. Contributions on these backends will be very
        appreciated, since I do not use them enough to figure out the
@@ -56,6 +56,7 @@ two way sync::
 .. _codeville: http://www.codeville.org/
 .. _cvs: http://www.nongnu.org/cvs/
 .. _darcs: http://www.darcs.net/
+.. _git: http://git.or.cz/
 .. _mercurial: http://www.selenic.com/mercurial/
 .. _monotone: http://www.venge.net/monotone/
 .. _subversion: http://subversion.tigris.org/
@@ -233,7 +234,7 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
 b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
-c) ArX, Baazar-NG, Codeville and Mercurial are (currently) only
+c) ArX, Baazar-NG, Codeville, Git, and Mercurial are (currently) only
    supported as *target*; Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
@@ -444,8 +445,8 @@ All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``bzr``,
-``bzrng``, ``cdv``, ``cvs``, ``darcs``, ``hg``, ``monotone``, ``svn``
-and ``tla``.
+``bzrng``, ``cdv``, ``cg``, ``cvs``, ``darcs``, ``hg``, ``monotone``,
+``svn`` and ``tla``.
 
 When a repository is used as a `source`, it must indicate its origin
 with ``repository``, and for some backends also a ``module``, but are
@@ -591,6 +592,12 @@ Bazaar-NG support
 
 `Bazaar-NG`_ support was contributed by `Johan Rydberg
 <jrydberg@gnu.org>`_.
+
+Git support
+-----------
+
+`Git`_ support (using Cogito) was contributed by `Todd Mokros
+<tmokros@tmokros.net>`_.
 
 Monotone support
 ----------------
