@@ -20,7 +20,7 @@ class Repository(object):
     """
     Collector for the configuration of a single repository.
     """
-    EXTRA_META = []
+    EXTRA_METADIRS = []
 
     def __init__(self, name, kind, project, which):
         self.name = name
@@ -245,4 +245,4 @@ class TlaRepository(Repository):
         self.TLA_CMD = config.get(self.name, 'tla-command', self.TLA_CMD)
         self.IGNORE_IDS = config.get(self.name, 'ignore-ids', False)
         if self.IGNORE_IDS:
-            self.EXTRA_META = ['.arch-ids']
+            self.EXTRA_METADIRS = ['.arch-ids']
