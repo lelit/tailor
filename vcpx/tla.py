@@ -255,7 +255,8 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             # ignore permission changes and changes in the {arch} directory
             if l[0] in ['--', '-/'] or l1.startswith("{arch}"):
                 continue
-
+            if self.repository.IGNORE_IDS and l1.find('.arch-ids') >= 0:
+                continue
             rev = changeset.revision
             if l[0][0] == 'M' or l[0] in ['ch', 'cl']:
                 # 'ch': file <-> symlink, 'cl': ChangeLog updated

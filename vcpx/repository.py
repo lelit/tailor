@@ -243,3 +243,6 @@ class TlaRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.TLA_CMD = config.get(self.name, 'tla-command', self.TLA_CMD)
+        self.IGNORE_IDS = config.get(self.name, 'ignore-ids', False)
+        if self.IGNORE_IDS:
+            self.EXTRA_META = ['.arch-ids']
