@@ -111,6 +111,15 @@ class ArxRepository(Repository):
         self.ARX_CMD = config.get(self.name, 'arx-command', self.ARX_CMD)
 
 
+class BazRepository(Repository):
+    METADIR = '{arch}'
+    BAZ_CMD = "baz"
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.BAZ_CMD = config.get(self.name, 'baz-command', self.BAZ_CMD)
+
+
 class BzrRepository(Repository):
     METADIR = '.bzr'
     BZR_CMD = 'bzr'
