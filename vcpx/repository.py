@@ -111,7 +111,6 @@ class ArxRepository(Repository):
         self.ARX_CMD = config.get(self.name, 'arx-command', self.ARX_CMD)
 
 
-
 class BzrRepository(Repository):
     METADIR = '.bzr'
     BZR_CMD = 'bzr'
@@ -119,6 +118,7 @@ class BzrRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.BZR_CMD = config.get(self.name, 'bzr-command', self.BZR_CMD)
+
 
 class BzrngRepository(Repository):
     METADIR = '.bzr'
@@ -142,6 +142,15 @@ class CdvRepository(Repository):
         self.CDV_CMD = config.get(self.name, 'cdv-command', self.CDV_CMD)
 
 
+class CgRepository(Repository):
+    METADIR = '.git'
+    CG_CMD = 'cg'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.CG_CMD = config.get(self.name, 'cg-command', self.CG_CMD)
+
+
 class CvsRepository(Repository):
     METADIR = 'CVS'
     CVS_CMD = 'cvs'
@@ -159,7 +168,9 @@ class CvsRepository(Repository):
             self.module = split(self.repository)[1]
 
         if not self.module:
-            raise ConfigurationError("Must specify a repository and maybe a module also")
+            raise ConfigurationError("Must specify a repository and maybe "
+                                     "a module also")
+
 
 class CvspsRepository(CvsRepository):
     CVSPS_CMD = 'cvsps'
@@ -186,15 +197,6 @@ class HgRepository(Repository):
     def _load(self, config, which):
         Repository._load(self, config, which)
         self.HG_CMD = config.get(self.name, 'hg-command', self.HG_CMD)
-
-
-class CgRepository(Repository):
-    METADIR = '.git'
-    CG_CMD = 'cg'
-
-    def _load(self, config, which):
-        Repository._load(self, config, which)
-        self.CG_CMD = config.get(self.name, 'cg-command', self.CG_CMD)
 
 
 class MonotoneRepository(Repository):
