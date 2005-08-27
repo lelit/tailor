@@ -440,10 +440,6 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
        
         # now childs is a list of revids, we must transform it in a list of changesets
         childs = outstr[0].getvalue().split()
-#        mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
-#        allrev = [sincerev]
-#        allrev.extend(childs)
-#        return mtr( allrev, False )
         chlist = []
         anc=sincerev
         for r in childs:
@@ -458,8 +454,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         mtl = ExternalCommand(cwd=self.basedir, command=cmd)
         mtl.execute()
         if mtl.exit_status:
-            self.log_info("'mtn update' returned status %s" % mtl.exit_status)
-#            raise ChangesetApplicationFailure("'mtn update' returned status %s" % mtl.exit_status)
+#        self.log_info("'mtn update' returned status %s" % mtl.exit_status)
+            raise ChangesetApplicationFailure("'mtn update' returned status %s" % mtl.exit_status)
         self.oldrev = changeset.lin_ancestor
         mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
         mtr.updateCset( self.oldrev, changeset )
@@ -501,12 +497,14 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 self.log_info("ignoring addition of directory '%s' (%s)" % (fn, join(self.basedir, fn)) );
             else:
                 fnames.append(fn)
-
-        cmd = [self.repository.MONOTONE_CMD, "add"]
-        add = ExternalCommand(cwd=self.basedir, command=cmd)
-        add.execute(fnames)
-        if add.exit_status:
-            raise ChangesetApplicationFailure("%s returned status %s" % (str(add),add.exit_status))
+        if len(fnames):
+            # ok, we still have something to add
+            cmd = [self.repository.MONOTONE_CMD, "add"]
+            add = ExternalCommand(cwd=self.basedir, command=cmd)
+            add.execute(fnames)
+            if add.exit_status:
+                raise ChangesetApplicationFailure("%s returned status %s" % (str(add),add.exit_status))
+        
 
     def _addSubtree(self, subdir):
         """
@@ -591,8 +589,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         
         cmd = [self.repository.MONOTONE_CMD, "rename"]
         rename = ExternalCommand(cwd=self.basedir, command=cmd)
-        o1, o2 =rename.execute(oldname, newname, stderr=PIPE)
-        stderr.write(o2.read())
+        rename.execute(oldname, newname)
         
         # redo the rename ...
         renames(join(self.basedir, oldname), join(self.basedir, newname))
@@ -683,7 +680,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         """
         Setup the monotone working copy
 
-        The user must setup a monotone working directory himself. Then
+        The user must setup a monotone working directory himself or use the
+        tailor config file to provide parameters for creation. Then
         we simply use 'monotone commit', without having to specify a database
         file or branch. Monotone looks up the database and branch in it's MT
         directory.
@@ -692,4 +690,5 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if not exists(join(self.basedir, 'MT')):
             raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % self.basedir)
 
-        self._addSubtree([self.repository.subdir])
+#        self._addSubtree([self.repository.subdir])
+        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
