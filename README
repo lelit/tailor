@@ -6,8 +6,8 @@ Tailor 1.0
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, `Bazaar-NG`_
-CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_, Tla_ and Subversion_
+Tailor is a tool to migrate changesets between ArX_, Bazaar_, `Bazaar-NG`_
+CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_, Subversion_ and Tla_
 [#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
@@ -42,16 +42,18 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] ArX, Codeville, Git, Mercurial and Baazar-NG systems may be
+.. [#] ArX, Baazar-NG, Codeville, Git and Mercurial systems may be
        used only as the `target` backend, since the `source` support
        isn't coded yet. Contributions on these backends will be very
        appreciated, since I do not use them enough to figure out the
        best way to get pending changes and build tailor ChangeSets out
        of them.
 
-       To the opposite, Tla is supported only as a source system.
+       To the opposite, Bazaar and Tla are supported only as a source
+       system.
 
 .. _arx: http://www.nongnu.org/arx/
+.. _bazaar: http://bazaar.canonical.com/
 .. _bazaar-ng: http://www.bazaar-ng.org/
 .. _codeville: http://www.codeville.org/
 .. _cvs: http://www.nongnu.org/cvs/
@@ -235,7 +237,7 @@ b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
 c) ArX, Baazar-NG, Codeville, Git, and Mercurial are (currently) only
-   supported as *target*; Tla only as *source*.
+   supported as *target*; Bazaar and Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
    with remote CVS repositories (it does when the CVS repository is
@@ -320,7 +322,7 @@ line arguments::
 
 This will use a single directory, ``pxlib`` to contain both the source
 and the target system. If you prefer keeping the separated, you just
-need to specify a different directory for each repository, as in::
+need to specify a different directory for each repository [#]_, as in::
 
     [pxlib]
     source = cvs:pxlib
@@ -339,6 +341,29 @@ need to specify a different directory for each repository, as in::
 
 This will extract upstream CVS sources into ``~/mypxlib/original``,
 and create a new Mercurial repository in ``~/mypxlib/migrated``.
+
+On final example to show the syntax of Bazaar sources::
+
+    [project]
+    target = hg:target
+    start-revision = base-0
+    root-directory = /tmp/calife
+    state-file = tailor.state
+    source = baz:source
+
+    [baz:source]
+    module = calife--pam--3.0
+    repository = roberto@keltia.net--2003-depot
+    subdir = tla
+
+    [hg:target]
+    repository = /tmp/HG/calife-pam
+    subdir = hg
+
+.. [#] NB: when the source and the target repositories specify
+       different directories with the ``subdir`` option, tailor
+       uses ``rsync`` to keep them in sync, so that tool needs
+       to be installed.
 
 
 Configuration sections
@@ -444,7 +469,7 @@ Repositories
 All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
-indicates the `kind` of the repository, one of ``arx``, ``bzr``,
+indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
 ``bzrng``, ``cdv``, ``cg``, ``cvs``, ``darcs``, ``hg``, ``monotone``,
 ``svn`` and ``tla``.
 
