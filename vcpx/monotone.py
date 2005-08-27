@@ -454,7 +454,6 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         mtl = ExternalCommand(cwd=self.basedir, command=cmd)
         mtl.execute()
         if mtl.exit_status:
-#        self.log_info("'mtn update' returned status %s" % mtl.exit_status)
             raise ChangesetApplicationFailure("'mtn update' returned status %s" % mtl.exit_status)
         self.oldrev = changeset.lin_ancestor
         mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
@@ -690,5 +689,4 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if not exists(join(self.basedir, 'MT')):
             raise TargetInitializationFailure("Please setup '%s' as a monotone working directory" % self.basedir)
 
-#        self._addSubtree([self.repository.subdir])
         SyncronizableTargetWorkingDir._initializeWorkingDir(self)
