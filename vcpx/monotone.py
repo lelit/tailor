@@ -601,7 +601,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
     def __createRepository(self, target_repository):
         """
-        Create a new monotone DB.
+        Create a new monotone DB, storing the commit keys, if available
         """
 
         cmd = [self.repository.MONOTONE_CMD, "db", "init", "--db",
@@ -615,16 +615,26 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                               target_repository)
 
         if target_repository.keyfile:
+            # a key file is available, read into the database
             keyfile = file(target_repository.keyfile)
             cmd = [self.repository.MONOTONE_CMD, "read", "--db",
                    target_repository.repository]
             regkey = ExternalCommand(command=cmd)
             regkey.execute(input=keyfile)
         else:
+            # no keyfile specified, generate a new key - if a passphrase is defined, automatically
+            # provide it
+            # The keyid must be available
+            if not target_repository.keyid:
+                raise TargetInitializationFailure("Can't setup the monotone repository %r\n"
+                                                  "A keyfile or keyid must be provided." %
+                                                  target_repository)
             cmd = [self.repository.MONOTONE_CMD, "genkey", "--db",
                    target_repository.repository]
             regkey = ExternalCommand(command=cmd)
-            regkey.execute('tailor')
+            if target_repository.passphrase:
+                passp="%s\n%s\n" % (target_repository.passphrase,target_repository.passphrase)
+            regkey.execute(target_repository.keyid, input=passp)
 
         if regkey.exit_status:
             raise TargetInitializationFailure("Was not able to setup "
@@ -657,7 +667,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
         cmd = [self.repository.MONOTONE_CMD, "setup",
                "--db", self.repository.repository, "--branch", self.repository.module]
-        if !self.repository.module:
+        
+        if not self.repository.module:
             raise TargetInitializationFailure("Monotone needs a module defined (to be used as commit branch)")
 
         setup = ExternalCommand(command=cmd)

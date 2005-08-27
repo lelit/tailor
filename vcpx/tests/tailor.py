@@ -74,8 +74,10 @@ python-path = /opt/src/bzr.dev
 [hg:tailor]
 
 [monotone:tailor]
+keyid = tailor
 passphrase = fin che la barca va
 repository = /tmp/tailor-tests/tailor-mtn.db
+module = tailor.test
 
 [svn:tailor]
 repository = file:///tmp/tailor-tests/svnrepo
@@ -130,7 +132,7 @@ class TailorTest(TestCase):
         while not exists(join(tailor_repo, '_darcs')):
             tailor_repo = split(tailor_repo)[0]
         self.tailor_repo = tailor_repo
-        self.config = Config(StringIO(__doc__), {'TAILOR_REPO': tailor_repo})
+        self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo})
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
             register(rmtree, '/tmp/tailor-tests')

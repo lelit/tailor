@@ -205,6 +205,7 @@ class MonotoneRepository(Repository):
         Repository._load(self, config, which)
         self.MONOTONE_CMD = config.get(self.name,
                                        'monotone-command', self.MONOTONE_CMD)
+        self.keyid = config.get(self.name, 'keyid')
         self.passphrase = config.get(self.name, 'passphrase')
         self.keyfile = config.get(self.name, 'keyfile')
 
