@@ -52,6 +52,43 @@ class ExternalCommandChain:
             outstr = out.getvalue()
         return out, err
 
+class MonotoneChangeset(Changeset):
+    """
+    Monotone changesets differ from standard Changeset because:
+    1. only the "revision" field is used for eq/ne comparison
+    2. have additional properties used to handle history linearization
+    """
+
+    def __init__(self, linearized_ancestor, revision):
+        """
+        Initializes a new MonotoneChangeset. The linearized_ancestor parameters is the fake ancestor
+        used for linearization. The very first revision tailorized has lin_ancestor==None
+        """
+        Changeset.__init__(self, revision=revision, date=None, author=None, log="")
+        self.lin_ancestor = linearized_ancestor
+
+    def __eq__(self, other):
+        return (self.revision == other.revision)
+
+    def __ne__(self, other):
+        return (self.revision <> other.revision)
+
+    def __str__(self):
+        s = [Changeset.__str__(self)]
+        s.append('linearized ancestor: %s' % self.lin_ancestor)
+        s.append('real ancestor(s): %s' % ','.join(self.real_ancestors))
+        return '\n'.join(s)
+        
+    def update(self, real_dates, authors, log, real_ancestors):
+        """
+        Updates the monotone changeset secondary data 
+        """
+        self.author=".".join(authors)
+        self.setLog(log)
+        self.date = real_dates[0]
+        self.real_dates = real_dates
+        self.real_ancestors = real_ancestors
+        
 class MonotoneLogParser:
     """
     Obtains and parses a *single* "monotone log" output, reconstructing the revision information
@@ -165,14 +202,14 @@ class MonotoneLogParser:
             raise GetUpstreamChangesetsFailure("Error parsing log of revision %s. Missing data" % revision)
         self.changelog = logs + comments
     
-    def __call__(self, revision):
-        self.parse(revision)
+    def convertLog(self, chset):
+        self.parse(chset.revision)
         
-        chset = Changeset(revision=revision, date=self.dates[0], 
-                        author=".".join(self.authors), log=self.changelog)
-
-        chset.real_ancestors = self.ancestors
-        chset.real_dates = self.dates
+        chset.update(real_dates=self.dates, 
+                     authors=self.authors, 
+                     log=self.changelog,
+                     real_ancestors=self.ancestors)
+ 
         return chset
 
 class MonotoneDiffParser:
@@ -252,9 +289,16 @@ class MonotoneDiffParser:
         self.working_dir = working_dir
         self.repository = repository
         
-    def convertDiff(self, ancestor, revision, chset):
+    def convertDiff(self, chset):
+        """
+        Fills a chset with the details data coming by a diff beetween chset lin_ancestor and revision
+        (i.e. the linearized history)
+        """
+        if not chset.lin_ancestor or not chset.revision or chset.lin_ancestor == chset.revision:
+            raise GetUpstreamChangesetsFailure("internal error:  MonotoneDiffParser.convertDiff called with invalid parameters: lin_ancestor %s, revision %s" % (chset.lin_ancestor, chset.revision))
+    
         # the order of revisions is very important. Monotone gives a diff from the first to the second
-        cmd = [self.repository.MONOTONE_CMD, "diff", "--db", self.repository.repository, "--revision", ancestor, "--revision", revision]
+        cmd = [self.repository.MONOTONE_CMD, "diff", "--db", self.repository.repository, "--revision", chset.lin_ancestor, "--revision", chset.revision]
 
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE)
@@ -283,10 +327,10 @@ class MonotoneDiffParser:
                     
                     # ok, is a file, control changesets data
                     if token == "add_file" or token=="add_directory":
-                        chentry = chset.addEntry(fname[1:-1],revision)
+                        chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.ADDED
                     elif token == "delete_file" or token=="delete_directory":
-                        chentry = chset.addEntry(fname[1:-1],revision)
+                        chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.DELETED
                     elif token == "rename_file" or token=="rename_directory":
                         # renames are in the form:  oldname to newname 
@@ -294,7 +338,7 @@ class MonotoneDiffParser:
                         newname = tkiter.next()
                         if tow != "to" or fname[0]!='"':
                             raise GetUpstreamChangesetsFailure("Unexpected rename token sequence: '%s' followed by '%s'" %(tow, newname))
-                        chentry = chset.addEntry(newname[1:-1],revision)
+                        chentry = chset.addEntry(newname[1:-1], chset.revision)
                         chentry.action_kind = chentry.RENAMED
                         chentry.oldname= fname[1:-1]
                     elif token == "patch":
@@ -310,7 +354,7 @@ class MonotoneDiffParser:
                         # present
                         if len( [e for e in chset.entries if e.name==fname[1:-1]])==0:
                             # is a real update
-                            chentry = chset.addEntry(fname[1:-1],revision)
+                            chentry = chset.addEntry(fname[1:-1], chset.revision)
                             chentry.action_kind = chentry.UPDATED
                             
         except StopIteration:   
@@ -347,40 +391,30 @@ class MonotoneRevToCset:
         self.logparser = MonotoneLogParser(repository=repository, working_dir=working_dir)
         self.diffparser = MonotoneDiffParser(repository=repository, working_dir=working_dir)
     
-    def _cset_from_rev(self, ancestor, revision, fillEntries):
-        # Parsing the log gives a changeset from revision data
-        chset = self.logparser(revision)
-        
-        # fills the cset with file/dir entries
-        if ancestor and fillEntries:
-            self.diffparser.convertDiff(ancestor, revision, chset)
-        
-        # the current ancestor is recorded in the patch 
-        chset.lin_ancestor = ancestor
-        
+    def _cset_from_rev(self, lin_ancestor, revision):
+        # prepare a new changeset and fill it with rev data
+        chset = MonotoneChangeset(lin_ancestor, revision)
+        self.updateCset(chset)
         return chset
         
-    def getCset(self, revlist, fillEntries):
+    def updateCset(self, chset):
+        # Parsing the log fills the changeset from revision data
+        self.logparser.convertLog(chset)
+        
+        # if an ancestor is available, fills the cset with file/dir entries
+        if chset.lin_ancestor:
+            self.diffparser.convertDiff(chset)
+
+    def getCset(self, revlist):
         # receives a revlist, already toposorted (i.e. ordered by ancestry) and outputs a list of
         # changesets
         cslist=[]
         anc=revlist[0]
         for r in revlist[1:]:
-            cslist.append(self._cset_from_rev(anc, r, fillEntries))
+            cslist.append(self._cset_from_rev(anc, r))
             anc=r
         return cslist
     
-    def updateCset(self, anc, cset):
-        # updates the cset with revision data
-        cslist = self.getCset( [anc, cset.revision], True)
-        cset.date = cslist[0].date
-        cset.author = cslist[0].author
-        cset.log = cslist[0].log
-        cset.entries = cslist[0].entries
-        cset.unidiff = cslist[0].unidiff
-        cset.real_ancestors = cslist[0].real_ancestors
-        cset.real_dates = cslist[0].real_dates
-        cset.lin_ancestor = cslist[0].lin_ancestor
         
 class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
@@ -438,15 +472,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if cld.exit_status:
             raise InvocationError("monotone descendents returned status %d" % cld.exit_status)
        
-        # now childs is a list of revids, we must transform it in a list of changesets
+        # now childs is a list of revids, we must transform it in a list of monotone changesets
+        # at this time we fill only the linearized ancestor and revision ids, because at this time we need 
+        # only to know WICH changesets must be applied to the target repo, not WHAT are the changesets
         childs = outstr[0].getvalue().split()
         chlist = []
-        anc=sincerev
+        lin_anc=sincerev
         for r in childs:
-            ch = Changeset(r, None, None, "")
-            ch.lin_ancestor = anc
-            anc = r
-            chlist.append(ch)
+            chlist.append(MonotoneChangeset(lin_anc, r))
+            lin_anc = r
         return chlist
 
     def _applyChangeset(self, changeset):
@@ -455,15 +489,14 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         mtl.execute()
         if mtl.exit_status:
             raise ChangesetApplicationFailure("'mtn update' returned status %s" % mtl.exit_status)
-        self.oldrev = changeset.lin_ancestor
         mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
-        mtr.updateCset( self.oldrev, changeset )
+        mtr.updateCset( changeset )
         
         return False   # no conflicts
     
     def _checkoutUpstreamRevision(self, revision):
         """
-        Concretely do the checkout of the upstream revision.
+        Concretely do the checkout of the FIRST upstream revision.
         """
         effrev = self.convert_head_initial(self.repository.repository, self.repository.module, revision, self.basedir)
         if not exists(join(self.basedir, 'MT')):
@@ -480,9 +513,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         
         # ok, now the workdir contains the checked out revision. We need to return a changeset
         # describing it. 
+        # Since this is the first revision checked out, we don't have a (linearized) ancestor, so wne
+        # must use None as the lin_ancestor parameter
+        chset = MonotoneChangeset(None, effrev)
+
+        # now we update the new chset with basic data - without the linearized ancestor, changeset
+        # entries will NOT be filled
         mtr = MonotoneRevToCset(repository=self.repository, working_dir=self.basedir)
-        csetlist = mtr.getCset( [None, effrev], True )
-        return csetlist[0]
+        mtr.updateCset(chset)
+        return chset
             
     ## SyncronizableTargetWorkingDir
 

@@ -110,10 +110,7 @@ class Changeset(object):
         # Author name may be missing, to mean a check in made by an
         # anonymous user.
         self.author = author or self.ANONYMOUS_USER
-        if self.REFILL_MESSAGE:
-            self.log = refill(log)
-        else:
-            self.log = log.strip()
+        self.setLog(log)
         self.entries = entries or []
         self.unidiff = None        # This is the unidiff of the whole changeset
 
@@ -126,6 +123,12 @@ class Changeset(object):
         return (self.revision <> other.revision or
                 self.date <> other.date or
                 self.author <> other.author)
+
+    def setLog(self, log):
+        if self.REFILL_MESSAGE:
+            self.log = refill(log)
+        else:
+            self.log = log.strip()
 
     def addEntry(self, entry, revision):
         """
