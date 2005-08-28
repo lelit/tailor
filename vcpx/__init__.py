@@ -9,9 +9,8 @@
 vcpx - Version Control Patch eXchanger
 ======================================
 
-This is the package `vcpx` (pronounced "veeseepex").  It encapsulates
-the machinery needed to keep the patches in sync across different VC
-systems.
+This package encapsulates the machinery needed to keep the patches in
+sync across different VC systems.
 """
 
 __docformat__ = 'reStructuredText'
