@@ -27,7 +27,7 @@ class StateFile(object):
 
     It behaves as an iterator, and source backends loop over not yet
     applied changesets, calling .applied() after each one: that writes
-    the applied changeset in a `journal` file, much more atomic than
+    the applied changeset in a *journal* file, much more atomic than
     rewriting the whole archive each time.
 
     When the source backend finishes it's job, either because there

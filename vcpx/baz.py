@@ -26,9 +26,15 @@ This module implements the backends for baz (Arch 1.x).
 
 This backend interprets tailor's repository, module and revision arguments
 as follows:
-  repository: a registered archive name
-  module:     <category>--<branch>--<version>
-  revision:   <revision>
+
+repository
+  a registered archive name
+
+module
+  <category>--<branch>--<version>
+
+revision
+  <revision>
 """
 
 __docformat__ = 'reStructuredText'

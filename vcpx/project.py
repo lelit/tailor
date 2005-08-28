@@ -32,11 +32,11 @@ class Project(object):
     root-directory
       This is where all the fun will happen: this directory will contain
       the source and the target working copy, and usually the state and
-      the log file. It support the conventional `~user` to indicate user's
+      the log file. It support the conventional "~user" to indicate user's
       home directory.
 
     subdir
-      This is the subdirectory, relative to the `root-directory`, where
+      This is the subdirectory, relative to the root-directory, where
       tailor will extract the source working copy. It may be '.' for some
       backend kinds.
 

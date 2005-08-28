@@ -372,19 +372,42 @@ class MonotoneRevToCset:
     data, diff the differences beetween revisions.  
     Monotone also supports multiple authors/tags/comments for each revision, while tailor allows only single values.
     We collapse those multiple data (when present) to single entries in the following manner:
-        * author:       all entries separated by a comma
-        * date:         chooses only one, at random
-        * changelog:    all entries appended, without a specific order
-        * comment:      all comments are appended to the changelog string, prefixed by a "Note:" line
-        * tag:          not used by tailor. Ignored
-        * branch:       ignored (tailor follows only a single branch)
-        * testresult:   ignored
-        * other certs:  ignored
+    
+    author
+      all entries separated by a comma
+
+    date
+      chooses only one, at random
+
+    changelog
+      all entries appended, without a specific order
+
+    comment
+      all comments are appended to the changelog string, prefixed by a "Note:" line
+    tag
+      not used by tailor. Ignored
+
+    branch
+      ignored (tailor follows only a single branch)
+
+    testresult
+      ignored
+
+    other certs
+      ignored
+
     Changesets created by monotone will have additional fields with the original data:
-        * real_ancestors: list of the real revision ancestor(s)
-        * real_dates:     list with all date certs
-        * lin_ancestor:   linearized ancestor (i.e. previous revision in the linearized history)
+
+    real_ancestors
+      list of the real revision ancestor(s)
+
+    real_dates
+      list with all date certs
+
+    lin_ancestor
+      linearized ancestor (i.e. previous revision in the linearized history)
     """
+
     def __init__(self, repository, working_dir):
         self.working_dir = working_dir
         self.repository = repository
