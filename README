@@ -6,7 +6,7 @@ Tailor 1.0
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, Bazaar_, `Bazaar-NG`_
+Tailor is a tool to migrate changesets between ArX_, Bazaar_, `Bazaar-NG`_,
 CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_, Subversion_ and Tla_
 [#]_ repositories.
 
