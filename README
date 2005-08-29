@@ -49,8 +49,8 @@ two way sync::
        best way to get pending changes and build tailor ChangeSets out
        of them.
 
-       To the opposite, Bazaar and Tla are supported only as a source
-       system.
+       To the opposite, Bazaar and Tla are supported only as source
+       systems.
 
 .. _arx: http://www.nongnu.org/arx/
 .. _bazaar: http://bazaar.canonical.com/
