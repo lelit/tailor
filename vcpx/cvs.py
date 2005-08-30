@@ -291,7 +291,7 @@ class CvsWorkingDir(CvspsWorkingDir):
         fname = join(self.basedir, 'CVS', 'Tag')
         if exists(fname):
             tag = open(fname).read()
-            if tag[0] in 'NT':
+            if tag[0] == 'T':
                 branch=tag[1:-1]
 
         cmd = [self.repository.CVS_CMD, "-f", "-d", "%(repository)s", "rlog",
