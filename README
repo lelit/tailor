@@ -213,6 +213,9 @@ a `start-revision` with a timestamp like ``2001-12-25 23:26:48 UTC``.
 To specify also a particular `branch`, prepend it before the
 timestamp, as in ``unstable-branch 2001-12-25 23:26:48 UTC``.
 
+To migrate the whole history of a specific `branch`, use something
+like ``somebranch INITIAL``.
+
 
 Resolving conflicts
 ===================
