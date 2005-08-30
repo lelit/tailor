@@ -91,7 +91,7 @@ subdir = darcside
 target = darcs:pxlib
 root-directory = /tmp/tailor-tests/cvs2darcs
 source = cvs:pxlib
-start-revision = INITIAL
+start-revision = R-0-5-1
 subdir = pxlib
 
 [darcs:pxlib]
@@ -104,7 +104,7 @@ module = pxlib
 root-directory = /tmp/tailor-tests/cvs2hg
 source = cvs:cmsmini
 target = hg:cmsmini
-start-revision = HEAD
+start-revision = INITIAL
 subdir = cmsmini
 
 [cvs:cmsmini]
