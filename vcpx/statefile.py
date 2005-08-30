@@ -147,23 +147,27 @@ class StateFile(object):
                     old = open(self.filename)
                     load(old) # last applied
                     queuelen = load(old)
-                    cs = load(old)
-
-                    # Skip already applied changesets
-                    while cs <> last_applied:
-                        queuelen -= 1
+                    if queuelen>0:
                         cs = load(old)
+                        # Skip already applied changesets
+                        while cs <> last_applied:
+                            queuelen -= 1
+                            if queuelen==0:
+                                break
+                            cs = load(old)
 
                     sf = open(self.filename + '.new', 'w')
                     dump(last_applied, sf)
-                    dump(queuelen-1, sf)
-
-                    while True:
-                        try:
-                            cs = load(old)
-                        except EOFError:
-                            break
-                        dump(cs, sf)
+                    if queuelen==0:
+                        dump(queuelen, sf)
+                    else:
+                        dump(queuelen-1, sf)
+                        while True:
+                            try:
+                                cs = load(old)
+                            except EOFError:
+                                break
+                            dump(cs, sf)
                     sf.close()
                     old.close()
                     unlink(self.filename)
