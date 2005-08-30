@@ -112,6 +112,20 @@ repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
 module = cmsmini
 
 [hg:cmsmini]
+
+[cvs2bzr]
+root-directory = /tmp/tailor-tests/cvs2bzr
+source = cvs:atse
+target = bzr:atse
+start-revision = spamies-improvement-branch INITIAL
+subdir = atse
+
+[cvs:atse]
+repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
+module = ATSchemaEditorNG
+
+[bzr:atse]
+bzr-command = /opt/src/bzr.dev/bzr
 """
 
 from unittest import TestCase, TestSuite
@@ -241,6 +255,14 @@ class TailorTest(TestCase):
         "Test CVS to Mercurial"
 
         tailorizer = Tailorizer('cvs2hg', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testCvsToBazaarng(self):
+        "Test CVS to Bazaar-NG"
+
+        tailorizer = Tailorizer('cvs2bzr', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
