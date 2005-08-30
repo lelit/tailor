@@ -272,7 +272,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if not initial:
             cmd = [self.repository.SVN_CMD, "log", "--verbose", "--xml",
-                   "--revision", revision]
+                   "--revision", revision=='HEAD' and 'COMMITTED' or revision]
             svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
             output = svnlog.execute(stdout=PIPE)[0]
 
