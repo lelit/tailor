@@ -48,7 +48,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                self.target.shared_basedirs = \
                                self.source.basedir == self.target.basedir
 
-        IGNORED_METADIRS = [source_repo.METADIR, target_repo.METADIR]
+        IGNORED_METADIRS = filter(None, [source_repo.METADIR,
+                                         target_repo.METADIR])
         IGNORED_METADIRS.extend(source_repo.EXTRA_METADIRS)
         IGNORED_METADIRS.extend(target_repo.EXTRA_METADIRS)
 

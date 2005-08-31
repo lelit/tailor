@@ -20,6 +20,7 @@ class Repository(object):
     """
     Collector for the configuration of a single repository.
     """
+    METADIR = None
     EXTRA_METADIRS = []
 
     def __init__(self, name, kind, project, which):
