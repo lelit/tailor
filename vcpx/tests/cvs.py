@@ -865,3 +865,31 @@ to be changing this directory much, so ignore any non-cvs files in it.
 
         log = StringIO(self.MULTI_MODULE_TEST)
         csets = changesets_from_cvslog(log, 'apache-1.3')
+
+    ENTRY_NAMES_TEST = """
+cvs rlog: Logging Products/PluggableAuthService
+
+RCS file: /cvs-repository/Products/PluggableAuthService/COPYRIGHT.txt,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 1;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/12 15:15:53;  author: jens;  state: Exp;
+Sorry for the noise - switching to ZPL 2.1
+=============================================================================
+"""
+
+    def testEntryNames(self):
+        """Verify the parser removes module name from entries"""
+
+        log = StringIO(self.ENTRY_NAMES_TEST)
+        csets = changesets_from_cvslog(log, 'Products/PluggableAuthService')
+
+        cset = csets[0]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'COPYRIGHT.txt')
