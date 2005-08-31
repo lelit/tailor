@@ -271,7 +271,6 @@ For example::
     root-directory = /tmp/n9
     source = darcs:tailor
     target = svn:tailor
-    dont-refill-changelogs = True
     state-file = tailor.state
 
     [tailor-reverse]
@@ -465,6 +464,9 @@ remove-first-log-line
   go in pair with ``patch-name-format``, when using it's 'firstlogline'
   variable to build the name of the patch.  By default is ``False``.
 
+refill-changelogs
+  Off by default, when active tailor reformats every changelog before
+  committing on the target system.
 
 Repositories
 ~~~~~~~~~~~~

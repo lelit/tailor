@@ -7,7 +7,6 @@
 
 """
 [DEFAULT]
-dont-refill-changelogs = True
 target-module = None
 source-repository = %(tailor_repo)s
 encoding = None

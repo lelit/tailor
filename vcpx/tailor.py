@@ -148,7 +148,7 @@ class Tailorizer(Project):
         if pname_format is not None:
             SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
         SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
-        Changeset.REFILL_MESSAGE = not pconfig('dont-refill-changelogs')
+        Changeset.REFILL_MESSAGE = pconfig('refill-changelogs')
 
         if not self.exists():
             self.bootstrap()
@@ -203,12 +203,10 @@ UPDATE_OPTIONS = [
                      "is intended to go in pair with --patch-name-format, "
                      "when using it's 'firstlogline' variable to build the "
                      "name of the patch."),
-    RecogOption("-N", "--dont-refill-changelogs", action="store_true",
+    RecogOption("-N", "--refill-changelogs", action="store_true",
                 default=False,
-                help="Do not refill every changelog, but keep them as is. "
-                     "This is usefull when using --patch-name-format, or "
-                     "when upstream developers are already formatting their "
-                     "notes with a consistent layout."),
+                help="Refill every changelog, useful when upstream logs "
+                     "are not uniform."),
 ]
 
 BOOTSTRAP_OPTIONS = [
