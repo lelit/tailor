@@ -485,7 +485,7 @@ denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
 ``bzrng``, ``cdv``, ``cg``, ``cvs``, ``darcs``, ``hg``, ``monotone``,
-``svn`` and ``tla``.
+``svn``, ``svndump`` and ``tla``.
 
 When a repository is used as a `source`, it must indicate its origin
 with ``repository``, and for some backends also a ``module``, but are

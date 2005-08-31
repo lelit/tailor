@@ -125,6 +125,18 @@ module = ATSchemaEditorNG
 
 [bzr:atse]
 bzr-command = /opt/src/bzr.dev/bzr
+
+[svndump2darcs]
+source = svndump:simple
+target = darcs:simple
+root-directory = /tmp/tailor-tests/svndump2darcs
+subdir = simple
+start-revision = INITIAL
+
+[svndump:simple]
+repository = /tmp/pyobjc.svndump
+
+[darcs:simple]
 """
 
 from unittest import TestCase, TestSuite
@@ -262,6 +274,14 @@ class TailorTest(TestCase):
         "Test CVS to Bazaar-NG"
 
         tailorizer = Tailorizer('cvs2bzr', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testSvndumpToDarcs(self):
+        "Test subversion dump to darcs"
+
+        tailorizer = Tailorizer('svndump2darcs', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
