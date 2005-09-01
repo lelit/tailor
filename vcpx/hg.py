@@ -52,7 +52,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         cmd = [self.repository.HG_CMD, "commit", "-u", author,
                "-l", "%(logfile)s",
-               "-d", "%(time)s UTC"]
+               "-d", "%(time)d 0"]
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
