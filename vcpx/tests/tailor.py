@@ -134,9 +134,22 @@ subdir = simple
 start-revision = INITIAL
 
 [svndump:simple]
-repository = /tmp/pyobjc.svndump
+repository = %(tailor_repo)s/simple.svndump
 
 [darcs:simple]
+
+[svndump2hg]
+source = svndump:pyobjc
+target = hg:pyobjc
+root-directory = /tmp/tailor-tests/svndump2hg
+start-revision = INITIAL
+
+[svndump:pyobjc]
+repository = %(tailor_repo)s/pyobjc.svndump
+subdir = plain
+
+[hg:pyobjc]
+subdir = hg
 """
 
 from unittest import TestCase, TestSuite
@@ -282,6 +295,14 @@ class TailorTest(TestCase):
         "Test subversion dump to darcs"
 
         tailorizer = Tailorizer('svndump2darcs', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testSvndumpToMercurial(self):
+        "Test subversion dump to mercurial"
+
+        tailorizer = Tailorizer('svndump2hg', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
