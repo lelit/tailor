@@ -153,20 +153,18 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
 
     def _prepareWorkingDirectory(self, source_repo):
         """
-        Create the .gitignore.
+        Create the .git/info/exclude.
         """
 
         from os.path import join
         from re import escape
         from dualwd import IGNORED_METADIRS
 
-        # Create the .gitignore file, that contains an fnmatch per line
-        # with all known VCs metadirs to be skipped.
-        # .gitignore is per directory, and does not recurse.
-        # We could change to cogito specific .git/ignore or
-        # once/if upstream cogito is updated to use .git/info/exclude,
-        # use it instead of .gitignore
-        ignore = open(join(self.basedir, '.gitignore'), 'w')
+        # Create the .git/info/exclude file, that contains an
+        # fnmatch per line with metadirs to be skipped.
+        ignore = open(join(self.basedir, self.repository.METADIR,
+                           'info', 'exclude'), 'a')
+        ignore.write('\n')
         ignore.write('\n'.join(['%s' % md
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n')
