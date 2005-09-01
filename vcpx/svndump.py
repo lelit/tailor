@@ -217,7 +217,7 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
                     file.close()
                     if e.action_kind == e.RENAMED:
                         if exists(join(self.basedir, e.old_name)):
-                            unlink(path)
+                            unlink(join(self.basedir, e.old_name))
 
     def _checkoutUpstreamRevision(self, revision):
         if revision is None or revision == 'INITIAL':
