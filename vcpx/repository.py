@@ -23,9 +23,23 @@ class Repository(object):
     METADIR = None
     EXTRA_METADIRS = []
 
-    def __init__(self, name, kind, project, which):
+    def __new__(klass, name, project, which):
+        """
+        Return the right subclass for kind, if it exists.
+        """
+
+        kind = name[:name.index(':')]
+        subclass = klass
+        subclassname = kind.capitalize() + 'Repository'
+        if subclassname in globals():
+            subclass = globals()[subclassname]
+        instance = super(Repository, klass).__new__(subclass, name,
+                                                    project, which)
+        instance.kind = kind
+        return instance
+
+    def __init__(self, name, project, which):
         self.name = name
-        self.kind = kind
         self.project = project
         self._load(project.config, which)
 

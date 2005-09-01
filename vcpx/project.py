@@ -178,16 +178,11 @@ class Project(object):
         that wraps it.
         """
 
-        import repository
+        from repository import Repository
 
         repname = self.config.get(self.name, which)
         kind = repname[:repname.index(':')]
-        klassname = kind.capitalize() + 'Repository'
-        try:
-            klass = getattr(repository, klassname)
-        except AttributeError:
-            klass = repository.Repository
-        return klass(repname, kind, self, which)
+        return Repository(repname, self, which)
 
     def exists(self):
         """
