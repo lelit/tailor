@@ -19,13 +19,8 @@ from datetime import datetime
 
 def changesets_from_svndump(dump, sincerev=None, module=None):
     """
-    Parse a Subversion dump file and iterate over the changesets.
+    Parse a Subversion dump file and return a sequence of changesets.
     """
-
-    dump.seek(0)
-    format = dump.readline()
-    assert format=="SVN-fs-dump-format-version: 2\n"
-    dump.readline()
 
     def parse_field(line):
         name,value = line[:-1].split(': ')
@@ -48,7 +43,7 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
         type,length = line[:-1].split(' ')
         assert type=='V'
         value = dump.read(int(length))
-        dump.read(1)
+        assert dump.read(1) == '\n'
         return name,value
 
     def parse_props():
@@ -63,16 +58,15 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
     def parse_entries():
         entries = []
         copied = {}
-
+        end = dump.tell()
         line = dump.readline()
         while not line.startswith('Node-'):
-            end = dump.tell()
-            line = dump.readline()
             if line.startswith('Revision-number:'):
                 dump.seek(end)
                 return []
+            end = dump.tell()
+            line = dump.readline()
 
-        end = None
         while line.startswith('Node-path'):
             fields = parse_fields(line)
             if 'Prop-content-length' in fields:
@@ -107,47 +101,63 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
                 renamed.action_kind = ChangesetEntry.RENAMED
             else:
                 if module is None or entry.name.startswith(module):
+                    if module is not None:
+                        # remove the module prefix
+                        entry.name = entry.name[len(module):]
+                        if entry.old_name and entry.old_name.startswith(module):
+                            entry.old_name = entry.old_name[len(module):]
                     entries.append(entry)
 
-            if line == '\n':
+            while line == '\n':
                 end = dump.tell()
                 line = dump.readline()
 
-        if end:
-            dump.seek(end)
+        dump.seek(end)
 
         return entries
 
     def parse_revision(rev):
         fname, proplength = parse_field(dump.readline())
-        assert fname=='Prop-content-length'
+        assert fname=='Prop-content-length', fname
         fname, contentlength = parse_field(dump.readline())
         assert dump.readline() == '\n'
 
         props = parse_props()
+        assert dump.readline() == '\n'
         entries = parse_entries()
+        if entries:
+            svndate = props['svn:date']
+            y,m,d = map(int, svndate[:10].split('-'))
+            hh,mm,ss = map(int, svndate[11:19].split(':'))
+            ms = int(svndate[20:-1])
+            timestamp = datetime(y, m, d, hh, mm, ss, ms)
+            cs = Changeset(rev, timestamp, props.get('svn:author'),
+                           props.get('svn:log', ''), entries)
+            return cs
 
-        svndate = props['svn:date']
-        y,m,d = map(int, svndate[:10].split('-'))
-        hh,mm,ss = map(int, svndate[11:19].split(':'))
-        ms = int(svndate[20:-1])
-        timestamp = datetime(y, m, d, hh, mm, ss, ms)
-        cs = Changeset(rev, timestamp, props.get('svn:author'),
-                       props.get('svn:log', ''), entries)
-        return cs
-
-    while True:
+    dump.seek(0)
+    format = dump.readline()
+    assert format=="SVN-fs-dump-format-version: 2\n", format
+    dump.readline()
+    line = dump.readline()
+    if line.startswith('UUID'):
+        dump.readline()
         line = dump.readline()
-        while line and not line.startswith('Revision-number:'):
-            line = dump.readline()
+
+    csets = []
+    while True:
         if line.startswith('Revision-number:'):
             fname, rev = parse_field(line)
             rev = int(rev)
             cs = parse_revision(rev)
-            if sincerev is None or rev>=sincerev:
-                yield cs
+            if cs is not None and (sincerev is None or rev>=sincerev):
+                csets.append(cs)
+            line = dump.readline()
+            while line and line=='\n':
+                line = dump.readline()
         else:
             break
+    return csets
 
 class SvndumpWorkingDir(UpdatableSourceWorkingDir):
 
@@ -159,8 +169,8 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
         else:
             sincerev = int(sincerev)
 
-        return list(changesets_from_svndump(self.svndump, sincerev,
-                                            self.repository.module))
+        return changesets_from_svndump(self.svndump, sincerev,
+                                       self.repository.module)
 
     def __getEntryContent(self, entry):
         if entry.text_length:
