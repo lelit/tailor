@@ -203,17 +203,15 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
                     else:
                         unlink(path)
             elif e.action_kind in (e.ADDED, e.RENAMED):
+                if not exists(dir):
+                    makedirs(dir)
                 if e.text_length is None:
-                    if not exists(dir):
-                        makedirs(dir)
                     if e.action_kind == e.RENAMED:
                         rename(join(self.basedir, e.old_name), path)
                     else:
                         if not exists(path):
                             makedirs(path)
                 else:
-                    if not exists(dir):
-                        makedirs(dir)
                     file = open(path, 'w')
                     file.write(content)
                     file.close()
