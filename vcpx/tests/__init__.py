@@ -13,5 +13,6 @@ from svn import *
 from config import *
 from statefile import *
 from tailor import *
+from svndump import *
 
 ExternalCommand.VERBOSE = False
