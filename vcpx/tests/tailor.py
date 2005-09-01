@@ -181,9 +181,11 @@ class TailorTest(TestCase):
 
         dwd = tailorizer.workingDir()
         if dwd.source.basedir <> dwd.target.basedir:
-            cmd = ["diff", "-r", "-u",
-                   "-x", tailorizer.source.METADIR,
-                   "-x", tailorizer.target.METADIR]
+            cmd = ["diff", "-r", "-u"]
+            if tailorizer.source.METADIR:
+                cmd.extend(["-x", tailorizer.source.METADIR])
+            if tailorizer.target.METADIR:
+                cmd.extend(["-x", tailorizer.target.METADIR])
             d = ExternalCommand(command=cmd)
             out = d.execute(dwd.source.basedir, dwd.target.basedir,
                             stdout=PIPE)[0]
