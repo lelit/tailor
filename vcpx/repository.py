@@ -255,6 +255,15 @@ class DarcsRepository(Repository):
         self.EXECUTABLE = config.get(self.name, 'darcs-command', 'darcs')
 
 
+class GitRepository(Repository):
+    METADIR = '.git'
+    GIT_CMD = 'git'
+
+    def _load(self, config, which):
+        Repository._load(self, config, which)
+        self.GIT_CMD = config.get(self.name, 'git-command', self.GIT_CMD)
+
+
 class HgRepository(Repository):
     METADIR = '.hg'
 
