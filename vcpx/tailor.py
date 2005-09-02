@@ -139,7 +139,7 @@ class Tailorizer(Project):
 
             # Make printouts be encoded as well. A better solution would be
             # using the replace mechanism of the encoder, and keep printing
-            # in the user LC_CTYPE/LANG setting.
+            # in the user's LC_CTYPE/LANG setting.
 
             import codecs, sys
             sys.stdout = codecs.getwriter(encoding)(sys.stdout)
@@ -184,8 +184,8 @@ GENERAL_OPTIONS = [
                      "every project found in the config file."),
     RecogOption("--encoding", metavar="CHARSET", default=None,
                 help="Force the output encoding to given CHARSET, rather "
-                     "then using the user default settings specified in the "
-                     "environment."),
+                     "then using the user's default settings specified "
+                     "in the environment."),
 ]
 
 UPDATE_OPTIONS = [
@@ -200,8 +200,8 @@ UPDATE_OPTIONS = [
     RecogOption("-1", "--remove-first-log-line", action="store_true",
                 default=False,
                 help="Remove the first line of the upstream changelog. This "
-                     "is intended to go in pair with --patch-name-format, "
-                     "when using it's 'firstlogline' variable to build the "
+                     "is intended to pair with --patch-name-format, "
+                     "when using its 'firstlogline' variable to build the "
                      "name of the patch."),
     RecogOption("-N", "--refill-changelogs", action="store_true",
                 default=False,
@@ -231,7 +231,7 @@ BOOTSTRAP_OPTIONS = [
                      "SVN it's the prefix of the tree you want and must begin "
                      "with a slash. Since it's used in the description of the "
                      "target repository, you may want to give it a value with "
-                     "darcs too even if it is otherwise ignored."),
+                     "darcs too, even though it is otherwise ignored."),
     RecogOption("-r", "--revision", "--start-revision", dest="start_revision",
                 metavar="REV",
                 help="Specify the revision bootstrap should checkout.  REV "

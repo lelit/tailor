@@ -7,7 +7,7 @@
 
 """
 This module contains supporting classes for CVS. To get a
-cross-repository revision number ala Subversion, the implementation
+cross-repository revision number a la Subversion, the implementation
 uses `cvsps` to fetch the changes from the upstream repository.
 """
 
@@ -133,9 +133,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                       SyncronizableTargetWorkingDir):
 
     """
-    An instance of this class represent a read/write CVS working directory,
-    so that it can be used both as source of patches, or as a target
-    repository.
+    An instance of this class represents a read/write CVS working
+    directory, so that it can be used both as a source of patches and
+    as a target repository.
 
     It uses `cvsps` to do the actual fetch of the changesets metadata
     from the server, so that we can reasonably group together related
@@ -214,7 +214,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             # If this is a directory (CVS does not version directories,
             # and thus new_revision is always None for them), and it's
             # going to be deleted, do not execute a 'cvs update', that
-            # in some cases does not what one would expect. Instead,
+            # in some cases does not do what one would expect. Instead,
             # remove it with everything it contains (that should be
             # just a single "CVS" subdir, btw)
 
@@ -253,8 +253,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     def _checkoutUpstreamRevision(self, revision):
         """
-        Concretely do the checkout of the upstream sources. Use `revision` as
-        the name of the tag to get, or as a date if it starts with a number.
+        Concretely do the checkout of the upstream sources. Use
+        `revision` as the name of the tag to get, or as a date if it
+        starts with a number.
 
         Return the last applied changeset.
         """
@@ -375,8 +376,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
         Verify that the hierarchy down to the entry is under CVS.
 
-        If the directory containing the entry does not exists,
-        create it and make it appear as under CVS so that succeding
+        If the directory containing the entry does not exist,
+        create it and make it appear as under CVS so that a subsequent
         'cvs update' will work.
         """
 
@@ -422,7 +423,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             rootf.close()
 
             # Add the "new" directory to the changeset, so that the
-            # replayer get its name
+            # replayer gets its name
 
             entry = changeset.addEntry(path, None)
             entry.action_kind = entry.ADDED

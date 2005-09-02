@@ -84,7 +84,7 @@ You can either run tailor where it is currently located, or move it
 along with the vcpx directory to a location in your PATH.
 
 There's even a standard setup.py that you may use to install the
-script using Python conventional distutils.
+script using Python's conventional distutils.
 
 .. [#] Darcs 1.0.2 is too old, 1.0.3 is good, 1.0.4 (the fourth
        release candidate is under final testing) is recommended since
@@ -593,7 +593,7 @@ Further help
 See the output of ``tailor -h`` for some further tips.  There's
 also a `wiki page`_ that may give you some other hints.  The
 development of Tailor is mainly driven by user requests at this point,
-and the preferred comunication media is the dedicated `mailing list`_
+and the preferred comunication medium is the dedicated `mailing list`_
 [#]_.
 
 .. _wiki page:
@@ -603,9 +603,9 @@ and the preferred comunication media is the dedicated `mailing list`_
    http://lists.zooko.com/mailman/listinfo/tailor
    
 I will be more than happy to answer any doubt, question or suggestion
-you may have on it. I'm usually hanging as "lelit" on the IRC channel
-devoted to darcs on the `freenode.net` network. Do not hesitate to
-contact me either by email or chatting there.
+you may have on it. I'm usually hanging out as "lelit" on the IRC
+channel devoted to darcs on the `freenode.net` network. Do not
+hesitate to contact me either by email or chatting there.
 
 .. [#] I wish to say a big `Thank you` to `Zooko <zooko@zooko.com>`_,
        for hosting the ML and for supporting Tailor in several ways,
