@@ -256,9 +256,17 @@ class SvnRepository(Repository):
         self.use_propset = config.get(self.name, 'use-propset', False)
 
     def _validateConfiguration(self):
+        from vcpx.config import ConfigurationError
+
+        if not self.repository:
+            raise ConfigurationError("Must specify the root of the "
+                                     "Subversion repository used "
+                                     "as %s with the option "
+                                     "'repository'" % self.which)
+
         if not self.module:
-            raise ConfigurationError("Must the path within the "
-                                     "Subversion repository")
+            raise ConfigurationError("Must specify the path within the "
+                                     "Subversion repository as 'module'")
 
         if not self.module.startswith('/'):
             self.project.log_info("Prepending '/' to module")
