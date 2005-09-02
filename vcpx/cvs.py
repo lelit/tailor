@@ -162,7 +162,10 @@ class ChangeSetCollector(object):
         revision = self.__readline()
         if not revision or not revision.startswith('revision '):
             return None
-        rev = revision[9:-1]
+        # Don't just knock off the leading 'revision ' here.
+        # There may be locks, in which case we get output like:
+        # 'revision 1.4    locked by: mem;'.
+        rev = revision.split(' ')[1]
 
         infoline = self.__readline()
 
