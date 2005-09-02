@@ -230,6 +230,13 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
                 break
             self._applyChangeset(cs)
             last = cs
+
+        if last is None:
+            raise TargetInitializationFailure(
+                "Couldn't initialize the source working copy at %s, "
+                "no changesets found" % revision)
+
+        self.log_info("Working copy up to svndump revision %s" % last.revision)
         return last
 
     def _prepareSourceRepository(self):
