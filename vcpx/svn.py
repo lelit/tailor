@@ -246,7 +246,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                     stdout=PIPE)[0]
 
             if svnlog.exit_status:
-                raise ChangesetApplicationFailure(
+                raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
                     (str(output), changes.exit_status, output.read()))
 
@@ -277,7 +277,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             output = svnlog.execute(stdout=PIPE)[0]
 
             if svnlog.exit_status:
-                raise ChangesetApplicationFailure(
+                raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
                     (str(changes), changes.exit_status, output.read()))
 
