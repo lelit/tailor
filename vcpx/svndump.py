@@ -96,9 +96,31 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
                 entry.old_name = fields['Node-copyfrom-path']
                 copied[entry.old_name] = entry
 
+            # Subversion does not have an atomic rename, but rather
+            # an copy+del duo: recognize the case, and eventually
+            # collapse the two back to a rename.
+
             if action == 'delete' and entry.name in copied:
                 renamed = copied[entry.name]
-                renamed.action_kind = ChangesetEntry.RENAMED
+
+                # Add the deletion, thus collapsing the copy+del into
+                # a rename, only if we are filtering by module and
+                # corresponding add does not pass the filter
+                if module is None or renamed.name.startswith(module):
+                    if module is None or entry.name.startswith(module):
+                        # Both pass the filter, switch add to a rename
+                        renamed.action_kind = ChangesetEntry.RENAMED
+                    else:
+                        # Only the delete pass, append to entries as is
+                        if module:
+                            entry.name = entry.name[len(module):]
+                        entries.append(entry)
+                else:
+                    # The copy didn't pass, so we must consider to keep
+                    # the deletion (we are here only if module is not None)
+                    if entry.name.startswith(module):
+                        entry.name = entry.name[len(module):]
+                        entries.append(entry)
             else:
                 if module is None or entry.name.startswith(module):
                     if module is not None:

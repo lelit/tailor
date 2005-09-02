@@ -3,7 +3,7 @@
 # :Creato:   gio 01 set 2005 10:47:17 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase, TestSuite
 from datetime import datetime
@@ -252,3 +252,11 @@ Node-action: delete
         self.assertEqual(entry.name, 'subdir')
         self.assertEqual(entry.action_kind, entry.ADDED)
         self.assertEqual(entry.text_length, None)
+
+    def testFilterOnModule(self):
+        "Verify how svndump parser filters entries"
+
+        log = StringIO(self.SIMPLE_TEST)
+        csets = changesets_from_svndump(log, module="subdir")
+
+        self.assertEqual(len(csets), 2)
