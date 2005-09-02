@@ -49,6 +49,7 @@ class Repository(object):
         self.project = project
         self.which = which
         self._load(project.config)
+        self._validateConfiguration()
 
     def __str__(self):
 
@@ -110,8 +111,6 @@ class Repository(object):
         """
 
         from source import InvocationError
-
-        self._validateConfiguration()
 
         wdname = self.kind.capitalize() + 'WorkingDir'
         modname = 'vcpx.' + self.kind

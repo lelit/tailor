@@ -7,7 +7,8 @@
 
 from unittest import TestCase, TestSuite
 from cStringIO import StringIO
-from vcpx.config import Config
+from vcpx.config import Config, ConfigurationError
+from vcpx.project import Project
 
 class ConfigTest(TestCase):
 
@@ -42,10 +43,12 @@ passphrase = simba
 [project2]
 root-directory = /tmp/test
 source = darcs:project1repo
-target = svn:project1repo
+target = svn:project2repo
 refill-changelogs = Yes
 state-file = project2.state
 before-commit = refill
+
+[svn:project2repo]
 '''
 
 def maybe_skip(context, changeset):
@@ -80,3 +83,9 @@ def checkpoint(context, changeset):
 
         config = Config(StringIO(self.BASIC_TEST), {})
         self.assertEqual(config.projects(), ['project2'])
+
+    def testValidation(self):
+        """Verify Repository validation mechanism"""
+
+        config = Config(StringIO(self.BASIC_TEST), {})
+        self.assertRaises(ConfigurationError, Project, 'project2', config)
