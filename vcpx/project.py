@@ -181,7 +181,6 @@ class Project(object):
         from repository import Repository
 
         repname = self.config.get(self.name, which)
-        kind = repname[:repname.index(':')]
         return Repository(repname, self, which)
 
     def exists(self):
