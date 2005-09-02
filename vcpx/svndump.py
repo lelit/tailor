@@ -221,20 +221,23 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
 
     def _checkoutUpstreamRevision(self, revision):
         if revision is None or revision == 'INITIAL':
-            torev = 1
+            torev = -1
         else:
             torev = int(revision)
         last = None
         for cs in self._getUpstreamChangesets():
-            if cs.revision>torev:
+            if torev>=0 and cs.revision>torev:
                 break
             self._applyChangeset(cs)
             last = cs
+            if torev==-1:
+                break
 
         if last is None:
+            from vcpx.target import TargetInitializationFailure
             raise TargetInitializationFailure(
-                "Couldn't initialize the source working copy at %s, "
-                "no changesets found" % revision)
+                "Couldn't initialize the source working copy at %d, "
+                "no changesets found." % torev)
 
         self.log_info("Working copy up to svndump revision %s" % last.revision)
         return last
