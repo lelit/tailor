@@ -277,6 +277,14 @@ class SvnRepository(Repository):
         return wd
 
 
+class SvndumpRepository(Repository):
+
+    def _validateConfiguration(self):
+        if self.module and self.module.startswith('/'):
+            self.project.log_info("Removing starting '/' from module")
+            self.module = self.module[1:]
+
+
 class TlaRepository(Repository):
     METADIR = '{arch}'
     TLA_CMD = "tla"
