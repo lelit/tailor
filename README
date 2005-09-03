@@ -501,7 +501,9 @@ the BazaarNG Python library is located.
 A repository may also have it's own ``subdir``: when the `source` and
 `target` repositories use different subdirectories, tailor uses
 ``rsync`` to copy the changes between the two after each applied
-changeset.
+changeset.  When the source repository basedir is a subdirectory of
+target basedir tailor prefixes all paths coming from upstream to match
+the relative position.
 
 CVS and CVSPS repositories may turn of automatic tagging of entries,
 that tailor does by default to prevent manual interventions in the
