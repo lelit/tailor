@@ -101,6 +101,41 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                      patchname, changelog, entries)
         self._dismissChangeset(changeset)
 
+    def __getPrefixToSource(self):
+        ssubdir = self.repository.project.source.subdir
+        tsubdir = self.repository.project.target.subdir
+        if self.shared_basedirs and ssubdir <> tsubdir:
+            if tsubdir == '.':
+                prefix = ssubdir
+            else:
+                if not tsubdir.endswith('/'):
+                    tsubdir += '/'
+                prefix = ssubdir[len(tsubdir):]
+            return prefix
+        else:
+            return None
+
+    def __adaptEntriesPath(self, changeset):
+        """
+        If the source basedir is a subdirectory of the
+        target, adjust all the pathnames adding the prefix
+        computed by difference.
+        """
+
+        from copy import deepcopy
+        from os.path import join
+
+        prefix = self.__getPrefixToSource()
+        if prefix:
+            adapted = deepcopy(changeset)
+            for e in adapted.entries:
+                e.name = join(prefix, e.name)
+                if e.old_name:
+                    e.old_name = join(prefix, e.old_name)
+            return adapted
+        else:
+            return changeset
+
     def _adaptChangeset(self, changeset):
         """
         Do whatever needed before replay the changeset.
@@ -113,16 +148,14 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         from copy import copy
 
+        adapted = self.__adaptEntriesPath(changeset)
         if self.repository.project.before_commit:
-            adapted = copy(changeset)
+            adapted = copy(adapted)
 
             for adapter in self.repository.project.before_commit:
                 if not adapter(self, adapted):
                     return None
-
-            return adapted
-        else:
-            return changeset
+        return adapted
 
     def _dismissChangeset(self, changeset):
         """
