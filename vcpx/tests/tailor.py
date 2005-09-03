@@ -134,9 +134,11 @@ subdir = simple
 start-revision = INITIAL
 
 [svndump:simple]
-repository = %(tailor_repo)s/simple.svndump
+repository = %(tailor_repo)s/vcpx/tests/data/simple.svndump
+subdir = plain
 
 [darcs:simple]
+subdir = .
 
 [svndump2hg]
 source = svndump:pyobjc
