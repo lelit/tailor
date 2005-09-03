@@ -115,11 +115,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Execute ``hg init``.
         """
 
-        from os import makedirs
         from os.path import join, exists
-
-        if not exists(self.basedir):
-            makedirs(self.basedir)
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,

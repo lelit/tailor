@@ -295,16 +295,35 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         self._prepareWorkingDirectory(source_repo)
 
-    def _prepareTargetRepository(self):
-        """
-        Possibly create or connect to the repository, when overriden
-        by subclasses.
-        """
-
     def _prepareWorkingDirectory(self, source_repo):
         """
         Possibly checkout a working copy of the target VC, that will host the
         upstream source tree, when overriden by subclasses.
+        """
+
+    def prepareTargetRepository(self):
+        """
+        Do anything required to host the target repository.
+        """
+
+        from os import makedirs
+        from os.path import join, exists
+
+        if not exists(self.basedir):
+            makedirs(self.basedir)
+
+        self._prepareTargetRepository()
+
+        prefix = self.__getPrefixToSource()
+        if prefix:
+            if not exists(join(self.basedir, prefix)):
+                makedirs(join(self.basedir, prefix))
+            self._addPathnames([prefix])
+
+    def _prepareTargetRepository(self):
+        """
+        Possibly create or connect to the repository, when overriden
+        by subclasses.
         """
 
     def importFirstRevision(self, source_repo, changeset, initial):

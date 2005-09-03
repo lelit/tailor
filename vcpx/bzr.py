@@ -86,10 +86,6 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
-        from os import makedirs
-
-        if not exists(self.basedir):
-            makedirs(self.basedir)
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             cmd = [self.repository.BZR_CMD, "init"]

@@ -91,10 +91,6 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
-        from os import makedirs
-
-        if not exists(self.basedir):
-            makedirs(self.basedir)
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
