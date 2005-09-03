@@ -44,9 +44,21 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.target = target_repo.workingDir()
         self.target._prepareTargetRepository()
 
-        self.shared_basedirs = self.source.shared_basedirs = \
-                               self.target.shared_basedirs = \
-                               self.source.basedir == self.target.basedir
+        sbdir = self.source.basedir
+        tbdir = self.target.basedir
+        if sbdir == tbdir:
+            shared = True
+        elif tbdir.startswith(sbdir):
+            raise InvocationError('Target base directory %r cannot be a '
+                                  'subdirectory of source directory %r' %(
+                (tbdir, sbdir)))
+        elif sbdir.startswith(tbdir):
+            shared = True
+        else:
+            shared = False
+        self.shared_basedirs = shared
+        self.source.shared_basedirs = shared
+        self.target.shared_basedirs = shared
 
         IGNORED_METADIRS = filter(None, [source_repo.METADIR,
                                          target_repo.METADIR])
