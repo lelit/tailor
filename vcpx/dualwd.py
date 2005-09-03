@@ -39,10 +39,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         global IGNORED_METADIRS
 
         self.source = source_repo.workingDir()
-        self.source._prepareSourceRepository()
-
         self.target = target_repo.workingDir()
-        self.target._prepareTargetRepository()
 
         sbdir = self.source.basedir
         tbdir = self.target.basedir
@@ -64,6 +61,9 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                          target_repo.METADIR])
         IGNORED_METADIRS.extend(source_repo.EXTRA_METADIRS)
         IGNORED_METADIRS.extend(target_repo.EXTRA_METADIRS)
+
+        self.source.prepareSourceRepository()
+        self.target.prepareTargetRepository()
 
         # UpdatableSourceWorkingDir
 
