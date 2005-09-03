@@ -165,7 +165,7 @@ class ChangeSetCollector(object):
         # Don't just knock off the leading 'revision ' here.
         # There may be locks, in which case we get output like:
         # 'revision 1.4    locked by: mem;'.
-        rev = revision.split(' ')[1]
+        rev = revision[:-1].split(' ')[1]
 
         infoline = self.__readline()
 
