@@ -5,7 +5,9 @@
 # :Licenza:  GNU General Public License
 #
 
-"""
+"""\
+#!tailor
+'''
 [DEFAULT]
 target-module = None
 source-repository = %(tailor_repo)s
@@ -105,6 +107,7 @@ source = cvs:cmsmini
 target = hg:cmsmini
 start-revision = INITIAL
 subdir = cmsmini
+before-commit = remap_authors
 
 [cvs:cmsmini]
 repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
@@ -152,6 +155,12 @@ subdir = plain
 
 [hg:pyobjc]
 subdir = hg
+'''
+
+def remap_authors(context, changeset):
+    if changeset.author == 'tizziano':
+        changeset.author = 'tiziano'
+    return True
 """
 
 from unittest import TestCase, TestSuite
