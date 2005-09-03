@@ -56,6 +56,11 @@ class SvndumpParserTest(TestCase):
     def testFilterOnModule(self):
         "Verify how svndump parser filters entries"
 
-        csets = changesets_from_svndump(self.log, module="subdir")
+        csets = changesets_from_svndump(self.log, module="subdir/")
 
-        self.assertEqual(len(csets), 2)
+        self.assertEqual(len(csets), 1)
+
+        cset = csets[0]
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'other.version')
+        self.assertEqual(entry.action_kind, entry.ADDED)

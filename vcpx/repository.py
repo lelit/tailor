@@ -283,7 +283,8 @@ class SvndumpRepository(Repository):
         if self.module and self.module.startswith('/'):
             self.project.log_info("Removing starting '/' from module")
             self.module = self.module[1:]
-
+        if self.module and not self.module.endswith('/'):
+            self.module = self.module+'/'
 
 class TlaRepository(Repository):
     METADIR = '{arch}'
