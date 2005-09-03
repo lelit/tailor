@@ -81,6 +81,7 @@ class Project(object):
         self.config = config
         self.name = name
         self.dwd = None
+        self.logger = None
         self._load()
 
     def __str__(self):
@@ -97,6 +98,7 @@ class Project(object):
         from os.path import join, exists, expanduser
         import logging
 
+        self.verbose = self.config.get(self.name, 'verbose', False)
         self.rootdir = self.config.get(self.name, 'root-directory', getcwd())
         if not exists(self.rootdir):
             makedirs(self.rootdir)
@@ -128,7 +130,6 @@ class Project(object):
                                      'unknown function: %s' %
                                      (self.name, str(e)))
 
-        self.verbose = self.config.get(self.name, 'verbose', False)
         self.logger = logging.getLogger('tailor.%s' % self.name)
         self.logfile = join(self.rootdir,
                             expanduser(self.config.get(self.name, 'logfile',
