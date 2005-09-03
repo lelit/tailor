@@ -180,7 +180,7 @@ class TailorTest(TestCase):
         "Diff the resulting sides"
 
         dwd = tailorizer.workingDir()
-        if dwd.source.basedir <> dwd.target.basedir:
+        if not dwd.shared_basedirs:
             cmd = ["diff", "-r", "-u"]
             if tailorizer.source.METADIR:
                 cmd.extend(["-x", tailorizer.source.METADIR])
