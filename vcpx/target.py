@@ -350,8 +350,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         prefix = self.__getPrefixToSource()
         if prefix:
             if not exists(join(self.basedir, prefix)):
+                # At bootstrap time, we assume that if the user
+                # extracted the source manually, she added
+                # the subdir, before doing that.
                 makedirs(join(self.basedir, prefix))
-            self._addPathnames([prefix])
+                self._addPathnames([prefix])
 
     def _prepareTargetRepository(self):
         """
