@@ -459,6 +459,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
+        from re import escape, compile
+        from dualwd import IGNORED_METADIRS
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
@@ -470,41 +472,88 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(init), init.exit_status))
 
+            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'rU')
+            ignored = [line[:-1] for line in boring]
+            boring.close()
+
+            # Augment the boring file, that contains a regexp per line
+            # with all known VCs metadirs to be skipped.
+            ignored.extend(['(^|/)%s($|/)' % escape(md)
+                            for md in IGNORED_METADIRS])
+
+            # Eventually omit our own log...
+            logfile = self.repository.project.logfile
+            if logfile.startswith(self.basedir):
+                ignored.append('^%s$' %
+                               escape(logfile[len(self.basedir)+1:]))
+
+            # ... and state file
+            sfname = self.repository.project.state_file.filename
+            if sfname.startswith(self.basedir):
+                sfrelname = sfname[len(self.basedir)+1:]
+                ignored.append('^%s$' % escape(sfrelname))
+                ignored.append('^%s$' % escape(sfrelname+'.journal'))
+
+            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'wU')
+            boring.write('\n'.join(ignored))
+            boring.close()
+        else:
+            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'rU')
+            ignored = [line[:-1] for line in boring]
+            boring.close()
+
+        # Build a list of compiled regular expressions, that will be
+        # used later to filter the entries.
+        self.__unwanted_entries = [compile(rx) for rx in ignored
+                                   if rx and not rx.startswith('#')]
+
     def _prepareWorkingDirectory(self, source_repo):
         """
         Tweak the default settings of the repository.
         """
 
         from os.path import join
-        from re import escape
-        from dualwd import IGNORED_METADIRS
 
         motd = open(join(self.basedir, '_darcs/prefs/motd'), 'w')
         motd.write(MOTD % str(source_repo))
         motd.close()
 
-        # Remove .cvsignore from default boring file
-        boring = open(join(self.basedir, '_darcs/prefs/boring'), 'r')
-        ignored = [line for line in boring if line <> '\.cvsignore$\n']
-        boring.close()
+    def _adaptEntries(self, changeset):
+        """
+        Filter out boring files.
+        """
 
-        # Augment the boring file, that contains a regexp per line
-        # with all known VCs metadirs to be skipped.
-        boring = open(join(self.basedir, '_darcs/prefs/boring'), 'w')
-        boring.write(''.join(ignored))
-        boring.write('\n'.join(['(^|/)%s($|/)' % escape(md)
-                                for md in IGNORED_METADIRS]))
-        boring.write('\n')
-        if self.logfile.startswith(self.basedir):
-            boring.write('^')
-            boring.write(self.logfile[len(self.basedir)+1:])
-            boring.write('$\n')
-        if self.state_file.filename.startswith(self.basedir):
-            sfrelname = self.state_file.filename[len(self.basedir)+1:]
-            boring.write('^')
-            boring.write(sfrelname)
-            boring.write('$\n')
-            boring.write('^')
-            boring.write(sfrelname+'.journal')
-            boring.write('$\n')
-        boring.close()
+        from copy import copy
+
+        adapted = SyncronizableTargetWorkingDir._adaptEntries(self, changeset)
+
+        # If there are no entries or no rules, there's nothing to do
+        if not adapted or not adapted.entries or not self.__unwanted_entries:
+            return adapted
+
+        entries = []
+        skipped = False
+        for e in adapted.entries:
+            skip = False
+            for rx in self.__unwanted_entries:
+                if rx.search(e.name):
+                    skip = True
+                    break
+            if skip:
+                self.log_info('Entry %r skipped per boring rules' %
+                              e.name)
+                skipped = True
+            else:
+                entries.append(e)
+
+        # All entries are gone, don't commit this changeset
+        if not entries:
+            self.log_info('All entries ignored, skipping whole '
+                          'changeset %r' % changeset.revision)
+            return None
+
+        if skipped:
+            adapted = copy(adapted)
+            adapted.entries = entries
+
+        return adapted
