@@ -117,13 +117,15 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
     def __adaptEntriesPath(self, changeset):
         """
-        If the source basedir is a subdirectory of the
-        target, adjust all the pathnames adding the prefix
-        computed by difference.
+        If the source basedir is a subdirectory of the target, adjust
+        all the pathnames adding the prefix computed by difference.
         """
 
         from copy import deepcopy
         from os.path import join
+
+        if not changeset.entries:
+            return changeset
 
         prefix = self.__getPrefixToSource()
         if prefix:
@@ -136,25 +138,43 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         else:
             return changeset
 
+    def _adaptEntries(self, changeset):
+        """
+        Do whatever is needed to adapt entries to the target system.
+
+        This implementation adds a prefix to each path if needed,
+        when the target basedir *contains* the source basedir. It
+        operates on and returns a copy of the given changeset.
+
+        Subclasses shall eventually extend this to exclude unwanted
+        entries, eventually returning None when all entries were
+        excluded, to avoid the commit on target of an empty changeset.
+        """
+
+        adapted = self.__adaptEntriesPath(changeset)
+        return adapted
+
     def _adaptChangeset(self, changeset):
         """
         Do whatever needed before replay the changeset.
 
-        This execute the adapters defined by before-commit on the project:
-        each adapter is run in turn, and may return False to indicate that
-        the changeset shouldn't be replayed at all. They are otherwise
-        free to alter the changeset in any meaningful way.
+        This implementation calls ``self._adaptEntries()``, then
+        executes the adapters defined by before-commit on the project:
+        each adapter is run in turn, and may return False to indicate
+        that the changeset shouldn't be replayed at all. They are
+        otherwise free to alter the changeset in any meaningful way.
         """
 
         from copy import copy
 
-        adapted = self.__adaptEntriesPath(changeset)
-        if self.repository.project.before_commit:
-            adapted = copy(adapted)
+        adapted = self._adaptEntries(changeset)
+        if adapted:
+            if self.repository.project.before_commit:
+                adapted = copy(adapted)
 
-            for adapter in self.repository.project.before_commit:
-                if not adapter(self, adapted):
-                    return None
+                for adapter in self.repository.project.before_commit:
+                    if not adapter(self, adapted):
+                        return None
         return adapted
 
     def _dismissChangeset(self, changeset):
