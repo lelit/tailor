@@ -91,6 +91,8 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
                                  'delete': ChangesetEntry.DELETED}[action]
             entry.text_offset = textoffset
             entry.text_length = textlength
+            if action <> 'delete':
+                entry.is_dir = fields['Node-kind'] == 'dir'
 
             if 'Node-copyfrom-path' in fields:
                 entry.old_name = fields['Node-copyfrom-path']
@@ -214,7 +216,10 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
             if e.action_kind == e.UPDATED:
                 if not exists(dir):
                     makedirs(dir)
-                if not isdir(path):
+                if e.is_dir:
+                    if not exists(path):
+                        makedirs(path)
+                else:
                     file = open(path, 'w')
                     file.write(content)
                     file.close()
@@ -231,7 +236,7 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
                     if e.action_kind == e.RENAMED:
                         rename(join(self.basedir, e.old_name), path)
                     else:
-                        if not exists(path):
+                        if e.is_dir and not exists(path):
                             makedirs(path)
                 else:
                     file = open(path, 'w')
