@@ -94,7 +94,7 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
             entry.text_offset = textoffset
             entry.text_length = textlength
             if action <> 'delete':
-                entry.is_dir = fields['Node-kind'] == 'dir'
+                entry.is_dir = fields.get('Node-kind', 'dir') == 'dir'
 
             if 'Node-copyfrom-path' in fields:
                 entry.old_name = fields['Node-copyfrom-path']
