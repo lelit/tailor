@@ -22,6 +22,8 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
     Parse a Subversion dump file and return a sequence of changesets.
     """
 
+    offsets = {}
+
     def parse_field(line):
         name,value = line[:-1].split(': ')
         return name,value
@@ -55,7 +57,7 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
             line = dump.readline()
         return props
 
-    def parse_entries():
+    def parse_entries(rev):
         entries = []
         copied = {}
         end = dump.tell()
@@ -97,6 +99,15 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
             if 'Node-copyfrom-path' in fields:
                 entry.old_name = fields['Node-copyfrom-path']
                 copied[entry.old_name] = entry
+
+                if entry.text_offset is None:
+                    previous = offsets.get((entry.old_name,
+                                            int(fields['Node-copyfrom-rev'])))
+                    if previous is not None:
+                        entry.text_offset,entry.text_length = previous
+            if entry.text_offset is not None:
+                offsets[(entry.name, rev)] = (entry.text_offset,
+                                              entry.text_length)
 
             # Subversion does not have an atomic rename, but rather
             # an copy+del duo: recognize the case, and eventually
@@ -148,7 +159,7 @@ def changesets_from_svndump(dump, sincerev=None, module=None):
 
         props = parse_props()
         assert dump.readline() == '\n'
-        entries = parse_entries()
+        entries = parse_entries(rev)
         if entries:
             svndate = props['svn:date']
             y,m,d = map(int, svndate[:10].split('-'))

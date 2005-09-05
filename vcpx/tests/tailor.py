@@ -155,6 +155,21 @@ subdir = plain
 
 [hg:pyobjc]
 subdir = hg
+
+[svndump2hg-partial]
+source = svndump:simple-partial
+target = hg:simple-partial
+root-directory = /tmp/tailor-tests/svndump2hg-partial
+start-revision = INITIAL
+
+[svndump:simple-partial]
+repository = %(tailor_repo)s/vcpx/tests/data/simple.svndump
+#repository = /usr/local/tmp/docit.svndump
+module = subdir
+subdir = plain
+
+[hg:simple-partial]
+subdir = hg
 '''
 
 def remap_authors(context, changeset):
@@ -316,6 +331,14 @@ class TailorTest(TestCase):
         "Test subversion dump to mercurial"
 
         tailorizer = Tailorizer('svndump2hg', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testPartialSvndumpToMercurial(self):
+        "Test partial subversion dump to mercurial"
+
+        tailorizer = Tailorizer('svndump2hg-partial', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
