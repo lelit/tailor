@@ -23,6 +23,7 @@ __docformat__ = 'reStructuredText'
 from source import UpdatableSourceWorkingDir, InvocationError
 from target import SyncronizableTargetWorkingDir
 from shwrap import ExternalCommand
+from datetime import datetime
 
 IGNORED_METADIRS = []
 
@@ -106,6 +107,12 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _syncTargetWithSource(self):
         cmd = ['rsync', '--delete', '--archive']
+        now = datetime.now()
+        if hasattr(self, '_last_rsync'):
+            last = self._last_rsync
+            if not (now-last).seconds:
+                cmd.append('--ignore-times')
+        self._last_rsync = now
         for M in IGNORED_METADIRS:
             cmd.extend(['--exclude', M])
 
