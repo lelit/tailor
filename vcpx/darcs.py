@@ -392,9 +392,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
         logmessage.append(author.encode(encoding))
-        logmessage.append(patchname and patchname.encode(encoding) or 'Unnamed patch')
+        if patchname:
+            logmessage.append(patchname.encode(encoding))
         if changelog:
-            logmessage.append(changelog and changelog.encode(encoding))
+            logmessage.append(changelog.encode(encoding))
+        if not patchname and not changelog:
+            logmessage.append('Unnamed patch')
 
         cmd = [self.repository.DARCS_CMD, "record", "--all", "--pipe"]
         if not entries:
