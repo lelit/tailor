@@ -11,7 +11,7 @@ This module implements the backend for Git using git-core.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
@@ -85,10 +85,14 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
         cmd = [self.repository.GIT_CMD, "commit", "-a", "-F", "-"]
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
-        c.execute(env=env, input='\n'.join(logmessage))
+        (out, _) = c.execute(stdout=PIPE, env=env, input='\n'.join(logmessage))
         if c.exit_status:
-            raise ChangesetApplicationFailure("%s returned status %d" %
-                                              (str(c), c.exit_status))
+            if out is None or out.readline().strip() != 'nothing to commit':
+                raise ChangesetApplicationFailure("%s returned status %d" %
+                                                  (str(c), c.exit_status))
+            else:
+                # empty changeset, which git-core doesn't support
+                pass
 
     def _removePathnames(self, names):
         """
