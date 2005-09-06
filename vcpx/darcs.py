@@ -386,16 +386,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from sys import getdefaultencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
-
         logmessage = []
 
         logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
         logmessage.append(author.encode(encoding))
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
         if not patchname and not changelog:
             logmessage.append('Unnamed patch')
 
