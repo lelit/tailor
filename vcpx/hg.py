@@ -31,7 +31,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = [self.repository.HG_CMD, "add"]
+            cmd = self.repository.command("add")
             ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -50,9 +50,9 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog.encode(encoding))
 
-        cmd = [self.repository.HG_CMD, "commit", "-u", author,
-               "-l", "%(logfile)s",
-               "-d", "%(time)d 0"]
+        cmd = self.repository.command("commit", "-u", author,
+                                      "-l", "%(logfile)s",
+                                      "-d", "%(time)d 0")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
@@ -78,7 +78,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = [self.repository.HG_CMD, "remove"]
+            cmd = self.repository.command("remove")
             ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
     def _renamePathname(self, oldname, newname):
@@ -90,7 +90,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
-        cmd = [self.repository.HG_CMD, "copy"]
+        cmd = self.repository.command("copy")
         copy = ExternalCommand(cwd=self.basedir, command=cmd)
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current HG,
@@ -119,7 +119,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
-                                   command=[self.repository.HG_CMD, "init"])
+                                   command=self.repository.command("init"))
             init.execute()
 
             if init.exit_status:
@@ -161,4 +161,4 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         ExternalCommand(cwd=self.basedir,
-                        command=[self.repository.HG_CMD, "addremove"]).execute()
+                        command=self.repository.command("addremove")).execute()

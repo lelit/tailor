@@ -22,6 +22,7 @@ class Repository(object):
     """
     METADIR = None
     EXTRA_METADIRS = []
+    EXECUTABLE = None
 
     def __new__(klass, name, project, which):
         """
@@ -89,6 +90,24 @@ class Repository(object):
         Validate the configuration, possibly altering/completing it.
         """
 
+        if self.EXECUTABLE:
+            from os import getenv
+            from os.path import isabs, exists, join
+            from vcpx.config import ConfigurationError
+
+            if isabs(self.EXECUTABLE):
+                ok = exists(self.EXECUTABLE)
+            else:
+                ok = False
+                for path in getenv('PATH').split(':'):
+                    if exists(join(path, self.EXECUTABLE)):
+                        ok = True
+                        break
+            if not ok:
+                raise ConfigurationError("The command %r used "
+                                         "by %r does not exist!" %
+                                         (self.EXECUTABLE, self.name))
+
     def log_info(self, what):
         """
         Print some info on the log and, in verbose mode, to stdout as well.
@@ -122,32 +141,43 @@ class Repository(object):
 
         return workingdir(self)
 
+    def command(self, *args, **kwargs):
+        """
+        Return the base external command, a sequence suitable to be used
+        to init an ExternalCommand instance.
+
+        This return None if the backend uses a different way to execute
+        its actions.
+        """
+
+        executable = kwargs.get('executable', self.EXECUTABLE)
+        if executable:
+            cmd = [executable]
+            cmd.extend(args)
+            return cmd
 
 class ArxRepository(Repository):
     METADIR = '_arx'
-    ARX_CMD = "arx"
 
     def _load(self, config):
         Repository._load(self, config)
-        self.ARX_CMD = config.get(self.name, 'arx-command', self.ARX_CMD)
+        self.EXECUTABLE = config.get(self.name, 'arx-command', 'arx')
 
 
 class BazRepository(Repository):
     METADIR = '{arch}'
-    BAZ_CMD = "baz"
 
     def _load(self, config):
         Repository._load(self, config)
-        self.BAZ_CMD = config.get(self.name, 'baz-command', self.BAZ_CMD)
+        self.EXECUTABLE = config.get(self.name, 'baz-command', 'baz')
 
 
 class BzrRepository(Repository):
     METADIR = '.bzr'
-    BZR_CMD = 'bzr'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.BZR_CMD = config.get(self.name, 'bzr-command', self.BZR_CMD)
+        self.EXECUTABLE = config.get(self.name, 'bzr-command', 'bzr')
 
 
 class BzrngRepository(Repository):
@@ -165,34 +195,33 @@ class BzrngRepository(Repository):
 
 class CdvRepository(Repository):
     METADIR = '.cdv'
-    CDV_CMD = 'cdv'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.CDV_CMD = config.get(self.name, 'cdv-command', self.CDV_CMD)
+        self.EXECUTABLE = config.get(self.name, 'cdv-command', 'cdv')
 
 
 class CgRepository(Repository):
     METADIR = '.git'
-    CG_CMD = 'cg'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.CG_CMD = config.get(self.name, 'cg-command', self.CG_CMD)
+        self.EXECUTABLE = config.get(self.name, 'cg-command', 'cg')
 
 
 class CvsRepository(Repository):
     METADIR = 'CVS'
-    CVS_CMD = 'cvs'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.CVS_CMD = config.get(self.name, 'cvs-command', self.CVS_CMD)
+        self.EXECUTABLE = config.get(self.name, 'cvs-command', 'cvs')
         self.tag_entries = config.get(self.name, 'tag-entries', 'True')
 
     def _validateConfiguration(self):
         from os.path import split
         from config import ConfigurationError
+
+        Repository._validateConfiguration(self)
 
         if not self.module and self.repository:
             self.module = split(self.repository)[1]
@@ -203,40 +232,39 @@ class CvsRepository(Repository):
 
 
 class CvspsRepository(CvsRepository):
-    CVSPS_CMD = 'cvsps'
+    def command(self, *args, **kwargs):
+        if kwargs.get('cvsps', False):
+            kwargs['executable'] = self.__cvsps
+        return CvsRepository.command(self, *args, **kwargs)
 
     def _load(self, config):
         CvsRepository._load(self, config)
-        self.CVSPS_CMD = config.get(self.name, 'cvsps-command', self.CVSPS_CMD)
+        self.__cvsps = config.get(self.name, 'cvsps-command', 'cvsps')
         self.tag_entries = config.get(self.name, 'tag-entries', 'True')
 
 
 class DarcsRepository(Repository):
     METADIR = '_darcs'
-    DARCS_CMD = 'darcs'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.DARCS_CMD = config.get(self.name, 'darcs-command', self.DARCS_CMD)
+        self.EXECUTABLE = config.get(self.name, 'darcs-command', 'darcs')
 
 
 class HgRepository(Repository):
     METADIR = '.hg'
-    HG_CMD = "hg"
 
     def _load(self, config):
         Repository._load(self, config)
-        self.HG_CMD = config.get(self.name, 'hg-command', self.HG_CMD)
+        self.EXECUTABLE = config.get(self.name, 'hg-command', 'hg')
 
 
 class MonotoneRepository(Repository):
     METADIR = 'MT'
-    MONOTONE_CMD = "monotone"
 
     def _load(self, config):
         Repository._load(self, config)
-        self.MONOTONE_CMD = config.get(self.name,
-                                       'monotone-command', self.MONOTONE_CMD)
+        self.EXECUTABLE = config.get(self.name, 'monotone-command', 'monotone')
         self.keyid = config.get(self.name, 'keyid')
         self.passphrase = config.get(self.name, 'passphrase')
         self.keyfile = config.get(self.name, 'keyfile')
@@ -244,18 +272,22 @@ class MonotoneRepository(Repository):
 
 class SvnRepository(Repository):
     METADIR = '.svn'
-    SVN_CMD = "svn"
-    SVNADMIN_CMD = "svnadmin"
+
+    def command(self, *args, **kwargs):
+        if kwargs.get('svnadmin', False):
+            kwargs['executable'] = self.__svnadmin
+        return Repository.command(self, *args, **kwargs)
 
     def _load(self, config):
         Repository._load(self, config)
-        self.SVN_CMD = config.get(self.name, 'svn-command', self.SVN_CMD)
-        self.SVNADMIN_CMD = config.get(self.name,
-                                       'svnadmin-command', self.SVNADMIN_CMD)
+        self.EXECUTABLE = config.get(self.name, 'svn-command', 'svn')
+        self.__svnadmin = config.get(self.name, 'svnadmin-command', 'svnadmin')
         self.use_propset = config.get(self.name, 'use-propset', False)
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError
+
+        Repository._validateConfiguration(self)
 
         if not self.repository:
             raise ConfigurationError("Must specify the root of the "
@@ -280,6 +312,8 @@ class SvnRepository(Repository):
 class SvndumpRepository(Repository):
 
     def _validateConfiguration(self):
+        Repository._validateConfiguration(self)
+
         if self.module and self.module.startswith('/'):
             self.project.log_info("Removing starting '/' from module")
             self.module = self.module[1:]
@@ -288,11 +322,10 @@ class SvndumpRepository(Repository):
 
 class TlaRepository(Repository):
     METADIR = '{arch}'
-    TLA_CMD = "tla"
 
     def _load(self, config):
         Repository._load(self, config)
-        self.TLA_CMD = config.get(self.name, 'tla-command', self.TLA_CMD)
+        self.EXECUTABLE = config.get(self.name, 'tla-command', 'tla')
         self.IGNORE_IDS = config.get(self.name, 'ignore-ids', False)
         if self.IGNORE_IDS:
             self.EXTRA_METADIRS = ['.arch-ids']

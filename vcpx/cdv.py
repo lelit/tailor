@@ -27,7 +27,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         SyncronizableTargetWorkingDir._replayChangeset(self, changeset)
 
         names = [e.name for e in changeset.modifiedEntries()]
-        cmd = [self.repository.CDV_CMD, "edit"]
+        cmd = self.repository.command("edit")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _addPathnames(self, names):
@@ -35,7 +35,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [self.repository.CDV_CMD, "add"]
+        cmd = self.repository.command("add")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -53,9 +53,9 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
 
-        cmd = [self.repository.CDV_CMD, "-u", author.encode(encoding), "commit",
-               "-m", '\n'.join(logmessage),
-               "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC')]
+        cmd = self.repository.command("-u", author.encode(encoding), "commit",
+                                      "-m", '\n'.join(logmessage),
+                                      "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC'))
 
         if not entries:
             entries = ['...']
@@ -72,7 +72,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        cmd = [self.repository.CDV_CMD, "remove"]
+        cmd = self.repository.command("remove")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
@@ -80,7 +80,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [self.repository.CDV_CMD, "rename"]
+        cmd = self.repository.command("rename")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
@@ -94,7 +94,7 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
-                                   command=[self.repository.CDV_CMD, "init"])
+                                   command=self.repository.command("init"))
             init.execute()
 
             if init.exit_status:
@@ -109,6 +109,6 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         from os import getenv
         from os.path import join
 
-        cmd = [self.repository.CDV_CMD, "set", "user"]
+        cmd = self.repository.command("set", "user")
         user = getenv('CDV_USER') or getenv('LOGNAME')
         ExternalCommand(cwd=self.basedir, command=cmd).execute(user)

@@ -25,7 +25,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [self.repository.ARX_CMD, "add"]
+        cmd = self.repository.command("add")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -44,9 +44,9 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog.replace('%', '%%').encode(encoding))
 
-        cmd = [self.repository.ARX_CMD, "commit", "-s", '\n'.join(logmessage),
-               "--author", author,
-               "--date", date.isoformat()]
+        cmd = self.repository.command("commit", "-s", '\n'.join(logmessage),
+                                      "--author", author,
+                                      "--date", date.isoformat())
         c = ExternalCommand(cwd=self.basedir, command=cmd)
         c.execute()
 
@@ -59,7 +59,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        cmd = [self.repository.ARX_CMD, "rm"]
+        cmd = self.repository.command("rm")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
@@ -67,7 +67,7 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = [self.repository.ARX_CMD, "copy"]
+        cmd = self.repository.command("copy")
         rename = ExternalCommand(cwd=self.basedir, command=cmd)
         rename.execute(oldname, newname)
 

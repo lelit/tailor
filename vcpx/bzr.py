@@ -24,7 +24,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Add some new filesystem objects.
         """
 
-        cmd = [self.repository.BZR_CMD, "add"]
+        cmd = self.repository.command("add")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -50,8 +50,8 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = [self.repository.BZR_CMD, "commit", "--unchanged",
-               "--file", rontf.name]
+        cmd = self.repository.command("commit", "--unchanged",
+                                      "--file", rontf.name)
         if not entries:
             entries = ['.']
 
@@ -67,7 +67,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Remove some filesystem objects.
         """
 
-        cmd = [self.repository.BZR_CMD, "remove"]
+        cmd = self.repository.command("remove")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
@@ -75,7 +75,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object to some other name/location.
         """
 
-        cmd = [self.repository.BZR_CMD, "rename"]
+        cmd = self.repository.command("rename")
         ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
@@ -88,7 +88,7 @@ class BzrWorkingDir(SyncronizableTargetWorkingDir):
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            cmd = [self.repository.BZR_CMD, "init"]
+            cmd = self.repository.command("init")
             init = ExternalCommand(cwd=self.basedir, command=cmd)
             init.execute()
 

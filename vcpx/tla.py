@@ -69,7 +69,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         self.fqversion = '/'.join([self.repository.repository,
                                    self.repository.module])
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.TLA_CMD, "missing", "-f"])
+                            command=self.repository.command("missing", "-f"))
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise GetUpstreamChangesetsFailure(
@@ -124,9 +124,8 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
     def __checkout_initial_revision(self, fqrev, root, destdir):
         if not os.path.exists(root):
             os.makedirs(root)
-        c = ExternalCommand(cwd=root,
-                            command=[self.repository.TLA_CMD, "get",
-                                     "--no-pristine", fqrev, destdir])
+        cmd = self.repository.command("get", "--no-pristine", fqrev, destdir)
+        c = ExternalCommand(cwd=root, command=cmd)
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise TargetInitializationFailure(
@@ -135,7 +134,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
     def __apply_changeset(self, changeset):
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.TLA_CMD, "replay"])
+                            command=self.repository.command("replay"))
         out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
         if not c.exit_status in [0, 1]:
             raise ChangesetApplicationFailure(
@@ -150,8 +149,8 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             if path[0:2] == "./":
                 path = path[2:]
         if path.find("\(") != -1:
-            c = ExternalCommand(command=[self.repository.TLA_CMD, "escape",
-                                         "--unescaped", path])
+            cmd = self.repository.command("escape", "--unescaped", path)
+            c = ExternalCommand(command=cmd)
             out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
@@ -164,7 +163,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         fqversion = '/'.join([self.repository.repository,
                               self.repository.module])
         if revision in ['HEAD', 'INITIAL']:
-            cmd = [self.repository.TLA_CMD, "revisions"]
+            cmd = self.repository.command("revisions")
             if revision == 'HEAD':
                 cmd.append("-r")
             cmd.append(fqversion)
@@ -181,8 +180,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         changesets = []
         logparser = Parser()
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.TLA_CMD,
-                                     "cat-archive-log"])
+                            command=self.repository.command("cat-archive-log"))
         for fqrev in fqrevlist:
             out, err = c.execute(fqrev, stdout=PIPE, stderr=PIPE)
             if c.exit_status:
@@ -218,8 +216,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
     def __hide_foreign_entries(self):
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.TLA_CMD,
-                                     "tree-lint", "-tu"])
+                            command=self.repository.command("tree-lint", "-tu"))
         out = c.execute(stdout=PIPE)[0]
         tempdir = None
         if c.exit_status:

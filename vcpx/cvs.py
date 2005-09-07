@@ -306,8 +306,8 @@ class CvsWorkingDir(CvspsWorkingDir):
             if tag[0] == 'T':
                 branch=tag[1:-1]
 
-        cmd = [self.repository.CVS_CMD, "-f", "-d", "%(repository)s", "rlog",
-               "-N"]
+        cmd = self.repository.command("-f", "-d", "%(repository)s", "rlog",
+                                      "-N")
 
         if not sincerev or sincerev in ("INITIAL", "HEAD"):
             # We are bootstrapping, trying to collimate the actual

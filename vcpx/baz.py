@@ -71,7 +71,7 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
         self.fqversion = '/'.join([self.repository.repository,
                                    self.repository.module])
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.BAZ_CMD, "missing", "-f"])
+                            command=self.repository.command("missing", "-f"))
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise GetUpstreamChangesetsFailure(
@@ -90,7 +90,7 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
         tempdir = self.__hide_foreign_entries()
         try:
             c = ExternalCommand(cwd=self.basedir,
-                                command=[self.repository.BAZ_CMD, "replay"])
+                                command=self.repository.command("replay"))
             out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
             if not c.exit_status in [0, 1]:
                 raise ChangesetApplicationFailure(
@@ -112,9 +112,9 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
         fqrev = self.__initial_revision(revision)
         tempdir = mkdtemp("", ",,tailor-", self.basedir)
         try:
+            cmd = self.repository.command("get", "--no-pristine", fqrev, "t")
             c = ExternalCommand(cwd=os.path.join(self.basedir, tempdir),
-                                command=[self.repository.BAZ_CMD, "get",
-                                         "--no-pristine", fqrev, "t"])
+                                command=cmd)
             out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise TargetInitializationFailure(
@@ -143,8 +143,8 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
             if path[0:2] == "./":
                 path = path[2:]
         if path.find("\(") != -1:
-            c = ExternalCommand(command=[self.repository.BAZ_CMD, "escape",
-                                         "--unescaped", path])
+            cmd = self.repository.command("escape", "--unescaped", path)
+            c = ExternalCommand(command=cmd)
             out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
@@ -157,7 +157,7 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
         fqversion = '/'.join([self.repository.repository,
                               self.repository.module])
         if revision in ['HEAD', 'INITIAL']:
-            cmd = [self.repository.BAZ_CMD, "revisions"]
+            cmd = self.repository.command("revisions")
             if revision == 'HEAD':
                 cmd.append("-r")
             cmd.append(fqversion)
@@ -174,8 +174,7 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
         changesets = []
         logparser = Parser()
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.BAZ_CMD,
-                                     "cat-archive-log"])
+                            command=self.repository.command("cat-archive-log"))
         for fqrev in fqrevlist:
             out, err = c.execute(fqrev, stdout=PIPE, stderr=PIPE)
             if c.exit_status:
@@ -211,8 +210,7 @@ class BazWorkingDir(UpdatableSourceWorkingDir):
 
     def __hide_foreign_entries(self):
         c = ExternalCommand(cwd=self.basedir,
-                            command=[self.repository.BAZ_CMD,
-                                     "lint", "-tu"])
+                            command=self.repository.command("lint", "-tu"))
         out = c.execute(stdout=PIPE)
         tempdir = None
         if c.exit_status:

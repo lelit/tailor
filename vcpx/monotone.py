@@ -131,7 +131,8 @@ class MonotoneLogParser:
         self.dates=[]
         self.changelog=""
 
-        cmd = [self.repository.MONOTONE_CMD, "log", "--db", self.repository.repository, "--last", "1", "--revision", revision]
+        cmd = self.repository.command("log", "--db", self.repository.repository,
+                                      "--last", "1", "--revision", revision)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE)
         if mtl.exit_status:
@@ -298,7 +299,10 @@ class MonotoneDiffParser:
             raise GetUpstreamChangesetsFailure("internal error:  MonotoneDiffParser.convertDiff called with invalid parameters: lin_ancestor %s, revision %s" % (chset.lin_ancestor, chset.revision))
     
         # the order of revisions is very important. Monotone gives a diff from the first to the second
-        cmd = [self.repository.MONOTONE_CMD, "diff", "--db", self.repository.repository, "--revision", chset.lin_ancestor, "--revision", chset.revision]
+        cmd = self.repository.command("diff",
+                                      "--db", self.repository.repository,
+                                      "--revision", chset.lin_ancestor,
+                                      "--revision", chset.revision)
 
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE)
@@ -448,7 +452,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         effective_rev = revision
         if revision == 'HEAD' or revision=='INITIAL':
             # in both cases we need the head(s) of the requested branch
-            cmd = [self.repository.MONOTONE_CMD, "automate","heads", "--db", repository, module]
+            cmd = self.repository.command("automate","heads",
+                                          "--db", repository, module)
             mtl = ExternalCommand(cwd=working_dir, command=cmd)
             outstr = mtl.execute(stdout=PIPE)
             if mtl.exit_status:
@@ -465,10 +470,10 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 # heads then we could end up with only part of the ancestry graph.
                 if len(revision)>1:
                     stderr.write("Branch '%s' has multiple heads. There is no guarantee to reconstruct the full history." % module)
-                cmd = [ [self.repository.MONOTONE_CMD, "automate","ancestors",
-                            "--db",repository],
-                        [self.repository.MONOTONE_CMD, "automate","toposort",
-                            "--db",repository, "-@-"]
+                cmd = [ self.repository.command("automate","ancestors",
+                                                "--db",repository),
+                        self.repository.command("automate","toposort",
+                                                "--db",repository, "-@-")
                         ]
                 cmd[0].extend(revision)
                 cld = ExternalCommandChain(cwd=working_dir, command=cmd)
@@ -485,10 +490,12 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # monotone descendents returns results sorted in alpha order
         # here we want ancestry order, so descendents output is feed back to 
         # mtn for a toposort ...
-        cmd = [ [self.repository.MONOTONE_CMD, "automate","descendents",
-                    "--db",self.repository.repository, sincerev],
-                [self.repository.MONOTONE_CMD, "automate","toposort",
-                    "--db",self.repository.repository, "-@-"]
+        cmd = [ self.repository.command("automate","descendents",
+                                        "--db", self.repository.repository,
+                                        sincerev),
+                self.repository.command("automate","toposort",
+                                        "--db", self.repository.repository,
+                                        "-@-")
                 ]
         cld = ExternalCommandChain(cwd=self.repository.rootdir, command=cmd)
         outstr = cld.execute()
@@ -507,7 +514,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         return chlist
 
     def _applyChangeset(self, changeset):
-        cmd = [self.repository.MONOTONE_CMD, "update", "--revision", changeset.revision]
+        cmd = self.repository.command("update", "--revision", changeset.revision)
         mtl = ExternalCommand(cwd=self.basedir, command=cmd)
         mtl.execute()
         if mtl.exit_status:
@@ -524,8 +531,11 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         effrev = self.convert_head_initial(self.repository.repository, self.repository.module, revision, self.basedir)
         if not exists(join(self.basedir, 'MT')):
             self.log_info("checking out a working copy")
-            cmd = [self.repository.MONOTONE_CMD, "co", "--db", self.repository.repository, "--revision", effrev, 
-                    "--branch", self.repository.module, self.repository.subdir]
+            cmd = self.repository.command("co",
+                                          "--db", self.repository.repository,
+                                          "--revision", effrev, 
+                                          "--branch", self.repository.module,
+                                          self.repository.subdir)
             mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
             mtl.execute()
             if mtl.exit_status:
@@ -560,7 +570,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 fnames.append(fn)
         if len(fnames):
             # ok, we still have something to add
-            cmd = [self.repository.MONOTONE_CMD, "add"]
+            cmd = self.repository.command("add")
             add = ExternalCommand(cwd=self.basedir, command=cmd)
             add.execute(fnames)
             if add.exit_status:
@@ -571,7 +581,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         """
         Add a whole subtree
         """
-        cmd = [self.repository.MONOTONE_CMD, "add"]
+        cmd = self.repository.command("add")
         add = ExternalCommand(cwd=self.basedir, command=cmd)
         add.execute(subdir)
         if add.exit_status:
@@ -597,9 +607,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = [self.repository.MONOTONE_CMD, "commit", "--author", author,
-               "--date", date.isoformat(),
-               "--message-file", rontf.name]
+        cmd = self.repository.command("commit", "--author", author,
+                                      "--date", date.isoformat(),
+                                      "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
@@ -626,7 +636,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # Monotone currently doesn't allow removing a directory,
         # so we must remove every item separately and intercept monotone directory errore messages.
         # We can't just filter the directories, because the wc doesn't contain them anymore ...
-        cmd = [self.repository.MONOTONE_CMD, "drop"]
+        cmd = self.repository.command("drop")
         drop = ExternalCommand(cwd=self.basedir, command=cmd)
         for fn in names:
             dum, error = drop.execute(fn, stderr=PIPE)
@@ -648,7 +658,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             renames(join(self.basedir, newname), join(self.basedir, oldname))
             self.log_info("preparing to rename %s->%s" % (oldname, newname))
         
-        cmd = [self.repository.MONOTONE_CMD, "rename"]
+        cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.basedir, command=cmd)
         rename.execute(oldname, newname)
         
@@ -662,8 +672,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Create a new monotone DB, storing the commit keys, if available
         """
 
-        cmd = [self.repository.MONOTONE_CMD, "db", "init", "--db",
-               target_repository.repository]
+        cmd = self.repository.command("db", "init", "--db",
+                                      target_repository.repository)
         init = ExternalCommand(command=cmd)
         init.execute()
 
@@ -675,8 +685,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if target_repository.keyfile:
             # a key file is available, read into the database
             keyfile = file(target_repository.keyfile)
-            cmd = [self.repository.MONOTONE_CMD, "read", "--db",
-                   target_repository.repository]
+            cmd = self.repository.command("read", "--db",
+                                          target_repository.repository)
             regkey = ExternalCommand(command=cmd)
             regkey.execute(input=keyfile)
         else:
@@ -687,8 +697,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 raise TargetInitializationFailure("Can't setup the monotone repository %r\n"
                                                   "A keyfile or keyid must be provided." %
                                                   target_repository)
-            cmd = [self.repository.MONOTONE_CMD, "genkey", "--db",
-                   target_repository.repository]
+            cmd = self.repository.command("genkey", "--db",
+                                          target_repository.repository)
             regkey = ExternalCommand(command=cmd)
             if target_repository.passphrase:
                 passp="%s\n%s\n" % (target_repository.passphrase,target_repository.passphrase)
@@ -723,8 +733,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if not self.repository.repository or exists(join(self.basedir, 'MT')):
             return
 
-        cmd = [self.repository.MONOTONE_CMD, "setup",
-               "--db", self.repository.repository, "--branch", self.repository.module]
+        cmd = self.repository.command("setup",
+                                      "--db", self.repository.repository,
+                                      "--branch", self.repository.module)
         
         if not self.repository.module:
             raise TargetInitializationFailure("Monotone needs a module defined (to be used as commit branch)")

@@ -31,7 +31,7 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = [self.repository.CG_CMD, "add"]
+            cmd = self.repository.command("add")
             ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
     def __parse_author(self, author):
@@ -82,7 +82,7 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
             env['GIT_AUTHOR_DATE']=str(date)
         # '-f' flag means we can get empty commits, which
         # shouldn't be a problem.
-        cmd = [self.repository.CG_CMD, "commit", "-f"]
+        cmd = self.repository.command("commit", "-f")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         c.execute(env=env, input='\n'.join(logmessage))
@@ -101,7 +101,7 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = [self.repository.CG_CMD, "rm"]
+            cmd = self.repository.command("rm")
             c=ExternalCommand(cwd=self.basedir, command=cmd)
             c.execute(notdirs)
 
@@ -143,9 +143,8 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            init = ExternalCommand(cwd=self.basedir,
-                                   command=[self.repository.CG_CMD,
-                                            "init", "-I"])
+            cmd = self.repository.command("init", "-I")
+            init = ExternalCommand(cwd=self.basedir, command=cmd)
             init.execute()
 
             if init.exit_status:
