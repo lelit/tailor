@@ -51,16 +51,22 @@ root-directory = /tmp/tailor-tests/darcs2svn
 source = darcs:svntailor
 start-revision = INITIAL
 
-[darcs2monotone]
-target = monotone:tailor
-root-directory = /tmp/tailor-tests/darcs2monotone
-source = darcs:tailor
-
 [svn2darcs]
 target = darcs:svntailor
 root-directory = /tmp/tailor-tests/svn2darcs
 source = svn:tailor
 start-revision = 1
+
+[darcs2monotone]
+target = monotone:tailor
+root-directory = /tmp/tailor-tests/darcs2monotone
+source = darcs:tailor
+
+[monotone2darcs]
+source = monotone:tailor
+root-directory = /tmp/tailor-tests/darcs2monotone
+target = darcs:mtntailor
+start-revision = INITIAL
 
 [darcs:tailor]
 
@@ -79,6 +85,9 @@ keyid = tailor
 passphrase = fin che la barca va
 repository = /tmp/tailor-tests/tailor-mtn.db
 module = tailor.test
+
+[darcs:mtntailor]
+subdir = darcside
 
 [svn:tailor]
 repository = file:///tmp/tailor-tests/svnrepo
