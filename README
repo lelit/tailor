@@ -505,6 +505,12 @@ changeset.  When the source repository basedir is a subdirectory of
 target basedir tailor prefixes all paths coming from upstream to match
 the relative position.
 
+Another option is ``encoding``, which states the charset encoding the
+particular repository uses, and it's particularly important when it
+differs from local system setup, that you may inspect executing::
+
+  python -m locale
+
 CVS and CVSPS repositories may turn of automatic tagging of entries,
 that tailor does by default to prevent manual interventions in the
 CVS working copy, using ``tag_entries = False``.

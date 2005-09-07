@@ -73,6 +73,7 @@ class Repository(object):
         """
 
         from os.path import split, expanduser
+        from sys import getdefaultencoding
 
         self.repository = config.get(self.name, 'repository') or \
                           config.get(self.name, '%s-repository' % self.which)
@@ -84,6 +85,9 @@ class Repository(object):
                                   vars={'root-directory': self.project.rootdir})
         self.subdir = config.get(self.name, 'subdir',
                                  vars={'subdir': self.project.subdir})
+        self.encoding = config.get(self.name, 'encoding')
+        if self.encoding is None:
+            self.encoding = getdefaultencoding()
 
     def _validateConfiguration(self):
         """
