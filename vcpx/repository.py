@@ -160,6 +160,7 @@ class Repository(object):
             cmd.extend(args)
             return cmd
 
+
 class ArxRepository(Repository):
     METADIR = '_arx'
 
@@ -323,6 +324,7 @@ class SvndumpRepository(Repository):
             self.module = self.module[1:]
         if self.module and not self.module.endswith('/'):
             self.module = self.module+'/'
+
 
 class TlaRepository(Repository):
     METADIR = '{arch}'
