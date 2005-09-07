@@ -43,7 +43,7 @@ class CvsEntryTest(TestCase):
 class CvsLogParserTest(TestCase):
     """Ensure the cvs log parser does its job."""
 
-    SIMPLE_TEST = """\
+    SIMPLE_TEST = u"""\
 cvs rlog: Logging docutils
 
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
@@ -93,7 +93,7 @@ Added to project (exctracted from HISTORY.txt)
         self.assertEqual(entry.new_revision, '1.2')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
-    DOUBLE_TEST = """\
+    DOUBLE_TEST = u"""\
 cvs rlog: Logging docutils/docutils
 
 RCS file: /cvsroot/docutils/docutils/docutils/statemachine.py,v
@@ -187,7 +187,7 @@ updated
         self.assertEqual(cset.author, "felixwiemann")
         self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
 
-    DELETED_TEST = """\
+    DELETED_TEST = u"""\
 cvs rlog: Logging docutils
 
 RCS file: /cvsroot/docutils/docutils/Attic/THANKS.txt,v
@@ -227,7 +227,7 @@ Added to project (exctracted from HISTORY.txt)
         self.assertEqual(entry.name, 'THANKS.txt')
         self.assertEqual(entry.action_kind, entry.DELETED)
 
-    COLLAPSE_TEST = """\
+    COLLAPSE_TEST = u"""\
 cvs rlog: Logging PyObjC/Doc
 
 RCS file: /usr/local/CVSROOT/PyObjC/Doc/libObjCStreams.tex,v
@@ -311,7 +311,7 @@ Fake changelog 4
         self.assertEqual(len(cset.entries), 2)
         self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 45))
 
-    BRANCHES_TEST = """\
+    BRANCHES_TEST = u"""\
 cvs rlog: Logging Archetypes/tests
 
 RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
@@ -349,7 +349,7 @@ Fixed deepcopy problem in validations
         cset = csets[0]
         self.assertEqual(cset.log,"Fixed deepcopy problem in validations")
 
-    REPOSPATH_TEST = """\
+    REPOSPATH_TEST = u"""\
 cvs rlog: Logging Zope/spurious/dummy/dir
 cvs rlog: Logging Zope/lib/python/DateTime
 cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/DateTime/Attic/DateTime.html,v'
@@ -383,7 +383,7 @@ backported copy constructor from trunk
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'lib/python/DateTime/DateTime.py')
 
-    LONGLOG_TEST = """\
+    LONGLOG_TEST = u"""\
 cvs rlog: Logging ATContentTypes
 
 RCS file: /cvsroot/collective/ATContentTypes/Attic/ConstrainTypesMixin.py,v
@@ -679,7 +679,7 @@ Added a findStaledObjects external method to ATCT to find staled objects. It is 
         self.assertEqual(entry.new_revision, '1.7')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
-    SILLY_TEST = """\
+    SILLY_TEST = u"""\
 RCS file: /cvsroot/docutils/docutils/THANKS.txt,v
 head: 1.2
 """
@@ -691,7 +691,7 @@ head: 1.2
         self.assertRaises(AssertionError,
                           changesets_from_cvslog, log, 'docutils')
 
-    CREATED_IN_BRANCH_TEST = """\
+    CREATED_IN_BRANCH_TEST = u"""\
 cvs rlog: Logging dsssl-utils/bigdiesel/src
 
 RCS file: /cvsroot/dsssl-utils/dsssl-utils/bigdiesel/src/tokenizer-rgc-test.scm,v
@@ -722,7 +722,7 @@ file tokenizer-rgc-test.scm was initially added on branch bigloo-parser.
 
         self.assertEqual(len(csets), 1)
 
-    DESCRIPTION_TEST = """\
+    DESCRIPTION_TEST = u"""\
 cvs rlog: Logging Zope
 
 RCS file: /cvs-repository/Packages/ZServer/Attic/start_medusa.py,v
@@ -755,7 +755,7 @@ cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/ZS
         log = StringIO(self.DESCRIPTION_TEST)
         csets = changesets_from_cvslog(log, 'zope')
 
-    ADD_DEL_ADD_AGAIN_TEST = """\
+    ADD_DEL_ADD_AGAIN_TEST = u"""\
 cvs rlog: Logging test
 
 RCS file: /tmp/t/test-repo/test/file,v
@@ -819,7 +819,7 @@ date: 2004-03-23 19:20:02 +0000;  author: mdlavin;  state: Exp;
         self.assertEqual(entry.new_revision, '1.3')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-    MULTI_MODULE_TEST = """\
+    MULTI_MODULE_TEST = u"""\
 cvs rlog: Logging apache-1.3/src/test/vhtest/logs
 
 RCS file: /home/cvspublic/apache-1.3/src/test/vhtest/logs/.cvsignore,v
@@ -866,7 +866,7 @@ to be changing this directory much, so ignore any non-cvs files in it.
         log = StringIO(self.MULTI_MODULE_TEST)
         csets = changesets_from_cvslog(log, 'apache-1.3')
 
-    ENTRY_NAMES_TEST = """
+    ENTRY_NAMES_TEST = u"""
 cvs rlog: Logging Products/PluggableAuthService
 
 RCS file: /cvs-repository/Products/PluggableAuthService/COPYRIGHT.txt,v
@@ -893,3 +893,38 @@ Sorry for the noise - switching to ZPL 2.1
         cset = csets[0]
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'COPYRIGHT.txt')
+
+    ENCODING_TEST = u"""
+cvs rlog: Logging pxlib/src
+
+RCS file: /cvsroot/pxlib/pxlib/src/px_head.h,v
+head: 1.8
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;     selected revisions: 2
+description:
+----------------------------
+revision 1.8
+date: 2005/08/17 16:07:40;  author: steinm;  state: Exp;  lines: +1 -0
+- added prototype for px_delete_data_from_block()
+----------------------------
+revision 1.7
+date: 2005/08/17 05:16:24;  author: steinm;  state: Exp;  lines: +1 -1
+­ new prototype for px_add_data_to_block()
+=============================================================================
+"""
+    def testUnicode(self):
+        """Verify cvs parser returns unicode strings"""
+
+        log = StringIO(self.ENCODING_TEST)
+        csets = changesets_from_cvslog(log, 'pxlib')
+
+        self.assertEqual(len(csets), 2)
+
+        log = csets[0].log
+        self.assertEqual(type(log), type(u'€'))
+        self.assertEqual(len(log), 42)
+        self.assertRaises(UnicodeEncodeError, log.encode, 'ascii')
+        self.assertEqual(len(log.encode('ascii', 'ignore')), 41)

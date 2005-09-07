@@ -299,6 +299,8 @@ class CvsWorkingDir(CvspsWorkingDir):
         from os.path import join, exists
         from datetime import timedelta
 
+        from codecs import getreader
+
         branch = ''
         fname = join(self.basedir, 'CVS', 'Tag')
         if exists(fname):
@@ -348,6 +350,8 @@ class CvsWorkingDir(CvspsWorkingDir):
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
+        reader = getreader(self.repository.encoding)
+        log = reader(log)
         return changesets_from_cvslog(log, self.repository.module)
 
     def _checkoutUpstreamRevision(self, revision):

@@ -100,6 +100,7 @@ subdir = pxlib
 [cvs:pxlib]
 repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
 module = pxlib
+encoding = iso-8859-1
 
 [cvs2hg]
 root-directory = /tmp/tailor-tests/cvs2hg
