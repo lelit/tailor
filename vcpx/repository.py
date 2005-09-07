@@ -257,11 +257,10 @@ class DarcsRepository(Repository):
 
 class GitRepository(Repository):
     METADIR = '.git'
-    GIT_CMD = 'git'
 
     def _load(self, config):
         Repository._load(self, config)
-        self.GIT_CMD = config.get(self.name, 'git-command', self.GIT_CMD)
+        self.EXECUTABLE = config.get(self.name, 'git-command', 'git')
 
 
 class HgRepository(Repository):

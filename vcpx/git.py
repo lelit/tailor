@@ -31,7 +31,7 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = [self.repository.GIT_CMD, "add"]
+            cmd = self.repository.command("add")
             ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
 
     def __parse_author(self, author):
@@ -82,7 +82,7 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
             env['GIT_AUTHOR_DATE']=str(date)
         # '-f' flag means we can get empty commits, which
         # shouldn't be a problem.
-        cmd = [self.repository.GIT_CMD, "commit", "-a", "-F", "-"]
+        cmd = self.repository.command("commit", "-a", "-F", "-")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         (out, _) = c.execute(stdout=PIPE, env=env, input='\n'.join(logmessage))
@@ -142,8 +142,7 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
 
         if not exists(join(self.basedir, self.repository.METADIR)):
             init = ExternalCommand(cwd=self.basedir,
-                                   command=[self.repository.GIT_CMD,
-                                            "init-db"])
+                                   command=self.repository.command("init-db"))
             init.execute()
 
             if init.exit_status:
