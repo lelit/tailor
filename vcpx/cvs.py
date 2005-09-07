@@ -24,7 +24,7 @@ def compare_cvs_revs(rev1, rev2):
     # handle locked files by taking only the first part of the revision string
     # this is to handle gracefully lines like "1.1 locked" which were breaking the script before
     rev1 = rev1.split(' ')[0]
-    rev2 = rev1.split(' ')[0]
+    rev2 = rev2.split(' ')[0]
     r1 = [int(n) for n in rev1.split('.')]
     r2 = [int(n) for n in rev2.split('.')]
 
