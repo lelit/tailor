@@ -331,9 +331,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                         (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
-            cmd = self.repository.command("get", "--partial", "--quiet")
+            cmd = self.repository.command("get", "--quiet")
             if revision and revision<>'HEAD':
                 cmd.extend([initial and "--to-match" or "--tag", revision])
+            else:
+                cmd.append("--partial")
             dget = ExternalCommand(command=cmd)
             output = dget.execute(self.repository.repository, self.basedir,
                                   stdout=PIPE, stderr=STDOUT)[0]
