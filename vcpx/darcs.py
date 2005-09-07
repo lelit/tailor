@@ -389,7 +389,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         logmessage = []
 
         logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
-        logmessage.append(author.encode(encoding))
+        logmessage.append(author)
         if patchname:
             logmessage.append(patchname)
         if changelog:
