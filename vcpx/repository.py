@@ -168,14 +168,6 @@ class ArxRepository(Repository):
         self.EXECUTABLE = config.get(self.name, 'arx-command', 'arx')
 
 
-class BazRepository(Repository):
-    METADIR = '{arch}'
-
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'baz-command', 'baz')
-
-
 class BzrRepository(Repository):
     METADIR = '.bzr'
 
@@ -341,3 +333,15 @@ class TlaRepository(Repository):
         self.IGNORE_IDS = config.get(self.name, 'ignore-ids', False)
         if self.IGNORE_IDS:
             self.EXTRA_METADIRS = ['.arch-ids']
+
+
+class BazRepository(TlaRepository):
+    def _load(self, config):
+        TlaRepository._load(self, config)
+        self.EXECUTABLE = config.get(self.name, 'baz-command', 'baz')
+
+    def command(self, *args, **kwargs):
+        if args:
+            if args[0] == 'tree-lint':
+                args[0] = 'lint'
+        return TlaRepository.command(self, *args, **kwargs)

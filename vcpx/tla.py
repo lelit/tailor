@@ -193,9 +193,9 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             except Exception, err:
                 pass
             if not err and msg.is_multipart():
-                err = "unable to parse 'tla' log description"
+                err = "unable to parse log description"
             if not err and update and msg.has_key('Continuation-of'):
-                err = "tla in-version continuations not supported"
+                err = "in-version continuations not supported"
             if err:
                 raise GetUpstreamChangesetsFailure(str(err))
             y,m,d,hh,mm,ss,d1,d2,d3 = strptime(msg['Standard-date'],
@@ -281,6 +281,6 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                     conflicts.append(l2)
             else:
                 raise ChangesetApplicationFailure(
-                        "unhandled 'tla' changeset operation: \"%s\"" %
+                        "unhandled changeset operation: \"%s\"" %
                         line.strip())
         return conflicts
