@@ -449,3 +449,30 @@ class SvnLogParserTest(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'documentation/test.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
+
+    ENCODING_TEST = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="7564">
+<author>fschulze</author>
+<date>2005-07-20T17:47:53.425055Z</date>
+<msg>Fix http://members.plone.org/collector/4034 — Collapsible fieldsets need a full width mode.</msg>
+</logentry>
+</log>
+"""
+    def testUnicode(self):
+        """Verify svn parser returns unicode strings"""
+
+        log = StringIO(self.ENCODING_TEST)
+        csets = changesets_from_svnlog(log,
+                                       'http://svn.plone.org/plone/CMFPlone',
+                                       '/branches/2.1')
+
+        self.assertEqual(len(csets), 1)
+
+        log = csets[0].log
+        self.assertEqual(type(log), type(u'€'))
+        self.assertEqual(len(log), 91)
+        self.assertRaises(UnicodeEncodeError, log.encode, 'iso-8859-1')
+        self.assertEqual(len(log.encode('ascii', 'ignore')), 90)
