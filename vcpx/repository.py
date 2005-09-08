@@ -95,17 +95,26 @@ class Repository(object):
         """
 
         if self.EXECUTABLE:
-            from os import getenv
+            from os import getenv, pathsep
             from os.path import isabs, exists, join
             from vcpx.config import ConfigurationError
+            from sys import platform
 
             if isabs(self.EXECUTABLE):
                 ok = exists(self.EXECUTABLE)
             else:
                 ok = False
-                for path in getenv('PATH').split(':'):
+                mswindows = (platform == "win32")
+                for path in getenv('PATH').split(pathsep):
                     if exists(join(path, self.EXECUTABLE)):
                         ok = True
+                    elif mswindows:
+                        for ext in ['.exe', '.bat']:
+                            if exists(join(path, self.EXECUTABLE + ext)):
+                                self.EXECUTABLE += ext
+                                ok = True
+                                break
+                    if ok:
                         break
             if not ok:
                 raise ConfigurationError("The command %r used "
