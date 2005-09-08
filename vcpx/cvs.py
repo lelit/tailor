@@ -334,7 +334,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             if since.strip() == 'INITIAL':
                 cmd.extend(["-r%(branch)s"])
             else:
-                cmd.extend(["-d", "%(since)s UTC<", "-r:%(branch)s"])
+                cmd.extend(["-d", "%(since)s UTC<", "-r%(branch)s"])
         else:
             branch = sincerev
             since = None
