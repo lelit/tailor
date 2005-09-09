@@ -180,6 +180,22 @@ subdir = plain
 
 [hg:simple-partial]
 subdir = hg
+
+[cvs2svn]
+source = cvs:cmfeditions-houston-sprint
+target = svn:cmfeditions
+start-revision = houston-sprint-branch INITIAL
+root-directory = /tmp/tailor-tests/cvs2svn
+
+[cvs:cmfeditions-houston-sprint]
+repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
+module = CMFEditions
+subdir = cvside
+
+[svn:cmfeditions]
+repository = file:///tmp/tailor-tests/cmfeditions.svnrepo
+module = cmfeditions
+subdir = svnside
 '''
 
 def remap_authors(context, changeset):
@@ -325,6 +341,14 @@ class TailorTest(TestCase):
         "Test CVS to Bazaar-NG"
 
         tailorizer = Tailorizer('cvs2bzr', self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+    def testCvsToSubversion(self):
+        "Test CVS branch to Subversion"
+
+        tailorizer = Tailorizer('cvs2svn', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")

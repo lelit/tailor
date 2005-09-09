@@ -325,7 +325,9 @@ class CvsWorkingDir(CvspsWorkingDir):
                 cmd.append("-r:HEAD")
         elif ' by ' in sincerev:
             since, author = _splitGlobalCVSRevision(sincerev)
-            cmd.extend(["-d", "%(since)s UTC<", "-r:%(branch)s"])
+            cmd.extend(["-d", "%(since)s UTC<"])
+            if branch:
+                cmd.append("-r%(branch)s")
         elif sincerev[0] in '0123456789':
             since = sincerev
             cmd.extend(["-d", "%(since)s UTC<"])
@@ -336,6 +338,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             else:
                 cmd.extend(["-d", "%(since)s UTC<", "-r%(branch)s"])
         else:
+            # Then we assume it's a tag
             branch = sincerev
             since = None
             cmd.extend(["-r:%(branch)s"])
