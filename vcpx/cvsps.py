@@ -397,7 +397,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if path and not exists(cvsarea):
             parentcvs = self.__createParentCVSDirectories(changeset, path)
 
-            assert exists(parentcvs), "Uhm, strange things happen"
+            assert exists(parentcvs), "Uhm, strange things happen: " \
+                "unable to find or create parent CVS area for %r" % path
 
             if not exists(basedir):
                 mkdir(basedir)
