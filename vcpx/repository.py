@@ -118,8 +118,9 @@ class Repository(object):
                         break
             if not ok:
                 raise ConfigurationError("The command %r used "
-                                         "by %r does not exist!" %
-                                         (self.EXECUTABLE, self.name))
+                                         "by %r does not exist in %r!" %
+                                         (self.EXECUTABLE, self.name,
+                                          getenv('PATH')))
 
     def log_info(self, what):
         """
