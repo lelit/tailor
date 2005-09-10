@@ -2,6 +2,7 @@
 # :Progetto: vcpx -- Monotone details
 # :Creato:   Tue Apr 12 01:28:10 CEST 2005
 # :Autore:   Markus Schiltknecht <markus@bluegap.ch>
+# :Autore:   Riccardo Ghetta <birrachiara@tin.it>
 # :Licenza:  GNU General Public License
 #
 
@@ -344,7 +345,7 @@ class MonotoneDiffParser:
                             raise GetUpstreamChangesetsFailure("Unexpected rename token sequence: '%s' followed by '%s'" %(tow, newname))
                         chentry = chset.addEntry(newname[1:-1], chset.revision)
                         chentry.action_kind = chentry.RENAMED
-                        chentry.oldname= fname[1:-1]
+                        chentry.old_name= fname[1:-1]
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
