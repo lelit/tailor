@@ -31,7 +31,7 @@ class ExternalCommandChain:
     """
     This class implements command piping, i.e. a chain of
     ExternalCommand, each feeding its stdout to the stdin of next
-    command in the chain If a command fails, the chain breaks and
+    command in the chain. If a command fails, the chain breaks and
     returns error.
 
     Note:
@@ -57,6 +57,7 @@ class ExternalCommandChain:
 class MonotoneChangeset(Changeset):
     """
     Monotone changesets differ from standard Changeset because:
+
     1. only the "revision" field is used for eq/ne comparison
     2. have additional properties used to handle history linearization
     """
@@ -301,7 +302,7 @@ class MonotoneDiffParser:
 
     def convertDiff(self, chset):
         """
-        Fills a chset with the details data coming by a diff beetween
+        Fills a chset with the details data coming by a diff between
         chset lin_ancestor and revision (i.e. the linearized history)
         """
         if (not chset.lin_ancestor or
@@ -395,12 +396,12 @@ class MonotoneRevToCset:
     """
     This class is used to create changesets from revision ids.
 
-    Since most backends (and tailor itself) doesn't support monotone
+    Since most backends (and tailor itself) don't support monotone
     multihead feature, sometimes we need to linearize the revision
-    graph, creating syntethized (i.e. fake) edges beetween revisions.
+    graph, creating syntethized (i.e. fake) edges between revisions.
 
     The revision itself is real, only its ancestors (and all changes
-    beetween) are faked.
+    between) are faked.
 
     To properly do this, changeset are created by a mixture of 'log'
     and 'diff' output. Log gives the revision data, diff the
