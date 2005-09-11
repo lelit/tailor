@@ -17,7 +17,6 @@ from source import UpdatableSourceWorkingDir, InvocationError, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from changes import ChangesetEntry,Changeset
-from sys import stderr
 from os.path import exists, join, isdir
 from os import renames, access, F_OK
 from string import whitespace
@@ -514,9 +513,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 # if the branch has multiple heads then we could end
                 # up with only part of the ancestry graph.
                 if len(revision)>1:
-                    stderr.write("Branch '%s' has multiple heads. There "
-                                 "is no guarantee to reconstruct the "
-                                 "full history." % module)
+                    self.log_info("Branch '%s' has multiple heads. There "
+                                  "is no guarantee to reconstruct the "
+                                  "full history." % module)
                 cmd = [ self.repository.command("automate","ancestors",
                                                 "--db",repository),
                         self.repository.command("automate","toposort",
@@ -687,7 +686,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 raise ChangesetApplicationFailure(
                     "%s returned status %s" % (str(commit),commit.exit_status))
             else:
-                stderr.write("No changes to commit - changeset ignored\n")
+                self.log_info("No changes to commit - changeset ignored")
 
     def _removePathnames(self, names):
         """
@@ -704,7 +703,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             dum, error = drop.execute(fn, stderr=PIPE)
             if drop.exit_status:
                 if not error.read().find("drop <directory>"):
-                    log_error(error.read())
+                    self.log_error(error.read())
                     raise ChangesetApplicationFailure("%s returned status %s" %
                                                       (str(drop),
                                                        drop.exit_status))
