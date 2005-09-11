@@ -274,6 +274,19 @@ class HgRepository(Repository):
         self.EXECUTABLE = config.get(self.name, 'hg-command', 'hg')
 
 
+class HglibRepository(Repository):
+    METADIR = '.hg'
+
+    def _load(self, config):
+        Repository._load(self, config)
+        ppath = config.get(self.name, 'python-path')
+        if ppath:
+            from sys import path
+
+            if ppath not in path:
+                path.insert(0, ppath)
+
+
 class MonotoneRepository(Repository):
     METADIR = 'MT'
 

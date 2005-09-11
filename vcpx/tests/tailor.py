@@ -111,10 +111,10 @@ repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
 module = pxlib
 encoding = iso-8859-1
 
-[cvs2hg]
-root-directory = /tmp/tailor-tests/cvs2hg
+[cvs2hglib]
+root-directory = /tmp/tailor-tests/cvs2hglib
 source = cvs:cmsmini
-target = hg:cmsmini
+target = hglib:cmsmini
 start-revision = INITIAL
 subdir = cmsmini
 before-commit = remap_authors
@@ -123,7 +123,7 @@ before-commit = remap_authors
 repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
 module = cmsmini
 
-[hg:cmsmini]
+[hglib:cmsmini]
 
 [cvs2bzr]
 root-directory = /tmp/tailor-tests/cvs2bzr
@@ -332,7 +332,7 @@ class TailorTest(TestCase):
     def testCvsToMercurial(self):
         "Test CVS to Mercurial"
 
-        tailorizer = Tailorizer('cvs2hg', self.config)
+        tailorizer = Tailorizer('cvs2hglib', self.config)
         self.assert_(not tailorizer.exists())
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
