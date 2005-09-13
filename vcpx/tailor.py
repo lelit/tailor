@@ -103,8 +103,7 @@ class Tailorizer(Project):
 
         nchanges = len(pendings)
         if nchanges:
-            if self.verbose:
-                print "Applying %d upstream changesets" % nchanges
+            self.log_info("Applying %d upstream changesets" % nchanges)
 
             try:
                 last, conflicts = dwd.applyPendingChangesets(
