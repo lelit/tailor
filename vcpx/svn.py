@@ -356,6 +356,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             raise ChangesetApplicationFailure("%s returned status %d" %
                                               (str(commit), commit.exit_status))
         line = out.readline()
+        if not line:
+            # svn did not find anything to commit
+            return
+
         while line and not line.startswith('Committed revision '):
             if not line.startswith('Sending ') and \
                not line.startswith('Transmitting file data ') and \
