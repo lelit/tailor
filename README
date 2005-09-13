@@ -515,6 +515,16 @@ CVS and CVSPS repositories may turn of automatic tagging of entries,
 that tailor does by default to prevent manual interventions in the
 CVS working copy, using ``tag_entries = False``.
 
+Subversion repositories may specify ``use-propset = True``, to
+indicate that tailor is allowed to properly inject the upstream
+changeset's author and timestamp into the target repository.  As
+stated above, this requires a manual intervention on the repository
+itself and thus is off by default, and tailor simply appends those
+values to the changelog.  When active at bootstrap time and the
+repository is local, tailor creates automatically a minimal
+``hooks/pre-revprop-change`` script inside the repository, so no other
+intervention is needed.
+
 
 Using a Python script as configuration file
 -------------------------------------------

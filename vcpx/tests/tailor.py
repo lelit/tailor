@@ -93,6 +93,7 @@ subdir = darcside
 repository = file:///tmp/tailor-tests/svnrepo
 module = tailor
 subdir = svnside
+use-propset = True
 
 [darcs:svntailor]
 subdir = darcside

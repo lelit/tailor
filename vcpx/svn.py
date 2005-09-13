@@ -413,17 +413,32 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Create a local repository.
         """
 
-        assert target_repository.startswith('file:///')
+        from os.path import join
+        from sys import platform
 
+        assert target_repository.startswith('file:///')
+        repodir = target_repository[7:]
         cmd = self.repository.command("create", "--fs-type", "fsfs",
                                       svnadmin=True)
         svnadmin = ExternalCommand(command=cmd)
-        svnadmin.execute(target_repository[7:])
+        svnadmin.execute(repodir)
 
         if svnadmin.exit_status:
             raise TargetInitializationFailure("Was not able to create a 'fsfs' "
                                               "svn repository at %r" %
                                               target_repository)
+        if self.USE_PROPSET:
+            hookname = join(repodir, 'hooks', 'pre-revprop-change')
+            if platform == 'win32':
+                hookname += '.bat'
+            prehook = open(hookname, 'wU')
+            if platform <> 'win32':
+                prehook.write('#!/bin/sh\n')
+            prehook.write('exit 0\n')
+            prehook.close()
+            if platform <> 'win32':
+                from os import chmod
+                chmod(hookname, 0755)
 
         if target_module and target_module <> '/':
             cmd = self.repository.command("mkdir", "-m",
