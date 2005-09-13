@@ -140,6 +140,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from datetime import datetime
         from time import strptime
         from changes import Changeset
+        from sha import new
 
         cmd = self.repository.command("pull", "--dry-run")
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -185,11 +186,27 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 changelog = []
                 l = output.readline()
-                while l.startswith(' '):
-                    changelog.append(l.strip())
+                while l.startswith('  '):
+                    changelog.append(l[2:-1])
                     l = output.readline()
 
-                changesets.append(Changeset(name, date, author, '\n'.join(changelog)))
+                cset = Changeset(name, date, author, '\n'.join(changelog))
+                compactdate = date.strftime("%Y%m%d%H%M%S")
+                if name.startswith('UNDO: '):
+                    name = name[6:]
+                    inverted = 't'
+                else:
+                    inverted = 'f'
+                phash = new()
+                phash.update(name)
+                phash.update(author)
+                phash.update(compactdate)
+                phash.update(''.join(changelog))
+                phash.update(inverted)
+                cset.darcs_hash = '%s-%s-%s.gz' % (compactdate,
+                                                   new(author).hexdigest()[:5],
+                                                   phash.hexdigest())
+                changesets.append(cset)
 
                 while not l.strip():
                     l = output.readline()
