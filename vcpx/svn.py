@@ -367,9 +367,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                not line.startswith('Deleting '):
                 break
             line = out.readline()
+
         if not line.startswith('Committed revision '):
-            raise ChangesetApplicationFailure("%s wrote unexpected line %r" %
-                                              (str(commit), line))
+            out.seek(0)
+            raise ChangesetApplicationFailure("%s wrote unexpected line %r. "
+                                              "This the whole output:\n%s" %
+                                              (str(commit), line, out.read()))
         revision = line[19:-2]
 
         if self.USE_PROPSET:
