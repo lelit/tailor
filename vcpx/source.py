@@ -90,8 +90,6 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 if not self._willApplyChangeset(c, applyable):
                     break
 
-                self.log_info("Applying changeset %s" % c.revision)
-
                 try:
                     res = self._applyChangeset(c)
                 except:
