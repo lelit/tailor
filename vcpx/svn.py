@@ -344,28 +344,41 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = self.repository.command("commit", "--quiet",
-                                      "--file", rontf.name)
+        cmd = self.repository.command("commit", "--file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
             entries = ['.']
 
-        commit.execute(entries)
+        out = commit.execute(entries, stdout=PIPE, LANG='C')[0]
 
         if commit.exit_status:
             raise ChangesetApplicationFailure("%s returned status %d" %
                                               (str(commit), commit.exit_status))
+        line = out.readline()
+        while line and not line.startswith('Committed revision '):
+            if not line.startswith('Sending ') and \
+               not line.startswith('Transmitting file data ') and \
+               not line.startswith('Adding ') and \
+               not line.startswith('Deleting '):
+                break
+            line = out.readline()
+        if not line.startswith('Committed revision '):
+            raise ChangesetApplicationFailure("%s wrote unexpected line %r" %
+                                              (str(commit), line))
+        revision = line[19:-2]
 
         if self.USE_PROPSET:
             cmd = self.repository.command("propset", "%(propname)s",
-                                          "--quiet", "--revprop", "-rHEAD")
+                                          "--quiet", "--revprop",
+                                          "--revision", revision)
             propset = ExternalCommand(cwd=self.basedir, command=cmd)
 
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(author, propname='svn:author')
 
-        cmd = self.repository.command("update", "--quiet")
+        cmd = self.repository.command("update", "--quiet",
+                                      "--revision", revision)
         ExternalCommand(cwd=self.basedir, command=cmd).execute()
 
     def _removePathnames(self, names):
