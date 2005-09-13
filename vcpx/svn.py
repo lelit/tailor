@@ -361,7 +361,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             return
 
         while line and not line.startswith('Committed revision '):
-            if not line.startswith('Sending ') and \
+            if line <> '\n' and not line.startswith('Sending ') and \
                not line.startswith('Transmitting file data ') and \
                not line.startswith('Adding ') and \
                not line.startswith('Deleting '):
