@@ -511,7 +511,7 @@ differs from local system setup, that you may inspect executing::
 
   python -m locale
 
-CVS and CVSPS repositories may turn of automatic tagging of entries,
+CVS and CVSPS repositories may turn off automatic tagging of entries,
 that tailor does by default to prevent manual interventions in the
 CVS working copy, using ``tag_entries = False``.
 
