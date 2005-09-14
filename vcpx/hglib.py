@@ -54,8 +54,6 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
         from os import walk
         from dualwd import IGNORED_METADIRS
 
-        cmd = self.repository.command("copy")
-        copy = ExternalCommand(cwd=self.basedir, command=cmd)
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current HG,
             # loop over all files under the new directory and
