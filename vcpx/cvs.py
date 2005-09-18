@@ -14,6 +14,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, STDOUT, PIPE
 from cvsps import CvspsWorkingDir
 from source import GetUpstreamChangesetsFailure
+from config import ConfigurationError
 
 def compare_cvs_revs(rev1, rev2):
     """Compare two CVS revision numerically, not alphabetically."""
@@ -301,6 +302,17 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         from codecs import getreader
 
+        try:
+            reader = getreader(self.repository.encoding)
+        except LookupError, err:
+            raise ConfigurationError('Encoding %r does not seem to be '
+                                     'allowed on this system (%s): you '
+                                     'may override the default with '
+                                     'something like "encoding = ascii" in '
+                                     'the %s config section' %
+                                     (self.repository.encoding, err,
+                                      self.repository.name))
+
         branch = ''
         fname = join(self.basedir, 'CVS', 'Tag')
         if exists(fname):
@@ -353,7 +365,6 @@ class CvsWorkingDir(CvspsWorkingDir):
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
-        reader = getreader(self.repository.encoding)
         log = reader(log)
         return changesets_from_cvslog(log, self.repository.module)
 
