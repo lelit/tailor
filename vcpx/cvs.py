@@ -22,8 +22,8 @@ def compare_cvs_revs(rev1, rev2):
     if not rev1: rev1 = '0'
     if not rev2: rev2 = '0'
 
-    # handle locked files by taking only the first part of the revision string
-    # this is to handle gracefully lines like "1.1 locked" which were breaking the script before
+    # handle locked files by taking only the first part of the
+    # revision string to handle gracefully lines like "1.1 locked"
     rev1 = rev1.split(' ')[0]
     rev2 = rev2.split(' ')[0]
     r1 = [int(n) for n in rev1.split('.')]
@@ -81,7 +81,8 @@ def _splitGlobalCVSRevision(revision):
     Split what _getGlobalCVSRevision() returns into the two components.
     """
 
-    assert ' by ' in revision, "Simple revision found, expected 'timestamp by author'"
+    assert ' by ' in revision, \
+           "Simple revision found, expected 'timestamp by author'"
     return revision.split(' by ')
 
 class ChangeSetCollector(object):
