@@ -109,6 +109,11 @@ def changesets_from_svnlog(log, repository, module):
                     if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
                         mv_or_cp[e.name].action_kind = e.RENAMED
                     elif e.action_kind=='R':
+                        # In svn parlance, 'R' means Replaced: a tipical
+                        # scenario is
+                        #   $ svn mv a.txt b.txt
+                        #   $ touch a.txt
+                        #   $ svn add a.txt
                         if mv_or_cp.has_key(e.name):
                             mv_or_cp[e.name].action_kind = e.RENAMED
                         e.action_kind = e.ADDED

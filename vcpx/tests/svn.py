@@ -476,3 +476,67 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(len(log), 91)
         self.assertRaises(UnicodeEncodeError, log.encode, 'iso-8859-1')
         self.assertEqual(len(log.encode('ascii', 'ignore')), 90)
+
+    COPY_AND_REPLACE_TEST = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="1379">
+<author>cmlenz</author>
+<date>2005-03-21T08:34:02.522947Z</date>
+<paths>
+<path
+   copyfrom-path="/trunk/scripts/trac-admin"
+   copyfrom-rev="1377"
+   action="A">/trunk/trac/scripts/admin.py</path>
+<path
+   action="A">/trunk/trac/scripts</path>
+<path
+   action="M">/trunk/trac/tests/tracadmin.py</path>
+<path
+   action="R">/trunk/scripts/trac-admin</path>
+<path
+   action="A">/trunk/trac/scripts/__init__.py</path>
+<path
+   action="M">/trunk/trac/tests/environment.py</path>
+<path
+   action="M">/trunk/setup.py</path>
+</paths>
+<msg>Applied Mark Rowe's patch for refactoring trad-admin into a real module so that the unit tests don't need to invoke it through the shell. Closes #1328. Many thanks.</msg>
+</logentry>
+</log>
+"""
+
+    def testCopyAndReplace(self):
+        """Verify the svn parser handle copy+replace"""
+
+        log = StringIO(self.COPY_AND_REPLACE_TEST)
+        csets = changesets_from_svnlog(log,
+                                       'http://svn.edgewall.com/repos/trac',
+                                       '/trunk')
+
+        self.assertEqual(len(csets), 1)
+
+        cset = csets[0]
+        self.assertEqual(len(cset.entries), 7)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'scripts/trac-admin')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'setup.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'trac/scripts')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[3]
+        self.assertEqual(entry.name, 'trac/scripts/__init__.py')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[4]
+        self.assertEqual(entry.name, 'trac/scripts/admin.py')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.old_name, 'scripts/trac-admin')
