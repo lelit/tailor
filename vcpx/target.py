@@ -60,22 +60,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
     When true, remove the first line from the upstream changelog.
     """
 
-    def replayChangeset(self, changeset):
+    def __getPatchNameAndLog(self, changeset):
         """
-        Do whatever is needed to replay the changes under the target
-        VC, to register the already applied (under the other VC)
-        changeset.
+        Return a tuple (patchname, changelog) interpolating changeset's
+        information with the template above.
         """
-
-        changeset = self._adaptChangeset(changeset)
-        if changeset is None:
-            return
-
-        try:
-            self._replayChangeset(changeset)
-        except:
-            self.log_error(str(changeset), exc=True)
-            raise
 
         if changeset.log == '':
             firstlogline = 'Empty log message'
@@ -99,9 +88,27 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             changelog = remaininglog
         else:
             changelog = changeset.log
+        return patchname, changelog
+
+    def replayChangeset(self, changeset):
+        """
+        Do whatever is needed to replay the changes under the target
+        VC, to register the already applied (under the other VC)
+        changeset.
+        """
+
+        changeset = self._adaptChangeset(changeset)
+        if changeset is None:
+            return
+
+        try:
+            self._replayChangeset(changeset)
+        except:
+            self.log_error(str(changeset), exc=True)
+            raise
+        patchname, log = self.__getPatchNameAndLog(changeset)
         entries = self._getCommitEntries(changeset)
-        self._commit(changeset.date, changeset.author,
-                     patchname, changelog, entries)
+        self._commit(changeset.date, changeset.author, patchname, log, entries)
         self._dismissChangeset(changeset)
 
     def __getPrefixToSource(self):
@@ -392,17 +399,19 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         """
 
         self._initializeWorkingDir()
+        # Execute the precommit hooks, but ignore None results
+        changeset = self._adaptChangeset(changeset) or changeset
         revision = changeset.revision
         source_repository = str(source_repo)
         if initial:
             author = changeset.author
-            patchname = changeset.log
-            log = None
+            patchname, log = self.__getPatchNameAndLog(changeset)
         else:
             author = "%s@%s" % (AUTHOR, HOST)
             patchname = BOOTSTRAP_PATCHNAME
             log = BOOTSTRAP_CHANGELOG % locals()
         self._commit(changeset.date, author, patchname, log)
+        self._dismissChangeset(changeset)
 
     def _initializeWorkingDir(self):
         """
