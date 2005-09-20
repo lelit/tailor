@@ -69,8 +69,10 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
                 for f in files:
                     self._hg.copy(join(oldname, prefix, f),
                                   join(newname, prefix, f))
+                    self._hg.remove([join(oldname, prefix, f)])
         else:
             self._hg.copy(oldname, newname)
+            self._hg.remove(oldname)
 
     def _prepareTargetRepository(self):
         """
