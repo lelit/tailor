@@ -16,7 +16,7 @@ sync across different VC systems.
 __docformat__ = 'reStructuredText'
 
 from vcpx.tailor import main, ExistingProjectError, ProjectNotTailored
-from vcpx.target import TargetInitializationFailure
+from vcpx.target import TargetInitializationFailure, ChangesetReplayFailure
 from vcpx.source import InvocationError, GetUpstreamChangesetsFailure,\
      ChangesetApplicationFailure
 from vcpx.cvsps import EmptyRepositoriesFoolsMe
@@ -27,4 +27,4 @@ TailorExceptions = (ExistingProjectError, ProjectNotTailored,
                     TargetInitializationFailure, EmptyRepositoriesFoolsMe,
                     InvocationError, GetUpstreamChangesetsFailure,
                     ChangesetApplicationFailure, ConfigurationError,
-                    UnknownProjectError)
+                    UnknownProjectError, ChangesetReplayFailure)

@@ -27,6 +27,9 @@ Import of the upstream sources from
 class TargetInitializationFailure(Exception):
     "Failure initializing the target VCS"
 
+class ChangesetReplayFailure(Exception):
+    "Failure replaying the changeset on the target system"
+
 class SyncronizableTargetWorkingDir(WorkingDir):
     """
     This is an abstract working dir usable as a *shadow* of another
