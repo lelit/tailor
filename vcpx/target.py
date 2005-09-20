@@ -112,6 +112,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         self._dismissChangeset(changeset)
 
     def __getPrefixToSource(self):
+        """
+        Compute and return the "offset" between source and target basedirs,
+        or None when not using shared directories, or there's no offset.
+        """
+
         ssubdir = self.repository.project.source.subdir
         tsubdir = self.repository.project.target.subdir
         if self.shared_basedirs and ssubdir <> tsubdir:
@@ -166,7 +171,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
     def _adaptChangeset(self, changeset):
         """
-        Do whatever needed before replay the changeset.
+        Do whatever needed before replay and return the adapted changeset.
 
         This implementation calls ``self._adaptEntries()``, then
         executes the adapters defined by before-commit on the project:
