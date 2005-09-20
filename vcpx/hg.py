@@ -12,7 +12,8 @@ This module implements the backends for Mercurial.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SyncronizableTargetWorkingDir, TargetInitializationFailure, \
+     ChangesetReplayFailure
 from source import ChangesetApplicationFailure
 
 class HgWorkingDir(SyncronizableTargetWorkingDir):
@@ -107,8 +108,16 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
                 for f in files:
                     copy.execute(join(oldname, prefix, f),
                                  join(newname, prefix, f))
+                    if copy.exit_status:
+                        raise ChangesetReplayFailure("Could not rename %r "
+                                                     "into %r: maybe using a "
+                                                     "pre 0.7 mercurial?")
         else:
             copy.execute(oldname, newname)
+            if copy.exit_status:
+                raise ChangesetReplayFailure("Could not rename %r "
+                                             "into %r: maybe using a "
+                                             "pre 0.7 mercurial?")
 
     def _prepareTargetRepository(self):
         """
