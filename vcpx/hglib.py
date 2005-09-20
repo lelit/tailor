@@ -34,7 +34,7 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog.encode(encoding))
         self._hg.commit(names and [n.encode(encoding) for n in names] or [],
-                        '\n'.join(logmessage),
+                        '\n'.join(logmessage) or "Empty changelog",
                         author.encode(encoding),
                         "%d 0" % mktime(date.timetuple()))
 

@@ -58,7 +58,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
 
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(logmessage))
+        log.write('\n'.join(logmessage) or "Empty changelog")
         log.close()
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))
