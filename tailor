@@ -17,7 +17,9 @@ __docformat__ = 'reStructuredText'
 
 if __name__ == '__main__':
     import sys
+    import locale
 
+    locale.setlocale(locale.LC_CTYPE, '')
     if len(sys.argv)>1 and sys.argv[1] == 'test':
         del sys.argv[1]
         from unittest import main
