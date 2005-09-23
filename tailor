@@ -37,3 +37,5 @@ if __name__ == '__main__':
         except UnicodeEncodeError, exc:
             print exc
             print "You may want to specify a suitable charset using --encoding"
+        except KeyboardInterrupt:
+            print "Stopped by user"

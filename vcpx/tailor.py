@@ -96,7 +96,7 @@ class Tailorizer(Project):
             pendings = dwd.getPendingChangesets()
         except KeyboardInterrupt:
             self.log_info("Leaving '%s' unchanged, stopped by user" % self.name)
-            return
+            raise
         except:
             self.log_error("Unable to get changes for '%s'" % self.name, True)
             raise
@@ -111,7 +111,7 @@ class Tailorizer(Project):
             except KeyboardInterrupt:
                 self.log_info("Leaving '%s' incomplete, stopped by user" %
                               self.name)
-                return
+                raise
             except:
                 self.log_error('Upstream change application failed', True)
                 raise
