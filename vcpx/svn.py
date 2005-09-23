@@ -254,7 +254,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if svnlog.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %d saying \"%s\"" %
-                    (str(output), changes.exit_status, output.read()))
+                    (str(svnlog), svnlog.exit_status, output.read()))
 
             csets = changesets_from_svnlog(output,
                                            self.repository.repository,
