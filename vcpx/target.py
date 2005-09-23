@@ -79,6 +79,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 remaininglog = ''
 
         patchname = self.PATCH_NAME_FORMAT % {
+            'project': self.repository.project.name,
             'revision': changeset.revision,
             'author': changeset.author,
             'date': changeset.date,
