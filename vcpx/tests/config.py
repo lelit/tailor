@@ -79,7 +79,6 @@ subdir = plain
 subdir = .
 
 [project4]
-root-directory = /tmp/tailor-tests
 source = svndump:project3repo
 target = darcs:project4repo
 
@@ -145,3 +144,17 @@ def checkpoint(context, changeset):
         project4 = Project('project4', config)
         wd = project4.workingDir()
         self.assert_(not wd.shared_basedirs)
+
+    def testRootDirectory(self):
+        """Verify the root-directory expansion"""
+
+        from os import getcwd
+
+        config = Config(StringIO(self.BASIC_TEST),
+                        {'tailor_repo': self.tailor_repo})
+
+        project1 = Project('project1', config)
+        self.assertEqual(project1.rootdir, '/tmp/tailor-tests')
+
+        project4 = Project('project4', config)
+        self.assertEqual(project4.rootdir, getcwd())

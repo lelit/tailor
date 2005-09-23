@@ -395,8 +395,8 @@ colon (":") character, and configured with the following values:
 root-directory
   This is where all the fun will happen: this directory will contain
   the source and the target working copy, and usually the state and
-  the log file. It support the conventional `~user` to indicate user's
-  home directory.
+  the log file. It supports the conventional `~user` to indicate user's
+  home directory and defaults to the current working directory.
 
 subdir
   This is the subdirectory, relative to the `root-directory`, where

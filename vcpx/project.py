@@ -94,12 +94,14 @@ class Project(object):
         Load relevant information from the configuration.
         """
 
-        from os import getcwd, makedirs
-        from os.path import join, exists, expanduser
+        from os import makedirs
+        from os.path import join, exists, expanduser, abspath
         import logging
 
         self.verbose = self.config.get(self.name, 'verbose', False)
-        self.rootdir = self.config.get(self.name, 'root-directory', getcwd())
+        self.rootdir = abspath(expanduser(self.config.get(self.name,
+                                                          'root-directory',
+                                                          '.')))
         if not exists(self.rootdir):
             makedirs(self.rootdir)
         self.subdir = self.config.get(self.name, 'subdir')
