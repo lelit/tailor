@@ -401,7 +401,8 @@ root-directory
 subdir
   This is the subdirectory, relative to the `root-directory`, where
   tailor will extract the source working copy. It may be '.' for some
-  backend kinds.
+  backend kinds. The source and target backends will use this value
+  if they don't explicitly override it.
 
 state-file
   Name of the state file needed to store tailor last activity.
