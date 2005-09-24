@@ -14,8 +14,11 @@ __docformat__ = 'reStructuredText'
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.branch import Branch
 from bzrlib.errors import BzrError
+from bzrlib.osutils import compact_date, rand_bytes
+from binascii import hexlify
 import os
 import os.path
+import re
 
 class BzrngWorkingDir(SyncronizableTargetWorkingDir):
     def _addPathnames(self, entries):
@@ -37,16 +40,24 @@ class BzrngWorkingDir(SyncronizableTargetWorkingDir):
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
 
-        # FIXME: maybe we should construct the revision id here instead?
-        #revision_id = "%s-%d" % (author, timestamp)
         logmessage = []
         if patchname:
             logmessage.append(patchname)
         if changelog:
             logmessage.append(changelog)
         timestamp = int(mktime(date.timetuple()))
+
+    	# Guess sane email address
+    	email = re.search("<(.*@.*)>", author)
+    	if email: 
+    		email = email.group(1)
+    	else:
+    		email = author
+
+        revision_id = "%s-%s-%s" % (email, compact_date(timestamp), hexlify(rand_bytes(8))
+)
         self._b.commit('\n'.join(logmessage), committer=author,
-                       specific_files=entries,
+                       specific_files=entries, rev_id=revision_id,
                        verbose=self.repository.project.verbose,
                        timestamp=timestamp)
 
