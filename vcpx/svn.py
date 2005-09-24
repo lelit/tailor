@@ -100,16 +100,16 @@ def changesets_from_svnlog(log, repository, module):
                 # at the same time change related entry from ADDED to
                 # RENAMED.
 
-                # When copying a directory from another location in the 
-                # repository (outside the tracked tree), SVN will report files 
-                # below this dir that are not being committed as being 
+                # When copying a directory from another location in the
+                # repository (outside the tracked tree), SVN will report files
+                # below this dir that are not being committed as being
                 # removed.
 
                 # We thus need to change the action_kind for all entries
-                # that are below a dir that was "copyfrom" from a path 
+                # that are below a dir that was "copyfrom" from a path
                 # outside of this module:
-                # 	D -> Remove entry completely (it's not going to be in here)
-                # 	(M,A,R) -> A
+                #  D -> Remove entry completely (it's not going to be in here)
+                #  (M,A,R) -> A
 
                 mv_or_cp = {}
                 for e in self.current['entries']:
@@ -137,7 +137,7 @@ def changesets_from_svnlog(log, repository, module):
                         e.action_kind = e.ADDED
                         entries.append(e)
                     elif parent_was_copied_externally(e.name):
-                        if e.action_kind != e.DELETED:    
+                        if e.action_kind != e.DELETED:
                             e.action_kind = e.ADDED
                             entries.append(e)
                     else:
