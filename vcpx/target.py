@@ -131,6 +131,27 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         else:
             return None
 
+    def _normalizeEntryPaths(self, entry):
+        """
+        Normalize the name and old_name of an entry.
+
+        The ``name`` and ``old_name`` of an entry are pathnames coming
+        from the upstream system, and is usually (although there is no
+        guarantee it actually is) a UNIX style path with forward
+        slashes "/" as separators.
+
+        This implementation uses normpath to adapt the path to the
+        actual OS convention, but subclasses may eventually override
+        this to use their own canonicalization of ``name`` and
+        ``old_name``.
+        """
+
+        from os.path import normpath
+
+        entry.name = normpath(entry.name)
+        if entry.old_name:
+            entry.old_name = normpath(entry.old_name)
+
     def __adaptEntriesPath(self, changeset):
         """
         If the source basedir is a subdirectory of the target, adjust
@@ -144,23 +165,24 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             return changeset
 
         prefix = self.__getPrefixToSource()
-        if prefix:
-            adapted = deepcopy(changeset)
-            for e in adapted.entries:
+        adapted = deepcopy(changeset)
+        for e in adapted.entries:
+            if prefix:
                 e.name = join(prefix, e.name)
                 if e.old_name:
                     e.old_name = join(prefix, e.old_name)
-            return adapted
-        else:
-            return changeset
+            self._normalizeEntryPaths(e)
+        return adapted
 
     def _adaptEntries(self, changeset):
         """
         Do whatever is needed to adapt entries to the target system.
 
-        This implementation adds a prefix to each path if needed,
-        when the target basedir *contains* the source basedir. It
-        operates on and returns a copy of the given changeset.
+        This implementation adds a prefix to each path if needed, when
+        the target basedir *contains* the source basedir. Also, each
+        path is normalized thru ``normpath()`` or whatever equivalent
+        operation provided by the specific target. It operates on and
+        returns a copy of the given changeset.
 
         Subclasses shall eventually extend this to exclude unwanted
         entries, eventually returning None when all entries were
