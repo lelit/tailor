@@ -184,12 +184,14 @@ def changesets_from_svnlog(log, repository, module):
             self.current_field.append(data)
 
 
-    # Apparently some (SVN repo contains)/(SVN server dumps) some characters that
-    # are illegal in an XML stream. This was the case with Twisted Matrix master
-    # repository. To be safe, we replace all of them with a question mark.
+    # Apparently some (SVN repo contains)/(SVN server dumps) some
+    # characters that are illegal in an XML stream. This was the case
+    # with Twisted Matrix master repository. To be safe, we replace
+    # all of them with a question mark.
 
-    allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0B\x0C\x0E\x0F\x10\x11" \
-                  "\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7f"
+    allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0B\x0C\x0E\x0F" \
+                  "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D" \
+                  "\x1E\x1F\x7f"
     tt = maketrans(allbadchars, "?"*len(allbadchars))
     handler = SvnXMLLogHandler()
     parseString(log.read().translate(tt), handler)
