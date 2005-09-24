@@ -540,3 +540,61 @@ class SvnLogParserTest(TestCase):
         self.assertEqual(entry.name, 'trac/scripts/admin.py')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'scripts/trac-admin')
+
+
+    COPYFROM_AND_REMOVE_TEST = """\
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="3170">
+<author>abartlet</author>
+<date>2004-10-24T23:54:00.078045Z</date>
+<paths>
+<path
+   action="D">/branches/SAMBA_4_0/source/nsswitch/wins.c</path>
+<path
+   action="A">/branches/SAMBA_4_0/source/nsswitch/config.m4</path>
+<path
+   copyfrom-path="/branches/SAMBA_3_0/source/nsswitch"
+   copyfrom-rev="3150"
+   action="A">/branches/SAMBA_4_0/source/nsswitch</path>
+<path
+   action="M">/branches/SAMBA_4_0/source/nsswitch/wb_common.c</path>
+</paths>
+<msg>Add winbind client support back into Samba4.  This is to allow
+auth_winbind to work, and to therefore use the new ntlm_auth and
+GENSEC in an otherwise Samba3 setup.
+
+I'm not quite sure what fun-and games my svn cp caused as I merged
+this from samba_3_0, but anyway...
+
+Andrew Bartlett
+</msg>
+</logentry>
+</log>
+"""
+
+    def testCopyFromAndRemove(self):
+        """Verify the svn parser handle copyfrom+remove"""
+
+        log = StringIO(self.COPYFROM_AND_REMOVE_TEST)
+        csets = changesets_from_svnlog(log,
+                                       'http://svnanon.samba.org/samba',
+                                       '/branches/SAMBA_4_0')
+
+        self.assertEqual(len(csets), 1)
+
+        cset = csets[0]
+        self.assertEqual(len(cset.entries), 3)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'source/nsswitch/config.m4')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'source/nsswitch')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'source/nsswitch/wb_common.c')
+        self.assertEqual(entry.action_kind, entry.ADDED)
