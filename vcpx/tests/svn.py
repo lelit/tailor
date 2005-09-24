@@ -588,11 +588,11 @@ Andrew Bartlett
         self.assertEqual(len(cset.entries), 3)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'source/nsswitch/config.m4')
+        self.assertEqual(entry.name, 'source/nsswitch')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
         entry = cset.entries[1]
-        self.assertEqual(entry.name, 'source/nsswitch')
+        self.assertEqual(entry.name, 'source/nsswitch/config.m4')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
         entry = cset.entries[2]

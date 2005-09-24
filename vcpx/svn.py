@@ -68,6 +68,7 @@ def changesets_from_svnlog(log, repository, module):
             self.current = None
             self.current_field = []
             self.renamed = {}
+            self.external_copies = []
 
         def startElement(self, name, attributes):
             if name == 'logentry':
@@ -99,17 +100,35 @@ def changesets_from_svnlog(log, repository, module):
                 # at the same time change related entry from ADDED to
                 # RENAMED.
 
+                # When copying a directory from another location in the 
+                # repository (outside the tracked tree), SVN will report files 
+                # below this dir that are not being committed as being 
+                # removed.
+
+                # We thus need to change the action_kind for all entries
+                # that are below a dir that was "copyfrom" from a path 
+                # outside of this module:
+                # 	D -> Remove entry completely (it's not going to be in here)
+                # 	(M,A,R) -> A
+
                 mv_or_cp = {}
                 for e in self.current['entries']:
                     if e.action_kind == e.ADDED and e.old_name is not None:
                         mv_or_cp[e.old_name] = e
+
+                def parent_was_copied_externally(n):
+                    for p in self.external_copies:
+                        # Check if this was in fact a parent
+                        if len(p) < len(n) and n[0:len(p)] == p:
+                            return True
+                    return False
 
                 entries = []
                 for e in self.current['entries']:
                     if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
                         mv_or_cp[e.name].action_kind = e.RENAMED
                     elif e.action_kind=='R':
-                        # In svn parlance, 'R' means Replaced: a tipical
+                        # In svn parlance, 'R' means Replaced: a typical
                         # scenario is
                         #   $ svn mv a.txt b.txt
                         #   $ touch a.txt
@@ -118,6 +137,10 @@ def changesets_from_svnlog(log, repository, module):
                             mv_or_cp[e.name].action_kind = e.RENAMED
                         e.action_kind = e.ADDED
                         entries.append(e)
+                    elif parent_was_copied_externally(e.name):
+                        if e.action_kind != e.DELETED:    
+                            e.action_kind = e.ADDED
+                            entries.append(e)
                     else:
                         entries.append(e)
 
@@ -150,6 +173,7 @@ def changesets_from_svnlog(log, repository, module):
                             entry.old_name = old
                             self.renamed[entry.old_name] = True
                         else:
+                            self.external_copies.append(entry.name)
                             entry.action_kind = entry.ADDED
                     else:
                         entry.action_kind = self.ACTIONSMAP[self.current_path_action]
