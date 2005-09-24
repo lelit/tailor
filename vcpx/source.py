@@ -78,6 +78,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
         - the sequence (potentially empty!) of conflicts.
         """
 
+        from time import sleep
+
         c = None
         last = None
         conflicts = []
@@ -89,6 +91,11 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 # source backend.
                 if not self._willApplyChangeset(c, applyable):
                     break
+
+                # Sometime is better to wait a little while before each
+                # changeset, to avoid upstream server stress.
+                if self.repository.delay_before_apply:
+                    sleep(self.repository.delay_before_apply)
 
                 try:
                     res = self._applyChangeset(c)

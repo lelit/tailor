@@ -85,6 +85,7 @@ class Repository(object):
                                   vars={'root-directory': self.project.rootdir})
         self.subdir = config.get(self.name, 'subdir',
                                  vars={'subdir': self.project.subdir})
+        self.delay_before_apply = config.get(self.name, 'delay_before_apply')
         self.encoding = config.get(self.name, 'encoding')
         if self.encoding is None:
             self.encoding = getdefaultencoding()

@@ -336,6 +336,7 @@ need to specify a different directory for each repository [#]_, as in::
     repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
     module = pxlib
     subdir = original
+    delay_before_apply = 10
 
     [hg:pxlib]
     hg-command = /usr/local/bin/hg
@@ -532,6 +533,12 @@ values to the changelog.  When active at bootstrap time and the
 repository is local, tailor creates automatically a minimal
 ``hooks/pre-revprop-change`` script inside the repository, so no other
 intervention is needed.
+
+Sometime the migration is fast enough to put the upstream server under
+an excessive load. When this is the case, you may specify
+``delay_before_apply = 5``, that is the number of seconds tailor will
+wait before applying each changeset. It defaults to None, ie no delay
+at all.
 
 
 Using a Python script as configuration file
