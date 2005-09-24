@@ -13,9 +13,23 @@ instead of thru the command line.
 __docformat__ = 'reStructuredText'
 
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
-from mercurial import ui, hg, commands
+from mercurial import ui, hg, commands, util
 
 class HglibWorkingDir(SyncronizableTargetWorkingDir):
+
+    def _normalizeEntryPaths(self, entry):
+        """
+        Normalize the name and old_name of an entry.
+
+        This implementation uses ``mercurial.util.normpath()``, since
+        at this level hg is expecting UNIX style pathnames, with
+        forward slash"/" as separator, also under insane operating systems.
+        """
+
+        entry.name = util.normpath(entry.name)
+        if entry.old_name:
+            entry.old_name = util.normpath(entry.old_name)
+
     def _addPathnames(self, names):
         from os.path import join, isdir
 
