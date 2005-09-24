@@ -14,6 +14,8 @@ __docformat__ = 'reStructuredText'
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.branch import Branch
 from bzrlib.errors import BzrError
+import os
+import os.path
 
 class BzrngWorkingDir(SyncronizableTargetWorkingDir):
     def _addPathnames(self, entries):
@@ -55,6 +57,9 @@ class BzrngWorkingDir(SyncronizableTargetWorkingDir):
 
     def _renamePathname(self, oldentry, newentry):
         """Rename an entry"""
+
+        # bzr does the rename itself as well
+        os.rename(os.path.join(self.basedir, newentry), os.path.join(self.basedir, oldentry))
 
         self._b.rename_one(oldentry, newentry)
 
