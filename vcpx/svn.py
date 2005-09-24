@@ -118,8 +118,7 @@ def changesets_from_svnlog(log, repository, module):
 
                 def parent_was_copied_externally(n):
                     for p in self.external_copies:
-                        # Check if this was in fact a parent
-                        if len(p) < len(n) and n[0:len(p)] == p:
+                        if n.startswith(p):
                             return True
                     return False
 
