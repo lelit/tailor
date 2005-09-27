@@ -31,9 +31,10 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
             entry.old_name = util.normpath(entry.old_name)
 
     def _addPathnames(self, names):
-        from os.path import join, isdir
+        from os.path import join, isdir, normpath
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names
+                   if not isdir(join(self.basedir, normpath(n)))]
         if notdirs:
             self._hg.add(notdirs)
 
@@ -58,9 +59,10 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
     def _removePathnames(self, names):
         """Remove a sequence of entries"""
 
-        from os.path import join, isdir
+        from os.path import join, isdir, normpath
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names
+                   if not isdir(join(self.basedir, normpath(n)))]
         if notdirs:
             self._hg.remove(notdirs)
 
@@ -69,7 +71,7 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
 
         from os.path import join, isdir, normpath
 
-        if isdir(join(self.basedir, newname)):
+        if isdir(join(self.basedir, normpath(newname))):
             # Given lack of support for directories in current HG,
             # loop over all files under the old directory and
             # do a copy on them.
