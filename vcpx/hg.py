@@ -88,26 +88,21 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, isdir
-        from os import walk
-        from dualwd import IGNORED_METADIRS
 
         cmd = self.repository.command("rename", "--after")
         copy = ExternalCommand(cwd=self.basedir, command=cmd)
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current HG,
-            # loop over all files under the new directory and
-            # do a copy on them.
-            skip = len(self.basedir)+len(newname)+2
-            for dir, subdirs, files in walk(join(self.basedir, newname)):
-                prefix = dir[skip:]
-
-                for excd in IGNORED_METADIRS:
-                    if excd in subdirs:
-                        subdirs.remove(excd)
-
-                for f in files:
-                    copy.execute(join(oldname, prefix, f),
-                                 join(newname, prefix, f))
+            # loop over all files presented by "hg manifest" under the
+            # old directory and do a copy on them.
+            cmd = self.repository.command("manifest")
+            manifest = ExternalCommand(cwd=self.basedir, command=cmd)
+            output = manifest.execute(stdout=PIPE)[0]
+            for row in output:
+                sha, mode, oldpath = row[:-1].split(' ')
+                if oldpath.startswith(oldname):
+                    tail = oldpath[len(oldname)+2:]
+                    copy.execute(oldpath, join(newname, tail))
                     if copy.exit_status:
                         raise ChangesetReplayFailure("Could not rename %r "
                                                      "into %r: maybe using a "

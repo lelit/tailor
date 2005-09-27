@@ -67,26 +67,16 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
     def _renamePathname(self, oldname, newname):
         """Rename an entry"""
 
-        from os.path import join, isdir
-        from os import walk
-        from dualwd import IGNORED_METADIRS
+        from os.path import join, isdir, normpath
 
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current HG,
-            # loop over all files under the new directory and
+            # loop over all files under the old directory and
             # do a copy on them.
-            skip = len(self.basedir)+len(newname)+2
-            for dir, subdirs, files in walk(join(self.basedir, newname)):
-                prefix = dir[skip:]
-
-                for excd in IGNORED_METADIRS:
-                    if excd in subdirs:
-                        subdirs.remove(excd)
-
-                for f in files:
-                    self._hg.copy(join(oldname, prefix, f),
-                                  join(newname, prefix, f))
-                    self._hg.remove([join(oldname, prefix, f)])
+            for src, oldpath in self._hg.dirstate.walk(oldname):
+                tail = oldpath[len(oldname)+2:]
+                self._hg.copy(oldpath, join(newname, tail))
+                self._hg.remove([oldpath])
         else:
             self._hg.copy(oldname, newname)
             self._hg.remove(oldname)
