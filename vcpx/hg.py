@@ -41,9 +41,9 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from time import mktime
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
 
         logmessage = []
         if patchname:
@@ -51,7 +51,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog.encode(encoding))
 
-        cmd = self.repository.command("commit", "-u", author,
+        cmd = self.repository.command("commit", "-u", author.encode(encoding),
                                       "-l", "%(logfile)s",
                                       "-d", "%(time)d 0")
         c = ExternalCommand(cwd=self.basedir, command=cmd)

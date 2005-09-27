@@ -653,9 +653,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Commit the changeset.
         """
 
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
 
         logmessage = []
         if patchname:
@@ -668,7 +668,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = self.repository.command("commit", "--author", author,
+        cmd = self.repository.command("commit",
+                                      "--author", author.encode(encoding),
                                       "--date", date.isoformat(),
                                       "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)

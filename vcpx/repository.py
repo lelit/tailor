@@ -73,7 +73,7 @@ class Repository(object):
         """
 
         from os.path import split, expanduser
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
         self.repository = config.get(self.name, 'repository') or \
                           config.get(self.name, '%s-repository' % self.which)
@@ -88,7 +88,7 @@ class Repository(object):
         self.delay_before_apply = config.get(self.name, 'delay-before-apply')
         self.encoding = config.get(self.name, 'encoding')
         if self.encoding is None:
-            self.encoding = getdefaultencoding()
+            self.encoding = getpreferredencoding()
 
     def _validateConfiguration(self):
         """

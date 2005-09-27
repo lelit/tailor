@@ -402,8 +402,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from sys import getdefaultencoding
-
         logmessage = []
 
         logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))

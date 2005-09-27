@@ -497,9 +497,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from shwrap import ReopenableNamedTemporaryFile
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
 
         logmessage = []
         if patchname:

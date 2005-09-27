@@ -351,9 +351,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
 
         logmessage = []
         if patchname:
@@ -412,7 +412,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             propset = ExternalCommand(cwd=self.basedir, command=cmd)
 
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
-            propset.execute(author, propname='svn:author')
+            propset.execute(author.encode(encoding), propname='svn:author')
 
         cmd = self.repository.command("update", "--quiet",
                                       "--revision", revision)

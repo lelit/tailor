@@ -45,18 +45,22 @@ class BzrngWorkingDir(SyncronizableTargetWorkingDir):
             logmessage.append(patchname)
         if changelog:
             logmessage.append(changelog)
+        if logmessage:
+            logmessage = '\n'.join(logmessage)
+        else:
+            logmessage = "Empty changelog"
         timestamp = int(mktime(date.timetuple()))
 
-    	# Guess sane email address
-    	email = re.search("<(.*@.*)>", author)
-    	if email: 
-    		email = email.group(1)
-    	else:
-    		email = author
+        # Guess sane email address
+        email = re.search("<(.*@.*)>", author)
+        if email: 
+            email = email.group(1)
+        else:
+            email = author
 
-        revision_id = "%s-%s-%s" % (email, compact_date(timestamp), hexlify(rand_bytes(8))
-)
-        self._b.commit('\n'.join(logmessage), committer=author,
+        revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
+                                    hexlify(rand_bytes(8)))
+        self._b.commit(logmessage, committer=author,
                        specific_files=entries, rev_id=revision_id,
                        verbose=self.repository.project.verbose,
                        timestamp=timestamp)

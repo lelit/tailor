@@ -43,9 +43,9 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from sys import getdefaultencoding
+        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
+        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
 
         logmessage = []
         if patchname:

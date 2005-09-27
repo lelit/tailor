@@ -59,16 +59,13 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from time import mktime
-        from sys import getdefaultencoding
         from os import environ
-
-        encoding = ExternalCommand.FORCE_ENCODING or getdefaultencoding()
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
 
         env = {}
         env.update(environ)

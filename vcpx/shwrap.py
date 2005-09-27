@@ -117,7 +117,8 @@ class ExternalCommand:
     def execute(self, *args, **kwargs):
         """Execute the command."""
 
-        from sys import stderr, getdefaultencoding
+        from sys import stderr
+        from locale import getpreferredencoding
         import os
         from cStringIO import StringIO
 
@@ -174,8 +175,8 @@ class ExternalCommand:
             else:
                 raise
 
-        if input:
-            input = input.encode(self.FORCE_ENCODING or getdefaultencoding())
+        if input and isinstance(input, unicode):
+            input = input.encode(self.FORCE_ENCODING or getpreferredencoding())
 
         out, err = process.communicate(input=input)
 

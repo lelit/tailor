@@ -44,12 +44,15 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
+        if logmessage:
+            logmessage = '\n'.join(logmessage).encode(encoding)
+        else:
+            logmessage = "Empty changelog"
         self._hg.commit(names and [n.encode(encoding) for n in names] or [],
-                        '\n'.join(logmessage) or "Empty changelog",
-                        author.encode(encoding),
+                        logmessage, author.encode(encoding),
                         "%d 0" % mktime(date.timetuple()))
 
     def _removePathnames(self, names):

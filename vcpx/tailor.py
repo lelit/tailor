@@ -14,7 +14,7 @@ __docformat__ = 'reStructuredText'
 __version__ = '0.9.16'
 
 from optparse import OptionParser, OptionGroup, Option
-from config import Config
+from config import Config, ConfigurationError
 from project import Project
 from source import InvocationError
 
@@ -126,6 +126,7 @@ class Tailorizer(Project):
         from shwrap import ExternalCommand
         from target import SyncronizableTargetWorkingDir
         from changes import Changeset
+        from locale import getpreferredencoding
 
         def pconfig(option, raw=False):
             return self.config.get(self.name, option, raw=raw)
@@ -142,6 +143,8 @@ class Tailorizer(Project):
 
             import codecs, sys
             sys.stdout = codecs.getwriter(encoding)(sys.stdout)
+        else:
+            encoding = getpreferredencoding()
 
         pname_format = pconfig('patch-name-format', raw=True)
         if pname_format is not None:
@@ -149,12 +152,19 @@ class Tailorizer(Project):
         SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
         Changeset.REFILL_MESSAGE = pconfig('refill-changelogs')
 
-        if not self.exists():
-            self.bootstrap()
-            if pconfig('start-revision') == 'HEAD':
-                return
-        self.update()
-
+        try:
+            if not self.exists():
+                self.bootstrap()
+                if pconfig('start-revision') == 'HEAD':
+                    return
+            self.update()
+        except UnicodeEncodeError, exc:
+            raise ConfigurationError('%s: it seems that current encoding %r '
+                                     'cannot properly represent at least one '
+                                     'of the characters in the upstream '
+                                     'changelog. You need to use a wider '
+                                     'character set, using "encoding" option.'
+                                     % (exc, encoding))
 
 class RecogOption(Option):
     """
