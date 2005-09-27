@@ -11,7 +11,7 @@
 #
 # - In-version continuations not supported (raises an exception); this
 #   would probably require to compute a changeset with 'tla delta'
-#   instead of using replay.
+#   instead of using update.
 #
 # - Pika escaped file names. This implementations requires a version
 #   of tla that supports pika escapes. For changesets created with a
@@ -134,14 +134,12 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
     def __apply_changeset(self, changeset):
         c = ExternalCommand(cwd=self.basedir,
-                            command=self.repository.command("replay"))
+                            command=self.repository.command("update"))
         out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
         if not c.exit_status in [0, 1]:
             raise ChangesetApplicationFailure(
                 "%s returned status %d saying \"%s\"" %
                 (str(c), c.exit_status, err.read()))
-        # drop initial line: "* patching for revision ..."
-        out.readline()
         return self.__parse_apply_changeset_output(changeset, out)
 
     def __normalize_path(self, path):
@@ -243,7 +241,15 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
     def __parse_apply_changeset_output(self, changeset, output):
         conflicts = []
+        skip = True
         for line in output:
+            # skip comment lines
+            if line[0] == '*':
+                if line.startswith("* applying changeset"):
+                    skip = False
+                continue
+            if skip:
+                continue
             l = line.split()
 
             # if there is an empty line, we are done
