@@ -87,7 +87,7 @@ class Repository(object):
                                  vars={'subdir': self.project.subdir})
         self.delay_before_apply = config.get(self.name, 'delay-before-apply')
         self.encoding = config.get(self.name, 'encoding')
-        if self.encoding is None:
+        if not self.encoding:
             self.encoding = getpreferredencoding()
 
     def _validateConfiguration(self):
