@@ -236,9 +236,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 if retry>3:
                     break
                 delay = 2**retry
-                self.log_info("%s returned status %s, "
+                self.log_info("%s returned status %s saying \"%s\", "
                               "retrying in %d seconds..." %
-                              (str(svnup), svnup.exit_status, delay))
+                              (str(svnup), svnup.exit_status, out.read(),
+                               delay))
                 sleep(delay)
             else:
                 break
