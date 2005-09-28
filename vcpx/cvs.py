@@ -305,7 +305,7 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         try:
             reader = getreader(self.repository.encoding)
-        except LookupError, err:
+        except (ValueError, LookupError), err:
             raise ConfigurationError('Encoding %r does not seem to be '
                                      'allowed on this system (%s): you '
                                      'may override the default with '
