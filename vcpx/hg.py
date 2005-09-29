@@ -102,7 +102,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
                 sha, mode, oldpath = row[:-1].split(' ', 2)
                 oldpath = normpath(oldpath)
                 if oldpath.startswith(oldname):
-                    tail = oldpath[len(oldname)+2:]
+                    tail = oldpath[len(oldname)+1:]
                     copy.execute(oldpath, join(newname, tail))
                     if copy.exit_status:
                         raise ChangesetReplayFailure("Could not rename %r "
