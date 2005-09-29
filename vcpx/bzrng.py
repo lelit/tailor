@@ -25,10 +25,10 @@ import re
 class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
 
-    """
-    Generate changeset for the given BzrNg revision
-    """
     def _changesetFromRevision(self, parent, revision):
+        """
+        Generate changeset for the given BzrNg revision
+        """
         from changes import ChangesetEntry, Changeset
         from datetime import datetime
         r = parent.get_revision(revision)
@@ -63,10 +63,10 @@ class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                               r.message,
                               entries)
    
-    """
-    See what other revisions exist upstream and return them
-    """
     def _getUpstreamChangesets(self, sincerev):
+        """
+        See what other revisions exist upstream and return them
+        """
         parent = Branch.open(self.repository.repository)
 
         revisions = self._b.missing_revisions(parent)
@@ -75,17 +75,17 @@ class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         
         return changesets
 
-    """
-    Apply given remote revision to workingdir
-    """
     def _applyChangeset(self, changeset):
+        """
+        Apply given remote revision to workingdir
+        """
         self._b.append_revision(changeset.revision)
         return [] # No conflicts for now
 
-    """
-    Initial checkout, equivalent of 'bzr branch -r ... '
-    """
     def _checkoutUpstreamRevision(self, revision):
+        """
+        Initial checkout, equivalent of 'bzr branch -r ... '
+        """
         from bzrlib.clone import copy_branch
 
         parent = Branch.open(self.repository.repository)
