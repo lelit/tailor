@@ -87,7 +87,7 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        from os.path import join, isdir
+        from os.path import join, isdir, normpath
 
         cmd = self.repository.command("rename", "--after")
         copy = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -99,7 +99,8 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
             manifest = ExternalCommand(cwd=self.basedir, command=cmd)
             output = manifest.execute(stdout=PIPE)[0]
             for row in output:
-                sha, mode, oldpath = row[:-1].split(' ')
+                sha, mode, oldpath = row[:-1].split(' ', 2)
+                oldpath = normpath(oldpath)
                 if oldpath.startswith(oldname):
                     tail = oldpath[len(oldname)+2:]
                     copy.execute(oldpath, join(newname, tail))
