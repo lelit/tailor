@@ -79,7 +79,7 @@ class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     Apply given remote revision to workingdir
     """
     def _applyChangeset(self, changeset):
-        self._b.append_revision(changeset.revision_id)
+        self._b.append_revision(changeset.revision)
         return [] # No conflicts for now
 
     """
@@ -91,7 +91,7 @@ class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         parent = Branch.open(self.repository.repository)
 
         if revision == "INITIAL":
-            self._b = copy_branch(parent, self.basedir)
+            self._b = copy_branch(parent, self.basedir, parent.get_rev_id(1))
         else:
             self._b = copy_branch(parent, self.basedir, revision)
 
