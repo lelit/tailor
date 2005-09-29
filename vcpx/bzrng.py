@@ -87,6 +87,6 @@ class BzrngWorkingDir(SyncronizableTargetWorkingDir):
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            self._b = Branch(self.basedir, init=True, find_root=False)
+            self._b = Branch.initialize(self.basedir)
         else:
-            self._b = Branch(self.basedir, init=False, find_root=True)
+            self._b = Branch.open(self.basedir)
