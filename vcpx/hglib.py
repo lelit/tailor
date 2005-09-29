@@ -81,7 +81,7 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
                 self._hg.remove([oldpath])
         else:
             self._hg.copy(oldname, newname)
-            self._hg.remove(oldname)
+            self._hg.remove([oldname])
 
     def _prepareTargetRepository(self):
         """
