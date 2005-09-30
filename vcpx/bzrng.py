@@ -49,7 +49,7 @@ class BzrngWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         for delta in deltatree.renamed:
             e = ChangesetEntry(delta[1])
             e.action_kind = ChangesetEntry.RENAMED
-            e.old_name = delta[2]
+            e.old_name = delta[0]
             entries.append(e)
 
         for delta in deltatree.modified:
