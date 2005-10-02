@@ -45,12 +45,30 @@ def changesets_from_cvslog(log, module):
     threshold = timedelta(seconds=180)
     last = None
 
+    # Loop over collected changesets, and collapse those with same author,
+    # same changelog and that were committed within 3 minutes one from the
+    # other. If they have entries in common, keep them separated. Special
+    # treatment to deleted entries, given that sometime there are two
+    # deletions on the same file: in that case, keep only the last one,
+    # with higher revision.
     for cs in collected:
-        if (last and last.author == cs.author and  last.log == cs.log and
+        if (last and last.author == cs.author and last.log == cs.log and
             abs(lastts - cs.date) < threshold and
             not [e for e in cs.entries
-                 if e.name in [n.name for n in last.entries]]):
-            last.entries.extend(cs.entries)
+                 if e.name in [n.name for n in last.entries
+                               if n.action_kind <> e.action_kind]]):
+            for e in cs.entries:
+                if e.action_kind == e.DELETED:
+                    doubledelete = False
+                    for n in last.entries:
+                        if n.name == e.name and n.action_kind == n.DELETED:
+                            doubledelete = True
+                            n.new_revision = e.new_revision
+                            break
+                    if not doubledelete:
+                        last.entries.append(e)
+                else:
+                    last.entries.append(e)
             if lastts < cs.date:
                 lastts = cs.date
         else:

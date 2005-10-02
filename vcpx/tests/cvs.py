@@ -953,27 +953,58 @@ revision 1.1
 date: 2004/07/14 15:39:55;  author: sverre_boschman;  state: Exp;
 Backup
 =============================================================================
+
+RCS file: /cvsroot/composestar/composestar/temp/ComposestarVSAddin/ConfigManager/Attic/ConfigManager.cs,v
+head: 1.3
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;     selected revisions: 3
+description:
+----------------------------
+revision 1.3
+date: 2004/07/15 08:28:03;  author: sverre_boschman;  state: dead;  lines: +0 -0
+*** empty log message ***
+----------------------------
+revision 1.2
+date: 2004/07/15 08:28:02;  author: sverre_boschman;  state: dead;  lines: +0 -0
+*** empty log message ***
+----------------------------
+revision 1.1
+date: 2004/07/14 15:39:55;  author: sverre_boschman;  state: Exp;
+Backup
+=============================================================================
 """
 
     def testDoubleDead(self):
         """Verify the parser collapse multiple deletions on a single entry"""
 
         log = StringIO(self.DOUBLE_DEAD_TEST)
-        csets = changesets_from_cvslog(log, 'composestar')
+        csets = changesets_from_cvslog(log,
+                                       'composestar/temp/ComposestarVSAddin')
 
         self.assertEqual(len(csets), 2)
 
         cset = csets[0]
-        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(len(cset.entries), 2)
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'temp/ComposestarVSAddin/ComposestarVSAddin/Ini.cs')
+        self.assertEqual(entry.name, 'ComposestarVSAddin/Ini.cs')
+        self.assertEqual(entry.new_revision, '1.1')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'ComposestarVSAddin/ConfigManager.cs')
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
         cset = csets[1]
-        self.assertEqual(len(cset.entries), 1)
+        self.assertEqual(len(cset.entries), 2)
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'temp/ComposestarVSAddin/ComposestarVSAddin/Ini.cs')
+        self.assertEqual(entry.name, 'ComposestarVSAddin/Ini.cs')
+        self.assertEqual(entry.new_revision, '1.3')
+        self.assertEqual(entry.action_kind, entry.DELETED)
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'ComposestarVSAddin/ConfigManager.cs')
         self.assertEqual(entry.new_revision, '1.3')
         self.assertEqual(entry.action_kind, entry.DELETED)
 
