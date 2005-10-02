@@ -122,7 +122,11 @@ class ChangeSetCollector(object):
 
         key = (timestamp, author, changelog)
         if self.changesets.has_key(key):
-            return self.changesets[key].addEntry(entry, revision)
+            cs = self.changesets[key]
+            for e in cs.entries:
+                if e.name == entry:
+                    return e
+            return cs.addEntry(entry, revision)
         else:
             cs = Changeset(_getGlobalCVSRevision(timestamp, author),
                            timestamp, author, changelog)
@@ -280,7 +284,10 @@ class ChangeSetCollector(object):
                 found_revisions = found_revisions + 1
 
                 if previous and last.action_kind == last.DELETED:
-                    previous.action_kind = previous.ADDED
+                    # For unknown reasons, sometimes there are two dead
+                    # revision is a row.
+                    if previous.action_kind <> last.DELETED:
+                        previous.action_kind = previous.ADDED
 
                 previous = last
 
