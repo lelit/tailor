@@ -84,7 +84,7 @@ class MonotoneChangeset(Changeset):
         s.append('real ancestor(s): %s' % ','.join(self.real_ancestors))
         return '\n'.join(s)
 
-    def update(self, real_dates, authors, log, real_ancestors):
+    def update(self, real_dates, authors, log, real_ancestors, branches):
         """
         Updates the monotone changeset secondary data
         """
@@ -93,6 +93,7 @@ class MonotoneChangeset(Changeset):
         self.date = real_dates[0]
         self.real_dates = real_dates
         self.real_ancestors = real_ancestors
+        self.branches = branches
 
 class MonotoneLogParser:
     """
@@ -136,6 +137,7 @@ class MonotoneLogParser:
         self.authors=[]
         self.dates=[]
         self.changelog=""
+        self.branches=[]
 
         cmd = self.repository.command("log", "--db", self.repository.repository,
                                       "--last", "1", "--revision", revision)
@@ -173,7 +175,11 @@ class MonotoneLogParser:
                     date = datetime(y,m,d,hh,mm,ss)
                     self.dates.append(date)
                     state = self.SINGLE
-            elif pr("Branch:") or pr("Tag"):
+            elif pr("Branch:"):
+                # branch data
+                self.branches.append(pr.value)
+                state = self.SINGLE
+            elif pr("Tag"):
                 # unused data, just resetting state
                 state = self.SINGLE
             elif pr("Deleted files:") or pr("Deleted directories:"):
@@ -215,7 +221,8 @@ class MonotoneLogParser:
         chset.update(real_dates=self.dates,
                      authors=self.authors,
                      log=self.changelog,
-                     real_ancestors=self.ancestors)
+                     real_ancestors=self.ancestors,
+                     branches=self.branches)
 
         return chset
 
@@ -430,7 +437,7 @@ class MonotoneRevToCset:
       not used by tailor. Ignored
 
     branch
-      ignored (tailor follows only a single branch)
+      used to restrict source revs (tailor follows only a single branch)
 
     testresult
       ignored
@@ -451,19 +458,14 @@ class MonotoneRevToCset:
       linearized ancestor (i.e. previous revision in the linearized history)
     """
 
-    def __init__(self, repository, working_dir):
+    def __init__(self, repository, working_dir, branch):
         self.working_dir = working_dir
         self.repository = repository
+        self.branch = branch
         self.logparser = MonotoneLogParser(repository=repository,
                                            working_dir=working_dir)
         self.diffparser = MonotoneDiffParser(repository=repository,
                                              working_dir=working_dir)
-
-    def _cset_from_rev(self, lin_ancestor, revision):
-        # prepare a new changeset and fill it with rev data
-        chset = MonotoneChangeset(lin_ancestor, revision)
-        self.updateCset(chset)
-        return chset
 
     def updateCset(self, chset):
         # Parsing the log fills the changeset from revision data
@@ -473,20 +475,29 @@ class MonotoneRevToCset:
         if chset.lin_ancestor:
             self.diffparser.convertDiff(chset)
 
-    def getCset(self, revlist):
-        # receives a revlist, already toposorted (i.e. ordered by
-        # ancestry) and outputs a list of changesets
+    def getCset(self, revlist, onlyFirst):
+        """
+        receives a revlist, already toposorted (i.e. ordered by
+        ancestry) and outputs a list of changesets, filtering out revs
+        outside the chosen branch. If onlyFirst is true, only the
+        first valid element is considered
+        """
         cslist=[]
         anc=revlist[0]
         for r in revlist[1:]:
-            cslist.append(self._cset_from_rev(anc, r))
-            anc=r
+            chtmp = MonotoneChangeset(anc, r)
+            self.logparser.convertLog(chtmp)
+            if self.branch in chtmp.branches:
+                cslist.append(MonotoneChangeset(anc, r)) # using a new, unfilled changeset
+                anc=r
+                if onlyFirst:
+                    break
         return cslist
 
 
 class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
-    def convert_head_initial(self, repository, module, revision, working_dir):
+    def _convert_head_initial(self, dbrepo, module, revision, working_dir):
         """
         This method handles HEAD and INITIAL pseudo-revisions, converting
         them to monotone revids
@@ -495,7 +506,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if revision == 'HEAD' or revision=='INITIAL':
             # in both cases we need the head(s) of the requested branch
             cmd = self.repository.command("automate","heads",
-                                          "--db", repository, module)
+                                          "--db", dbrepo, module)
             mtl = ExternalCommand(cwd=working_dir, command=cmd)
             outstr = mtl.execute(stdout=PIPE)
             if mtl.exit_status:
@@ -518,9 +529,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                   "is no guarantee to reconstruct the "
                                   "full history." % module)
                 cmd = [ self.repository.command("automate","ancestors",
-                                                "--db",repository),
+                                                "--db",dbrepo),
                         self.repository.command("automate","toposort",
-                                                "--db",repository, "-@-")
+                                                "--db",dbrepo, "-@-")
                         ]
                 cmd[0].extend(revision)
                 cld = ExternalCommandChain(cwd=working_dir, command=cmd)
@@ -528,8 +539,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 if cld.exit_status:
                     raise InvocationError("Ancestor reading returned "
                                           "status %d" % cld.exit_status)
-                revision = outstr[0].getvalue().split()
-                effective_rev=revision[0]
+                revlist = outstr[0].getvalue().split()
+                mtr = MonotoneRevToCset(repository=self.repository,
+                                        working_dir=working_dir,
+                                        branch=module)
+                first_cset = mtr.getCset(revlist, True)
+                if len(first_cset)==0:
+                    raise InvocationError("Can't find an INITIAL revision on branch '%s'."
+                                          % module)
+                effective_rev=first_cset[0].revision
         return effective_rev
 
     ## UpdatableSourceWorkingDir
@@ -552,16 +570,16 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                   "status %d" % cld.exit_status)
 
         # now childs is a list of revids, we must transform it in a
-        # list of monotone changesets at this time we fill only the
+        # list of monotone changesets. We fill only the
         # linearized ancestor and revision ids, because at this time
         # we need only to know WICH changesets must be applied to the
-        # target repo, not WHAT are the changesets
-        childs = outstr[0].getvalue().split()
-        chlist = []
-        lin_anc=sincerev
-        for r in childs:
-            chlist.append(MonotoneChangeset(lin_anc, r))
-            lin_anc = r
+        # target repo, not WHAT are the changesets (apart for filtering
+        # the outside-branch revs)
+        childs = [sincerev] +outstr[0].getvalue().split()
+        mtr = MonotoneRevToCset(repository=self.repository,
+                                working_dir=self.repository.rootdir,
+                                branch=self.repository.module)
+        chlist = mtr.getCset(childs, False)
         return chlist
 
     def _applyChangeset(self, changeset):
@@ -572,7 +590,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             raise ChangesetApplicationFailure("'mtn update' returned "
                                               "status %s" % mtl.exit_status)
         mtr = MonotoneRevToCset(repository=self.repository,
-                                working_dir=self.basedir)
+                                working_dir=self.basedir,
+                                branch=self.repository.module)
         mtr.updateCset( changeset )
 
         return False   # no conflicts
@@ -581,16 +600,18 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         """
         Concretely do the checkout of the FIRST upstream revision.
         """
-        effrev = self.convert_head_initial(self.repository.repository,
+        effrev = self._convert_head_initial(self.repository.repository,
                                            self.repository.module, revision,
-                                           self.basedir)
+                                           self.repository.rootdir)
         if not exists(join(self.basedir, 'MT')):
+
+            # actually check out the revision
             self.log_info("checking out a working copy")
             cmd = self.repository.command("co",
                                           "--db", self.repository.repository,
                                           "--revision", effrev,
                                           "--branch", self.repository.module,
-                                          self.repository.subdir)
+                                          self.basedir)
             mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
             mtl.execute()
             if mtl.exit_status:
@@ -598,7 +619,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                     "'monotone co' returned status %s" % mtl.exit_status)
         else:
             self.log_info("%s already exists, assuming it's a monotone "
-                          "working dir" % self.basedir)
+                          "working dir already populated" % self.basedir)
+
 
         # Ok, now the workdir contains the checked out revision. We
         # need to return a changeset describing it.  Since this is the
@@ -609,7 +631,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # now we update the new chset with basic data - without the
         # linearized ancestor, changeset entries will NOT be filled
         mtr = MonotoneRevToCset(repository=self.repository,
-                                working_dir=self.basedir)
+                                working_dir=self.basedir,
+                                branch=self.repository.module)
         mtr.updateCset(chset)
         return chset
 
