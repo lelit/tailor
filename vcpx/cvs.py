@@ -383,9 +383,24 @@ class CvsWorkingDir(CvspsWorkingDir):
 
         cvslog = ExternalCommand(command=cmd)
 
-        log = cvslog.execute(self.repository.module, stdout=PIPE, stderr=STDOUT,
-                             repository=self.repository.repository,
-                             since=since, branch=branch or 'HEAD', TZ='UTC')[0]
+        retry = 0
+        while True:
+            log = cvslog.execute(self.repository.module, stdout=PIPE,
+                                 stderr=STDOUT, since=since,
+                                 repository=self.repository.repository,
+                                 branch=branch or 'HEAD', TZ='UTC')[0]
+            if cvslog.exit_status:
+                retry += 1
+                if retry>3:
+                    break
+                delay = 2**retry
+                self.log_info("%s returned status %s, "
+                              "retrying in %d seconds..." %
+                              (str(cvslog), cvslog.exit_status,
+                               delay))
+                sleep(retry)
+            else:
+                break
 
         if cvslog.exit_status:
             raise GetUpstreamChangesetsFailure(
