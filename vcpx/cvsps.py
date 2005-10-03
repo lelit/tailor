@@ -304,7 +304,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cmd.extend(["-D", "%s UTC" % timestamp])
 
             checkout = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
-            checkout.execute(self.repository.module)
+            retry = 0
+            while True:
+                checkout.execute(self.repository.module)
+                if checkout.exit_status:
+                    retry += 1
+                    if retry>3:
+                        break
+                    delay = 2**retry
+                    self.log_info("%s returned status %s, "
+                                  "retrying in %d seconds..." %
+                                  (str(checkout), checkout.exit_status,
+                                   delay))
+                    sleep(retry)
+                else:
+                    break
 
             if checkout.exit_status:
                 raise TargetInitializationFailure(
