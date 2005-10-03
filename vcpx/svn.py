@@ -229,16 +229,16 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         retry = 0
         while True:
-            out = svnup.execute(stdout=PIPE)[0]
+            out, err = svnup.execute(stdout=PIPE, stderr=PIPE)
 
             if svnup.exit_status == 1:
                 retry += 1
                 if retry>3:
                     break
                 delay = 2**retry
-                self.log_info("%s returned status %s saying \"%s\", "
+                self.log_info("%s returned status %s saying %r, "
                               "retrying in %d seconds..." %
-                              (str(svnup), svnup.exit_status, out.read(),
+                              (str(svnup), svnup.exit_status, err.read(),
                                delay))
                 sleep(delay)
             else:
@@ -273,16 +273,16 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                           "--limit", "1", "--stop-on-copy",
                                           "--revision", "1:HEAD")
             svnlog = ExternalCommand(command=cmd)
-            output = svnlog.execute("%s%s" % (self.repository.repository,
-                                              self.repository.module),
-                                    stdout=PIPE)[0]
+            out, err = svnlog.execute("%s%s" % (self.repository.repository,
+                                                self.repository.module),
+                                      stdout=PIPE, stderr=PIPE)
 
             if svnlog.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying \"%s\"" %
-                    (str(svnlog), svnlog.exit_status, output.read()))
+                    "%s returned status %d saying %r" %
+                    (str(svnlog), svnlog.exit_status, err.read()))
 
-            csets = changesets_from_svnlog(output,
+            csets = changesets_from_svnlog(out,
                                            self.repository.repository,
                                            self.repository.module)
             revision = csets[0].revision
@@ -294,11 +294,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             cmd = self.repository.command("co", "--quiet",
                                           "--revision", revision)
             svnco = ExternalCommand(command=cmd)
-            svnco.execute("%s%s" % (self.repository.repository,
-                                    self.repository.module), self.basedir)
+            out, err = svnco.execute("%s%s" % (self.repository.repository,
+                                               self.repository.module),
+                                     self.basedir, stdout=PIPE, stderr=PIPE)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %s" % (str(svnco), svnco.exit_status))
+                    "%s returned status %s saying %r" % (str(svnco),
+                                                         svnco.exit_status,
+                                                         err.read()))
         else:
             self.log_info("%s already exists, assuming it's a svn working dir" % self.basedir)
 
@@ -306,14 +309,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             cmd = self.repository.command("log", "--verbose", "--xml",
                                           "--revision", revision=='HEAD' and 'COMMITTED' or revision)
             svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
-            output = svnlog.execute(stdout=PIPE)[0]
+            out, err = svnlog.execute(stdout=PIPE, stderr=PIPE)
 
             if svnlog.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying \"%s\"" %
-                    (str(changes), changes.exit_status, output.read()))
+                    "%s returned status %d saying %r" %
+                    (str(changes), changes.exit_status, err.read()))
 
-            csets = changesets_from_svnlog(output,
+            csets = changesets_from_svnlog(out,
                                            self.repository.repository,
                                            self.repository.module)
 
@@ -375,7 +378,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = self.repository.command("commit", "--file", rontf.name)
+        cmd = self.repository.command("commit", "--quiet", "--file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
