@@ -264,6 +264,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         from os.path import join, exists
         from cvs import CvsEntries, compare_cvs_revs
+        from time import sleep
 
         if not self.repository.module:
             raise InvocationError("Must specify a module name")

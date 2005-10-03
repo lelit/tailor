@@ -325,6 +325,7 @@ class CvsWorkingDir(CvspsWorkingDir):
     def _getUpstreamChangesets(self, sincerev):
         from os.path import join, exists
         from datetime import timedelta
+        from time import sleep
 
         from codecs import getreader
 
