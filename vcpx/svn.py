@@ -382,7 +382,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         log.write('\n'.join(logmessage))
         log.close()
 
-        cmd = self.repository.command("commit", "--quiet", "--file", rontf.name)
+        cmd = self.repository.command("commit", "--file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
         if not entries:
