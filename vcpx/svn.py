@@ -306,8 +306,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             self.log_info("%s already exists, assuming it's a svn working dir" % self.basedir)
 
         if not initial:
+            if revision=='HEAD':
+                revision = 'COMMITTED'
             cmd = self.repository.command("log", "--verbose", "--xml",
-                                          "--revision", revision=='HEAD' and 'COMMITTED' or revision)
+                                          "--revision", revision)
             svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
             out, err = svnlog.execute(stdout=PIPE, stderr=PIPE)
 
