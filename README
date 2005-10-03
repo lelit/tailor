@@ -151,8 +151,26 @@ Examples
 
    b. Modify it as you like (mostly adjusting root-directories and the
       like)::
-      
+
        $ emacs cmfcore.tailor
+
+   .. note:: By default, tailor uses "." as ``subdir``, to mean that
+             it will extract upstream source directly inside the
+             ``root-directory``.
+
+             This is known to cause problems with CVS as source, with
+             which you could see some wierd error like
+
+             ::
+
+               $ cvs -q -d ...:/cvsroot/mymodule checkout -d . ... mymodule
+               cvs checkout: existing repository /cvsroot/mymodule does not match /cvsroot/mymodule/mymodule
+               cvs checkout: ignoring module mymodule
+
+             When this is the case, the culprit may be a CVS
+             shortcoming not being able to handle ``-d .`` in the
+             right way.  Specify a different ``subdir`` option to
+             avoid the problem.
 
    c. Run tailor on it once, to bootstrap the project::
    
