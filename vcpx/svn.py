@@ -246,7 +246,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %s" % (str(svnup), svnup.exit_status))
+                "%s returned status %s saying %r" % (str(svnup),
+                                                     svnup.exit_status,
+                                                     err.read()))
 
         self.log_info("%s updated to %s" % (
             ','.join([e.name for e in changeset.entries]),
@@ -386,11 +388,13 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        out = commit.execute(entries, stdout=PIPE, LANG='C')[0]
+        out, err = commit.execute(entries, stdout=PIPE, stderr=PIPE, LANG='C')
 
         if commit.exit_status:
-            raise ChangesetApplicationFailure("%s returned status %d" %
-                                              (str(commit), commit.exit_status))
+            raise ChangesetApplicationFailure("%s returned status %d saying %r"
+                                              % (str(commit),
+                                                 commit.exit_status,
+                                                 err.read()))
         line = out.readline()
         if not line:
             # svn did not find anything to commit
