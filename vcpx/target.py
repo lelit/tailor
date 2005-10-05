@@ -110,6 +110,8 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         patchname, log = self.__getPatchNameAndLog(changeset)
         entries = self._getCommitEntries(changeset)
         self._commit(changeset.date, changeset.author, patchname, log, entries)
+        for tag in changeset.tags:
+            self._tag(tag)
         self._dismissChangeset(changeset)
 
     def __getPrefixToSource(self):
@@ -439,6 +441,8 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             patchname = BOOTSTRAP_PATCHNAME
             log = BOOTSTRAP_CHANGELOG % locals()
         self._commit(changeset.date, author, patchname, log)
+        for tag in changeset.tags:
+            self._tag(tag)
         self._dismissChangeset(changeset)
 
     def _initializeWorkingDir(self):
@@ -453,3 +457,10 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         """
 
         self._addSubtree('.')
+
+    def _tag(self, tagname):
+        """
+        Tag the current version, if the VC type supports it, otherwise
+        do nothing.
+        """
+        pass
