@@ -556,3 +556,15 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         self._removePathnames([oldname])
         self._addPathnames([newname])
+
+    def _tag(self, tagname):
+        """
+        Apply a tag.
+        """
+
+        cmd = self.repository.command("tag")
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c.execute(tagname)
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))

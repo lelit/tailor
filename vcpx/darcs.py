@@ -573,3 +573,47 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             adapted.entries = entries
 
         return adapted
+
+    def _tag(self, tag):
+        """
+        Apply the given tag to the repository, unless it has already
+        been applied to the current state. (If it has been applied to
+        an earlier state, do apply it; the later tag overrides the
+        earlier one.
+        """
+        if tag not in self._currentTags():
+            cmd = self.repository.command("tag", "--author", "Unknown tagger")
+            ExternalCommand(cwd=self.basedir, command=cmd).execute(tag)
+
+    def _currentTags(self):
+        """
+        Return a list of tags that refer to the repository's current
+        state.  Does not consider tags themselves to be part of the
+        state, so if the repo was tagged with T1 and then T2, then
+        both T1 and T2 are considered to refer to the current state,
+        even though 'darcs get --tag=T1' and 'darcs get --tag=T2'
+        would have different results (the latter creates a repo that
+        contains tag T2, but the former does not).
+
+        This function assumes that a tag depends on all patches that
+        precede it in the "darcs changes" list.  This assumption is
+        valid if tags only come into the repository via tailor; if the
+        user applies a tag by hand in the hybrid repository, or pulls
+        in a tag from another darcs repository, then the assumption
+        could be violated and mistagging could result.
+        """
+        cmd = self.repository.command("changes", "--from-match=not name ^TAG",\
+                                      "--xml-output")
+        changes =  ExternalCommand(cwd=self.basedir, command=cmd)
+        output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
+        if changes.exit_status:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d saying \"%s\"" %
+                (str(changes), changes.exit_status, output.read()))
+
+        tags = []
+        for cs in changesets_from_darcschanges_unsafe(output):
+            for tag in cs.tags:
+                if tag not in tags:
+                    tags.append(tag)
+        return tags
