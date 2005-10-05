@@ -151,8 +151,9 @@ class Repository(object):
         try:
             wdmod = __import__(modname, globals(), locals(), [wdname])
             workingdir = getattr(wdmod, wdname)
-        except (AttributeError, ImportError):
-            raise InvocationError("Unhandled source VCS kind: " + self.kind)
+        except (AttributeError, ImportError), e:
+            raise InvocationError("%r is not a known VCS kind: %s" %
+                                  (self.kind, e))
 
         return workingdir(self)
 
