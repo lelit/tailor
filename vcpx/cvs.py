@@ -45,15 +45,52 @@ def compare_cvs_revs(revstr1, revstr2):
 
     return cmp(r1, r2)
 
+def cvs_revs_same_branch(rev1, rev2):
+    """True iff the two normalized revision numbers are on the same branch."""
 
-def changesets_from_cvslog(log, module):
+    # Odd-length revisions are branch numbers, even-length ones
+    # are revision numbers.
+
+    # Two branch numbers can't be on the same branch unless they're identical.
+    if len(rev1) % 2 and len(rev2) % 2:
+        return rev1 == rev2
+
+    # Two revision numbers are on the same branch if they
+    # agree up to the last number.
+    if len(rev1) % 2 == 0 and len(rev2) % 2 == 0:
+        return rev1[0:-1] == rev2[0:-1]
+
+    # One branch number, one revision number.  If by removing the last number
+    # of one you get the other, then they're on the same branch, regardless of
+    # which is longer.  E.g. revision 1.2 is the root of the branch 1.2.2;
+    # revision 1.2.2.2 is directly on the branch 1.2.2.
+    if rev1[0:-1] == rev2:
+        return True
+
+    if rev2[0:-1] == rev1:
+        return True
+
+    return False
+
+def is_branch(rev):
+    """True iff the given (normalized) revision number is a branch number"""
+    if len(rev) % 2:
+        return True
+
+def rev2branch(rev):
+    """Return the branch on which this (normalized) revision lies"""
+    assert not is_branch(rev)
+    return rev[0:-1]
+
+
+def changesets_from_cvslog(log, module, branch, entries, since):
     """
     Parse CVS log.
     """
 
     from datetime import timedelta
 
-    collected = ChangeSetCollector(log, module)
+    collected = ChangeSetCollector(log, module, branch, entries, since)
     collapsed = []
 
     threshold = timedelta(seconds=180)
@@ -68,6 +105,7 @@ def changesets_from_cvslog(log, module):
     for cs in collected:
         if (last and last.author == cs.author and last.log == cs.log and
             abs(lastts - cs.date) < threshold and
+            not last.tags and
             not [e for e in cs.entries
                  if e.name in [n.name for n in last.entries
                                if n.action_kind <> e.action_kind]]):
@@ -124,7 +162,7 @@ class ChangeSetCollector(object):
     intra_sep = '-' * 28 + '\n'
     inter_sep = '=' * 77 + '\n'
 
-    def __init__(self, log, module):
+    def __init__(self, log, module, branch, entries, since):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -140,7 +178,7 @@ class ChangeSetCollector(object):
         self.module = module
         """The CVS module name."""
 
-        self.__parseCvsLog()
+        self.__parseCvsLog(entries, since, branch)
 
     def __iter__(self):
         keys = self.changesets.keys()
@@ -261,16 +299,23 @@ class ChangeSetCollector(object):
 
         return (date, author, changelog, entry, rev, state, newentry)
 
-    def __parseCvsLog(self):
+    def __parseCvsLog(self, entries, since, branch):
         """Parse a complete CVS log."""
 
+        from changes import Changeset
         from os.path import split, join
         import sre
+        from datetime import timedelta
+        from time import strptime
+        from datetime import datetime
 
         revcount_regex = sre.compile('\\bselected revisions:\\s*(\\d+)\\b')
 
         self.__currentdir = None
 
+        file2rev2tags = {}
+        tagcounts = {}
+        branchnum = None
         while 1:
             l = self.__readline()
             while l and not l.startswith('RCS file: '):
@@ -283,16 +328,49 @@ class ChangeSetCollector(object):
                    "Missed 'cvs rlog: Logging XX' line"
 
             entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
+            while l and not l.startswith('head: '):
+                l = self.__readline()
+            assert l, "Missed 'head:' line"
+            if branch is None:
+                branchnum = normalize_cvs_rev(l[6:-1])
+                branchnum = rev2branch(branchnum)
+
+            while l and not l == 'symbolic names:\n':
+                l = self.__readline()
+
+            assert l, "Missed 'symbolic names:' line"
+
+            l = self.__readline()
+            rev2tags = {}
+            while l.startswith('\t'):
+                tag,revision = l[1:-1].split(': ')
+                tagcounts[tag] = tagcounts.get(tag,0) + 1
+                revision = normalize_cvs_rev(revision)
+                rev2tags.setdefault(revision,[]).append(tag)
+                if tag == branch:
+                    branchnum = revision
+
+                l = self.__readline()
+
+            # branchnum may still be None, if this file doesn't exist
+            # on the requested branch.
+
+            # filter out branch tags, and tags for revisions that are
+            # on other branches.
+            for revision in rev2tags.keys():
+                if is_branch(revision) or \
+                   not branchnum or \
+                   not cvs_revs_same_branch(revision,branchnum):
+                    del rev2tags[revision]
+
+            file2rev2tags[entry] = rev2tags
 
             expected_revisions = None
-            while 1:
-                l = self.__readline()
-                if l in (self.inter_sep, self.intra_sep):
-                    break
-
+            while l not in (self.inter_sep, self.intra_sep):
                 m = revcount_regex.search(l)
                 if m is not None:
                     expected_revisions = int(m.group(1))
+                l = self.__readline()
 
             last = previous = None
             found_revisions = 0
@@ -327,7 +405,93 @@ class ChangeSetCollector(object):
                 print 'warning: expecting %s revisions, read %s revisions' % \
                       ( expected_revisions, found_revisions )
 
-    # end of __parseCvsLog()
+        # Determine the current revision of each live
+        # (i.e. non-deleted) entry.
+        state = dict(entries.getFileVersions())
+
+        # before stepping through changes, see if the initial state is
+        # taggable.  If so, add an initial changeset that does nothing
+        # but tag, using the date of the last revision tailor imported
+        # on its previous run.  There's no way to tell when the tag
+        # was really applied, so we don't know if it was seen on the
+        # last run or not.  Before applying the tag on the other end,
+        # we'll have to check whether it's already been applied.
+        tags = self.__getApplicableTags(state, file2rev2tags, tagcounts)
+        if tags:
+            if since == None:
+                # I think this could only happen if the CVS repo was
+                # tagged before any files were added to it.  We could
+                # probably get a better date by looking at when the
+                # files were added, but who cares.
+                timestamp = datetime(1900,1,1)
+            else:
+                # "since" is a revision name read from the state file,
+                # which means it was originally generated by
+                # getGlobalCVSRevision.  The format string "%Y-%m-%d
+                # %H:%M:%S" matches the format generated by the implicit
+                # call to timestamp.__str__() in getGlobalCVSRevision.
+                y,m,d,hh,mm,ss,d1,d2,d3 = strptime(since, "%Y-%m-%d %H:%M:%S")
+                timestamp = datetime(y,m,d,hh,mm,ss)
+            author = "unknown tagger"
+            changelog = "tag %s %s" % (timestamp, tags)
+            key = (timestamp, author, changelog)
+            self.changesets[key] = Changeset(_getGlobalCVSRevision(timestamp,
+                                                                   author),
+                                             timestamp,author,changelog,
+                                             tags=tags)
+
+        # Walk through the changesets, identifying ones that result in
+        # a state with a tag.  Add that info to the changeset.
+        for cs in self.__iter__():
+            self.__updateState(state, cs)
+            cs.tags = self.__getApplicableTags(state, file2rev2tags, tagcounts)
+
+    def __getApplicableTags(self,state,taginfo,expectedcounts):
+        # state:   a dictionary mapping filename->revision
+        #
+        # taginfo: a two-level dictionary mapping
+        #          tagname->revision->list of tags.
+        #
+        # expectedcounts: a dictionary mapping tagname->number of
+        #                 files tagged with that name.
+        observedcounts = {}
+        possibletags = []
+        for filename, revno in state.iteritems():
+            filetags = taginfo[filename].get(revno,[])
+            if len(possibletags) == 0:
+                # first iteration of loop
+                possibletags = filetags
+
+            # Intersection of possibletags and filetags.  I'm
+            # avoiding using python sets to preserve python 2.3
+            # compatibility.
+            possibletags = [t for t in possibletags if t in filetags]
+            for t in filetags:
+                 observedcounts[t] = observedcounts.get(t,0) + 1
+
+            if len(possibletags) == 0:
+                break
+
+        # All currently existing files carry the tags in possibletags.
+        # But that doesn't mean that the tags correspond to this
+        # state--we might need to create additional files before
+        # tagging.
+        possibletags = [t for t in possibletags if
+                        observedcounts[t] == expectedcounts[t]]
+
+        return possibletags
+
+    def __updateState(self,state, changeset):
+        for e in changeset.entries:
+            if e.action_kind in (e.ADDED, e.UPDATED):
+                state[e.name] = normalize_cvs_rev(e.new_revision)
+            elif e.action_kind == e.DELETED:
+                if state.has_key(e.name):
+                    del state[e.name]
+            elif e.action_kind == e.RENAMED:
+                if state.has_key(e.name):
+                    del state[e.old_name]
+                state[e.name] = normalize_cvs_rev(e.new_revision)
 
 
 class CvsWorkingDir(CvspsWorkingDir):
@@ -354,15 +518,14 @@ class CvsWorkingDir(CvspsWorkingDir):
                                      (self.repository.encoding, err,
                                       self.repository.name))
 
-        branch = ''
+        branch = None
         fname = join(self.basedir, 'CVS', 'Tag')
         if exists(fname):
             tag = open(fname).read()
             if tag[0] == 'T':
                 branch=tag[1:-1]
 
-        cmd = self.repository.command("-f", "-d", "%(repository)s", "rlog",
-                                      "-N")
+        cmd = self.repository.command("-f", "-d", "%(repository)s", "rlog")
 
         if not sincerev or sincerev in ("INITIAL", "HEAD"):
             # We are bootstrapping, trying to collimate the actual
@@ -422,7 +585,9 @@ class CvsWorkingDir(CvspsWorkingDir):
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
         log = reader(log)
-        return changesets_from_cvslog(log, self.repository.module)
+        return changesets_from_cvslog(log, self.repository.module, branch,
+                                      CvsEntries(self.repository.rootdir),
+                                      since)
 
     def _checkoutUpstreamRevision(self, revision):
         """
@@ -559,3 +724,18 @@ class CvsEntries(object):
                 latest = e
 
         return latest
+
+    def getFileVersions(self, prefix=''):
+        """Return a set of (entry name, version number) pairs."""
+
+        from os.path import join
+
+        pairs = [(prefix+e.filename, normalize_cvs_rev(e.cvs_version))
+                 for e in self.files.values()]
+
+        for dirname, entries in self.directories.iteritems():
+            pairs += [(prefix+filename, version)
+                      for filename, version in
+                      entries.getFileVersions("%s/" % dirname)]
+
+        return pairs
