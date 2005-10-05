@@ -511,8 +511,8 @@ All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
-``bzrng``, ``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``hglib``,
-``monotone``, ``svn``, ``svndump`` and ``tla``.
+``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``hglib``, ``monotone``, 
+``svn``, ``svndump`` and ``tla``.
 
 When a repository is used as a `source`, it must indicate its origin
 with ``repository``, and for some backends also a ``module``, but are
@@ -522,7 +522,7 @@ does).
 
 Each repository may then impose a particular external binary to be
 used, as done in the example above for ``hg``. Actually two of them,
-`bzrng` and `hglib`, accept an option ``python-path`` to indicate
+`bzr` and `hglib`, accept an option ``python-path`` to indicate
 where the BazaarNG Python library is located.
 
 A repository may also have it's own ``subdir``: when the `source` and
@@ -591,7 +591,7 @@ Just to illustrate the functionality, consider the following example::
     verbose = True
 
     [project]
-    target = bzrng:target
+    target = bzr:target
     root-directory = /tmp/prova
     state-file = tailor.state
     source = darcs:source
@@ -599,7 +599,7 @@ Just to illustrate the functionality, consider the following example::
     after-commit = after
     start-revision = Almost arbitrarily tagging this as version 0.8
 
-    [bzrng:target]
+    [bzr:target]
     python-path = /opt/src/bzr.dev
     subdir = bzrside
 
