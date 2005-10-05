@@ -5,12 +5,13 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from cStringIO import StringIO
 from vcpx.config import Config, ConfigurationError
 from vcpx.project import Project
 
-class ConfigTest(TestCase):
+class Config(TestCase):
+    "Test the configuration system"
 
     def setUp(self):
         from os import mkdir, getcwd

@@ -5,13 +5,13 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.svn import changesets_from_svnlog
 
-class SvnLogParserTest(TestCase):
-    """Ensure the svn log parser does its job."""
+class SvnLogParser(TestCase):
+    """Ensure the svn log parser does its job"""
 
     SIMPLE_RENAME_TEST = """\
 <?xml version="1.0" encoding="utf-8"?>

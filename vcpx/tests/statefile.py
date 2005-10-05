@@ -5,12 +5,13 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from cStringIO import StringIO
 from vcpx.statefile import StateFile
 from vcpx.shwrap import ReopenableNamedTemporaryFile
 
-class StateFileTest(TestCase):
+class Statefile(TestCase):
+    "Exercise the state file machinery"
 
     def testStateFile(self):
         """Verify the state file behaviour"""

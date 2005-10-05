@@ -94,15 +94,25 @@ script using Python's conventional distutils.
 Testing
 =======
 
-You can run the test suite with the following command line::
+Tailor has more than 50 unit and operational tests, that you can
+run with the following command line::
 
  $ tailor test -v
 
-that runs all the tests in sequence, or::
+Since some tests take very long to complete, in particular the
+operational tests, you may prefer the execution of a single suite::
 
- $ tailor test -v TailorTest
+ $ tailor test -v Darcs
 
-to trigger just a subset of them.
+or even a single test within a suite::
+
+ $ tailor test StateFile.testJournal
+
+To obtain a list of the test, use ``--list`` option.  As usual with::
+
+ $ tailor test --help
+
+you will get some more details.
 
 
 Operation

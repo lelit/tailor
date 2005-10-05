@@ -5,13 +5,13 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.darcs import changesets_from_darcschanges
 from shwrap import ExternalCommand, PIPE
 
-class DarcsChangesParserTest(TestCase):
+class DarcsChangesParser(TestCase):
     """Tests for the parser of darcs changes"""
 
     SIMPLE_TEST = """\

@@ -5,13 +5,13 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.svndump import changesets_from_svndump
 
-class SvndumpParserTest(TestCase):
-    """Ensure the svndump parser does its job."""
+class SvndumpParser(TestCase):
+    """Ensure the svndump parser does its job"""
 
     def setUp(self):
         from os.path import join, split

@@ -5,13 +5,13 @@
 # :Licenza:  GNU General Public License
 # 
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.cvsps import changesets_from_cvsps
 
-class CvspsParserTest(TestCase):
-    """Ensure the cvsps parser does its job."""
+class CvspsParser(TestCase):
+    """Ensure the cvsps parser does its job"""
 
     SIMPLE_TEST = """\
 ---------------------

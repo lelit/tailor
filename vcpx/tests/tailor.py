@@ -22,28 +22,41 @@ remove-first-log-line = False
 patch-name-format = None
 verbose = True
 state-file = tailor.state
-start-revision = Version 0.9.7
+start-revision = Version 0.9.16
 
 [darcs2bzr]
 target = bzr:tailor
 root-directory = /tmp/tailor-tests/darcs2bzr
 source = darcs:tailor
-
-[darcs2bzrng]
-target = bzrng:tailor
-root-directory = /tmp/tailor-tests/darcs2bzrng
-source = darcs:tailor
 patch-name-format = %(revision)s
+
+[bzr2darcs]
+source = bzr:tailor
+root-directory = /tmp/tailor-tests/bzr2darcs
+target = darcs:bzrtailor
+patch-name-format = %(revision)s
+
+[darcs:tailor]
+
+[bzr:tailor]
+python-path = /opt/src/bzr.dev
+
 
 [darcs2cdv]
 target = cdv:tailor
 root-directory = /tmp/tailor-tests/darcs2cdv
 source = darcs:tailor
 
+[cdv:tailor]
+
+
 [darcs2hg]
 target = hg:tailor
 root-directory = /tmp/tailor-tests/darcs2hg
 source = darcs:tailor
+
+[hg:tailor]
+
 
 [darcs2svn]
 target = svn:tailor
@@ -57,6 +70,16 @@ root-directory = /tmp/tailor-tests/svn2darcs
 source = svn:tailor
 start-revision = 1
 
+[svn:tailor]
+repository = file:///tmp/tailor-tests/svnrepo
+module = tailor
+subdir = svnside
+use-propset = True
+
+[darcs:svntailor]
+subdir = darcside
+
+
 [darcs2monotone]
 target = monotone:tailor
 root-directory = /tmp/tailor-tests/darcs2monotone
@@ -68,18 +91,6 @@ root-directory = /tmp/tailor-tests/darcs2monotone
 target = darcs:mtntailor
 start-revision = INITIAL
 
-[darcs:tailor]
-
-[bzr:tailor]
-bzr-command = /opt/src/bzr.dev/bzr
-
-[bzrng:tailor]
-python-path = /opt/src/bzr.dev
-
-[cdv:tailor]
-
-[hg:tailor]
-
 [monotone:tailor]
 keyid = tailor
 passphrase = fin che la barca va
@@ -89,14 +100,6 @@ module = tailor.test
 [darcs:mtntailor]
 subdir = darcside
 
-[svn:tailor]
-repository = file:///tmp/tailor-tests/svnrepo
-module = tailor
-subdir = svnside
-use-propset = True
-
-[darcs:svntailor]
-subdir = darcside
 
 [cvs2darcs]
 target = darcs:pxlib
@@ -112,6 +115,7 @@ repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
 module = pxlib
 encoding = iso-8859-1
 
+
 [cvs2hglib]
 root-directory = /tmp/tailor-tests/cvs2hglib
 source = cvs:cmsmini
@@ -126,6 +130,7 @@ module = cmsmini
 
 [hglib:cmsmini]
 
+
 [cvs2bzr]
 root-directory = /tmp/tailor-tests/cvs2bzr
 source = cvs:atse
@@ -138,7 +143,8 @@ repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
 module = ATSchemaEditorNG
 
 [bzr:atse]
-bzr-command = /opt/src/bzr.dev/bzr
+python-path = /opt/src/bzr.dev
+
 
 [svndump2darcs]
 source = svndump:simple
@@ -154,6 +160,7 @@ subdir = plain
 [darcs:simple]
 subdir = .
 
+
 [svndump2hg]
 source = svndump:pyobjc
 target = hg:pyobjc
@@ -166,6 +173,7 @@ subdir = plain
 
 [hg:pyobjc]
 subdir = hg
+
 
 [svndump2hg-partial]
 source = svndump:simple-partial
@@ -181,6 +189,7 @@ subdir = plain
 
 [hg:simple-partial]
 subdir = hg
+
 
 [cvs2svn]
 source = cvs:cmfeditions-houston-sprint
@@ -205,13 +214,13 @@ def remap_authors(context, changeset):
     return True
 """
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from cStringIO import StringIO
 from vcpx.config import Config
 from vcpx.tailor import Tailorizer
 from vcpx.shwrap import ExternalCommand, PIPE
 
-class TailorTest(TestCase):
+class OperationalTest(TestCase):
 
     def setUp(self):
         from os import mkdir, getcwd
@@ -227,7 +236,7 @@ class TailorTest(TestCase):
         self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo})
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
-            register(rmtree, '/tmp/tailor-tests')
+            #register(rmtree, '/tmp/tailor-tests')
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
@@ -245,6 +254,17 @@ class TailorTest(TestCase):
             return out.read()
         else:
             return ""
+
+    def tailorize(self, project):
+        "The actual test"
+
+        tailorizer = Tailorizer(project, self.config)
+        self.assert_(not tailorizer.exists())
+        tailorizer()
+        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+
+class Darcs(OperationalTest):
+    "Test darcs backend"
 
     def testConfiguration(self):
         "Test basic configuration"
@@ -264,116 +284,73 @@ class TailorTest(TestCase):
         self.assertEqual(tailorizer.subdir, 'pxlib')
         self.assertEqual(tailorizer.source.subdir, 'pxlib')
 
-    def testDarcsToBazaarng(self):
-        "Test darcs to BazaarNG"
+    def testDarcsAndBazaarng(self):
+        "Test darcs to bazaar-ng and the other way around"
 
-        tailorizer = Tailorizer('darcs2bzr', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
-
-    def testDarcsToBazaarngNative(self):
-        "Test darcs to BazaarNG (native)"
-
-        tailorizer = Tailorizer('darcs2bzrng', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('darcs2bzr')
+        self.tailorize('bzr2darcs')
 
     def testDarcsToMercurial(self):
         "Test darcs to mercurial"
 
-        tailorizer = Tailorizer('darcs2hg', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('darcs2hg')
 
     def testDarcsToCodeville(self):
         "Test darcs to codeville"
 
-        tailorizer = Tailorizer('darcs2cdv', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('darcs2cdv')
 
-    def testDarcsToSubversion(self):
-        "Test darcs to subversion"
+    def testDarcsAndSubversion(self):
+        "Test darcs to subversion and the other way around"
 
-        tailorizer = Tailorizer('darcs2svn', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('darcs2svn')
+        self.tailorize('svn2darcs')
 
-    def testDarcsToMonotone(self):
-        "Test darcs to monotone"
+    def testDarcsAndMonotone(self):
+        "Test darcs to monotone and the other way around"
 
-        tailorizer = Tailorizer('darcs2monotone', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('darcs2monotone')
+        self.tailorize('monotone2darcs')
 
-    ## The other way
 
-    def testSubversionToDarcs(self):
-        "Test subversion to darcs"
-
-        tailorizer = Tailorizer('svn2darcs', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+class Cvs(OperationalTest):
+    "Test the CVS source backend"
 
     def testCvsToDarcs(self):
         "Test CVS to darcs"
 
-        tailorizer = Tailorizer('cvs2darcs', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('cvs2darcs')
 
     def testCvsToMercurial(self):
-        "Test CVS to Mercurial"
+        "Test CVS to mercurial"
 
-        tailorizer = Tailorizer('cvs2hglib', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('cvs2hglib')
 
     def testCvsToBazaarng(self):
-        "Test CVS to Bazaar-NG"
+        "Test CVS to bazaar-ng"
 
-        tailorizer = Tailorizer('cvs2bzr', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('cvs2bzr')
 
     def testCvsToSubversion(self):
         "Test CVS branch to Subversion"
 
-        tailorizer = Tailorizer('cvs2svn', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('cvs2svn')
+
+
+class Svndump(OperationalTest):
+    "Test the svndump source backend (deprecated)"
 
     def testSvndumpToDarcs(self):
         "Test subversion dump to darcs"
 
-        tailorizer = Tailorizer('svndump2darcs', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('svndump2darcs')
 
     def testSvndumpToMercurial(self):
         "Test subversion dump to mercurial"
 
-        tailorizer = Tailorizer('svndump2hg', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('svndump2hg')
 
     def testPartialSvndumpToMercurial(self):
         "Test partial subversion dump to mercurial"
 
-        tailorizer = Tailorizer('svndump2hg-partial', self.config)
-        self.assert_(not tailorizer.exists())
-        tailorizer()
-        self.assertEqual(self.diffWhenPossible(tailorizer), "")
+        self.tailorize('svndump2hg-partial')

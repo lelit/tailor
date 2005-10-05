@@ -21,9 +21,8 @@ if __name__ == '__main__':
 
     locale.setlocale(locale.LC_CTYPE, '')
     if len(sys.argv)>1 and sys.argv[1] == 'test':
-        del sys.argv[1]
-        from unittest import main
-        main(module='vcpx.tests', argv=sys.argv)
+        from vcpx.tests import main
+        main()
     else:
         from vcpx import *
 

@@ -5,12 +5,12 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
 from vcpx.cvs import changesets_from_cvslog, CvsEntry
 
-class CvsEntryTest(TestCase):
+class CvsEntry(TestCase):
     """Tests for the CvsEntry class"""
 
     def testBasicCapabilities(self):
@@ -40,8 +40,8 @@ class CvsEntryTest(TestCase):
         self.assertEqual(e.cvs_tag, 'T1.55')
 
 
-class CvsLogParserTest(TestCase):
-    """Ensure the cvs log parser does its job."""
+class CvsLogParser(TestCase):
+    """Ensure the cvs log parser does its job"""
 
     SIMPLE_TEST = u"""\
 cvs rlog: Logging docutils

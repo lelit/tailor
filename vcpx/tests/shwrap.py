@@ -5,12 +5,11 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase, TestSuite
+from unittest import TestCase
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 
-class SystemCommandTest(TestCase):
-    """Perform some basic tests of the wrapper.
-    """
+class SystemCommand(TestCase):
+    """Perform some basic tests of the wrapper"""
 
     def testExitStatusForTrue(self):
         """Verify ExternalCommand exit_status of ``true``.
