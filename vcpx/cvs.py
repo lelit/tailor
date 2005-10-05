@@ -16,18 +16,32 @@ from cvsps import CvspsWorkingDir
 from source import GetUpstreamChangesetsFailure
 from config import ConfigurationError
 
-def compare_cvs_revs(rev1, rev2):
-    """Compare two CVS revision numerically, not alphabetically."""
-
-    if not rev1: rev1 = '0'
-    if not rev2: rev2 = '0'
+def normalize_cvs_rev(rev):
+    """Convert a revision string to a tuple of numbers, eliminating the
+    penultimate zero in a 'magic branch number' if there is one.
+    1.1.1.1 is converted to (1,1). """
+    if not rev: rev = '0'
 
     # handle locked files by taking only the first part of the
     # revision string to handle gracefully lines like "1.1 locked"
-    rev1 = rev1.split(' ')[0]
-    rev2 = rev2.split(' ')[0]
-    r1 = [int(n) for n in rev1.split('.')]
-    r2 = [int(n) for n in rev2.split('.')]
+    rev = rev.split(' ')[0]
+
+    r = [int(n) for n in rev.split('.')]
+    # convert "magic branch numbers" like 1.2.0.2 to regular
+    # branch numbers like 1.2.2.
+    if len(r) > 2 and r[-2] == 0:
+        r = r[0:-2] + r[-1:]
+
+    if r == [1,1,1,1]:
+        r = [1,1]
+
+    return tuple(r)
+
+def compare_cvs_revs(revstr1, revstr2):
+    """Compare two CVS revision strings numerically, not alphabetically."""
+
+    r1 = normalize_cvs_rev(revstr1)
+    r2 = normalize_cvs_rev(revstr2)
 
     return cmp(r1, r2)
 
