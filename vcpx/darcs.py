@@ -27,8 +27,31 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     Parse XML output of ``darcs changes``.
 
     Return a list of ``Changeset`` instances.
+
+    Filters out the (currently incorrect) tag info from
+    changesets_from_darcschanges_unsafe.
     """
 
+    csets = changesets_from_darcschanges_unsafe(changes, unidiff,\
+                                                repodir)
+    for cs in csets:
+        cs.tags = None
+    return csets
+
+
+def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None):
+    """
+    Do the real work of parsing the change log, including tags.
+    Warning: the tag information in the changsets returned by this
+    function are only correct if each darcs tag in the repo depends on
+    all of the patches that precede it.  This is not a valid
+    assumption in general--a tag that does not depend on patch P can
+    be pulled in from another darcs repo after P.  We collect the tag
+    info anyway because DarcsWorkingDir._currentTags() can use it
+    safely despite this problem.  Hopefully the problem will
+    eventually be fixed and this function can be renamed
+    changesets_from_darcschanges.
+    """
     from xml.sax import parse
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
@@ -84,7 +107,8 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                                  self.current['date'],
                                  self.current['author'],
                                  changelog,
-                                 self.current['entries'])
+                                 self.current['entries'],
+                                 tags=self.current.get('tags',[]))
                 cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(
@@ -93,7 +117,10 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
                 self.changesets.append(cset)
                 self.current = None
             elif name in ['name', 'comment']:
-                self.current[name] = ''.join(self.current_field)
+                val = ''.join(self.current_field)
+                if val[:4] == 'TAG ':
+                    self.current.setdefault('tags',[]).append(val[4:])
+                self.current[name] = val
             elif name == 'move':
                 entry = ChangesetEntry(self.new_name)
                 entry.action_kind = entry.RENAMED
@@ -206,7 +233,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 cset.darcs_hash = '%s-%s-%s.gz' % (compactdate,
                                                    new(author).hexdigest()[:5],
                                                    phash.hexdigest())
-                changesets.append(cset)
+
+                if name.startswith('tagged'):
+                    print "Warning: skipping tag %s because I don't \
+                    propagate tags from darcs." % name
+                else:
+                    changesets.append(cset)
 
                 while not l.strip():
                     l = output.readline()
