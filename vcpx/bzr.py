@@ -32,7 +32,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from changes import ChangesetEntry, Changeset
         from datetime import datetime
         r = parent.get_revision(revision)
-            
+
         deltatree = parent.get_revision_delta(parent.revision_id_to_revno(revision))
         entries = []
 
@@ -40,12 +40,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             e = ChangesetEntry(delta[0])
             e.action_kind = ChangesetEntry.ADDED
             entries.append(e)
-            
+
         for delta in deltatree.removed:
             e = ChangesetEntry(delta[0])
             e.action_kind = ChangesetEntry.DELETED
             entries.append(e)
-            
+
         for delta in deltatree.renamed:
             e = ChangesetEntry(delta[1])
             e.action_kind = ChangesetEntry.RENAMED
@@ -57,12 +57,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             e.action_kind = ChangesetEntry.UPDATED
             entries.append(e)
 
-        return Changeset(r.revision_id, 
+        return Changeset(r.revision_id,
                               datetime.fromtimestamp(r.timestamp),
-                              r.committer, 
+                              r.committer,
                               r.message,
                               entries)
-   
+
     def _getUpstreamChangesets(self, sincerev):
         """
         See what other revisions exist upstream and return them
@@ -72,7 +72,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         revisions = self._b.missing_revisions(parent)
 
         changesets = [self._changesetFromRevision(parent, ri) for ri in revisions]
-        
+
         return changesets
 
     def _applyChangeset(self, changeset):
@@ -98,7 +98,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         return self._changesetFromRevision(parent, parent.last_revision())
 
     ## SyncronizableTargetWorkingDir
-    
+
     def _addPathnames(self, entries):
         # This method may get invoked several times with the same
         # entries; and Branch.add complains if a file is already
@@ -131,7 +131,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # Guess sane email address
         email = re.search("<(.*@.*)>", author)
-        if email: 
+        if email:
             email = email.group(1)
         else:
             email = author
