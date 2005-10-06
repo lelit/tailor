@@ -83,7 +83,7 @@ def rev2branch(rev):
     return rev[0:-1]
 
 
-def changesets_from_cvslog(log, module, branch, entries, since):
+def changesets_from_cvslog(log, module, branch=None, entries=None, since=None):
     """
     Parse CVS log.
     """
@@ -328,42 +328,43 @@ class ChangeSetCollector(object):
                    "Missed 'cvs rlog: Logging XX' line"
 
             entry = join(self.__currentdir, split(l[10:-1])[1][:-2])
-            while l and not l.startswith('head: '):
-                l = self.__readline()
-            assert l, "Missed 'head:' line"
-            if branch is None:
-                branchnum = normalize_cvs_rev(l[6:-1])
-                branchnum = rev2branch(branchnum)
+            if entries is not None:
+                while l and not l.startswith('head: '):
+                    l = self.__readline()
+                assert l, "Missed 'head:' line"
+                if branch is None:
+                    branchnum = normalize_cvs_rev(l[6:-1])
+                    branchnum = rev2branch(branchnum)
 
-            while l and not l == 'symbolic names:\n':
-                l = self.__readline()
+                while l and not l == 'symbolic names:\n':
+                    l = self.__readline()
 
-            assert l, "Missed 'symbolic names:' line"
-
-            l = self.__readline()
-            rev2tags = {}
-            while l.startswith('\t'):
-                tag,revision = l[1:-1].split(': ')
-                tagcounts[tag] = tagcounts.get(tag,0) + 1
-                revision = normalize_cvs_rev(revision)
-                rev2tags.setdefault(revision,[]).append(tag)
-                if tag == branch:
-                    branchnum = revision
+                assert l, "Missed 'symbolic names:' line"
 
                 l = self.__readline()
+                rev2tags = {}
+                while l.startswith('\t'):
+                    tag,revision = l[1:-1].split(': ')
+                    tagcounts[tag] = tagcounts.get(tag,0) + 1
+                    revision = normalize_cvs_rev(revision)
+                    rev2tags.setdefault(revision,[]).append(tag)
+                    if tag == branch:
+                        branchnum = revision
 
-            # branchnum may still be None, if this file doesn't exist
-            # on the requested branch.
+                    l = self.__readline()
 
-            # filter out branch tags, and tags for revisions that are
-            # on other branches.
-            for revision in rev2tags.keys():
-                if is_branch(revision) or \
-                   not branchnum or \
-                   not cvs_revs_same_branch(revision,branchnum):
-                    del rev2tags[revision]
+                # branchnum may still be None, if this file doesn't exist
+                # on the requested branch.
 
-            file2rev2tags[entry] = rev2tags
+                # filter out branch tags, and tags for revisions that are
+                # on other branches.
+                for revision in rev2tags.keys():
+                    if is_branch(revision) or \
+                       not branchnum or \
+                       not cvs_revs_same_branch(revision,branchnum):
+                        del rev2tags[revision]
+
+                file2rev2tags[entry] = rev2tags
 
             expected_revisions = None
             while l not in (self.inter_sep, self.intra_sep):
@@ -404,6 +405,10 @@ class ChangeSetCollector(object):
             if expected_revisions <> found_revisions:
                 print 'warning: expecting %s revisions, read %s revisions' % \
                       ( expected_revisions, found_revisions )
+
+        # If entries is not given, don't try to desume tags information
+        if entries is None:
+            return
 
         # Determine the current revision of each live
         # (i.e. non-deleted) entry.
