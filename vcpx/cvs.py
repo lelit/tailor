@@ -178,7 +178,7 @@ class ChangeSetCollector(object):
         self.module = module
         """The CVS module name."""
 
-        self.__parseCvsLog(entries, since, branch)
+        self.__parseCvsLog(branch, entries, since)
 
     def __iter__(self):
         keys = self.changesets.keys()
@@ -299,7 +299,7 @@ class ChangeSetCollector(object):
 
         return (date, author, changelog, entry, rev, state, newentry)
 
-    def __parseCvsLog(self, entries, since, branch):
+    def __parseCvsLog(self, branch, entries, since):
         """Parse a complete CVS log."""
 
         from changes import Changeset
