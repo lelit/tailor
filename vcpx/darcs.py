@@ -32,7 +32,7 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     changesets_from_darcschanges_unsafe.
     """
 
-    csets = changesets_from_darcschanges_unsafe(changes, unidiff,\
+    csets = changesets_from_darcschanges_unsafe(changes, unidiff,
                                                 repodir)
     for cs in csets:
         cs.tags = None
@@ -176,7 +176,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying %r" %
                 (str(pull), pull.exit_status, output.read()))
 
         l = output.readline()
@@ -235,8 +235,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                                    phash.hexdigest())
 
                 if name.startswith('tagged'):
-                    print "Warning: skipping tag %s because I don't \
-                    propagate tags from darcs." % name
+                    print "Warning: skipping tag %s because I don't " \
+                          "propagate tags from darcs." % name
                 else:
                     changesets.append(cset)
 
@@ -284,7 +284,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if pull.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying %r" %
                 (str(pull), pull.exit_status, output.read()))
 
         conflicts = []
@@ -340,7 +340,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             if changes.exit_status:
                 raise ChangesetApplicationFailure(
-                    "%s returned status %d saying \"%s\"" %
+                    "%s returned status %d saying %r" %
                     (str(changes), changes.exit_status,
                      output and output.read() or ''))
 
@@ -376,7 +376,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
-                        "%s returned status %d saying \"%s\"" %
+                        "%s returned status %d saying %r" %
                         (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
@@ -391,7 +391,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             if dget.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying \"%s\"" %
+                    "%s returned status %d saying %r" %
                     (str(dget), dget.exit_status, output.read()))
 
         cmd = self.repository.command("changes", "--last", "1",
@@ -401,7 +401,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if changes.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying %r" %
                 (str(changes), changes.exit_status, output.read()))
 
         last = changesets_from_darcschanges(output)
@@ -634,13 +634,13 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         in a tag from another darcs repository, then the assumption
         could be violated and mistagging could result.
         """
-        cmd = self.repository.command("changes", "--from-match=not name ^TAG",\
+        cmd = self.repository.command("changes", "--from-match=not name ^TAG",
                                       "--xml-output")
         changes =  ExternalCommand(cwd=self.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
         if changes.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying %r" %
                 (str(changes), changes.exit_status, output.read()))
 
         tags = []
