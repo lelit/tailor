@@ -262,7 +262,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Return the last applied changeset.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, split
         from cvs import CvsEntries, compare_cvs_revs
         from time import sleep
 
@@ -295,16 +295,19 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             cset = None
 
         if not exists(join(self.basedir, 'CVS')):
+            # CVS does not handle "checkout -d multi/level/subdir", so
+            # split the basedir and use it's parentdir as cwd below.
+            parentdir, subdir = split(self.basedir)
             cmd = self.repository.command("-q",
                                           "-d", self.repository.repository,
                                           "checkout",
-                                          "-d", self.repository.subdir)
+                                          "-d", subdir)
             if revision:
                 cmd.extend(["-r", revision])
             if timestamp:
                 cmd.extend(["-D", "%s UTC" % timestamp])
 
-            checkout = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+            checkout = ExternalCommand(cwd=parentdir, command=cmd)
             retry = 0
             while True:
                 checkout.execute(self.repository.module)
