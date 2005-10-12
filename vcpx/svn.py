@@ -15,6 +15,7 @@ from shwrap import ExternalCommand, PIPE, STDOUT, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from config import ConfigurationError
 
 def changesets_from_svnlog(log, repository, module):
     from xml.sax import parseString
@@ -268,6 +269,31 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
+
+        # Verify that the we have the root of the repository: do that
+        # iterating an "svn ls" over the hierarchy until one fails
+
+        cmd = self.repository.command("ls")
+        svnls = ExternalCommand(command=cmd)
+        svnls.execute(self.repository.repository)
+
+        lastok = self.repository.repository
+        reporoot = lastok[:lastok.rfind('/')]
+        while '/' in reporoot:
+            svnls.execute(reporoot)
+            if svnls.exit_status:
+                break
+            lastok = reporoot
+            reporoot = reporoot[:reporoot.rfind('/')]
+
+        if lastok <> self.repository.repository:
+            module = self.repository.repository[len(lastok):]
+            module += self.repository.module
+            raise ConfigurationError("Non-root svn repository %r. "
+                                     "Please specify that as 'repository=%s' "
+                                     "and 'module=%s'." %
+                                     (self.repository.repository,
+                                      lastok, module.rstrip('/')))
 
         if revision == 'INITIAL':
             initial = True
