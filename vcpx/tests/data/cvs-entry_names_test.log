@@ -1,0 +1,15 @@
+cvs rlog: Logging Products/PluggableAuthService
+
+RCS file: /cvs-repository/Products/PluggableAuthService/COPYRIGHT.txt,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 1;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/12 15:15:53;  author: jens;  state: Exp;
+Sorry for the noise - switching to ZPL 2.1
+=============================================================================

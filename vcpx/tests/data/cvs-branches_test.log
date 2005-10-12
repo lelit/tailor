@@ -1,0 +1,24 @@
+cvs rlog: Logging Archetypes/tests
+
+RCS file: /cvsroot/archetypes/Archetypes/tests/test_classgen.py,v
+head: 1.18
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 34;    selected revisions: 3
+description:
+----------------------------
+revision 1.18.14.5
+date: 2004/06/17 19:08:43;  author: tiran;  state: Exp;  lines: +1 -0
+new test for setFormat/setContentType, content_type as computed attribute
+----------------------------
+revision 1.18.14.4
+date: 2004/05/24 11:20:57;  author: tiran;  state: Exp;  lines: +11 -1
+Merge from tiran-seperate_mtr-branch
+----------------------------
+revision 1.18.14.3
+date: 2004/05/21 18:08:46;  author: tiran;  state: Exp;  lines: +1 -3
+branches:  1.18.14.3.2;
+Fixed deepcopy problem in validations
+=============================================================================

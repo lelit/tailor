@@ -1,0 +1,19 @@
+cvs rlog: Logging pxlib/src
+
+RCS file: /cvsroot/pxlib/pxlib/src/px_head.h,v
+head: 1.8
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;     selected revisions: 2
+description:
+----------------------------
+revision 1.8
+date: 2005/08/17 16:07:40;  author: steinm;  state: Exp;  lines: +1 -0
+- added prototype for px_delete_data_from_block()
+----------------------------
+revision 1.7
+date: 2005/08/17 05:16:24;  author: steinm;  state: Exp;  lines: +1 -1
+­ new prototype for px_add_data_to_block()
+=============================================================================

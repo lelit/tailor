@@ -1,0 +1,238 @@
+cvs rlog: Logging ATContentTypes
+
+RCS file: /cvsroot/collective/ATContentTypes/Attic/ConstrainTypesMixin.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 5;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:09:46;  author: rochael;  state: dead;
+branches:  1.1.2;
+file ConstrainTypesMixin.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/customconfig.py.example,v
+head: 1.7
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;     selected revisions: 1
+description:
+----------------------------
+revision 1.7
+date: 2004/08/13 13:59:55;  author: rochael;  state: Exp;  lines: +1 -5
+removed duplicated ENABLE_TEMPLATE_MIXIN
+=============================================================================
+cvs rlog: Logging ATContentTypes/Extensions
+
+RCS file: /cvsroot/collective/ATContentTypes/Extensions/batchCreate.py,v
+head: 1.2
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;     selected revisions: 1
+description:
+----------------------------
+revision 1.2
+date: 2004/08/09 07:44:05;  author: tiran;  state: Exp;  lines: +4 -1
+branches:  1.2.2;
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/Extensions/findStaledObjects.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/09 07:44:05;  author: tiran;  state: Exp;
+branches:  1.1.2;
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/debian
+cvs rlog: Logging ATContentTypes/docs
+
+RCS file: /cvsroot/collective/ATContentTypes/docs/ExtendingType.txt,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/06 20:13:30;  author: tiran;  state: Exp;
+branches:  1.1.2;
+Added ExtendingType
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/docs/HISTORY.txt,v
+head: 1.42
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 44;    selected revisions: 1
+description:
+----------------------------
+revision 1.42
+date: 2004/08/09 07:44:07;  author: tiran;  state: Exp;  lines: +12 -0
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/i18n
+cvs rlog: Logging ATContentTypes/interfaces
+
+RCS file: /cvsroot/collective/ATContentTypes/interfaces/Attic/IConstrainTypes.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:09:47;  author: rochael;  state: dead;
+branches:  1.1.2;
+file IConstrainTypes.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+cvs rlog: Logging ATContentTypes/migration
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/ATCTMigrator.py,v
+head: 1.12
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 14;    selected revisions: 1
+description:
+----------------------------
+revision 1.12
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +42 -32
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/CPTMigrator.py,v
+head: 1.8
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 9;     selected revisions: 1
+description:
+----------------------------
+revision 1.8
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +38 -31
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/migration/Walker.py,v
+head: 1.15
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 17;    selected revisions: 1
+description:
+----------------------------
+revision 1.15
+date: 2004/08/09 07:44:09;  author: tiran;  state: Exp;  lines: +76 -30
+Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
+
+Rewritten folder migration to use the depth inside the folder structur instead of recursing into the full side.
+
+Added a findStaledObjects external method to ATCT to find staled objects. It is very useful to clean up a site before running the migration.
+=============================================================================
+cvs rlog: Logging ATContentTypes/skins
+cvs rlog: Logging ATContentTypes/skins/ATContentTypes
+
+RCS file: /cvsroot/collective/ATContentTypes/skins/ATContentTypes/atct_history.pt,v
+head: 1.5
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 7;     selected revisions: 1
+description:
+----------------------------
+revision 1.5
+date: 2004/08/13 13:21:53;  author: tiran;  state: Exp;  lines: +1 -2
+Somehow I mixed up two sentences
+=============================================================================
+cvs rlog: Logging ATContentTypes/tests
+
+RCS file: /cvsroot/collective/ATContentTypes/tests/Attic/testContrainTypes.py,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 4;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2004/08/11 01:13:43;  author: rochael;  state: dead;
+branches:  1.1.2;
+file testContrainTypes.py was initially added on branch jensens-restrain_mixin-branch.
+=============================================================================
+cvs rlog: Logging ATContentTypes/types
+
+RCS file: /cvsroot/collective/ATContentTypes/types/ATContentType.py,v
+head: 1.36
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 38;    selected revisions: 1
+description:
+----------------------------
+revision 1.36
+date: 2004/08/13 13:15:46;  author: tiran;  state: Exp;  lines: +2 -2
+Fixed typo
+=============================================================================
+
+RCS file: /cvsroot/collective/ATContentTypes/types/schemata.py,v
+head: 1.45
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 49;    selected revisions: 1
+description:
+----------------------------
+revision 1.45
+date: 2004/08/13 13:21:24;  author: tiran;  state: Exp;  lines: +24 -24
+Something went wrong ...
+=============================================================================
+cvs rlog: Logging ATContentTypes/types/criteria

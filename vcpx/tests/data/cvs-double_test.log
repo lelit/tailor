@@ -1,0 +1,53 @@
+cvs rlog: Logging docutils/docutils
+
+RCS file: /cvsroot/docutils/docutils/docutils/statemachine.py,v
+head: 1.16
+branch:
+locks: strict
+access list:
+symbolic names:
+        nesting: 1.15.0.2
+        start: 1.1.1.1
+        goodger: 1.1.1
+keyword substitution: kv
+total revisions: 17;    selected revisions: 1
+description:
+----------------------------
+revision 1.16
+date: 2004/06/17 21:46:50;  author: goodger;  state: Exp;  lines: +6 -2
+support for CSV directive implementation
+=============================================================================
+
+RCS file: /cvsroot/docutils/docutils/docutils/utils.py,v
+head: 1.35
+branch:
+locks: strict
+access list:
+symbolic names:
+        nesting: 1.29.0.2
+        start: 1.1.1.1
+        goodger: 1.1.1
+keyword substitution: kv
+total revisions: 36;    selected revisions: 5
+description:
+----------------------------
+revision 1.35
+date: 2004/06/20 16:03:17;  author: felixwiemann;  state: Exp;  lines: +12 -6
+make warning_stream work
+----------------------------
+revision 1.34
+date: 2004/06/17 21:46:50;  author: goodger;  state: Exp;  lines: +5 -2
+support for CSV directive implementation
+----------------------------
+revision 1.33
+date: 2004/06/17 02:51:31;  author: goodger;  state: Exp;  lines: +4 -2
+docstrings
+----------------------------
+revision 1.32
+date: 2004/06/17 02:08:48;  author: goodger;  state: Exp;  lines: +4 -2
+docstrings
+----------------------------
+revision 1.31
+date: 2004/04/27 19:51:07;  author: goodger;  state: Exp;  lines: +5 -3
+updated
+=============================================================================

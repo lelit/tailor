@@ -1,0 +1,20 @@
+cvs rlog: Logging dsssl-utils/bigdiesel/src
+
+RCS file: /cvsroot/dsssl-utils/dsssl-utils/bigdiesel/src/tokenizer-rgc-test.scm,v
+head: 1.2
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 3;     selected revisions: 2
+description:
+----------------------------
+revision 1.2
+date: 2002/07/30 12:38:24;  author: ydirson;  state: Exp;  lines: +36 -0
+merged until bigloo-parser_trunk-merge_2: new tokenizer, basic attributes support
+----------------------------
+revision 1.1
+date: 2002/07/27 16:28:23;  author: ydirson;  state: dead;
+branches:  1.1.2;
+file tokenizer-rgc-test.scm was initially added on branch bigloo-parser.
+=============================================================================

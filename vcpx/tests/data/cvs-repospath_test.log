@@ -1,0 +1,17 @@
+cvs rlog: Logging Zope/spurious/dummy/dir
+cvs rlog: Logging Zope/lib/python/DateTime
+cvs rlog: warning: no revision `Zope-2_7-branch' in `/cvs-repository/Packages/DateTime/Attic/DateTime.html,v'
+
+RCS file: /cvs-repository/Packages/DateTime/Attic/DateTime.py,v
+head: 1.100
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 170;   selected revisions: 1
+description:
+----------------------------
+revision 1.85.12.11
+date: 2004/08/02 09:49:18;  author: andreasjung;  state: Exp;  lines: +22 -2
+backported copy constructor from trunk
+=============================================================================

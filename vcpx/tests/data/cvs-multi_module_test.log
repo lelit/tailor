@@ -1,0 +1,38 @@
+cvs rlog: Logging apache-1.3/src/test/vhtest/logs
+
+RCS file: /home/cvspublic/apache-1.3/src/test/vhtest/logs/.cvsignore,v
+head: 1.1
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 1;     selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 1998/02/08 22:50:19;  author: dgaudet;  state: Exp;
+tweak tweak, docs were slightly wrong
+=============================================================================
+cvs rlog: Logging httpd-docs-1.3/htdocs
+
+RCS file: /home/cvspublic/httpd-docs-1.3/htdocs/Attic/.cvsignore,v
+head: 1.2
+branch:
+locks: strict
+access list:
+keyword substitution: kv
+total revisions: 2;     selected revisions: 2
+description:
+----------------------------
+revision 1.2
+date: 1999/08/28 01:11:49;  author: fielding;  state: dead;  lines: +0 -0
+Don't ignore everything when everything isn't supposed to be ignored.
+If this bugs configure users, then fix configure so that it uses a
+distinctive prefix that won't match Makefile.tmpl.
+
+Submitted by:   Roy Fielding, Sander van Zoest
+----------------------------
+revision 1.1
+date: 1997/12/21 00:22:00;  author: dgaudet;  state: Exp;
+I'm tired of cvs complaining about all my debugging files.  We're not likely
+to be changing this directory much, so ignore any non-cvs files in it.
