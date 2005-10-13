@@ -268,7 +268,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 if rem in renames:
                     removesfirst.append(rem)
 
-            if removedfirst:
+            if removesfirst:
                 self._removeEntries(removedfirst)
                 for rem in removesfirst:
                     removed.remove(rem)
