@@ -259,6 +259,20 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         # Replay the actions
 
+        if renamed and removed:
+            # Handle the "replace" operation, that is a remove+rename
+
+            renames = [e.name for e in renamed]
+            removesfirst = []
+            for rem in removed:
+                if rem in renames:
+                    removesfirst.append(rem)
+
+            if removedfirst:
+                self._removeEntries(removedfirst)
+                for rem in removesfirst:
+                    removed.remove(rem)
+
         if renamed: self._renameEntries(renamed)
         if removed: self._removeEntries(removed)
         if added: self._addEntries(added)
