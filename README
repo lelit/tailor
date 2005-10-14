@@ -421,63 +421,63 @@ Projects
 A project is identified by a section whose name does not contain any
 colon (":") character, and configured with the following values:
 
-root-directory
+root-directory : string
   This is where all the fun will happen: this directory will contain
   the source and the target working copy, and usually the state and
   the log file. It supports the conventional `~user` to indicate user's
   home directory and defaults to the current working directory.
 
-subdir
+subdir : string
   This is the subdirectory, relative to the `root-directory`, where
   tailor will extract the source working copy. It may be '.' for some
   backend kinds. The source and target backends will use this value
   if they don't explicitly override it.
 
-state-file
+state-file : string
   Name of the state file needed to store tailor last activity.
 
-source
+source : string
   The source repository: a repository name is something like
   "darcs:somename", that will be loaded from the homonymous section
   in the configuration.
 
-target
+target : string
   The counterpart of `source`, the repository that will receive the
   changes coming from there.
 
 Non mandatory options:
 
-verbose
+verbose : bool
   Print the commands as they are executed.
 
-debug
+debug : bool
   Print also their output.
   
-before-commit
+before-commit : tuple
   This is a function name, or a sequence of function names enclosed
   by brackets, that will be executed on each changeset just before
   it get replayed on the target system: this may be used to perform
   any kind of alteration on the content of the changeset, or to skip
   some of them.
 
-after-commit
+after-commit : tuple
   This is a function name, or a sequence of function names enclosed
   by brackets, that will be executed on each changeset just after
   the commit on the target system: this may be used for example to
   create a tag.
 
-subdir
+subdir : string
   The name of the subdirectory, under ``root-directory``, that will
   contain the source and target repositories/working directories.
 
-start-revision
+start-revision : string
   This identifies from when tailor should start the migration. It can
   be either ``INITIAL``, to indicate the start of the history, or
   ``HEAD`` to indicate the current latest changeset, or a backend
   specific way of indicate a particular revision/tag in the history.
   See also `CVS start-revision`_ above.
 
-patch-name-format
+patch-name-format : string
   Some backends have a distinct notion of `patch name` and `change
   log`, others just suggest a policy that the first line of the
   message is a summary, the rest if present is a more detailed
@@ -499,7 +499,7 @@ patch-name-format
 
   tailor will keep the original changelog as is.
 
-remove-first-log-line
+remove-first-log-line : bool
   Remove the first line of the upstream changelog. This is intended to
   go in pair with ``patch-name-format``, when using it's 'firstlogline'
   variable to build the name of the patch.  By default is ``False``.
@@ -510,9 +510,10 @@ remove-first-log-line
     patch-name-format=[%(project)s @ %(revision)s]: %(firstlogline)s
     remove-first-log-line=True
 
-refill-changelogs
+refill-changelogs : bool
   Off by default, when active tailor reformats every changelog before
   committing on the target system.
+
 
 Repositories
 ~~~~~~~~~~~~
@@ -524,49 +525,149 @@ indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
 ``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``hglib``, ``monotone``, 
 ``svn``, ``svndump`` and ``tla``.
 
-When a repository is used as a `source`, it must indicate its origin
-with ``repository``, and for some backends also a ``module``, but are
-not required when it's a target system, even if some backend may use
-the information to create the target repository (like ``svn`` backend
-does). 
+repository : string
+  When a repository is used as a `source`, it must indicate its origin
+  with ``repository``, and for some backends also a ``module``, but
+  are not required when it's a target system, even if some backend may
+  use the information to create the target repository (like ``svn``
+  backend does).
 
-Each repository may then impose a particular external binary to be
-used, as done in the example above for ``hg``. Actually two of them,
-`bzr` and `hglib`, accept an option ``python-path`` to indicate
-where the BazaarNG Python library is located.
+subdir : string
+  When the `source` and `target` repositories use different
+  subdirectories, tailor uses ``rsync`` to copy the changes between
+  the two after each applied changeset.  When the source repository
+  basedir is a subdirectory of target basedir tailor prefixes all
+  paths coming from upstream to match the relative position.
 
-A repository may also have it's own ``subdir``: when the `source` and
-`target` repositories use different subdirectories, tailor uses
-``rsync`` to copy the changes between the two after each applied
-changeset.  When the source repository basedir is a subdirectory of
-target basedir tailor prefixes all paths coming from upstream to match
-the relative position.
+  This defaults to the project's setting.
 
-Another option is ``encoding``, which states the charset encoding the
-particular repository uses, and it's particularly important when it
-differs from local system setup, that you may inspect executing::
+command : string
+  Backends based on external command line tool such as *svn* or
+  *darcs* offers this option to impose a particular external binary to
+  be used, as done in the example above for ``hg``.
 
-  python -m locale
+python-path : string
+  For pythonique backends such as *bzr* and *hglib* this indicates
+  where the respective library is located.
 
-CVS and CVSPS repositories may turn off automatic tagging of entries,
-that tailor does by default to prevent manual interventions in the
-CVS working copy, using ``tag_entries = False``.
+encoding : string
+  States the charset encoding the particular repository uses, and it's
+  particularly important when it differs from local system setup, that
+  you may inspect executing::
 
-Subversion repositories may specify ``use-propset = True``, to
-indicate that tailor is allowed to properly inject the upstream
-changeset's author and timestamp into the target repository.  As
-stated above, this requires a manual intervention on the repository
-itself and thus is off by default, and tailor simply appends those
-values to the changelog.  When active at bootstrap time and the
-repository is local, tailor creates automatically a minimal
-``hooks/pre-revprop-change`` script inside the repository, so no other
-intervention is needed.
+    python -m locale
 
-Sometime the migration is fast enough to put the upstream server under
-an excessive load. When this is the case, you may specify
-``delay-before-apply = 5``, that is the number of seconds tailor will
-wait before applying each changeset. It defaults to None, ie no delay
-at all.
+delay-before-apply : integer
+  Sometime the migration is fast enough to put the upstream server
+  under an excessive load. When this is the case, you may specify
+  ``delay-before-apply = 5``, that is the number of seconds tailor
+  will wait before applying each changeset.
+
+  It defaults to *None*, ie no delay at all.
+
+arx
+%%%
+
+..
+
+baz
+%%%
+
+..
+
+bzr
+%%%
+
+..
+
+cdv
+%%%
+
+..
+
+cvs
+%%%
+
+tag-entries : bool
+  CVS and CVSPS repositories may turn off automatic tagging of
+  entries, that tailor does by default to prevent manual interventions
+  in the CVS working copy, using ``tag_entries = False``.
+
+  *True* by default.
+
+cvsps
+%%%%%
+
+tag-entries : bool
+  CVS and CVSPS repositories may turn off automatic tagging of
+  entries, that tailor does by default to prevent manual interventions
+  in the CVS working copy, using ``tag_entries = False``.
+
+  *True* by default.
+  
+darcs
+%%%%%
+
+..
+
+git
+%%%
+
+..
+
+hg
+%%
+
+..
+
+hglib
+%%%%%
+
+..
+
+monotone
+%%%%%%%%
+
+keyid : string
+  Monotone keyid.
+
+passphrase : string
+  Monotone passphrase.
+
+keyfile : string
+  Monotone keyfile.
+
+svn
+%%%
+
+filter-badchars : bool (or string)
+  Activate (with *True*) or activate and specify (with a *string*) the
+  filter on the svn log to eliminate illegal XML characters.
+
+  *False* by default.
+  
+use-propset : bool
+  Indicate that tailor is allowed to properly inject the upstream
+  changeset's author and timestamp into the target repository.  As
+  stated above, this requires a manual intervention on the repository
+  itself and thus is off by default, and tailor simply appends those
+  values to the changelog.  When active at bootstrap time and the
+  repository is local, tailor creates automatically a minimal
+  ``hooks/pre-revprop-change`` script inside the repository, so no
+  other intervention is needed. 
+
+  *False* by default.
+
+svndump
+%%%%%%%
+
+..
+
+tla
+%%%
+
+..
+
 
 
 Using a Python script as configuration file
