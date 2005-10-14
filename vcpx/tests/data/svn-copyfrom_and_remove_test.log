@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="3170">
+<author>abartlet</author>
+<date>2004-10-24T23:54:00.078045Z</date>
+<paths>
+<path
+   action="D">/branches/SAMBA_4_0/source/nsswitch/wins.c</path>
+<path
+   action="A">/branches/SAMBA_4_0/source/nsswitch/config.m4</path>
+<path
+   copyfrom-path="/branches/SAMBA_3_0/source/nsswitch"
+   copyfrom-rev="3150"
+   action="A">/branches/SAMBA_4_0/source/nsswitch</path>
+<path
+   action="M">/branches/SAMBA_4_0/source/nsswitch/wb_common.c</path>
+</paths>
+<msg>Add winbind client support back into Samba4.  This is to allow
+auth_winbind to work, and to therefore use the new ntlm_auth and
+GENSEC in an otherwise Samba3 setup.
+
+I'm not quite sure what fun-and games my svn cp caused as I merged
+this from samba_3_0, but anyway...
+
+Andrew Bartlett
+</msg>
+</logentry>
+</log>

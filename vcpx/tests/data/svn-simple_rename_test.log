@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="2">
+<author>lele</author>
+<date>2004-11-12T15:05:37.134366Z</date>
+<paths>
+<path
+   action="A">/trunk/dir</path>
+<path
+   action="A">/trunk/dir/a.txt</path>
+</paths>
+<msg>create tree</msg>
+</logentry>
+<logentry
+   revision="3">
+<author>lele</author>
+<date>2004-11-12T15:06:04.193650Z</date>
+<paths>
+<path
+   action="D">/trunk/dir</path>
+<path
+   copyfrom-path="/trunk/dir"
+   copyfrom-rev="1"
+   action="A">/trunk/new</path>
+</paths>
+<msg>rename dir</msg>
+</logentry>
+</log>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="894">
+<author>anthony</author>
+<date>2004-11-09T06:54:20.709243Z</date>
+<paths>
+<path
+   action="D">/trunk/shtoom/tmp</path>
+<path
+   copyfrom-path="/trunk/shtoom/tmp"
+   copyfrom-rev="893"
+   action="A">/sandbox</path>
+</paths>
+<msg>Moving to a /sandbox
+</msg>
+</logentry>
+</log>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="7969">
+<author>hpk</author>
+<date>2004-12-22T10:30:39.458701Z</date>
+<paths>
+<path
+   copyfrom-path="/py/dist/example/test"
+   copyfrom-rev="7968"
+   action="R">/py/dist/py/documentation/example/test</path>
+<path
+   action="D">/py/dist/example</path>
+<path
+   copyfrom-path="/py/dist/example"
+   copyfrom-rev="7965"
+   action="A">/py/dist/py/documentation/example</path>
+<path
+   action="M">/py/dist/py/documentation/test.txt</path>
+</paths>
+<msg>moved example directory below the documentation directory lib
+
+</msg>
+</logentry>
+</log>

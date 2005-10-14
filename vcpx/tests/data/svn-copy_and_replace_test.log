@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="1379">
+<author>cmlenz</author>
+<date>2005-03-21T08:34:02.522947Z</date>
+<paths>
+<path
+   copyfrom-path="/trunk/scripts/trac-admin"
+   copyfrom-rev="1377"
+   action="A">/trunk/trac/scripts/admin.py</path>
+<path
+   action="A">/trunk/trac/scripts</path>
+<path
+   action="M">/trunk/trac/tests/tracadmin.py</path>
+<path
+   action="R">/trunk/scripts/trac-admin</path>
+<path
+   action="A">/trunk/trac/scripts/__init__.py</path>
+<path
+   action="M">/trunk/trac/tests/environment.py</path>
+<path
+   action="M">/trunk/setup.py</path>
+</paths>
+<msg>Applied Mark Rowe's patch for refactoring trad-admin into a real module so that the unit tests don't need to invoke it through the shell. Closes #1328. Many thanks.</msg>
+</logentry>
+</log>

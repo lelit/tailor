@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="1">
+<author>lele</author>
+<date>2005-01-08T17:36:39.131126Z</date>
+<paths>
+<path
+   action="A">/test/file1.txt</path>
+</paths>
+<msg>First commit</msg>
+</logentry>
+<logentry
+   revision="2">
+<author>lele</author>
+<date>2005-01-08T17:36:55.174757Z</date>
+<paths>
+<path
+   copyfrom-path="/test/file1.txt"
+   copyfrom-rev="1"
+   action="A">/test/file2.txt</path>
+</paths>
+<msg>Copy</msg>
+</logentry>
+<logentry
+   revision="3">
+<author>lele</author>
+<date>2005-01-08T17:42:41.347315Z</date>
+<paths>
+<path
+   action="D">/test/file1.txt</path>
+</paths>
+<msg>Remove</msg>
+</logentry>
+<logentry
+   revision="4">
+<author>lele</author>
+<date>2005-01-08T17:43:09.909127Z</date>
+<paths>
+<path
+   copyfrom-path="/test/file2.txt"
+   copyfrom-rev="2"
+   action="A">/test/file1.txt</path>
+<path
+   action="D">/test/file2.txt</path>
+</paths>
+<msg>Move</msg>
+</logentry>
+</log>

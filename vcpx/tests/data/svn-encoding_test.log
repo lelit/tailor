@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="7564">
+<author>fschulze</author>
+<date>2005-07-20T17:47:53.425055Z</date>
+<msg>Fix http://members.plone.org/collector/4034 — Collapsible fieldsets need a full width mode.</msg>
+</logentry>
+</log>
