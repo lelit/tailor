@@ -18,11 +18,10 @@ from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from config import ConfigurationError
 
 def changesets_from_svnlog(log, repository, module):
-    from xml.sax import parseString
+    from xml.sax import parse
     from xml.sax.handler import ContentHandler
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
-    from string import maketrans
 
     def get_entry_from_path(path, module=module):
         # Given the repository url of this wc, say
@@ -180,22 +179,11 @@ def changesets_from_svnlog(log, repository, module):
 
                     self.current['entries'].append(entry)
 
-
         def characters(self, data):
             self.current_field.append(data)
 
-
-    # Apparently some (SVN repo contains)/(SVN server dumps) some
-    # characters that are illegal in an XML stream. This was the case
-    # with Twisted Matrix master repository. To be safe, we replace
-    # all of them with a question mark.
-
-    allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0B\x0C\x0E\x0F" \
-                  "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D" \
-                  "\x1E\x1F\x7f"
-    tt = maketrans(allbadchars, "?"*len(allbadchars))
     handler = SvnXMLLogHandler()
-    parseString(log.read().translate(tt), handler)
+    parse(log, handler)
     return handler.changesets
 
 
@@ -216,6 +204,25 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if svnlog.exit_status:
             return []
+
+        if self.repository.filter_badchars:
+            from string import maketrans
+            from cStringIO import StringIO
+
+            # Apparently some (SVN repo contains)/(SVN server dumps) some
+            # characters that are illegal in an XML stream. This was the case
+            # with Twisted Matrix master repository. To be safe, we replace
+            # all of them with a question mark.
+
+            if isinstance(self.repository.filter_badchars, string):
+                allbadchars = self.repository.filter_badchars
+            else:
+                allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09" \
+                              "\x0B\x0C\x0E\x0F\x10\x11\x12\x13\x14\x15" \
+                              "\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7f"
+
+            tt = maketrans(allbadchars, "?"*len(allbadchars))
+            log = StringIO(log.read().translate(tt))
 
         return changesets_from_svnlog(log,
                                       self.repository.repository,
