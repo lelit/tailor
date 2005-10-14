@@ -52,7 +52,7 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.old_name, 'dir')
 
     def testRenameOutBehaviour(self):
-        """Verify svn log parser behaves correctly on renames outside tracked tree"""
+        """Verify svn log parser behaves correctly on renames out of scope"""
 
         log = self.getSvnLog('svn-rename_out_test')
         csets = changesets_from_svnlog(log, 'http://srv/svn/Shtoom', '/trunk')
