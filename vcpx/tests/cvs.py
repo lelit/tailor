@@ -54,7 +54,7 @@ class CvsLogParser(TestCase):
         """Verify basic cvs log parser behaviour"""
 
         log = self.getCvsLog('cvs-simple_test')
-        csets = changesets_from_cvslog(log, 'docutils')
+        csets = list(changesets_from_cvslog(log, 'docutils'))
 
         self.assertEqual(len(csets), 2)
 
@@ -83,21 +83,19 @@ class CvsLogParser(TestCase):
         log = self.getCvsLog('cvs-double_test')
         csets = changesets_from_cvslog(log, 'docutils')
 
-        self.assertEqual(len(csets), 5)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07))
 
-        cset = csets[1]
+        cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48))
 
-        cset = csets[2]
+        cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31))
 
-        cset = csets[3]
+        cset = csets.next()
         self.assertEqual(cset.author, "goodger")
         self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
         self.assertEqual(cset.log,"support for CSV directive implementation")
@@ -111,7 +109,7 @@ class CvsLogParser(TestCase):
         self.assertEqual(entry.name, 'docutils/utils.py')
         self.assertEqual(entry.new_revision, '1.34')
 
-        cset = csets[4]
+        cset = csets.next()
         self.assertEqual(cset.author, "felixwiemann")
         self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
 
@@ -119,7 +117,7 @@ class CvsLogParser(TestCase):
         """Verify recognition of deleted entries in the cvs log"""
 
         log = self.getCvsLog('cvs-deleted_test')
-        csets = changesets_from_cvslog(log, 'docutils')
+        csets = list(changesets_from_cvslog(log, 'docutils'))
 
         self.assertEqual(len(csets), 2)
 
@@ -136,7 +134,7 @@ class CvsLogParser(TestCase):
         """Verify the mechanism used to collapse related changesets"""
 
         log = self.getCvsLog('cvs-collapse_test')
-        csets = changesets_from_cvslog(log, 'PyObjC')
+        csets = list(changesets_from_cvslog(log, 'PyObjC'))
 
         self.assertEqual(len(csets), 5)
 
@@ -164,7 +162,7 @@ class CvsLogParser(TestCase):
         """Verify the parser groks with the branches info on revision"""
 
         log = self.getCvsLog('cvs-branches_test')
-        csets = changesets_from_cvslog(log, 'Archetypes')
+        csets = list(changesets_from_cvslog(log, 'Archetypes'))
 
         self.assertEqual(len(csets), 3)
 
@@ -177,9 +175,7 @@ class CvsLogParser(TestCase):
         log = self.getCvsLog('cvs-repospath_test')
         csets = changesets_from_cvslog(log, 'Zope')
 
-        self.assertEqual(len(csets), 1)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.log,"backported copy constructor from trunk")
         self.assertEqual(len(cset.entries), 1)
         entry = cset.entries[0]
@@ -191,9 +187,7 @@ class CvsLogParser(TestCase):
         log = self.getCvsLog('cvs-longlog_test')
         csets = changesets_from_cvslog(log, 'ATContentTypes')
 
-        self.assertEqual(len(csets), 6)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 6, 20, 13, 30))
         self.assertEqual(cset.log, "Added ExtendingType")
@@ -202,7 +196,7 @@ class CvsLogParser(TestCase):
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        cset = csets[1]
+        cset = csets.next()
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9))
         self.assertEqual(cset.log, """\
@@ -216,22 +210,22 @@ Added a findStaledObjects external method to ATCT to find staled objects. It is 
         self.assertEqual(entry.new_revision, '1.2')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
-        cset = csets[2]
+        cset = csets.next()
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 15, 46))
         self.assertEqual(cset.log, "Fixed typo")
 
-        cset = csets[3]
+        cset = csets.next()
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 24))
         self.assertEqual(cset.log, "Something went wrong ...")
 
-        cset = csets[4]
+        cset = csets.next()
         self.assertEqual(cset.author, "tiran")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 53))
         self.assertEqual(cset.log, "Somehow I mixed up two sentences")
 
-        cset = csets[5]
+        cset = csets.next()
         self.assertEqual(cset.author, "rochael")
         self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 59, 55))
         self.assertEqual(cset.log, "removed duplicated ENABLE_TEMPLATE_MIXIN")
@@ -249,14 +243,14 @@ head: 1.2
         """Verify how parser reacts on bad input"""
 
         log = StringIO(self.SILLY_TEST)
-        self.assertRaises(AssertionError,
-                          changesets_from_cvslog, log, 'docutils')
+        csets = changesets_from_cvslog(log, 'docutils')
+        self.assertRaises(AssertionError, csets.next)
 
     def testInitialCreationOnBranchBehaviour(self):
         """Verify cvs log parser skip spurious entries"""
 
         log = self.getCvsLog('cvs-created_in_branch_test')
-        csets = changesets_from_cvslog(log, 'dsssl-utils')
+        csets = list(changesets_from_cvslog(log, 'dsssl-utils'))
 
         self.assertEqual(len(csets), 1)
 
@@ -270,7 +264,7 @@ head: 1.2
         """Verify add->delete->add/modify->modify CVS case"""
 
         log = self.getCvsLog('cvs-add_del_add_again_test')
-        csets = changesets_from_cvslog(log, 'test')
+        csets = list(changesets_from_cvslog(log, 'test'))
 
         self.assertEqual(len(csets), 6)
 
@@ -304,7 +298,7 @@ head: 1.2
         log = self.getCvsLog('cvs-entry_names_test')
         csets = changesets_from_cvslog(log, 'Products/PluggableAuthService')
 
-        cset = csets[0]
+        cset = csets.next()
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'COPYRIGHT.txt')
 
@@ -314,9 +308,7 @@ head: 1.2
         log = self.getCvsLog('cvs-encoding_test')
         csets = changesets_from_cvslog(log, 'pxlib')
 
-        self.assertEqual(len(csets), 2)
-
-        log = csets[0].log
+        log = csets.next().log
         self.assertEqual(type(log), type(u'€'))
         self.assertEqual(len(log), 42)
         self.assertRaises(UnicodeEncodeError, log.encode, 'ascii')
@@ -329,9 +321,7 @@ head: 1.2
         csets = changesets_from_cvslog(log,
                                        'composestar/temp/ComposestarVSAddin')
 
-        self.assertEqual(len(csets), 2)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(len(cset.entries), 2)
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'ComposestarVSAddin/Ini.cs')
@@ -342,7 +332,7 @@ head: 1.2
         self.assertEqual(entry.new_revision, '1.1')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        cset = csets[1]
+        cset = csets.next()
         self.assertEqual(len(cset.entries), 2)
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'ComposestarVSAddin/Ini.cs')

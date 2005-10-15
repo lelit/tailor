@@ -91,7 +91,6 @@ def changesets_from_cvslog(log, module, branch=None, entries=None, since=None):
     from datetime import timedelta
 
     collected = ChangeSetCollector(log, module, branch, entries, since)
-    collapsed = []
 
     threshold = timedelta(seconds=180)
     last = None
@@ -126,11 +125,12 @@ def changesets_from_cvslog(log, module, branch=None, entries=None, since=None):
         else:
             if last:
                 last.date = lastts
+                yield last
             last = cs
             lastts = cs.date
-            collapsed.append(cs)
 
-    return collapsed
+    if last:
+        yield last
 
 
 def _getGlobalCVSRevision(timestamp, author):
