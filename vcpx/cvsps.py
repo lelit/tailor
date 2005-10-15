@@ -72,11 +72,9 @@ def changesets_from_cvsps(log, sincerev=None):
             msg.append(l)
             l = log.readline()
 
-        pset['log'] = ''.join(msg)
-
         assert l.startswith('Members:'), "Parse error: %s" % l
 
-        pset['entries'] = entries = []
+        entries = []
         l = log.readline()
         seen = {}
         while l.startswith('\t'):
@@ -129,7 +127,8 @@ def changesets_from_cvsps(log, sincerev=None):
             timestamp = datetime(y, m, d, hh, mm, ss)
             pset['date'] = timestamp
 
-            yield Changeset(**pset)
+            yield Changeset(pset['revision'], timestamp, pset['author'],
+                            ''.join(msg), entries)
 
 
 class CvspsWorkingDir(UpdatableSourceWorkingDir,
