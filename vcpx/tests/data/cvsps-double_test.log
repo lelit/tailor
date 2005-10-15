@@ -1,0 +1,15 @@
+---------------------
+PatchSet 819
+Date: 2004/06/26 12:05:44
+Author: ajung
+Branch: HEAD
+Tag: (none)
+Log:
+cleanup
+
+Members: 
+	Normalizer.py:1.12->1.13
+	Registry.py:1.22->1.23
+	Registry.py:1.21->1.22
+	Stopwords.py:1.9->1.10
+

@@ -1,0 +1,12 @@
+---------------------
+PatchSet 1500
+Date: 2004/05/09 17:54:22
+Author: grubert
+Branch: HEAD
+Tag: (none)
+Log:
+Tell the reason for using mbox (not wrapping long lines).
+
+Members: 
+	docutils/writers/latex2e.py:1.78->1.79
+

@@ -3,7 +3,7 @@
 # :Creato:   ven 09 lug 2004 01:43:52 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
 # :Licenza:  GNU General Public License
-# 
+#
 
 from unittest import TestCase
 from datetime import datetime
@@ -13,43 +13,17 @@ from vcpx.cvsps import changesets_from_cvsps
 class CvspsParser(TestCase):
     """Ensure the cvsps parser does its job"""
 
-    SIMPLE_TEST = """\
----------------------
-PatchSet 1500
-Date: 2004/05/09 17:54:22
-Author: grubert
-Branch: HEAD
-Tag: (none)
-Log:
-Tell the reason for using mbox (not wrapping long lines).
+    def getCvspsLog(self, testname):
+        from codecs import open
+        from os.path import join, split
 
-Members: 
-\tdocutils/writers/latex2e.py:1.78->1.79
-
-"""
-
-    DOUBLE_TEST = """\
----------------------
-PatchSet 819
-Date: 2004/06/26 12:05:44
-Author: ajung
-Branch: HEAD
-Tag: (none)
-Log:
-cleanup
-
-Members: 
-\tNormalizer.py:1.12->1.13
-\tRegistry.py:1.22->1.23
-\tRegistry.py:1.21->1.22
-\tStopwords.py:1.9->1.10
-
-"""
+        logname = join(split(__file__)[0], 'data', testname)+'.log'
+        return open(logname, 'r', 'utf-8')
 
     def testBasicBehaviour(self):
         """Verify basic cvsps log parser behaviour"""
 
-        log = StringIO(self.SIMPLE_TEST)
+        log = self.getCvspsLog('cvsps-simple_test')
         csets = changesets_from_cvsps(log)
 
         cset = csets.next()
@@ -62,7 +36,7 @@ Members:
     def testDoubleEntry(self):
         """Verify the cvsps log parser recognizes double entries"""
 
-        log = StringIO(self.DOUBLE_TEST)
+        log = self.getCvspsLog('cvsps-double_test')
         csets = changesets_from_cvsps(log)
 
         cset = csets.next()
