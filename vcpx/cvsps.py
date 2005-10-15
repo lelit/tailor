@@ -81,7 +81,10 @@ def changesets_from_cvsps(log, sincerev=None):
         seen = {}
         while l.startswith('\t'):
             if not sincerev or (sincerev<int(pset['revision'])):
-                file,revs = l[1:-1].split(':')
+                # Cannot use split here, file may contain ':'
+                cpos = l.rindex(':')
+                file = l[1:cpos]
+                revs = l[cpos+1:-1]
                 fromrev,torev = revs.strip().split('->')
 
                 # Due to the fuzzy mechanism, cvsps may group

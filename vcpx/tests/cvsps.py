@@ -56,3 +56,13 @@ class CvspsParser(TestCase):
         self.assertEqual(e.name, "Stopwords.py")
         self.assertEqual(e.old_revision, '1.9')
         self.assertEqual(e.new_revision, '1.10')
+
+    def testColonInName(self):
+        """Verify the parser handle ':' in names"""
+
+        log = self.getCvspsLog('cvsps-colon_in_name')
+        csets = changesets_from_cvsps(log)
+
+        cset = csets.next()
+        e = cset.entries[0]
+        self.assertEqual(e.name, 'somedir/with/fancy:named_file.txt')

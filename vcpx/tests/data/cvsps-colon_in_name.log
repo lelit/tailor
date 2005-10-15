@@ -1,0 +1,12 @@
+---------------------
+PatchSet 1
+Date: 2005/11/17 17:54:22
+Author: lele
+Branch: fake
+Tag: (none)
+Log:
+Just a test
+
+Members: 
+	somedir/with/fancy:named_file.txt:1.7->1.8
+
