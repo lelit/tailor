@@ -161,10 +161,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _renamePathname(self, oldentry, newentry):
         """Rename an entry"""
 
+        from os import rename
         from os.path import join
 
         # bzr does the rename itself as well
-        os.rename(join(self.basedir, newentry), join(self.basedir, oldentry))
+        rename(join(self.basedir, newentry), join(self.basedir, oldentry))
 
         self._b.rename_one(oldentry, newentry)
 
