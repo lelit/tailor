@@ -205,6 +205,7 @@ class StateFile(object):
                 else:
                     sf = open(self.filename, 'w')
                     dump(last_applied, sf)
+                    dump(None, sf)
                     sf.close()
 
                 unlink(journal.name)
