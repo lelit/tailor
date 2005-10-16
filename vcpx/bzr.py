@@ -18,8 +18,6 @@ from bzrlib.branch import Branch
 from bzrlib.errors import BzrError
 from bzrlib.osutils import compact_date, rand_bytes
 from binascii import hexlify
-import os
-import os.path
 import re
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
@@ -151,8 +149,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _renamePathname(self, oldentry, newentry):
         """Rename an entry"""
 
+        from os.path import join
+
         # bzr does the rename itself as well
-        os.rename(os.path.join(self.basedir, newentry), os.path.join(self.basedir, oldentry))
+        os.rename(join(self.basedir, newentry), join(self.basedir, oldentry))
 
         self._b.rename_one(oldentry, newentry)
 
