@@ -15,10 +15,6 @@ __docformat__ = 'reStructuredText'
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.branch import Branch
-from bzrlib.errors import BzrError
-from bzrlib.osutils import compact_date, rand_bytes
-from binascii import hexlify
-import re
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
@@ -115,6 +111,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
+        from binascii import hexlify
+        from re import search
+        from bzrlib.osutils import compact_date, rand_bytes
 
         logmessage = []
         if patchname:
@@ -128,7 +127,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         timestamp = int(mktime(date.timetuple()))
 
         # Guess sane email address
-        email = re.search("<(.*@.*)>", author)
+        email = search("<(.*@.*)>", author)
         if email:
             email = email.group(1)
         else:
