@@ -42,15 +42,15 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] ArX, Baazar-NG, Codeville, Git and Mercurial systems may be
+.. [#] ArX, Codeville, Git and Mercurial systems may be
        used only as the `target` backend, since the `source` support
        isn't coded yet. Contributions on these backends will be very
        appreciated, since I do not use them enough to figure out the
        best way to get pending changes and build tailor ChangeSets out
        of them.
 
-       To the opposite, Bazaar and Tla are supported only as source
-       systems.
+       To the opposite, Bazaar (1.0, not Bazaar-NG) and Tla are
+       supported only as source systems.
 
 .. _arx: http://www.nongnu.org/arx/
 .. _bazaar: http://bazaar.canonical.com/
