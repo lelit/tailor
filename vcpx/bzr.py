@@ -109,6 +109,19 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             return
         self._b.add(new_entries)
 
+    def _addSubtree(self, subdir):
+        """
+        Add a whole subtree.
+
+        Use smart_add_branch() to add a whole new subtree to the
+        repository.
+        """
+
+        from os.path import join
+        from bzrlib.add import smart_add_branch
+
+        smart_add_branch(self._b, [join(self.basedir, subdir)], recurse=True)
+
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
         from binascii import hexlify
