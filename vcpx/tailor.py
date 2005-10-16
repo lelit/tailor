@@ -101,9 +101,8 @@ class Tailorizer(Project):
             self.log_error("Unable to get changes for '%s'" % self.name, True)
             raise
 
-        nchanges = len(pendings)
-        if nchanges:
-            self.log_info("Applying %d upstream changesets" % nchanges)
+        if pendings.pending():
+            self.log_info("Applying pending upstream changesets")
 
             try:
                 last, conflicts = dwd.applyPendingChangesets(

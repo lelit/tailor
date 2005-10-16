@@ -20,7 +20,6 @@ class Statefile(TestCase):
 
         sf = StateFile(rontf.name, None)
         sf.setPendingChangesets([1,2,3,4,5])
-        self.assertEqual(len(sf), 5)
 
         sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), None)
@@ -37,16 +36,18 @@ class Statefile(TestCase):
         cs = sf.next()
         sf.applied()
         self.assertEqual(sf.lastAppliedChangeset(), 2)
-        self.assertEqual(len(sf), 3)
         sf.finalize()
+        self.assertEqual(sf.pending(), True)
 
         sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), 2)
-        self.assertEqual(len(sf), 3)
         i = 3
         for cs in sf:
             self.assertEqual(cs, i)
+            sf.applied()
             i += 1
+        sf.finalize()
+        self.assertEqual(sf.pending(), False)
 
     def testJournal(self):
         """Verify the state file journal"""
@@ -57,7 +58,6 @@ class Statefile(TestCase):
 
         sf = StateFile(rontf.name, None)
         sf.setPendingChangesets([1,2,3,4,5])
-        self.assertEqual(len(sf), 5)
 
         sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), None)
@@ -67,12 +67,10 @@ class Statefile(TestCase):
         cs = sf.next()
         sf.applied()
         self.assertEqual(sf.lastAppliedChangeset(), 2)
-        self.assertEqual(len(sf), 3)
         self.assert_(exists(rontf.name + '.journal'))
 
         sf = StateFile(rontf.name, None)
         self.assertEqual(sf.lastAppliedChangeset(), 2)
-        self.assertEqual(len(sf), 3)
         i = 3
         for cs in sf:
             self.assertEqual(cs, i)
@@ -85,7 +83,6 @@ class Statefile(TestCase):
 
         sf = StateFile(rontf.name, None)
         sf.setPendingChangesets([1,2,3,4,5])
-        self.assertEqual(len(sf), 5)
 
         reversed = list(sf.reversed())
         self.assertEqual(reversed, [5,4,3,2,1])

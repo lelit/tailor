@@ -44,7 +44,6 @@ class StateFile(object):
         self.archive = None
         self.last_applied = None
         self.current = None
-        self.queuelen = 0
 
     def _load(self):
         """
@@ -59,11 +58,11 @@ class StateFile(object):
         try:
             self.archive = open(self.filename)
             self.last_applied = load(self.archive)
-            self.queuelen = load(self.archive)
+            # compatibility dummity: there was the queuelen here
+            load(self.archive)
         except IOError:
             self.archive = None
             self.last_applied = None
-            self.queuelen = 0
 
     def _write(self, changesets):
         """
@@ -74,7 +73,7 @@ class StateFile(object):
         try:
             sf = open(self.filename, 'w')
             dump(self.last_applied, sf)
-            dump(len(changesets), sf)
+            dump(None, sf)
             for cs in changesets:
                 dump(cs, sf)
             sf.close()
@@ -96,13 +95,7 @@ class StateFile(object):
             self.archive.close()
             self.archive = None
             raise StopIteration
-        self.queuelen -= 1
         return self.current
-
-    def __len__(self):
-        if self.archive is None:
-            self._load()
-        return self.queuelen
 
     def reversed(self):
         """
@@ -126,6 +119,24 @@ class StateFile(object):
         for pos in index:
             self.archive.seek(pos)
             yield load(self.archive)
+
+    def pending(self):
+        """
+        Verify if there's at least one changeset still pending.
+        """
+
+        if self.archive is None:
+            self._load()
+        if self.archive is None:
+            return False
+
+        pos = self.archive.tell()
+        try:
+            next = load(self.archive)
+        except EOFError:
+            next = None
+        self.archive.seek(pos)
+        return next is not None
 
     def applied(self, current=None):
         """
@@ -169,22 +180,18 @@ class StateFile(object):
                 if exists(self.filename):
                     old = open(self.filename)
                     load(old) # last applied
-                    queuelen = load(old)
-                    if queuelen>0:
+                    load(old) # dummy queuelen
+                    try:
                         cs = load(old)
                         # Skip already applied changesets
                         while cs <> last_applied:
-                            queuelen -= 1
-                            if queuelen==0:
-                                break
                             cs = load(old)
-
+                    except EOFError:
+                        cs = None
                     sf = open(self.filename + '.new', 'w')
                     dump(last_applied, sf)
-                    if queuelen==0:
-                        dump(queuelen, sf)
-                    else:
-                        dump(queuelen-1, sf)
+                    dump(None, sf)
+                    if cs is not None:
                         while True:
                             try:
                                 cs = load(old)
@@ -198,7 +205,6 @@ class StateFile(object):
                 else:
                     sf = open(self.filename, 'w')
                     dump(last_applied, sf)
-                    dump(0, sf)
                     sf.close()
 
                 unlink(journal.name)

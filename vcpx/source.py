@@ -184,8 +184,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         pending changesets.
         """
 
-        pending = len(self.state_file)
-        if pending == 0:
+        if not self.state_file.pending():
             last = self.state_file.lastAppliedChangeset()
             if last:
                 revision = last.revision
