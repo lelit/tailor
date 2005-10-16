@@ -286,10 +286,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 "Something went wrong: there are no changesets since "
                 "revision '%s'" % revision)
         if timestamp == 'INITIAL':
-            cset = csets.next()
-            timestamp = cset.date.isoformat(sep=' ')
+            initialcset = csets.next()
+            timestamp = initialcset.date.isoformat(sep=' ')
         else:
-            cset = None
+            initialcset = None
 
         if not exists(join(self.basedir, 'CVS')):
             # CVS does not handle "checkout -d multi/level/subdir", so
@@ -344,18 +344,30 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         found = False
         csets = self.state_file.reversed()
-        for cset in csets:
-            for m in cset.entries:
+
+        def already_applied(cs, entries=entries):
+            "Loop over changeset entries to determine if it's already applied."
+
+            applied = False
+            for m in cs.entries:
                 info = entries.getFileInfo(m.name)
                 if info:
-                    actualversion = info.cvs_version
-                    found = compare_cvs_revs(actualversion,m.new_revision) >= 0
-                    if not found:
+                    odversion = info.cvs_version
+                    applied = compare_cvs_revs(odversion, m.new_revision) >= 0
+                    if not applied:
                         break
+            return applied
 
+        for cset in csets:
+            found = already_applied(cset)
             if found:
                 last = cset
                 break
+
+        if not found and initialcset:
+            found = already_applied(initialcset)
+            if found:
+                last = initialcset
 
         if not found:
             raise TargetInitializationFailure(
