@@ -159,7 +159,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if sincerev:
             sincerev = int(sincerev)
 
-        changesets = []
         cmd = self.repository.command("--cvs-direct", "-u", "-b", branch,
                                       "--root", self.repository.repository,
                                       cvsps=True)
@@ -167,9 +166,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         log = cvsps.execute(self.repository.module, stdout=PIPE, TZ='UTC')[0]
 
         for cs in changesets_from_cvsps(log, sincerev):
-            changesets.append(cs)
-
-        return changesets
+            yield cs
 
     def __maybeDeleteDirectory(self, entrydir, changeset):
         from os.path import join, exists
