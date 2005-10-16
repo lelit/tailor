@@ -357,11 +357,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 last = cset
                 break
 
-            if csets:
-                cset = csets.pop()
-            else:
-                cset = None
-
         if not found:
             raise TargetInitializationFailure(
                 "Something went wrong: unable to determine the exact upstream "
