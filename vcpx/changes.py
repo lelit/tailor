@@ -113,7 +113,7 @@ class Changeset(object):
         self.setLog(log)
         self.entries = entries or []
         self.unidiff = None        # This is the unidiff of the whole changeset
-        self.tags = other.get('tags',[])
+        self.tags = other.get('tags', None)
 
     def __eq__(self, other):
         return (self.revision == other.revision and
