@@ -8,7 +8,7 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.cvs import changesets_from_cvslog, CvsEntry
+from vcpx.cvs import changesets_from_cvslog
 
 class CvsEntry(TestCase):
     """Tests for the CvsEntry class"""
@@ -17,6 +17,7 @@ class CvsEntry(TestCase):
         """Verify CvsEntry parser"""
 
         from datetime import datetime, timedelta
+        from vcpx.cvs import CvsEntry
 
         tagline = "/version.txt/1.16.2.1/Tue Jul 13 12:49:02 2004//T1.16.2.1"
         e = CvsEntry(tagline)
