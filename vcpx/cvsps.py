@@ -280,15 +280,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             elif ' ' in revision:
                 revision, timestamp = revision.split(' ', 1)
 
-        # Trasform the whole history in a list, since we need to
-        # visit it beginning from the last element
-        csets = list(self.getPendingChangesets(revision))
+        csets = self.getPendingChangesets(revision)
         if not csets:
             raise TargetInitializationFailure(
                 "Something went wrong: there are no changesets since "
                 "revision '%s'" % revision)
         if timestamp == 'INITIAL':
-            cset = csets[0]
+            cset = csets.next()
             timestamp = cset.date.isoformat(sep=' ')
         else:
             cset = None
@@ -345,9 +343,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # out the actual cvsps revision
 
         found = False
-        if cset is None and csets:
-            cset = csets.pop()
-        while cset is not None:
+        csets = self.state_file.reversed()
+        for cset in csets:
             for m in cset.entries:
                 info = entries.getFileInfo(m.name)
                 if info:
