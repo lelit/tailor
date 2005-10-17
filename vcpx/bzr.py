@@ -65,9 +65,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         revisions = self._b.missing_revisions(parent)
 
-        changesets = [self._changesetFromRevision(parent, ri) for ri in revisions]
-
-        return changesets
+        for ri in revisions:
+            yield self._changesetFromRevision(parent, ri)
 
     def _applyChangeset(self, changeset):
         """
