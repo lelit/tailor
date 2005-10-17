@@ -183,9 +183,29 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         repository as well in the new working directory.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, split
+        from bzrlib import IGNORE_FILENAME
 
         if not exists(join(self.basedir, self.repository.METADIR)):
+            ignored = []
+
+            # Omit our own log...
+            logfile = self.repository.project.logfile
+            dir, file = split(logfile)
+            if dir == self.basedir:
+                ignored.append(file)
+
+            # ... and state file
+            sfname = self.repository.project.state_file.filename
+            dir, file = split(sfname)
+            if dir == self.basedir:
+                ignored.append(file)
+                ignored.append(file+'.journal')
+
+            if ignored:
+                bzrignore = open(join(self.basedir, IGNORE_FILENAME), 'wU')
+                bzrignore.write('\n'.join(ignored))
+
             self._b = Branch.initialize(self.basedir)
         else:
             self._b = Branch.open(self.basedir)
