@@ -178,6 +178,9 @@ class ChangeSetCollector(object):
         self.module = module
         """The CVS module name."""
 
+        self.__lookahead = []
+        """The look ahead line stack."""
+
         self.__parseCvsLog(branch, entries, since)
 
     def __iter__(self):
@@ -203,7 +206,7 @@ class ChangeSetCollector(object):
             self.changesets[key] = cs
             return cs.addEntry(entry, revision)
 
-    def __readline(self):
+    def __readline(self, lookahead=False):
         """
         Read a line from the log, intercepting the directory being listed.
 
@@ -211,7 +214,15 @@ class ChangeSetCollector(object):
         the root of the working copy.
         """
 
-        l = self.log.readline()
+        if lookahead:
+            l = self.log.readline()
+            self.__lookahead.append(l)
+            return l
+        else:
+            if self.__lookahead:
+                l = self.__lookahead.pop(0)
+            else:
+                l = self.log.readline()
         while l.startswith('cvs rlog: Logging '):
             currentdir = l[18:-1]
             # If the directory starts with the module name, keep
@@ -288,8 +299,14 @@ class ChangeSetCollector(object):
             l = self.__readline()
 
         mesg = []
-        while l not in (None, '', self.inter_sep, self.intra_sep):
-            mesg.append(l[:-1])
+        while True:
+            if l == self.intra_sep:
+                if self.__readline(True).startswith('revision '):
+                    break
+            if l in (None, '', self.inter_sep):
+                break
+            if l<>self.intra_sep:
+                mesg.append(l[:-1])
             l = self.__readline()
 
         if len(mesg)==1 and mesg[0] == '*** empty log message ***':
@@ -372,10 +389,10 @@ class ChangeSetCollector(object):
                 if m is not None:
                     expected_revisions = int(m.group(1))
                 l = self.__readline()
-
             last = previous = None
             found_revisions = 0
-            while l <> self.inter_sep:
+            while (l <> self.inter_sep or
+                   not self.__readline(True).startswith('revision ')):
                 cs = self.__parseRevision(entry)
                 if cs is None:
                     break

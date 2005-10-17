@@ -343,3 +343,15 @@ head: 1.2
         self.assertEqual(entry.name, 'ComposestarVSAddin/ConfigManager.cs')
         self.assertEqual(entry.new_revision, '1.3')
         self.assertEqual(entry.action_kind, entry.DELETED)
+
+    def testHumanTouched(self):
+        """Verify how the parser behaves with manually tweaked logs"""
+
+        log = self.getCvsLog('cvs-human_touched')
+        csets = list(changesets_from_cvslog(log, 'src'))
+
+        cset = csets[0]
+        self.assertEqual(cset.date, datetime(1994, 5, 17, 13, 03, 36))
+
+        cset = csets[-1]
+        self.assertEqual(cset.date, datetime(1995, 12, 30, 18, 32, 46))
