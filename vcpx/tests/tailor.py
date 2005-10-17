@@ -22,7 +22,7 @@ remove-first-log-line = False
 patch-name-format = None
 verbose = True
 state-file = tailor.state
-start-revision = Version 0.9.16
+start-revision = Version 0.9.17
 
 [darcs2bzr]
 target = bzr:tailor
