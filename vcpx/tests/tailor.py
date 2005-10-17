@@ -35,11 +35,15 @@ source = bzr:tailor
 root-directory = /tmp/tailor-tests/bzr2darcs
 target = darcs:bzrtailor
 patch-name-format = %(revision)s
+start-revision = INITIAL
 
 [darcs:tailor]
 
 [bzr:tailor]
 python-path = /opt/src/bzr.dev
+repository = /tmp/tailor-tests/darcs2bzr
+
+[darcs:bzrtailor]
 
 
 [darcs2cdv]
