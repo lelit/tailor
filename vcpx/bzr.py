@@ -72,7 +72,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         Apply given remote revision to workingdir
         """
+        from bzrlib.merge import merge
+
+        oldrevno = self._b.revno()
         self._b.append_revision(changeset.revision)
+        merge((self.basedir, -1), (self.basedir, oldrevno),
+              check_clean=False, this_dir=self.basedir)
         return [] # No conflicts for now
 
     def _checkoutUpstreamRevision(self, revision):
