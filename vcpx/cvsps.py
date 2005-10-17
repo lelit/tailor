@@ -475,11 +475,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from os import walk, rename
-        from os.path import join
+        from os.path import join, exists
 
         for dir, subdirs, files in walk(self.basedir):
             if dir[-3:] == 'CVS':
                 efn = join(dir, 'Entries')
+
+                # Strangeness is a foreign word in CVS: sometime
+                # the Entries isn't there...
+                if not exists(efn):
+                    continue
+
                 f = open(efn)
                 entries = f.readlines()
                 f.close()
