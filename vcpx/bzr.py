@@ -89,11 +89,15 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         parent = Branch.open(self.repository.repository)
 
         if revision == "INITIAL":
-            self._b = copy_branch(parent, self.basedir, parent.get_rev_id(1))
+            revid = parent.get_rev_id(1)
+        elif revision == "HEAD":
+            revid = None
         else:
-            self._b = copy_branch(parent, self.basedir, revision)
+            revid = revision
 
-        return self._changesetFromRevision(parent, parent.last_revision())
+        self._b = copy_branch(parent, self.basedir, revid)
+
+        return self._changesetFromRevision(parent, revid)
 
     ## SyncronizableTargetWorkingDir
 
