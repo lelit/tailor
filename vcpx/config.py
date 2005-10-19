@@ -23,9 +23,9 @@ class Config(SafeConfigParser):
     as a dictionary.
 
     The file may be a full fledged Python script, starting
-    with the usual "#!..." notation: in this case, it gets evaluated and
+    with the usual ``"#!..."`` notation: in this case, it gets evaluated and
     its documentation becomes the actual configuration, while the functions
-    it defines may be referenced by the 'before-commit' and 'after-commit'
+    it defines may be referenced by the `before-commit` and `after-commit`
     slots.
     """
 
