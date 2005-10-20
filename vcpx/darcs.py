@@ -282,7 +282,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             cmd.extend(['--patches', escape(changeset.revision)])
 
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
-        output = pull.execute(stdout=PIPE, stderr=STDOUT)[0]
+        output = pull.execute(stdout=PIPE, stderr=STDOUT, input='y')[0]
 
         if pull.exit_status:
             raise ChangesetApplicationFailure(
