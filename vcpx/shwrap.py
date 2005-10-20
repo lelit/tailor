@@ -75,11 +75,13 @@ class ExternalCommand:
         self.log = logging.getLogger('tailor.shell')
 
     def __str__(self):
-        result = []
+        r = '$'+repr(self)
         if self.cwd:
-            result.append(self.cwd)
-            result.append(' ')
-        result.append('$')
+            r = self.cwd + ' ' + r
+        return r
+
+    def __repr__(self):
+        result = []
         needquote = False
         for arg in self._last_command or self.command:
             bs_buf = []
@@ -122,7 +124,7 @@ class ExternalCommand:
 
         from sys import stderr
         from locale import getpreferredencoding
-        import os
+        from os import environ, getcwd
         from cStringIO import StringIO
 
         self.exit_status = None
@@ -141,9 +143,11 @@ class ExternalCommand:
         if not kwargs.has_key('cwd') and self.cwd:
             kwargs['cwd'] = self.cwd
 
+        self.log.debug("Executing %r (%r)", self, kwargs.get('cwd', getcwd()))
+
         if not kwargs.has_key('env'):
             env = kwargs['env'] = {}
-            env.update(os.environ)
+            env.update(environ)
 
             for v in ['LANG', 'TZ', 'PATH']:
                 if kwargs.has_key(v):
@@ -156,7 +160,10 @@ class ExternalCommand:
         # When not in debug, redirect stderr and stdout to /dev/null
         # when the caller didn't ask for them.
         if not self.DEBUG:
-            devnull = getattr(os, 'devnull', '/dev/null')
+            try:
+                from os import devnull
+            except ImportError:
+                devnull = '/dev/null'
             if output is None:
                 output = open(devnull, 'w')
             if error is None:
