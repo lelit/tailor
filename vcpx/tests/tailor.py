@@ -16,7 +16,7 @@ target-repository = None
 use-svn-propset = False
 source-module = None
 update = True
-subdir = .
+subdir = test
 debug = False
 remove-first-log-line = False
 patch-name-format = None
@@ -100,6 +100,7 @@ keyid = tailor
 passphrase = fin che la barca va
 repository = /tmp/tailor-tests/tailor-mtn.db
 module = tailor.test
+subdir = mntside
 
 [darcs:mtntailor]
 subdir = darcside
