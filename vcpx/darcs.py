@@ -22,7 +22,8 @@ Tailorized equivalent of
 %s
 """
 
-def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
+def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
+                                 chunksize=2**15):
     """
     Parse XML output of ``darcs changes``.
 
@@ -33,13 +34,13 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None):
     """
 
     csets = changesets_from_darcschanges_unsafe(changes, unidiff,
-                                                repodir)
+                                                repodir, chunksize)
     for cs in csets:
         cs.tags = None
-    return csets
+        yield cs
 
-
-def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None):
+def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
+                                        chunksize=2**15):
     """
     Do the real work of parsing the change log, including tags.
     Warning: the tag information in the changsets returned by this
@@ -52,8 +53,8 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None):
     eventually be fixed and this function can be renamed
     changesets_from_darcschanges.
     """
-    from xml.sax import parse
-    from xml.sax.handler import ContentHandler
+    from xml.sax import make_parser
+    from xml.sax.handler import ContentHandler, ErrorHandler
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
 
@@ -141,16 +142,21 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None):
         def characters(self, data):
             self.current_field.append(data)
 
-
+    parser = make_parser()
     handler = DarcsXMLChangesHandler()
-    parse(changes, handler)
-    changesets = handler.changesets
+    parser.setContentHandler(handler)
+    parser.setErrorHandler(ErrorHandler())
 
-    # sort changeset by date
-    changesets.sort(lambda x, y: cmp(x.date, y.date))
-
-    return changesets
-
+    chunk = changes.read(chunksize)
+    while chunk:
+        parser.feed(chunk)
+        for cs in handler.changesets:
+            yield cs
+        handler.changesets = []
+        chunk = changes.read(chunksize)
+    parser.close()
+    for cs in handler.changesets:
+        yield cs
 
 class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
     """
@@ -183,8 +189,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         while l and not (l.startswith('Would pull the following changes:') or
                          l == 'No remote changes to pull in!\n'):
             l = output.readline()
-
-        changesets = []
 
         if l <> 'No remote changes to pull in!\n':
             ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
@@ -238,12 +242,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     print "Warning: skipping tag %s because I don't " \
                           "propagate tags from darcs." % name
                 else:
-                    changesets.append(cset)
+                    yield cset
 
                 while not l.strip():
                     l = output.readline()
-
-        return changesets
 
     def _applyChangeset(self, changeset):
         """
@@ -302,7 +304,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         changes = ExternalCommand(cwd=self.basedir, command=cmd)
         last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0])
         if last:
-            changeset.entries.extend(last[0].entries)
+            changeset.entries.extend(last.next().entries)
 
         return conflicts
 
@@ -334,7 +336,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if revision == 'INITIAL':
             initial = True
             cmd = self.repository.command("changes", "--xml-output",
-                                          "--repo", self.repository.repository)
+                                          "--repo", self.repository.repository,
+                                           "--reverse")
             changes = ExternalCommand(command=cmd)
             output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
@@ -345,7 +348,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                      output and output.read() or ''))
 
             csets = changesets_from_darcschanges(output)
-            changeset = csets[0]
+            changeset = csets.next()
 
             revision = 'hash %s' % changeset.darcs_hash
         else:
@@ -406,7 +409,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         last = changesets_from_darcschanges(output)
 
-        return last[0]
+        return last.next()
 
 
     ## SyncronizableTargetWorkingDir
@@ -635,7 +638,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         could be violated and mistagging could result.
         """
         cmd = self.repository.command("changes", "--from-match=not name ^TAG",
-                                      "--xml-output")
+                                      "--xml-output", "--reverse")
         changes =  ExternalCommand(cwd=self.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
         if changes.exit_status:

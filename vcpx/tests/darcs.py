@@ -49,9 +49,19 @@ class DarcsChangesParser(TestCase):
 
         csets = changesets_from_darcschanges(log)
 
-        self.assertEqual(len(csets), 2)
+        cset = csets.next()
+        self.assertEqual(cset.revision,
+                         "Fix the CVS parser to omit already seen changesets")
+        self.assertEqual(cset.author, "lele@nautilus.homeip.net")
+        self.assertEqual(cset.date, datetime(2004, 7, 16, 12, 37, 37))
+        self.assertEqual(cset.log,
+                         "Fix the CVS parser to omit already seen changesets\n"
+                         "For some unknown reasons....")
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'vcpx/cvs.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
 
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.revision,
                          "Svn log parser with test")
         self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59))
@@ -72,18 +82,6 @@ class DarcsChangesParser(TestCase):
         self.assertEqual(entry.name, 'cvsync/tests/testrepo.dump')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        cset = csets[1]
-        self.assertEqual(cset.revision,
-                         "Fix the CVS parser to omit already seen changesets")
-        self.assertEqual(cset.author, "lele@nautilus.homeip.net")
-        self.assertEqual(cset.date, datetime(2004, 7, 16, 12, 37, 37))
-        self.assertEqual(cset.log,
-                         "Fix the CVS parser to omit already seen changesets\n"
-                         "For some unknown reasons....")
-        entry = cset.entries[0]
-        self.assertEqual(entry.name, 'vcpx/cvs.py')
-        self.assertEqual(entry.action_kind, entry.UPDATED)
-
     def testOnTailorOwnRepo(self):
         """Verify fetching unidiff of a darcs patch"""
 
@@ -95,7 +93,7 @@ class DarcsChangesParser(TestCase):
         csets = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0],
                                              unidiff=True,
                                              repodir=getcwd())
-        unidiff = csets[0].unidiff
+        unidiff = csets.next().unidiff
         head = unidiff.split('\n')[0]
         self.assertEqual(head, 'Thu Jun  9 22:17:11 CEST 2005  zooko@zooko.com')
 
@@ -145,7 +143,7 @@ class DarcsChangesParser(TestCase):
 
         log = StringIO(self.ALL_ACTIONS_TEST)
 
-        csets = changesets_from_darcschanges(log)
+        csets = list(changesets_from_darcschanges(log))
 
         self.assertEqual(len(csets), 4)
 
@@ -187,3 +185,11 @@ class DarcsChangesParser(TestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'a.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
+
+    def testIncrementalParser(self):
+        """Verify that the parser is effectively incremental"""
+
+        log = StringIO(self.ALL_ACTIONS_TEST)
+
+        csets = list(changesets_from_darcschanges(log, chunksize=100))
+        self.assertEqual(len(csets), 4)
