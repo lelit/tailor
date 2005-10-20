@@ -81,7 +81,6 @@ class Project(object):
         self.config = config
         self.name = name
         self.dwd = None
-        self.logger = None
         self._load()
 
     def __str__(self):
@@ -96,7 +95,7 @@ class Project(object):
 
         from os import makedirs
         from os.path import join, exists, expanduser, abspath
-        import logging
+        from logging import FileHandler, getLogger, DEBUG, Formatter
 
         self.verbose = self.config.get(self.name, 'verbose', False)
         self.rootdir = abspath(expanduser(self.config.get(self.name,
@@ -132,47 +131,24 @@ class Project(object):
                                      'unknown function: %s' %
                                      (self.name, str(e)))
 
-        self.logger = logging.getLogger('tailor.%s' % self.name)
-        self.logfile = join(self.rootdir,
-                            expanduser(self.config.get(self.name, 'logfile',
-                                                       'tailor.log')))
-        hdlr = logging.FileHandler(self.logfile)
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-        hdlr.setFormatter(formatter)
-        self.logger.addHandler(hdlr)
-        self.logger.setLevel(logging.INFO)
+        self.logfile = join(self.rootdir, self.name + '.log')
+        self.log = getLogger('tailor.project.%s' % self.name)
+        if self.config.get(self.name, 'debug'):
+            self.log.setLevel(DEBUG)
 
-    def log_info(self, what):
-        """
-        Print some info on the log and, in verbose mode, to stdout as well.
-        """
+        rootlog = getLogger('tailor')
+        formatter = Formatter(self.config.get(
+            self.name, 'log-format',
+            '%(asctime)s %(levelname)8s: %(message)s', raw=True),
+                              self.config.get(
+            self.name, 'log-datefmt', '%Y-%m-%d %H:%M:%S', raw=True))
+        self.loghandler = FileHandler(self.logfile)
+        self.loghandler.setFormatter(formatter)
+        self.loghandler.setLevel(DEBUG)
+        rootlog.addHandler(self.loghandler)
 
-        if self.logger:
-            self.logger.info(what)
-
-        if self.verbose:
-            print what
-
-    def log_error(self, what, exc=False):
-        """
-        Print an error message, possibly with an exception traceback,
-        to the log and to stdout as well.
-        """
-
-        if self.logger:
-            if exc:
-                self.logger.exception(what)
-            else:
-                self.logger.error(what)
-
-        print "Error:", what,
-        if exc:
-            from sys import exc_info
-
-            ei = exc_info()
-            print ' -- Exception %s: %s' % ei[0:2]
-        else:
-            print
+    def __del__(self):
+        getLogger.removeHandler(self.loghandler)
 
     def __loadRepository(self, which):
         """

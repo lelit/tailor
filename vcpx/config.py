@@ -16,8 +16,34 @@ from ConfigParser import SafeConfigParser, NoSectionError, DEFAULTSECT
 class ConfigurationError(Exception):
     """Configuration error"""
 
+LOGGING_SUPER_SECTION = '[[logging]]'
+BASIC_LOGGING_CONFIG = """\
+[formatters]
+keys = console
+
+[formatter_console]
+format =  %(asctime)s [%(levelname).1s] %(message)s
+datefmt = %H:%M:%S
+
+[loggers]
+keys = root
+
+[logger_root]
+level = INFO
+handlers = console
+
+[handlers]
+keys = console
+
+[handler_console]
+class = StreamHandler
+formatter = console
+args = (sys.stdout,)
+level = INFO
+"""
+
 class Config(SafeConfigParser):
-    """
+    '''
     Syntactic sugar around standard ConfigParser, for easier access to
     the configuration. To access any single project use the configuration
     as a dictionary.
@@ -27,25 +53,46 @@ class Config(SafeConfigParser):
     its documentation becomes the actual configuration, while the functions
     it defines may be referenced by the `before-commit` and `after-commit`
     slots.
-    """
+
+    This is where the logging system gets initialized, possibly merging a
+    logging specific configuration section, introduced by a *supersection*
+    ``[[logging]]``.
+    '''
 
     def __init__(self, fp, defaults):
         from cStringIO import StringIO
+        from logging.config import fileConfig
 
         SafeConfigParser.__init__(self)
         self.namespace = {}
+
+        loggingcfg = None
         if fp:
             if fp.read(2) == '#!':
                 fp.seek(0)
                 exec fp.read() in globals(), self.namespace
-                config = StringIO(self.namespace['__doc__'])
-                self.readfp(config)
+                config = self.namespace['__doc__']
             else:
                 fp.seek(0)
-                self.readfp(fp)
+                config = fp.read()
+
+            # Look for a [[logging]] separator, that introduce a
+            # standard logging  section
+            cfgs = config.split(LOGGING_SUPER_SECTION)
+            if len(cfgs) == 2:
+                tailorcfg, loggingcfg = cfgs
+            else:
+                tailorcfg = cfgs[0]
+
+            self.readfp(StringIO(tailorcfg))
+
         # Override the defaults with the command line options
         if defaults:
             self._defaults.update(defaults)
+
+        fileConfig(StringIO(BASIC_LOGGING_CONFIG), defaults)
+        if loggingcfg:
+            fileConfig(StringIO(loggingcfg), defaults)
 
     def projects(self):
         """

@@ -193,18 +193,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
                 if not info:
-                    self.log_info("promoting '%s' to ADDED at "
-                                  "revision %s" % (e.name, e.new_revision))
+                    self.log.debug("promoting %r to ADDED at "
+                                   "revision %s", e.name, e.new_revision)
                     e.action_kind = e.ADDED
                     self.__createParentCVSDirectories(changeset, e.name)
                 elif info.cvs_version == e.new_revision:
-                    self.log_info("skipping '%s' since it's already "
-                                  "at revision %s" % (e.name, e.new_revision))
+                    self.log.debug("skipping %r since it's already "
+                                   "at revision %s", e.name, e.new_revision)
                     continue
             elif e.action_kind == e.DELETED:
                 if not exists(join(self.basedir, e.name)):
-                    self.log_info("skipping '%s' since it's already "
-                                  "deleted" % e.name)
+                    self.log.debug("skipping %r since it's already "
+                                   "deleted", e.name)
                     self.__maybeDeleteDirectory(split(e.name)[0], changeset)
                     continue
             elif e.action_kind == e.ADDED and e.new_revision is None:
@@ -234,10 +234,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                         if retry>3:
                             break
                         delay = 2**retry
-                        self.log_info("%s returned status %s, "
-                                      "retrying in %d seconds..." %
-                                      (str(cvsup), cvsup.exit_status,
-                                       delay))
+                        self.log.warning("%s returned status %s, "
+                                         "retrying in %d seconds...",
+                                         str(cvsup), cvsup.exit_status, delay)
                         sleep(retry)
                     else:
                         break
@@ -247,7 +246,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                         "%s returned status %s" % (str(cvsup),
                                                    cvsup.exit_status))
 
-                self.log_info("%s updated to %s" % (e.name, e.new_revision))
+                self.log.debug("%s updated to %s", e.name, e.new_revision)
 
             if e.action_kind == e.DELETED:
                 self.__maybeDeleteDirectory(split(e.name)[0], changeset)
@@ -313,10 +312,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     if retry>3:
                         break
                     delay = 2**retry
-                    self.log_info("%s returned status %s, "
-                                  "retrying in %d seconds..." %
-                                  (str(checkout), checkout.exit_status,
-                                   delay))
+                    self.log.warning("%s returned status %s, "
+                                     "retrying in %d seconds...",
+                                     str(checkout), checkout.exit_status,
+                                     delay)
                     sleep(retry)
                 else:
                     break
@@ -326,7 +325,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     "%s returned status %s" % (str(checkout),
                                                checkout.exit_status))
         else:
-            self.log_info("Using existing %s" % self.basedir)
+            self.log.info("Using existing %s", self.basedir)
 
         if self.repository.tag_entries:
             self.__forceTagOnEachEntry()
@@ -374,7 +373,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 "Something went wrong: unable to determine the exact upstream "
                 "revision of the checked out tree in '%s'" % self.basedir)
         else:
-            self.log_info("working copy up to cvs revision %s" % last.revision)
+            self.log.info("Working copy up to revision %s", last.revision)
 
         return last
 

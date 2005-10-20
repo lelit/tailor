@@ -420,8 +420,8 @@ class ChangeSetCollector(object):
                 previous = last
 
             if expected_revisions <> found_revisions:
-                print 'warning: expecting %s revisions, read %s revisions' % \
-                      ( expected_revisions, found_revisions )
+                self.log.warning('Expecting %s revisions, found %s',
+                                 expected_revisions, found_revisions)
 
         # If entries is not given, don't try to desume tags information
         if entries is None:
@@ -594,10 +594,10 @@ class CvsWorkingDir(CvspsWorkingDir):
                 if retry>3:
                     break
                 delay = 2**retry
-                self.log_info("%s returned status %s, "
-                              "retrying in %d seconds..." %
-                              (str(cvslog), cvslog.exit_status,
-                               delay))
+                self.log.info("%s returned status %s, "
+                              "retrying in %d seconds...",
+                              str(cvslog), cvslog.exit_status,
+                              delay)
                 sleep(retry)
             else:
                 break

@@ -277,7 +277,7 @@ class SvndumpWorkingDir(UpdatableSourceWorkingDir):
                 "Couldn't initialize the source working copy at %d, "
                 "no changesets found." % torev)
 
-        self.log_info("Working copy up to svndump revision %s" % last.revision)
+        self.log.debug("Working copy up to svndump revision %s", last.revision)
         return last
 
     def _prepareSourceRepository(self):

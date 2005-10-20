@@ -754,7 +754,58 @@ has been applied to the tree, and a sequence of pending (not yet
 applied) changesets, that may be empty. In the latter case, tailor
 will fetch latest changes from the upstream repository.
 
-        
+
+Logging
+-------
+
+Tailor uses the Python's logging module to emit noise. It's basic
+configuration is hardwired and correspond to the following::
+
+    [formatters]
+    keys = console
+
+    [formatter_console]
+    format =  %(asctime)s [%(levelname).1s] %(message)s
+    datefmt = %H:%M:%S
+
+    [loggers]
+    keys = root
+
+    [logger_root]
+    level = INFO
+    handlers = console
+
+    [handlers]
+    keys = console
+
+    [handler_console]
+    class = StreamHandler
+    formatter = console
+    args = (sys.stdout,)
+    level = INFO
+
+However, you can completely override the default adding a
+*supersection* ``[[logging]]`` to the configuration file, something
+like::
+
+    # ... usual tailor config ...
+    [project]
+    source = bzr:source
+    target = hg:target
+
+    # Here ends tailor config, and start the one for the logging
+    # module
+
+    [[logging]]
+
+    [logger_tailor.BzrRepository]
+    level = DEBUG
+    handlers = tailor.source
+
+    [handler_tailor.source]
+    class = SMTPHandler
+    args = ('localhost', 'from@abc', ['tailor@abc'], 'Tailor log')
+
 Further help
 ============
 

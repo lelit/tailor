@@ -90,6 +90,8 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 # of the queue, before the application of the patch by the
                 # source backend.
                 if not self._willApplyChangeset(c, applyable):
+                    self.log.debug('Stopping application at revisin %r',
+                                   c.revision)
                     break
 
                 # Sometime is better to wait a little while before each
@@ -99,9 +101,13 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
                 try:
                     res = self._applyChangeset(c)
+                except ChangesetApplicationFailure, e:
+                    self.log.critical("Couldn't apply changeset")
+                    self.log.debug("Reason: %s", str(e))
+                    self.log.debug("Changeset: %s", c)
+                    raise
                 except:
-                    self.log_error("Couldn't apply changeset %s" % c.revision,
-                                   exc=True)
+                    self.log.exception("Couldn't apply changeset\n%s", c)
                     raise
 
                 if res:
@@ -113,14 +119,24 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     try:
                         self._handleConflict(c, conflicts, res)
                     except KeyboardInterrupt:
-                        self.log_info("INTERRUPTED BY THE USER!")
+                        self.log.warning("INTERRUPTED BY THE USER!")
                         break
 
                 # Give the opportunity to subclasses to skip the commit on
                 # the target backend.
                 if self._didApplyChangeset(c, replayable):
                     if replay:
-                        replay(c)
+                        try:
+                            replay(c)
+                        except ChangesetApplicationFailure, e:
+                            self.log.critical("Couldn't reply changeset")
+                            self.log.debug("Reason: %s", str(e))
+                            self.log.debug("Changeset: %s", c)
+                            raise
+                        except:
+                            self.log.exception("Couldn't reply changeset\n%s",
+                                               c)
+                            raise
 
                 # Remember it for the finally clause and notify the state
                 # file so that it gets removed from the queue

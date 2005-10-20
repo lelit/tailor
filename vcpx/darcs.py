@@ -182,7 +182,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(
-                "%s returned status %d saying %r" %
+                "%s returned status %d saying\n%s" %
                 (str(pull), pull.exit_status, output.read()))
 
         l = output.readline()
@@ -239,8 +239,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                                    phash.hexdigest())
 
                 if name.startswith('tagged'):
-                    print "Warning: skipping tag %s because I don't " \
-                          "propagate tags from darcs." % name
+                    self.log.warning("Skipping tag %s because I don't "
+                                     "propagate tags from darcs.", name)
                 else:
                     yield cset
 
@@ -286,7 +286,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if pull.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying %r" %
+                "%s returned status %d saying\n%s" %
                 (str(pull), pull.exit_status, output.read()))
 
         conflicts = []
@@ -294,8 +294,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         while line:
             if line.startswith('We have conflicts in the following files:'):
                 files = output.readline()[:-1].split('./')[1:]
-                self.log_info("Conflict after 'darcs pull': '%s'" %
-                              ' '.join(files))
+                self.log.warning("Conflict after 'darcs pull': %s",
+                                 ' '.join(files))
                 conflicts.extend(['./' + f for f in files])
             line = output.readline()
 
@@ -317,7 +317,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         be none of them in tailor context.
         """
 
-        self.log_info("Reverting changes to '%s', to solve the conflict" %
+        self.log.info("Reverting changes to %s, to solve the conflict",
                       ' '.join(conflict))
         cmd = self.repository.command("revert", "--all")
         revert = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -343,7 +343,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             if changes.exit_status:
                 raise ChangesetApplicationFailure(
-                    "%s returned status %d saying %r" %
+                    "%s returned status %d saying\n%s" %
                     (str(changes), changes.exit_status,
                      output and output.read() or ''))
 
@@ -379,7 +379,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
                 if dpull.exit_status:
                     raise TargetInitializationFailure(
-                        "%s returned status %d saying %r" %
+                        "%s returned status %d saying\n%s" %
                         (str(dpull), dpull.exit_status, output.read()))
         else:
             # Use much faster 'darcs get'
@@ -394,7 +394,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             if dget.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying %r" %
+                    "%s returned status %d saying\n%s" %
                     (str(dget), dget.exit_status, output.read()))
 
         cmd = self.repository.command("changes", "--last", "1",
@@ -404,7 +404,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         if changes.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying %r" %
+                "%s returned status %d saying\n%s" %
                 (str(changes), changes.exit_status, output.read()))
 
         last = changesets_from_darcschanges(output)
@@ -591,16 +591,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     skip = True
                     break
             if skip:
-                self.log_info('Entry %r skipped per boring rules' %
-                              e.name)
+                self.log.info('Entry %r skipped per boring rules', e.name)
                 skipped = True
             else:
                 entries.append(e)
 
         # All entries are gone, don't commit this changeset
         if not entries:
-            self.log_info('All entries ignored, skipping whole '
-                          'changeset %r' % changeset.revision)
+            self.log.info('All entries ignored, skipping whole '
+                          'changeset %r', changeset.revision)
             return None
 
         if skipped:
@@ -643,7 +642,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
         if changes.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying %r" %
+                "%s returned status %d saying\n%s" %
                 (str(changes), changes.exit_status, output.read()))
 
         tags = []

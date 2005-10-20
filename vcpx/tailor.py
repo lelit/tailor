@@ -31,12 +31,13 @@ class Tailorizer(Project):
         """
 
         if self.verbose:
-            print "Changeset %s:" % changeset.revision
-            try:
-                print changeset.log
-            except UnicodeEncodeError:
-                print ">>> Non-printable changelog <<<"
-
+            self.log.info("Changeset %s", changeset.revision)
+            if changeset.log:
+                try:
+                    self.log.info("Log message:\n%s", changeset.log)
+                except UnicodeEncodeError:
+                    self.log.warning("Non-printable changelog")
+        self.log.debug("Going to apply changeset:\n%s", str(changeset))
         return True
 
     def _applied(self, changeset):
@@ -45,7 +46,7 @@ class Tailorizer(Project):
         """
 
         if self.verbose:
-            print
+            self.log.info('-*'*30)
 
     def bootstrap(self):
         """
@@ -59,67 +60,68 @@ class Tailorizer(Project):
         content into the target repository.
         """
 
-        self.log_info("Bootstrapping '%s'" % self.rootdir)
+        self.log.info("Bootstrapping %s in %r", self.name, self.rootdir)
 
         dwd = self.workingDir()
         try:
             dwd.prepareWorkingDirectory(self.source)
         except:
-            self.log_error('Cannot prepare working directory!', True)
+            self.log.critical('Cannot prepare working directory!')
             raise
 
         revision = self.config.get(self.name, 'start-revision', 'INITIAL')
         try:
             actual = dwd.checkoutUpstreamRevision(revision)
         except:
-            self.log_error("Checkout of '%s' failed!" % self.name, True)
+            self.log.critical("Checkout of %s failed!", self.name)
             raise
 
         try:
             dwd.importFirstRevision(self.source, actual,
                                         revision=='INITIAL')
         except:
-            self.log_error('Could not import checked out tree!', True)
+            self.log.critical('Could not import checked out tree in %r!',
+                              self.rootdir)
             raise
 
-        self.log_info("Bootstrap completed")
+        self.log.info("Bootstrap completed")
 
     def update(self):
         """
         Update an existing tailorized project.
         """
 
-        self.log_info("Updating '%s'" % self.name)
+        self.log.info("Updating %s in %r", self.name, self.rootdir)
 
         dwd = self.workingDir()
         try:
             pendings = dwd.getPendingChangesets()
         except KeyboardInterrupt:
-            self.log_info("Leaving '%s' unchanged, stopped by user" % self.name)
+            self.log.warning("Leaving %s unchanged, stopped by user", self.name)
             raise
         except:
-            self.log_error("Unable to get changes for '%s'" % self.name, True)
+            self.log.critical("Unable to get changes for %s", self.name)
             raise
 
         if pendings.pending():
-            self.log_info("Applying pending upstream changesets")
+            self.log.info("Applying pending upstream changesets")
 
             try:
                 last, conflicts = dwd.applyPendingChangesets(
                     applyable=self._applyable, applied=self._applied)
             except KeyboardInterrupt:
-                self.log_info("Leaving '%s' incomplete, stopped by user" %
-                              self.name)
+                self.log.warning("Leaving %s incomplete, stopped by user",
+                                 self.name)
                 raise
             except:
-                self.log_error('Upstream change application failed', True)
+                self.log.critical('Upstream change application failed')
                 raise
 
             if last:
-                self.log_info("Update completed, now at revision '%s'" %
+                self.log.info("Update completed, now at revision %s",
                               last.revision)
         else:
-            self.log_info("Update completed with no upstream changes")
+            self.log.info("Update completed with no upstream changes")
 
     def __call__(self):
         from shwrap import ExternalCommand

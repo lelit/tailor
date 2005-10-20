@@ -73,7 +73,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise GetUpstreamChangesetsFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying\n%s" %
                 (str(c), c.exit_status, err.read()))
         changesets = self.__parse_revision_logs(out.read().split())
         return changesets
@@ -129,7 +129,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             raise TargetInitializationFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying\n%s" %
                 (str(c), c.exit_status, err.read()))
 
     def __apply_changeset(self, changeset):
@@ -138,7 +138,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
         if not c.exit_status in [0, 1]:
             raise ChangesetApplicationFailure(
-                "%s returned status %d saying \"%s\"" %
+                "%s returned status %d saying\n%s" %
                 (str(c), c.exit_status, err.read()))
         return self.__parse_apply_changeset_output(changeset, out)
 
@@ -152,7 +152,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
-                    "%s returned status %d saying \"%s\"" %
+                    "%s returned status %d saying\n%s" %
                     (str(c), c.exit_status, err.read()))
             path = out.read()
         return path
@@ -169,7 +169,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             out, err = c.execute(stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying \"%s\"" %
+                    "%s returned status %d saying\n%s" %
                     (str(c), c.exit_status, err.read()))
             revision = out.readline().strip()
         return '--'.join([fqversion, revision])
@@ -183,7 +183,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             out, err = c.execute(fqrev, stdout=PIPE, stderr=PIPE)
             if c.exit_status:
                 raise GetUpstreamChangesetsFailure(
-                    "%s returned status %d saying \"%s\"" %
+                    "%s returned status %d saying\n%s" %
                     (str(c), c.exit_status, err.read()))
             err = None
             try:

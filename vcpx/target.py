@@ -98,14 +98,19 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         changeset.
         """
 
-        changeset = self._adaptChangeset(changeset)
+        try:
+            changeset = self._adaptChangeset(changeset)
+        except:
+            self.log.exception("Failure adapting: %s", str(changeset))
+            raise
+
         if changeset is None:
             return
 
         try:
             self._replayChangeset(changeset)
         except:
-            self.log_error(str(changeset), exc=True)
+            self.log.exception("Failure replaying: %s", str(changeset))
             raise
         patchname, log = self.__getPatchNameAndLog(changeset)
         entries = self._getCommitEntries(changeset)
@@ -115,7 +120,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             for tag in changeset.tags:
                 self._tag(tag)
 
-        self._dismissChangeset(changeset)
+        try:
+            self._dismissChangeset(changeset)
+        except:
+            self.log.exception("Failure dismissing: %s", str(changeset))
+            raise
 
     def __getPrefixToSource(self):
         """

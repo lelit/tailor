@@ -46,10 +46,13 @@ class Repository(object):
         or "target".
         """
 
+        from logging import getLogger
+
         self.name = name
         self.project = project
         self.which = which
         self._load(project.config)
+        self.log = getLogger('vcpx.%s.%s' % (self.__class__.__name__, which))
         self._validateConfiguration()
 
     def __str__(self):
@@ -122,21 +125,6 @@ class Repository(object):
                                          "by %r does not exist in %r!" %
                                          (self.EXECUTABLE, self.name,
                                           getenv('PATH')))
-
-    def log_info(self, what):
-        """
-        Print some info on the log and, in verbose mode, to stdout as well.
-        """
-
-        self.project.log_info(what)
-
-    def log_error(self, what, exc=False):
-        """
-        Print an error message, possibly with an exception traceback,
-        to the log and to stdout as well.
-        """
-
-        self.project.log_error(what, exc)
 
     def workingDir(self):
         """
@@ -323,7 +311,7 @@ class SvnRepository(Repository):
                                      "Subversion repository as 'module'")
 
         if not self.module.startswith('/'):
-            self.project.log_info("Prepending '/' to module")
+            self.log.info("Prepending '/' to module %r", self.module)
             self.module = '/' + self.module
 
     def workingDir(self):
@@ -338,7 +326,7 @@ class SvndumpRepository(Repository):
         Repository._validateConfiguration(self)
 
         if self.module and self.module.startswith('/'):
-            self.project.log_info("Removing starting '/' from module")
+            self.log.info("Removing starting '/' from module %r", self.module)
             self.module = self.module[1:]
         if self.module and not self.module.endswith('/'):
             self.module = self.module+'/'

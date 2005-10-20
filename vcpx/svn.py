@@ -256,28 +256,27 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 if retry>3:
                     break
                 delay = 2**retry
-                self.log_info("%s returned status %s saying %r, "
-                              "retrying in %d seconds..." %
-                              (str(svnup), svnup.exit_status, err.read(),
-                               delay))
+                self.log.error("%s returned status %s saying\n%s",
+                               str(svnup), svnup.exit_status, err.read())
+                self.log.warning("Retrying in %d seconds...", delay)
                 sleep(delay)
             else:
                 break
 
         if svnup.exit_status:
             raise ChangesetApplicationFailure(
-                "%s returned status %s saying %r" % (str(svnup),
+                "%s returned status %s saying\n%s" % (str(svnup),
                                                      svnup.exit_status,
                                                      err.read()))
 
-        self.log_info("%s updated to %s" % (
-            ','.join([e.name for e in changeset.entries]),
-            changeset.revision))
+        self.log.debug("%s updated to %s",
+                       ','.join([e.name for e in changeset.entries]),
+                       changeset.revision)
 
         result = []
         for line in out:
             if len(line)>2 and line[0] == 'C' and line[1] == ' ':
-                self.log_info("Conflict after 'svn update': '%s'" % line)
+                self.log.warning("Conflict after svn update: %r", line)
                 result.append(line[2:-1])
 
         return result
@@ -328,7 +327,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
             if svnlog.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying %r" %
+                    "%s returned status %d saying\n%s" %
                     (str(svnlog), svnlog.exit_status, err.read()))
 
             csets = changesets_from_svnlog(out,
@@ -339,7 +338,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             initial = False
 
         if not exists(join(self.basedir, '.svn')):
-            self.log_info("checking out a working copy")
+            self.log.debug("checking out a working copy")
             cmd = self.repository.command("co", "--quiet",
                                           "--revision", revision)
             svnco = ExternalCommand(command=cmd)
@@ -348,11 +347,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                      self.basedir, stdout=PIPE, stderr=PIPE)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %s saying %r" % (str(svnco),
+                    "%s returned status %s saying\n%s" % (str(svnco),
                                                          svnco.exit_status,
                                                          err.read()))
         else:
-            self.log_info("%s already exists, assuming it's a svn working dir" % self.basedir)
+            self.log.debug("%r already exists, assuming it's "
+                           "a svn working dir", self.basedir)
 
         if not initial:
             if revision=='HEAD':
@@ -364,7 +364,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
             if svnlog.exit_status:
                 raise TargetInitializationFailure(
-                    "%s returned status %d saying %r" %
+                    "%s returned status %d saying\n%s" %
                     (str(changes), changes.exit_status, err.read()))
 
             csets = changesets_from_svnlog(out,
@@ -373,7 +373,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         last = csets.next()
 
-        self.log_info("working copy up to svn revision %s" % last.revision)
+        self.log.debug("Working copy up to svn revision %s", last.revision)
 
         return last
 
@@ -438,7 +438,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         out, err = commit.execute(entries, stdout=PIPE, stderr=PIPE, LANG='C')
 
         if commit.exit_status:
-            raise ChangesetApplicationFailure("%s returned status %d saying %r"
+            raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
                                               % (str(commit),
                                                  commit.exit_status,
                                                  err.read()))

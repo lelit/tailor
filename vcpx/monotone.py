@@ -525,9 +525,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 # if the branch has multiple heads then we could end
                 # up with only part of the ancestry graph.
                 if len(revision)>1:
-                    self.log_info("Branch '%s' has multiple heads. There "
+                    self.log.info("Branch %r has multiple heads. There "
                                   "is no guarantee to reconstruct the "
-                                  "full history." % module)
+                                  "full history.", module)
                 cmd = [ self.repository.command("automate","ancestors",
                                                 "--db",dbrepo),
                         self.repository.command("automate","toposort",
@@ -606,7 +606,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if not exists(join(self.basedir, 'MT')):
 
             # actually check out the revision
-            self.log_info("checking out a working copy")
+            self.log.info("Checking out a working copy")
             cmd = self.repository.command("co",
                                           "--db", self.repository.repository,
                                           "--revision", effrev,
@@ -618,8 +618,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 raise TargetInitializationFailure(
                     "'monotone co' returned status %s" % mtl.exit_status)
         else:
-            self.log_info("%s already exists, assuming it's a monotone "
-                          "working dir already populated" % self.basedir)
+            self.log.debug("%r already exists, assuming it's a monotone "
+                           "working dir already populated", self.basedir)
 
 
         # Ok, now the workdir contains the checked out revision. We
@@ -646,8 +646,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         fnames=[]
         for fn in names:
             if isdir(join(self.basedir, fn)):
-                self.log_info("ignoring addition of directory '%s' (%s)" %
-                              (fn, join(self.basedir, fn)) )
+                self.log.debug("ignoring addition of directory %r", fn)
             else:
                 fnames.append(fn)
         if len(fnames):
@@ -706,12 +705,12 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # we ignore those errors ...
         if commit.exit_status:
             text = error.read()
-            if text.find("monotone: misuse: no changes to commit") == -1:
-                self.log_error(text)
+            if not "monotone: misuse: no changes to commit" in text:
+                self.log.error("Monotone commit said: %s", text)
                 raise ChangesetApplicationFailure(
                     "%s returned status %s" % (str(commit),commit.exit_status))
             else:
-                self.log_info("No changes to commit - changeset ignored")
+                self.log.info("No changes to commit - changeset ignored")
 
     def _removePathnames(self, names):
         """
@@ -727,11 +726,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         for fn in names:
             dum, error = drop.execute(fn, stderr=PIPE)
             if drop.exit_status:
-                if not error.read().find("drop <directory>"):
-                    self.log_error(error.read())
+                errtext = error.read()
+                if not "drop <directory>" in errtext:
+                    self.log.error("Monotone drop said: %s", errtext)
                     raise ChangesetApplicationFailure("%s returned status %s" %
                                                       (str(drop),
                                                        drop.exit_status))
+                else:
+                    self.log.debug("Ignoring monotone whining about drop "
+                                   "of directory %r",  fn)
 
     def _renamePathname(self, oldname, newname):
         """
@@ -746,7 +749,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                                   "Both names already exist" %
                                                   (oldname, newname))
             renames(join(self.basedir, newname), join(self.basedir, oldname))
-            self.log_info("preparing to rename %s->%s" % (oldname, newname))
+            self.log.debug("Renamed %r back to %r", oldname, newname)
 
         cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.basedir, command=cmd)

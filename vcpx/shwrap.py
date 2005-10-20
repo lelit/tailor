@@ -13,6 +13,7 @@ try:
 except ImportError:
     # Older snakes
     from _process import Popen, PIPE, STDOUT
+import logging
 
 class ReopenableNamedTemporaryFile:
     """
@@ -70,6 +71,8 @@ class ExternalCommand:
 
         self._last_command = None
         """Last executed command."""
+
+        self.log = logging.getLogger('tailor.shell')
 
     def __str__(self):
         result = []
@@ -130,8 +133,7 @@ class ExternalCommand:
         else:
             self._last_command.extend(args)
 
-        if self.VERBOSE:
-            stderr.write(str(self))
+        self.log.info(self)
 
         if self.DRY_RUN:
             return
@@ -181,11 +183,10 @@ class ExternalCommand:
         out, err = process.communicate(input=input)
 
         self.exit_status = process.returncode
-        if self.VERBOSE:
-            if not self.exit_status:
-                stderr.write(" [Ok]\n")
-            else:
-                stderr.write(" [Status %s]\n" % self.exit_status)
+        if not self.exit_status:
+            self.log.info("[Ok]")
+        else:
+            self.log.warning("[Status %s]", self.exit_status)
 
         # For debug purposes, copy the output to our stderr when hidden above
         if self.DEBUG:

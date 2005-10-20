@@ -18,27 +18,15 @@ class WorkingDir(object):
 
     def __init__(self, repository):
         from os.path import join, normpath
+        from logging import getLogger
 
         self.repository = repository
         if repository.subdir:
             self.basedir = normpath(join(repository.rootdir, repository.subdir))
         else:
             self.basedir = repository.rootdir
-
-    def log_info(self, what):
-        """
-        Print some info on the log and, in verbose mode, to stdout as well.
-        """
-
-        self.repository.log_info(what)
-
-    def log_error(self, what, exc=False):
-        """
-        Print an error message, possibly with an exception traceback,
-        to the log and to stdout as well.
-        """
-
-        self.repository.log_error(what, exc)
+        self.log = getLogger('tailor.%s.%s' % (self.__class__.__name__,
+                                               repository.name))
 
     def setStateFile(self, state_file):
         """
@@ -46,4 +34,3 @@ class WorkingDir(object):
         """
 
         self.state_file = state_file
-
