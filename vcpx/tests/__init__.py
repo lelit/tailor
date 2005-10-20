@@ -5,7 +5,7 @@
 # :Licenza:  GNU General Public License
 #
 
-import sys
+import sys, logging
 from unittest import TestProgram, TestSuite
 
 from shwrap import *
@@ -42,6 +42,7 @@ Examples:
 """
 
     def __init__(self):
+        logging.disable(logging.CRITICAL)
         del sys.argv[1]
         TestProgram.__init__(self, module='vcpx.tests', argv=sys.argv)
 
