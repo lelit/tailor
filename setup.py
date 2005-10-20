@@ -4,20 +4,23 @@ from distutils.core import setup
 from vcpx.tailor import __version__ as VERSION
 
 setup(name='tailor',
-    version=VERSION,
-    author='Lele Gaifax',
-    author_email='lele@nautilus.homeip.net',
-    packages=['vcpx'],
-    scripts=['tailor'],
-    description='A tool to migrate changesets between ArX, Bazaar-ng, '
-      'Codeville, CVS, Darcs, Git, Mercurial, Monotone, Subversion and Tla '
-      'repositories.',
-    long_description="""\
-This script makes it easier to keep the upstream changes merged in
-a branch of a product, storing needed information such as the upstream
-URI and revision in special properties on the branched directory.
+      version=VERSION,
+      author='Lele Gaifax',
+      author_email='lele@nautilus.homeip.net',
+      packages=['vcpx'],
+      scripts=['tailor'],
+      description='A tool to migrate changesets between various kinds of '
+      'version control system.',
+      long_description="""\
+With its ability to "translate the history" from one VCS kind to another,
+this script makes it easier to keep the upstream changes merged in
+a own branch of a product.
+
+Tailor is able to fetch the history from Arch, Bazaar-NG, CVS, Darcs
+Monotone or Subversion and rewrite it over Bazaar-NG, CVS, Darcs, Git,
+Mercurial, Monotone and Subversion.
 """,
-    classifiers=[
+      classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -26,6 +29,5 @@ URI and revision in special properties on the branched directory.
         'Operating System :: Unix',
         'Topic :: Software Development :: Version Control',
         'License :: GNU General Public License',
-        # Don't know the stability. Took a guess
         ]
     )
