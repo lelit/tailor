@@ -75,6 +75,10 @@ class Project(object):
     """
 
     def __init__(self, name, config):
+        """
+        Initialize a new instance representing the project `name`.
+        """
+
         if not config.has_section(name):
             raise UnknownProjectError("'%s' is not a known project" % name)
 
