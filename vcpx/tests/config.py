@@ -72,3 +72,13 @@ class Configuration(TestCase):
         project4 = Project('project4', config)
         wd = project4.workingDir()
         self.assert_(not wd.shared_basedirs)
+
+    def testWithLogging(self):
+        """Verify a configuration containing also a [[logging]] section"""
+
+        from logging import getLogger
+
+        config = Config(self.getTestConfiguration("config-with_logging"), {})
+
+        logger = getLogger()
+        self.assertEqual(logger.handlers[0].formatter._fmt, 'DUMMY')
