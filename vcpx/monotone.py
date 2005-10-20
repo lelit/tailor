@@ -719,7 +719,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
         # Monotone currently doesn't allow removing a directory, so we
         # must remove every item separately and intercept monotone
-        # directory errore messages.  We can't just filter the
+        # directory error messages.  We can't just filter the
         # directories, because the wc doesn't contain them anymore ...
         cmd = self.repository.command("drop")
         drop = ExternalCommand(cwd=self.basedir, command=cmd)
