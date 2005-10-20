@@ -24,9 +24,8 @@ class SvnLogParser(TestCase):
 
         log = self.getSvnLog('svn-simple_rename_test')
         csets = changesets_from_svnlog(log, 'file:///tmp/t/repo', '/trunk')
-        self.assertEqual(len(csets), 2)
 
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.author, 'lele')
         self.assertEqual(cset.date, datetime(2004,11,12,15,05,37,134366))
         self.assertEqual(cset.log, 'create tree')
@@ -40,7 +39,7 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.name, 'dir/a.txt')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        cset = csets[1]
+        cset = csets.next()
         self.assertEqual(cset.author, 'lele')
         self.assertEqual(cset.date, datetime(2004,11,12,15,06,04,193650))
         self.assertEqual(cset.log, 'rename dir')
@@ -51,14 +50,15 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'dir')
 
+        self.assertRaises(StopIteration, csets.next)
+
     def testRenameOutBehaviour(self):
         """Verify svn log parser behaves correctly on renames out of scope"""
 
         log = self.getSvnLog('svn-rename_out_test')
         csets = changesets_from_svnlog(log, 'http://srv/svn/Shtoom', '/trunk')
-        self.assertEqual(len(csets), 1)
 
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(cset.author, 'anthony')
         self.assertEqual(cset.date, datetime(2004,11,9,6,54,20,709243))
         self.assertEqual(cset.log, 'Moving to a /sandbox')
@@ -68,11 +68,13 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.name, 'shtoom/tmp')
         self.assertEqual(entry.action_kind, entry.DELETED)
 
+        self.assertRaises(StopIteration, csets.next)
+
     def testCopyAndRename(self):
         """Verify svn log parser behaves correctly on copies"""
 
         log = self.getSvnLog('svn-copy_and_rename_test')
-        csets = changesets_from_svnlog(log, 'file:///tmp/rep', '/test')
+        csets = list(changesets_from_svnlog(log, 'file:///tmp/rep', '/test'))
         self.assertEqual(len(csets), 4)
 
         cset = csets[1]
@@ -110,11 +112,12 @@ class SvnLogParser(TestCase):
 
         log = self.getSvnLog('svn-svn_r_event_test')
         csets = changesets_from_svnlog(log, 'file:///tmp/rep', '/trunk')
-        self.assertEqual(len(csets), 2)
 
-        cset = csets[1]
+        cset = csets.next()
+
+        cset = csets.next()
         self.assertEqual(cset.author, 'cmlenz')
-        self.assertEqual(cset.date, datetime(2005,3,21, 8,34,02,522947))
+        self.assertEqual(cset.date, datetime(2005,3,21, 8,34, 2,522947))
         self.assertEqual(len(cset.entries), 7)
 
         entry = cset.entries[0]
@@ -142,11 +145,13 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.name, 'trac/tests/environment.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
+        self.assertRaises(StopIteration, csets.next)
+
     def testTrackingRoot(self):
         """Verify we are able to track the root of the repository"""
 
         log = self.getSvnLog('svn-svn_repos_root_test')
-        csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/')
+        csets = list(changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/'))
         self.assertEqual(len(csets), 4)
 
         cset = csets[1]
@@ -170,9 +175,7 @@ class SvnLogParser(TestCase):
         log = self.getSvnLog('svn-pydist_strange_case')
         csets = changesets_from_svnlog(log, 'http://srv/svn', '/py/dist')
 
-        self.assertEqual(len(csets), 1)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(len(cset.entries), 3)
 
         entry = cset.entries[0]
@@ -188,6 +191,8 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.name, 'py/documentation/test.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
+        self.assertRaises(StopIteration, csets.next)
+
     def testUnicode(self):
         """Verify svn parser returns unicode strings"""
 
@@ -195,13 +200,13 @@ class SvnLogParser(TestCase):
         csets = changesets_from_svnlog(log, 'http://srv/plone/CMFPlone',
                                        '/branches/2.1')
 
-        self.assertEqual(len(csets), 1)
-
-        log = csets[0].log
+        log = csets.next().log
         self.assertEqual(type(log), type(u'€'))
         self.assertEqual(len(log), 91)
         self.assertRaises(UnicodeEncodeError, log.encode, 'iso-8859-1')
         self.assertEqual(len(log.encode('ascii', 'ignore')), 90)
+
+        self.assertRaises(StopIteration, csets.next)
 
     def testCopyAndReplace(self):
         """Verify the svn parser handle copy+replace"""
@@ -209,9 +214,7 @@ class SvnLogParser(TestCase):
         log = self.getSvnLog('svn-copy_and_replace_test')
         csets = changesets_from_svnlog(log, 'http://srv/repos/trac', '/trunk')
 
-        self.assertEqual(len(csets), 1)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(len(cset.entries), 7)
 
         entry = cset.entries[0]
@@ -242,9 +245,7 @@ class SvnLogParser(TestCase):
         csets = changesets_from_svnlog(log, 'http://srv/samba',
                                        '/branches/SAMBA_4_0')
 
-        self.assertEqual(len(csets), 1)
-
-        cset = csets[0]
+        cset = csets.next()
         self.assertEqual(len(cset.entries), 3)
 
         entry = cset.entries[0]
@@ -258,3 +259,11 @@ class SvnLogParser(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'source/nsswitch/wb_common.c')
         self.assertEqual(entry.action_kind, entry.ADDED)
+
+    def testIncrementalParser(self):
+        """Verify that the svn log parser is effectively incremental"""
+
+        log = self.getSvnLog('svn-svn_repos_root_test')
+        csets = list(changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/',
+                                            chunksize=100))
+        self.assertEqual(len(csets), 4)

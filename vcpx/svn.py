@@ -17,9 +17,9 @@ from source import UpdatableSourceWorkingDir, \
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from config import ConfigurationError
 
-def changesets_from_svnlog(log, repository, module):
-    from xml.sax import parse
-    from xml.sax.handler import ContentHandler
+def changesets_from_svnlog(log, repository, module, chunksize=2**15):
+    from xml.sax import make_parser
+    from xml.sax.handler import ContentHandler, ErrorHandler
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
 
@@ -182,9 +182,21 @@ def changesets_from_svnlog(log, repository, module):
         def characters(self, data):
             self.current_field.append(data)
 
+    parser = make_parser()
     handler = SvnXMLLogHandler()
-    parse(log, handler)
-    return handler.changesets
+    parser.setContentHandler(handler)
+    parser.setErrorHandler(ErrorHandler())
+
+    chunk = log.read(chunksize)
+    while chunk:
+        parser.feed(chunk)
+        for cs in handler.changesets:
+            yield cs
+        handler.changesets = []
+        chunk = log.read(chunksize)
+    parser.close()
+    for cs in handler.changesets:
+        yield cs
 
 
 class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
