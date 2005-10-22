@@ -71,6 +71,7 @@ class MonotoneChangeset(Changeset):
 
         Changeset.__init__(self, revision=revision, date=None, author=None, log="")
         self.lin_ancestor = linearized_ancestor
+        self.real_ancestors = None
 
     def __eq__(self, other):
         return (self.revision == other.revision)
@@ -81,7 +82,9 @@ class MonotoneChangeset(Changeset):
     def __str__(self):
         s = [Changeset.__str__(self)]
         s.append('linearized ancestor: %s' % self.lin_ancestor)
-        s.append('real ancestor(s): %s' % ','.join(self.real_ancestors))
+        s.append('real ancestor(s): %s' %
+                 self.real_ancestors and ','.join(self.real_ancestors)
+                 or 'None')
         return '\n'.join(s)
 
     def update(self, real_dates, authors, log, real_ancestors, branches):
