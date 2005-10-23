@@ -247,7 +247,7 @@ class Config(SafeConfigParser):
             value = default
 
         if not raw:
-            value = self._interpolate(section, option, value, d)
+            value = self._interpolate(section, option, str(value), d)
 
         if value == 'None':
             return default
