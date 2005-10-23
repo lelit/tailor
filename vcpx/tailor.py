@@ -132,7 +132,6 @@ class Tailorizer(Project):
         def pconfig(option, raw=False):
             return self.config.get(self.name, option, raw=raw)
 
-        ExternalCommand.VERBOSE = pconfig('verbose')
         ExternalCommand.DEBUG = pconfig('debug')
         encoding = pconfig('encoding')
         if encoding:

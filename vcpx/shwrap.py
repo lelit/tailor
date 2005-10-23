@@ -44,9 +44,6 @@ class ReopenableNamedTemporaryFile:
 class ExternalCommand:
     """Wrap a single command to be executed by the shell."""
 
-    VERBOSE = True
-    """Print the executed command on stderr, at each run."""
-
     DEBUG = False
     """Print the output of the command, when not PIPEd to the caller."""
 

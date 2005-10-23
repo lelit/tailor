@@ -5,7 +5,7 @@
 # :Licenza:  GNU General Public License
 #
 
-import sys, logging
+import sys
 from unittest import TestProgram, TestSuite
 
 from shwrap import *
@@ -17,8 +17,6 @@ from config import *
 from statefile import *
 from tailor import *
 from svndump import *
-
-ExternalCommand.VERBOSE = False
 
 class TailorTest(TestProgram):
     """A command-line program that runs a set of tests; this is primarily
@@ -42,7 +40,6 @@ Examples:
 """
 
     def __init__(self):
-        logging.disable(logging.CRITICAL)
         del sys.argv[1]
         TestProgram.__init__(self, module='vcpx.tests', argv=sys.argv)
 
