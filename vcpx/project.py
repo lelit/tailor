@@ -99,7 +99,8 @@ class Project(object):
 
         from os import makedirs
         from os.path import join, exists, expanduser, abspath
-        from logging import FileHandler, getLogger, DEBUG, Formatter
+        from logging import getLogger, CRITICAL, DEBUG, FileHandler, \
+             StreamHandler, Formatter
 
         self.verbose = self.config.get(self.name, 'verbose', False)
         self.rootdir = abspath(expanduser(self.config.get(self.name,
@@ -110,6 +111,21 @@ class Project(object):
         self.subdir = self.config.get(self.name, 'subdir')
         if not self.subdir:
             self.subdir = '.'
+
+        self.logfile = join(self.rootdir, self.name + '.log')
+        self.log = getLogger('tailor.project.%s' % self.name)
+        if self.config.get(self.name, 'debug'):
+            self.log.setLevel(DEBUG)
+        tailorlog = getLogger('tailor')
+        formatter = Formatter(self.config.get(
+            self.name, 'log-format',
+            '%(asctime)s %(levelname)8s: %(message)s', raw=True),
+                              self.config.get(
+            self.name, 'log-datefmt', '%Y-%m-%d %H:%M:%S', raw=True))
+        self.loghandler = FileHandler(self.logfile)
+        self.loghandler.setFormatter(formatter)
+        self.loghandler.setLevel(DEBUG)
+        tailorlog.addHandler(self.loghandler)
 
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
@@ -135,24 +151,17 @@ class Project(object):
                                      'unknown function: %s' %
                                      (self.name, str(e)))
 
-        self.logfile = join(self.rootdir, self.name + '.log')
-        self.log = getLogger('tailor.project.%s' % self.name)
-        if self.config.get(self.name, 'debug'):
-            self.log.setLevel(DEBUG)
-
-        rootlog = getLogger('tailor')
-        formatter = Formatter(self.config.get(
-            self.name, 'log-format',
-            '%(asctime)s %(levelname)8s: %(message)s', raw=True),
-                              self.config.get(
-            self.name, 'log-datefmt', '%Y-%m-%d %H:%M:%S', raw=True))
-        self.loghandler = FileHandler(self.logfile)
-        self.loghandler.setFormatter(formatter)
-        self.loghandler.setLevel(DEBUG)
-        rootlog.addHandler(self.loghandler)
+        if not self.config.get(self.name, 'verbose', False):
+            # Disable console output
+            rootlog = getLogger()
+            rootlog.disabled = True
+            for h in rootlog.handlers:
+                if isinstance(h, StreamHandler):
+                    h.setLevel(CRITICAL)
 
     def __del__(self):
-        getLogger.removeHandler(self.loghandler)
+        from logging import getLogger
+        getLogger('tailor').removeHandler(self.loghandler)
 
     def __loadRepository(self, which):
         """
