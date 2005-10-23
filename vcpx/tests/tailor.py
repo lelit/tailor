@@ -241,7 +241,7 @@ class OperationalTest(TestCase):
         self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo})
         if not exists('/tmp/tailor-tests'):
             mkdir('/tmp/tailor-tests')
-            #register(rmtree, '/tmp/tailor-tests')
+            register(rmtree, '/tmp/tailor-tests')
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
