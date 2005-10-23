@@ -83,8 +83,8 @@ class MonotoneChangeset(Changeset):
         s = [Changeset.__str__(self)]
         s.append('linearized ancestor: %s' % self.lin_ancestor)
         s.append('real ancestor(s): %s' %
-                 self.real_ancestors and ','.join(self.real_ancestors)
-                 or 'None')
+                 (self.real_ancestors and ','.join(self.real_ancestors)
+                  or 'None'))
         return '\n'.join(s)
 
     def update(self, real_dates, authors, log, real_ancestors, branches):

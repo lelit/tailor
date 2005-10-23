@@ -91,7 +91,7 @@ source = darcs:tailor
 
 [monotone2darcs]
 source = monotone:tailor
-root-directory = /tmp/tailor-tests/darcs2monotone
+root-directory = /tmp/tailor-tests/monotone2darcs
 target = darcs:mtntailor
 start-revision = INITIAL
 
