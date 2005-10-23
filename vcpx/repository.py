@@ -47,12 +47,14 @@ class Repository(object):
         """
 
         from logging import getLogger
+        from weakref import ref
 
         self.name = name
-        self.project = project
         self.which = which
-        self._load(project.config)
-        self.log = getLogger('vcpx.%s.%s' % (self.__class__.__name__, which))
+        self.projectref = ref(project)
+        self._load(project)
+        self.log = getLogger('tailor.vcpx.%s.%s' % (self.__class__.__name__,
+                                                    which))
         self._validateConfiguration()
 
     def __str__(self):
@@ -62,7 +64,7 @@ class Repository(object):
             s += "\n     Module: %s" % self.module
         return s
 
-    def _load(self, config):
+    def _load(self, project):
         """
         Load the configuration for this repository.
 
@@ -78,18 +80,19 @@ class Repository(object):
         from os.path import split, expanduser
         from locale import getpreferredencoding
 
-        self.repository = config.get(self.name, 'repository') or \
-                          config.get(self.name, '%s-repository' % self.which)
+        cget = project.config.get
+        self.repository = cget(self.name, 'repository') or \
+                          cget(self.name, '%s-repository' % self.which)
         if self.repository:
             self.repository = expanduser(self.repository)
-        self.module = config.get(self.name, 'module') or \
-                      config.get(self.name, '%s-module' % self.which)
-        self.rootdir = config.get(self.name, 'root-directory',
-                                  vars={'root-directory': self.project.rootdir})
-        self.subdir = config.get(self.name, 'subdir',
-                                 vars={'subdir': self.project.subdir})
-        self.delay_before_apply = config.get(self.name, 'delay-before-apply')
-        self.encoding = config.get(self.name, 'encoding')
+        self.module = cget(self.name, 'module') or \
+                      cget(self.name, '%s-module' % self.which)
+        self.rootdir = cget(self.name, 'root-directory',
+                            vars={'root-directory': project.rootdir})
+        self.subdir = cget(self.name, 'subdir',
+                           vars={'subdir': project.subdir})
+        self.delay_before_apply = cget(self.name, 'delay-before-apply')
+        self.encoding = cget(self.name, 'encoding')
         if not self.encoding:
             self.encoding = getpreferredencoding()
 
@@ -121,6 +124,8 @@ class Repository(object):
                     if ok:
                         break
             if not ok:
+                self.log.critical("Cannot find external command %r",
+                                  self.EXECUTABLE)
                 raise ConfigurationError("The command %r used "
                                          "by %r does not exist in %r!" %
                                          (self.EXECUTABLE, self.name,
@@ -139,7 +144,11 @@ class Repository(object):
         try:
             wdmod = __import__(modname, globals(), locals(), [wdname])
             workingdir = getattr(wdmod, wdname)
+        except SyntaxError, e:
+            self.log.exception("Cannot import %r from %r", wdname, modname)
+            raise InvocationError("Cannot import %r: %s" % (wdname, e))
         except (AttributeError, ImportError), e:
+            self.log.critical("Cannot import %r from %r", wdname, modname)
             raise InvocationError("%r is not a known VCS kind: %s" %
                                   (self.kind, e))
 
@@ -164,17 +173,17 @@ class Repository(object):
 class ArxRepository(Repository):
     METADIR = '_arx'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'arx-command', 'arx')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'arx-command', 'arx')
 
 
 class BzrRepository(Repository):
     METADIR = '.bzr'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        ppath = config.get(self.name, 'python-path')
+    def _load(self, project):
+        Repository._load(self, project)
+        ppath = project.config.get(self.name, 'python-path')
         if ppath:
             from sys import path
 
@@ -184,26 +193,26 @@ class BzrRepository(Repository):
 class CdvRepository(Repository):
     METADIR = '.cdv'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'cdv-command', 'cdv')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'cdv-command', 'cdv')
 
 
 class CgRepository(Repository):
     METADIR = '.git'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'cg-command', 'cg')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'cg-command', 'cg')
 
 
 class CvsRepository(Repository):
     METADIR = 'CVS'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'cvs-command', 'cvs')
-        self.tag_entries = config.get(self.name, 'tag-entries', 'True')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'cvs-command', 'cvs')
+        self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
 
     def _validateConfiguration(self):
         from os.path import split
@@ -215,6 +224,7 @@ class CvsRepository(Repository):
             self.module = split(self.repository)[1]
 
         if not self.module:
+            self.log.critical('Missing module information')
             raise ConfigurationError("Must specify a repository and maybe "
                                      "a module also")
 
@@ -225,42 +235,42 @@ class CvspsRepository(CvsRepository):
             kwargs['executable'] = self.__cvsps
         return CvsRepository.command(self, *args, **kwargs)
 
-    def _load(self, config):
-        CvsRepository._load(self, config)
-        self.__cvsps = config.get(self.name, 'cvsps-command', 'cvsps')
-        self.tag_entries = config.get(self.name, 'tag-entries', 'True')
+    def _load(self, project):
+        CvsRepository._load(self, project)
+        self.__cvsps = project.config.get(self.name, 'cvsps-command', 'cvsps')
+        self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
 
 
 class DarcsRepository(Repository):
     METADIR = '_darcs'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'darcs-command', 'darcs')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'darcs-command', 'darcs')
 
 
 class GitRepository(Repository):
     METADIR = '.git'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'git-command', 'git')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
 
 
 class HgRepository(Repository):
     METADIR = '.hg'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'hg-command', 'hg')
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'hg-command', 'hg')
 
 
 class HglibRepository(Repository):
     METADIR = '.hg'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        ppath = config.get(self.name, 'python-path')
+    def _load(self, project):
+        Repository._load(self, project)
+        ppath = project.config.get(self.name, 'python-path')
         if ppath:
             from sys import path
 
@@ -271,12 +281,13 @@ class HglibRepository(Repository):
 class MonotoneRepository(Repository):
     METADIR = 'MT'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'monotone-command', 'monotone')
-        self.keyid = config.get(self.name, 'keyid')
-        self.passphrase = config.get(self.name, 'passphrase')
-        self.keyfile = config.get(self.name, 'keyfile')
+    def _load(self, project):
+        Repository._load(self, project)
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'monotone-command', 'monotone')
+        self.keyid = cget(self.name, 'keyid')
+        self.passphrase = cget(self.name, 'passphrase')
+        self.keyfile = cget(self.name, 'keyfile')
 
 
 class SvnRepository(Repository):
@@ -287,13 +298,14 @@ class SvnRepository(Repository):
             kwargs['executable'] = self.__svnadmin
         return Repository.command(self, *args, **kwargs)
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'svn-command', 'svn')
-        self.__svnadmin = config.get(self.name, 'svnadmin-command', 'svnadmin')
-        self.use_propset = config.get(self.name, 'use-propset', False)
-        self.filter_badchars = config.get(self.name, 'filter-badchars', False)
-        self.use_limit = config.get(self.name, 'use-limit', True)
+    def _load(self, project):
+        Repository._load(self, project)
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'svn-command', 'svn')
+        self.__svnadmin = cget(self.name, 'svnadmin-command', 'svnadmin')
+        self.use_propset = cget(self.name, 'use-propset', False)
+        self.filter_badchars = cget(self.name, 'filter-badchars', False)
+        self.use_limit = cget(self.name, 'use-limit', True)
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError
@@ -335,18 +347,18 @@ class SvndumpRepository(Repository):
 class TlaRepository(Repository):
     METADIR = '{arch}'
 
-    def _load(self, config):
-        Repository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'tla-command', 'tla')
-        self.IGNORE_IDS = config.get(self.name, 'ignore-ids', False)
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'tla-command', 'tla')
+        self.IGNORE_IDS = project.config.get(self.name, 'ignore-ids', False)
         if self.IGNORE_IDS:
             self.EXTRA_METADIRS = ['.arch-ids']
 
 
 class BazRepository(TlaRepository):
-    def _load(self, config):
-        TlaRepository._load(self, config)
-        self.EXECUTABLE = config.get(self.name, 'baz-command', 'baz')
+    def _load(self, project):
+        TlaRepository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'baz-command', 'baz')
 
     def command(self, *args, **kwargs):
         if args:

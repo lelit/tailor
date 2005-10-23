@@ -79,7 +79,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 remaininglog = ''
 
         patchname = self.PATCH_NAME_FORMAT % {
-            'project': self.repository.project.name,
+            'project': self.repository.projectref().name,
             'revision': changeset.revision,
             'author': changeset.author,
             'date': changeset.date,
@@ -132,8 +132,9 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         or None when not using shared directories, or there's no offset.
         """
 
-        ssubdir = self.repository.project.source.subdir
-        tsubdir = self.repository.project.target.subdir
+        project = self.repository.projectref()
+        ssubdir = project.target.subdir
+        tsubdir = project.target.subdir
         if self.shared_basedirs and ssubdir <> tsubdir:
             if tsubdir == '.':
                 prefix = ssubdir
@@ -221,10 +222,11 @@ class SyncronizableTargetWorkingDir(WorkingDir):
 
         adapted = self._adaptEntries(changeset)
         if adapted:
-            if self.repository.project.before_commit:
+            project = self.repository.projectref()
+            if project.before_commit:
                 adapted = copy(adapted)
 
-                for adapter in self.repository.project.before_commit:
+                for adapter in project.before_commit:
                     if not adapter(self, adapted):
                         return None
         return adapted
@@ -238,8 +240,9 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         particular kind of changeset.
         """
 
-        if self.repository.project.after_commit:
-            for farewell in self.repository.project.after_commit:
+        project = self.repository.projectref()
+        if project.after_commit:
+            for farewell in project.after_commit:
                 farewell(self, changeset)
 
     def _getCommitEntries(self, changeset):

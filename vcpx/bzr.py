@@ -158,7 +158,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                     hexlify(rand_bytes(8)))
         self._b.commit(logmessage, committer=author,
                        specific_files=entries, rev_id=revision_id,
-                       verbose=self.repository.project.verbose,
+                       verbose=self.repository.projectref().verbose,
                        timestamp=timestamp)
 
     def _removePathnames(self, entries):
@@ -190,13 +190,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             ignored = []
 
             # Omit our own log...
-            logfile = self.repository.project.logfile
+            logfile = self.repository.projectref().logfile
             dir, file = split(logfile)
             if dir == self.basedir:
                 ignored.append(file)
 
             # ... and state file
-            sfname = self.repository.project.state_file.filename
+            sfname = self.repository.projectref().state_file.filename
             dir, file = split(sfname)
             if dir == self.basedir:
                 ignored.append(file)

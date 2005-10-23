@@ -91,7 +91,7 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        project = self.repository.project
+        project = self.repository.projectref()
         self._ui = ui.ui(project.verbose,
                          project.config.get(self.repository.name,
                                             'debug', False),

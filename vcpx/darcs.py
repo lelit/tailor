@@ -533,13 +533,13 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                             for md in IGNORED_METADIRS])
 
             # Eventually omit our own log...
-            logfile = self.repository.project.logfile
+            logfile = self.repository.projectref().logfile
             if logfile.startswith(self.basedir):
                 ignored.append('^%s$' %
                                escape(logfile[len(self.basedir)+1:]))
 
             # ... and state file
-            sfname = self.repository.project.state_file.filename
+            sfname = self.repository.projectref().state_file.filename
             if sfname.startswith(self.basedir):
                 sfrelname = sfname[len(self.basedir)+1:]
                 ignored.append('^%s$' % escape(sfrelname))
