@@ -11,6 +11,7 @@ Handle the configuration details.
 
 __docformat__ = 'reStructuredText'
 
+from cStringIO import StringIO
 from ConfigParser import SafeConfigParser, NoSectionError, DEFAULTSECT
 
 class ConfigurationError(Exception):
@@ -60,9 +61,6 @@ class Config(SafeConfigParser):
     '''
 
     def __init__(self, fp, defaults):
-        from cStringIO import StringIO
-        from logging.config import fileConfig
-
         SafeConfigParser.__init__(self)
         self.namespace = {}
 
@@ -90,9 +88,123 @@ class Config(SafeConfigParser):
         if defaults:
             self._defaults.update(defaults)
 
-        fileConfig(StringIO(BASIC_LOGGING_CONFIG), defaults)
-        if loggingcfg:
-            fileConfig(StringIO(loggingcfg), defaults)
+        self._setupLogging(loggingcfg and loggingcfg or BASIC_LOGGING_CONFIG)
+
+    def _setupLogging(self, config):
+        """
+        Tailor own's approach at file based logging configuration.
+        """
+
+        import logging, logging.handlers
+
+        cp = SafeConfigParser()
+        cp.readfp(StringIO(config), self._defaults)
+
+        #first, do the formatters...
+        flist = cp.get("formatters", "keys")
+        if flist:
+            flist = flist.split(',')
+            formatters = {}
+            for form in flist:
+                sectname = "formatter_%s" % form
+                opts = cp.options(sectname)
+                if "format" in opts:
+                    fs = cp.get(sectname, "format", 1)
+                else:
+                    fs = None
+                if "datefmt" in opts:
+                    dfs = cp.get(sectname, "datefmt", 1)
+                else:
+                    dfs = None
+                f = logging.Formatter(fs, dfs)
+                formatters[form] = f
+        #next, do the handlers...
+        try:
+            hlist = cp.get("handlers", "keys")
+            if hlist:
+                handlers = {}
+                fixups = [] #for inter-handler references
+                for hand in hlist.split(','):
+                    try:
+                        sectname = "handler_%s" % hand
+                        klass = cp.get(sectname, "class")
+                        opts = cp.options(sectname)
+                        if "formatter" in opts:
+                            fmt = cp.get(sectname, "formatter")
+                        else:
+                            fmt = None
+                        klass = eval(klass, vars(logging))
+                        args = cp.get(sectname, "args")
+                        args = eval(args, vars(logging))
+                        h = apply(klass, args)
+                        if "level" in opts:
+                            level = cp.get(sectname, "level")
+                            h.setLevel(logging._levelNames[level])
+                        if fmt:
+                            h.setFormatter(formatters[fmt])
+                        #temporary hack for FileHandler and MemoryHandler.
+                        if klass == logging.handlers.MemoryHandler:
+                            if "target" in opts:
+                                target = cp.get(sectname,"target")
+                            else:
+                                target = ""
+                            if len(target):
+                                # the target handler may not be loaded
+                                # yet, so keep for later...
+                                fixups.append((h, target))
+                        handlers[hand] = h
+                    except:
+                        #if an error occurs when instantiating a
+                        #handler, too bad this could happen
+                        #e.g. because of lack of privileges
+                        raise #pass
+                #now all handlers are loaded, fixup inter-handler references...
+                for h,t in fixups:
+                    h.setTarget(handlers[t])
+            #at last, the loggers...first the root...
+            llist = cp.get("loggers", "keys")
+            if llist:
+                llist = llist.split(',')
+            llist.remove("root")
+            sectname = "logger_root"
+            root = logging.root
+            opts = cp.options(sectname)
+            if "level" in opts:
+                level = cp.get(sectname, "level")
+                root.setLevel(logging._levelNames[level])
+            for h in root.handlers[:]:
+                root.removeHandler(h)
+            hlist = cp.get(sectname, "handlers")
+            if hlist:
+                for h in hlist.split(','):
+                    root.addHandler(handlers[h])
+            #and now the others...
+            for log in llist:
+                sectname = "logger_%s" % log
+                qn = cp.get(sectname, "qualname", log)
+                opts = cp.options(sectname)
+                if "propagate" in opts:
+                    propagate = cp.getint(sectname, "propagate")
+                else:
+                    propagate = 1
+                logger = logging.getLogger(qn)
+                if "level" in opts:
+                    level = cp.get(sectname, "level")
+                    logger.setLevel(logging._levelNames[level])
+                for h in logger.handlers[:]:
+                    logger.removeHandler(h)
+                logger.propagate = propagate
+                logger.disabled = 0
+                hlist = cp.get(sectname, "handlers")
+                if hlist:
+                    for h in hlist.split(','):
+                        logger.addHandler(handlers[h])
+        except:
+            from sys import exc_info, stderr
+            from traceback import print_exception
+            ei = exc_info()
+            print_exception(ei[0], ei[1], ei[2], None, stderr)
+            del ei
 
     def projects(self):
         """
