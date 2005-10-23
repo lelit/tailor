@@ -169,10 +169,12 @@ class ChangeSetCollector(object):
         Loop over the modified entries and collect their logs.
         """
 
+        from logging import getLogger
+
         self.changesets = {}
         """The dictionary mapping (date, author, log) to each entry."""
 
-        self.log = log
+        self.cvslog = log
         """The log to be parsed."""
 
         self.module = module
@@ -180,6 +182,8 @@ class ChangeSetCollector(object):
 
         self.__lookahead = []
         """The look ahead line stack."""
+
+        self.log = getLogger('tailor.vcpx.cvs.collector')
 
         self.__parseCvsLog(branch, entries, since)
 
@@ -215,14 +219,14 @@ class ChangeSetCollector(object):
         """
 
         if lookahead:
-            l = self.log.readline()
+            l = self.cvslog.readline()
             self.__lookahead.append(l)
             return l
         else:
             if self.__lookahead:
                 l = self.__lookahead.pop(0)
             else:
-                l = self.log.readline()
+                l = self.cvslog.readline()
         while l.startswith('cvs rlog: Logging '):
             currentdir = l[18:-1]
             # If the directory starts with the module name, keep
@@ -236,7 +240,7 @@ class ChangeSetCollector(object):
                     self.__currentdir = currentdir[slash+1:]
                 else:
                     self.__currentdir = ''
-            l = self.log.readline()
+            l = self.cvslog.readline()
 
         return l
 
