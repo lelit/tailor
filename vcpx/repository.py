@@ -305,6 +305,7 @@ class SvnRepository(Repository):
         self.__svnadmin = config.get(self.name, 'svnadmin-command', 'svnadmin')
         self.use_propset = config.get(self.name, 'use-propset', False)
         self.filter_badchars = config.get(self.name, 'filter-badchars', False)
+        self.use_limit = config.get(self.name, 'use-limit', True)
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError

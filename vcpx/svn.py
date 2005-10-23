@@ -317,8 +317,10 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if revision == 'INITIAL':
             initial = True
             cmd = self.repository.command("log", "--verbose", "--xml",
-                                          "--limit", "1", "--stop-on-copy",
+                                          "--stop-on-copy",
                                           "--revision", "1:HEAD")
+            if self.repository.use_limit:
+                cmd.extend(["--limit", "1"])
             svnlog = ExternalCommand(command=cmd)
             out, err = svnlog.execute("%s%s" % (self.repository.repository,
                                                 self.repository.module),

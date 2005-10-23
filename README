@@ -658,6 +658,12 @@ use-propset : bool
 
   *False* by default.
 
+use-limit : bool
+  By default *True*, should be set to *False* when using old
+  Subversion clients, since ``log --limit`` was introduced with
+  version 1.2. By using this option tailor can fetch just the
+  revision it needs, instead of transfering whole history log.
+
 svndump
 %%%%%%%
 
