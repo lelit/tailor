@@ -20,7 +20,7 @@ subdir = test
 debug = False
 remove-first-log-line = False
 patch-name-format = None
-verbose = True
+verbose = False
 state-file = tailor.state
 start-revision = Version 0.9.17
 
