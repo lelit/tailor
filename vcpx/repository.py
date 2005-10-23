@@ -313,17 +313,19 @@ class SvnRepository(Repository):
         Repository._validateConfiguration(self)
 
         if not self.repository:
+            self.log.critical('Missing repository information')
             raise ConfigurationError("Must specify the root of the "
                                      "Subversion repository used "
                                      "as %s with the option "
                                      "'repository'" % self.which)
 
         if not self.module:
+            self.log.critical('Missing module information')
             raise ConfigurationError("Must specify the path within the "
                                      "Subversion repository as 'module'")
 
         if not self.module.startswith('/'):
-            self.log.info("Prepending '/' to module %r", self.module)
+            self.log.debug("Prepending '/' to module %r", self.module)
             self.module = '/' + self.module
 
     def workingDir(self):
@@ -338,7 +340,7 @@ class SvndumpRepository(Repository):
         Repository._validateConfiguration(self)
 
         if self.module and self.module.startswith('/'):
-            self.log.info("Removing starting '/' from module %r", self.module)
+            self.log.debug("Removing starting '/' from module %r", self.module)
             self.module = self.module[1:]
         if self.module and not self.module.endswith('/'):
             self.module = self.module+'/'
