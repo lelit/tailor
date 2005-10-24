@@ -466,7 +466,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        # darcs raises status 512 when it does not finding the entry,
+        # darcs raises status 512 when it does not find the entry,
         # removed by source. Since sometime a directory is left there
         # because it's not empty, darcs fails. So, do an explicit
         # remove on items that are still there.
