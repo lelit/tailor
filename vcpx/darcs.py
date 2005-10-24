@@ -473,7 +473,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         c = ExternalCommand(cwd=self.basedir,
                             command=self.repository.command("remove"))
-        c.execute([n for n in names if exists(join(self.basedir, n))])
+        existing = [n for n in names if exists(join(self.basedir, n))]
+        if existing:
+            c.execute(existing)
 
 
     def _renamePathname(self, oldname, newname):
