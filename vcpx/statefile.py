@@ -200,7 +200,11 @@ class StateFile(object):
                             dump(cs, sf)
                     sf.close()
                     old.close()
-                    unlink(self.filename)
+
+                    oldname = self.filename + '.old'
+                    if exists(oldname):
+                        unlink(oldname)
+                    rename(self.filename, oldname)
                     rename(sf.name, self.filename)
                 else:
                     sf = open(self.filename, 'w')
