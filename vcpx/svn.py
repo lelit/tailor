@@ -297,7 +297,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         lastok = self.repository.repository
         reporoot = lastok[:lastok.rfind('/')]
-        while '/' in reporoot:
+        # Don't go too far, that is, stop when you hit schema://...
+        while '//' in reporoot:
             svnls.execute(reporoot)
             if svnls.exit_status:
                 break
