@@ -686,7 +686,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             add.execute(fnames)
             if add.exit_status:
                 raise ChangesetApplicationFailure("%s returned status %s" %
-                                                  (str(add),add.exit_status))
+                                                    (str(add),add.exit_status))
 
 
     def _addSubtree(self, subdir):
@@ -806,35 +806,37 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                               "the monotone db at %r" %
                                               target_repository)
 
-        if target_repository.keyfile:
-            # a key file is available, read into the database
-            keyfile = file(target_repository.keyfile)
-            cmd = self.repository.command("read", "--db",
-                                          target_repository.repository)
-            regkey = ExternalCommand(command=cmd)
-            regkey.execute(input=keyfile)
+        if target_repository.keyid:
+            self.repository.log_info("Using key %s for commits" % (target_repository.keyid,))
         else:
-            # no keyfile specified, generate a new key - if a
-            # passphrase is defined, automatically provide it The
-            # keyid must be available
-            if not target_repository.keyid:
+            # keystore key id unspecified, look at other options
+            if target_repository.keyfile:
+                # a key file is available, read into the database
+                keyfile = file(target_repository.keyfile)
+                cmd = self.repository.command("read", "--db",
+                                              target_repository.repository)
+                regkey = ExternalCommand(command=cmd)
+                regkey.execute(input=keyfile)
+            elif target_repository.keygenid:
+                # requested a new key
+                cmd = self.repository.command("genkey", "--db",
+                                              target_repository.repository)
+                regkey = ExternalCommand(command=cmd)
+                if target_repository.passphrase:
+                    passp="%s\n%s\n" % (target_repository.passphrase,
+                                        target_repository.passphrase)
+                regkey.execute(target_repository.keygenid, input=passp)
+            else:
                 raise TargetInitializationFailure("Can't setup the monotone "
                                                   "repository %r. "
-                                                  "A keyfile or keyid must "
-                                                  "be provided." %
+                                                  "A keyid, keyfile or keygenid "
+                                                  "must be provided." %
                                                   target_repository)
-            cmd = self.repository.command("genkey", "--db",
-                                          target_repository.repository)
-            regkey = ExternalCommand(command=cmd)
-            if target_repository.passphrase:
-                passp="%s\n%s\n" % (target_repository.passphrase,
-                                    target_repository.passphrase)
-            regkey.execute(target_repository.keyid, input=passp)
-
-        if regkey.exit_status:
-            raise TargetInitializationFailure("Was not able to setup "
-                                              "the monotone initial key at %r" %
-                                              target_repository)
+    
+            if regkey.exit_status:
+                raise TargetInitializationFailure("Was not able to setup "
+                                                  "the monotone initial key at %r" %
+                                                  target_repository)
 
     def _prepareTargetRepository(self):
         """
@@ -860,15 +862,19 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         if not self.repository.repository or exists(join(self.basedir, 'MT')):
             return
 
-        cmd = self.repository.command("setup",
-                                      "--db", self.repository.repository,
-                                      "--branch", self.repository.module)
-
         if not self.repository.module:
             raise TargetInitializationFailure("Monotone needs a module "
                                               "defined (to be used as "
                                               "commit branch)")
 
+                                              
+        cmd = self.repository.command("setup",
+                                      "--db", self.repository.repository,
+                                      "--branch", self.repository.module)
+
+        if self.repository.keyid:
+            cmd.extend( ("--key", self.repository.keyid) )
+                                              
         setup = ExternalCommand(command=cmd)
         setup.execute(self.basedir)
 

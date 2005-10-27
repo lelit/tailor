@@ -288,7 +288,7 @@ class MonotoneRepository(Repository):
         self.keyid = cget(self.name, 'keyid')
         self.passphrase = cget(self.name, 'passphrase')
         self.keyfile = cget(self.name, 'keyfile')
-
+        self.keygenid = cget(self.name, 'keygenid')
 
 class SvnRepository(Repository):
     METADIR = '.svn'

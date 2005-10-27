@@ -629,13 +629,23 @@ monotone
 %%%%%%%%
 
 keyid : string
-  Monotone keyid.
-
-passphrase : string
-  Monotone passphrase.
+  Monotone key id to use for commits. The specified key 
+  must exist on keystore. Takes precedence
+  over keyfile and keygenid.
 
 keyfile : string
-  Monotone keyfile.
+  File containing a keypair to store in the repository.
+  The keypair is used for commits. Ignored if keyid is 
+  specified.
+
+keygenid : string
+  Id of a new keypair to generate and store in the 
+  repository.
+  The keypair is used for commits. Ignored if keyid is 
+  specified.
+
+passphrase : string
+  Passphrase to use for commits. 
 
 svn
 %%%
