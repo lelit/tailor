@@ -386,7 +386,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         of each entry.
         """
 
-        from os.path import split
+        from os.path import split, join, exists
 
         added = []
         for e in entries:
@@ -401,7 +401,22 @@ class SyncronizableTargetWorkingDir(WorkingDir):
                 parents.reverse()
                 self._addPathnames(parents)
 
-            self._renamePathname(e.old_name, e.name)
+            # Check to see if the oldentry is still there. If it is,
+            # that probably means one thing: it's been moved and then
+            # replaced, see svn 'R' event. In this case, rename the
+            # existing old entry to something else to trick targets
+            # (that will assume the move was already done manually) and
+            # finally restore its name.
+
+            absold = join(self.basedir, e.old_name)
+            renamed = exists(absold)
+            if renamed:
+                rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
+            try:
+                self._renamePathname(e.old_name, e.name)
+            finally:
+                if renamed:
+                    rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
 
     def _renamePathname(self, oldname, newname):
         """

@@ -483,28 +483,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        from os.path import join, exists
-        from os import rename
-
-        # Check to see if the oldentry is still there. If it is,
-        # that probably means one thing: it's been moved and then
-        # replaced, see svn 'R' event. In this case, rename the
-        # existing old entry to something else to trick "darcs mv"
-        # (that will assume the move was already done manually) and
-        # finally restore its name.
-
-        absold = join(self.basedir, oldname)
-        renamed = exists(absold)
-        if renamed:
-            rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
-
-        try:
-            cmd = self.repository.command("mv")
-            ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname,
-                                                                   newname)
-        finally:
-            if renamed:
-                rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
+        cmd = self.repository.command("mv")
+        ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
         """
