@@ -17,7 +17,7 @@ from source import UpdatableSourceWorkingDir, InvocationError, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from changes import ChangesetEntry,Changeset
-from os.path import exists, join, isdir
+from os.path import exists, join, isdir, split
 from os import renames, access, F_OK
 from string import whitespace
 
@@ -310,11 +310,12 @@ class MonotoneDiffParser:
         self.working_dir = working_dir
         self.repository = repository
 
-    def _addPathToSet(self, s, dirs):
-        for d in xrange(0,len(dirs)):
-            nd = '/'.join(dirs[0:d])
-            s.add( nd );
-    
+    def _addPathToSet(self, s, path):
+        parts = path.split('/')
+        while parts:
+            s.add('/'.join(parts))
+            parts.pop()
+
     def convertDiff(self, chset):
         """
         Fills a chset with the details data coming by a diff between
@@ -343,7 +344,7 @@ class MonotoneDiffParser:
 
         implicit_dirs_add = set()
         dirs_add = set()
-                
+
         # monotone diffs are prefixed by a section containing
         # metainformations about files
         # The section terminates with the first file diff, and each
@@ -373,11 +374,11 @@ class MonotoneDiffParser:
                         chentry.action_kind = chentry.ADDED
                         # split filespec in parts, skipping the filename
                         # (monotone always uses '/' as path separator)
-                        self._addPathToSet(implicit_dirs_add, "/".split(chentry.name)[:-1]);
+                        self._addPathToSet(implicit_dirs_add, split(chentry.name)[0])
                     elif token=="add_directory":
                         chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.ADDED
-                        self._addPathToSet(dirs_add, "/".split(chentry.name));
+                        self._addPathToSet(dirs_add, chentry.name)
                     elif token == "delete_file" or token=="delete_directory":
                         chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.DELETED
@@ -393,7 +394,7 @@ class MonotoneDiffParser:
                         chentry.action_kind = chentry.RENAMED
                         chentry.old_name= fname[1:-1]
                         if token=="rename_directory":
-                            self._addPathToSet(dirs_add, "/".split(chentry.name))
+                            self._addPathToSet(dirs_add, chentry.name)
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
