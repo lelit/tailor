@@ -844,8 +844,6 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Check for target repository existence, eventually create it.
         """
 
-        from os.path import exists
-
         if not self.repository.repository:
             return
 
@@ -857,8 +855,6 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Possibly checkout a working copy of the target VC, that will host the
         upstream source tree, when overriden by subclasses.
         """
-
-        from os.path import join, exists
 
         if not self.repository.repository or exists(join(self.basedir, 'MT')):
             return
