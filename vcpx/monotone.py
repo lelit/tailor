@@ -543,14 +543,17 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                     raise InvocationError("Ancestor reading returned "
                                           "status %d" % cld.exit_status)
                 revlist = outstr[0].getvalue().split()
-                mtr = MonotoneRevToCset(repository=self.repository,
-                                        working_dir=working_dir,
-                                        branch=module)
-                first_cset = mtr.getCset(revlist, True)
-                if len(first_cset)==0:
-                    raise InvocationError("Can't find an INITIAL revision on branch '%s'."
-                                          % module)
-                effective_rev=first_cset[0].revision
+                if len(revlist)>1:
+                    mtr = MonotoneRevToCset(repository=self.repository,
+                                            working_dir=working_dir,
+                                            branch=module)
+                    first_cset = mtr.getCset(revlist, True)
+                    if len(first_cset)==0:
+                        raise InvocationError("Can't find an INITIAL revision on branch '%s'."
+                                              % module)
+                    effective_rev=first_cset[0].revision
+                else:
+                    effective_rev=revlist[0]
         return effective_rev
 
     ## UpdatableSourceWorkingDir
