@@ -164,7 +164,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _removePathnames(self, entries):
         """Remove a sequence of entries"""
 
-        self._b.remove(entries)
+        self._b.working_tree().remove(entries)
 
     def _renamePathname(self, oldentry, newentry):
         """Rename an entry"""
