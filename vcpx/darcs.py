@@ -416,7 +416,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
     def _addPathnames(self, names):
         """
-        Add some new filesystems objects.
+        Add some new filesystem objects.
         """
 
         cmd = self.repository.command("add", "--case-ok", "--not-recursive",
