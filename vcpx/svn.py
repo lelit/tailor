@@ -334,7 +334,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             csets = changesets_from_svnlog(out,
                                            self.repository.repository,
                                            self.repository.module)
-            revision = csets.next().revision
+            last = csets.next()
+            revision = last.revision
         else:
             initial = False
 
@@ -371,8 +372,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             csets = changesets_from_svnlog(out,
                                            self.repository.repository,
                                            self.repository.module)
-
-        last = csets.next()
+            last = csets.next()
 
         self.log.debug("Working copy up to svn revision %s", last.revision)
 
