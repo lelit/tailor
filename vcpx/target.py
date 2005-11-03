@@ -391,6 +391,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         of each entry.
         """
 
+        from os import rename
         from os.path import split, join, exists
 
         added = []
