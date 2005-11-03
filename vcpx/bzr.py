@@ -116,8 +116,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # Do not try to catch any errors from Branch.add, since the
         # they are _real_ errors.
         new_entries = []
+        inv = self._b.get_inventory(self._b.last_revision())
         for e in entries:
-            if not self._b.inventory.has_filename(e):
+            if not inv.has_filename(e):
                 new_entries.extend([e])
             else:
                 self.log.debug('"%s" already in inventory, skipping', e)
