@@ -553,9 +553,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 # if the branch has multiple heads then we could end
                 # up with only part of the ancestry graph.
                 if len(revision)>1:
-                    self.log.info("Branch %r has multiple heads. There "
-                                  "is no guarantee to reconstruct the "
-                                  "full history.", module)
+                    self.log.info('Branch "%s" has multiple heads. There '
+                                  'is no guarantee to reconstruct the '
+                                  'full history.', module)
                 cmd = [ self.repository.command("automate","ancestors",
                                                 "--db",dbrepo),
                         self.repository.command("automate","toposort",

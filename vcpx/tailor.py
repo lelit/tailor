@@ -33,10 +33,7 @@ class Tailorizer(Project):
         if self.verbose:
             self.log.info("Changeset %s", changeset.revision)
             if changeset.log:
-                try:
-                    self.log.info("Log message:\n%s", changeset.log)
-                except UnicodeEncodeError:
-                    self.log.warning("Non-printable changelog")
+                self.log.info("Log message: %s", changeset.log)
         self.log.debug("Going to apply changeset:\n%s", str(changeset))
         return True
 
@@ -60,7 +57,7 @@ class Tailorizer(Project):
         content into the target repository.
         """
 
-        self.log.info("Bootstrapping %s in %r", self.name, self.rootdir)
+        self.log.info('Bootstrapping "%s" in "%s"', self.name, self.rootdir)
 
         dwd = self.workingDir()
         try:
@@ -80,7 +77,7 @@ class Tailorizer(Project):
             dwd.importFirstRevision(self.source, actual,
                                         revision=='INITIAL')
         except:
-            self.log.critical('Could not import checked out tree in %r!',
+            self.log.critical('Could not import checked out tree in "%s"!',
                               self.rootdir)
             raise
 
@@ -91,7 +88,7 @@ class Tailorizer(Project):
         Update an existing tailorized project.
         """
 
-        self.log.info("Updating %s in %r", self.name, self.rootdir)
+        self.log.info('Updating "%s" in "%s"', self.name, self.rootdir)
 
         dwd = self.workingDir()
         try:
@@ -159,7 +156,7 @@ class Tailorizer(Project):
                     return
             self.update()
         except UnicodeEncodeError, exc:
-            raise ConfigurationError('%s: it seems that current encoding %r '
+            raise ConfigurationError('%s: it seems that current encoding "%s" '
                                      'cannot properly represent at least one '
                                      'of the characters in the upstream '
                                      'changelog. You need to use a wider '

@@ -193,18 +193,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
                 if not info:
-                    self.log.debug("promoting %r to ADDED at "
-                                   "revision %s", e.name, e.new_revision)
+                    self.log.debug('promoting "%s" to ADDED at '
+                                   'revision %s', e.name, e.new_revision)
                     e.action_kind = e.ADDED
                     self.__createParentCVSDirectories(changeset, e.name)
                 elif info.cvs_version == e.new_revision:
-                    self.log.debug("skipping %r since it's already "
-                                   "at revision %s", e.name, e.new_revision)
+                    self.log.debug('skipping "%s" since it is already '
+                                   'at revision %s', e.name, e.new_revision)
                     continue
             elif e.action_kind == e.DELETED:
                 if not exists(join(self.basedir, e.name)):
-                    self.log.debug("skipping %r since it's already "
-                                   "deleted", e.name)
+                    self.log.debug('skipping "%s" since it is already '
+                                   'deleted', e.name)
                     self.__maybeDeleteDirectory(split(e.name)[0], changeset)
                     continue
             elif e.action_kind == e.ADDED and e.new_revision is None:

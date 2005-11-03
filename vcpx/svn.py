@@ -340,7 +340,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             initial = False
 
         if not exists(join(self.basedir, '.svn')):
-            self.log.debug("checking out a working copy")
+            self.log.debug("Checking out a working copy")
             cmd = self.repository.command("co", "--quiet",
                                           "--revision", revision)
             svnco = ExternalCommand(command=cmd)

@@ -477,7 +477,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         if existing:
             c.execute(existing)
 
-
     def _renamePathname(self, oldname, newname):
         """
         Rename a filesystem object.
@@ -573,7 +572,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     skip = True
                     break
             if skip:
-                self.log.info('Entry %r skipped per boring rules', e.name)
+                self.log.info('Entry "%s" skipped per boring rules', e.name)
                 skipped = True
             else:
                 entries.append(e)
@@ -581,7 +580,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         # All entries are gone, don't commit this changeset
         if not entries:
             self.log.info('All entries ignored, skipping whole '
-                          'changeset %r', changeset.revision)
+                          'changeset "%s"', changeset.revision)
             return None
 
         if skipped:

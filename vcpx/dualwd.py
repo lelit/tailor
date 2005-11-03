@@ -47,8 +47,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if sbdir == tbdir:
             shared = True
         elif tbdir.startswith(sbdir):
-            raise InvocationError('Target base directory %r cannot be a '
-                                  'subdirectory of source directory %r' %(
+            raise InvocationError('Target base directory "%s" cannot be a '
+                                  'subdirectory of source directory "%s"' %(
                 (tbdir, sbdir)))
         elif sbdir.startswith(tbdir):
             shared = True
