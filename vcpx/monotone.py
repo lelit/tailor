@@ -833,7 +833,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                                   "A keyid, keyfile or keygenid "
                                                   "must be provided." %
                                                   target_repository)
-    
+
             if regkey.exit_status:
                 raise TargetInitializationFailure("Was not able to setup "
                                                   "the monotone initial key at %r" %
@@ -864,14 +864,14 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                               "defined (to be used as "
                                               "commit branch)")
 
-                                              
+
         cmd = self.repository.command("setup",
                                       "--db", self.repository.repository,
                                       "--branch", self.repository.module)
 
         if self.repository.keyid:
             cmd.extend( ("--key", self.repository.keyid) )
-                                              
+
         setup = ExternalCommand(command=cmd)
         setup.execute(self.basedir)
 
