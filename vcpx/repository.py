@@ -306,6 +306,7 @@ class SvnRepository(Repository):
         self.use_propset = cget(self.name, 'use-propset', False)
         self.filter_badchars = cget(self.name, 'filter-badchars', False)
         self.use_limit = cget(self.name, 'use-limit', True)
+        self.trust_root = cget(self.name, 'trust-root', False)
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError

@@ -291,19 +291,20 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # Verify that the we have the root of the repository: do that
         # iterating an "svn ls" over the hierarchy until one fails
 
-        cmd = self.repository.command("ls")
-        svnls = ExternalCommand(command=cmd)
-        svnls.execute(self.repository.repository)
-
         lastok = self.repository.repository
-        reporoot = lastok[:lastok.rfind('/')]
-        # Don't go too far, that is, stop when you hit schema://...
-        while '//' in reporoot:
-            svnls.execute(reporoot)
-            if svnls.exit_status:
-                break
-            lastok = reporoot
-            reporoot = reporoot[:reporoot.rfind('/')]
+        if not self.repository.trust_root:
+            cmd = self.repository.command("ls")
+            svnls = ExternalCommand(command=cmd)
+            svnls.execute(self.repository.repository)
+
+            reporoot = lastok[:lastok.rfind('/')]
+            # Don't go too far, that is, stop when you hit schema://...
+            while '//' in reporoot:
+                svnls.execute(reporoot)
+                if svnls.exit_status:
+                    break
+                lastok = reporoot
+                reporoot = reporoot[:reporoot.rfind('/')]
 
         if lastok <> self.repository.repository:
             module = self.repository.repository[len(lastok):]

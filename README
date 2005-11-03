@@ -674,6 +674,15 @@ use-limit : bool
   version 1.2. By using this option tailor can fetch just the
   revision it needs, instead of transfering whole history log.
 
+trust-root : bool
+  Tailor by default verifies that the specified ``repository``
+  effectively points to the root of a Subversion repository,
+  eventually splitting it and adjusting ``module`` accordingly.  This
+  is sometimes undesiderable, for example when the root isn't public
+  and cannot be listed.  Setting this option to *True* disable the
+  check and tailor takes the given ``repository`` and ``module`` as-is.
+
+
 svndump
 %%%%%%%
 
