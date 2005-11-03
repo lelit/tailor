@@ -780,7 +780,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                                   "Both names already exist" %
                                                   (oldname, newname))
             renames(join(self.basedir, newname), join(self.basedir, oldname))
-            self.log.debug("Renamed %r back to %r", oldname, newname)
+            self.log.debug('Renamed "%s" back to "%s"', newname, oldname)
 
         cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.basedir, command=cmd)
