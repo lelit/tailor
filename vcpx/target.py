@@ -13,6 +13,7 @@ working directory under two different version control systems.
 __docformat__ = 'reStructuredText'
 
 import socket
+from signal import signal, SIGINT, SIG_IGN
 from workdir import WorkingDir
 
 HOST = socket.getfqdn()
@@ -114,11 +115,15 @@ class SyncronizableTargetWorkingDir(WorkingDir):
             raise
         patchname, log = self.__getPatchNameAndLog(changeset)
         entries = self._getCommitEntries(changeset)
-        self._commit(changeset.date, changeset.author, patchname, log, entries)
-
-        if changeset.tags:
-            for tag in changeset.tags:
-                self._tag(tag)
+        previous = signal(SIGINT, SIG_IGN)
+        try:
+            self._commit(changeset.date, changeset.author, patchname, log,
+                         entries)
+            if changeset.tags:
+                for tag in changeset.tags:
+                    self._tag(tag)
+        finally:
+            signal(SIGINT, previous)
 
         try:
             self._dismissChangeset(changeset)
