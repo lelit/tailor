@@ -243,19 +243,16 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         conflicts = []
         skip = True
         for line in output:
-            # skip comment lines
+            # skip comment lines, detect beginning and end of change list
             if line[0] == '*':
                 if line.startswith("* applying changeset"):
                     skip = False
+                elif line.startswith("* reapplying local changes"):
+                    break
                 continue
             if skip:
                 continue
             l = line.split()
-
-            # if there is an empty line, we are done
-            if not l:
-                break
-
             l1 = self.__normalize_path(l[1])
             l2 = None
             if len(l) > 2:
