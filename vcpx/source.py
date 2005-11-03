@@ -106,6 +106,9 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     self.log.debug("Reason: %s", str(e))
                     self.log.debug("Changeset: %s", c)
                     raise
+                except KeyboardInterrupt:
+                    self.log.warning("INTERRUPTED BY THE USER!")
+                    break
                 except:
                     self.log.exception("Couldn't apply changeset\n%s", c)
                     raise
