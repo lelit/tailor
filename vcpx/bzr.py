@@ -75,9 +75,14 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from bzrlib.merge import merge
 
         oldrevno = self._b.revno()
+        self.log.info('Applying "%s" to current r%s', changeset.revision,
+                      oldrevno)
         self._b.append_revision(changeset.revision)
         merge((self.basedir, -1), (self.basedir, oldrevno),
               check_clean=False, this_dir=self.basedir)
+        self.log.debug("%s updated to %s",
+                       ', '.join([e.name for e in changeset.entries]),
+                       changeset.revision)
         return [] # No conflicts for now
 
     def _checkoutUpstreamRevision(self, revision):
@@ -95,6 +100,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         else:
             revid = revision
 
+        self.log.info('Extracting r%s out of "%s" in "%s"...',
+                      revid, parent, self.basedir)
         self._b = copy_branch(parent, self.basedir, revid)
 
         return self._changesetFromRevision(parent, revid)
@@ -112,9 +119,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         for e in entries:
             if not self._b.inventory.has_filename(e):
                 new_entries.extend([e])
+            else:
+                self.log.debug('"%s" already in inventory, skipping', e)
 
         if len(new_entries) == 0:
             return
+        self.log.info('Adding %s...', ', '.join(entries))
         self._b.add(new_entries)
 
     def _addSubtree(self, subdir):
@@ -128,6 +138,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from os.path import join
         from bzrlib.add import smart_add_branch
 
+        self.log.info('Recursively adding directory "%s"...', subdir)
         smart_add_branch(self._b, [join(self.basedir, subdir)], recurse=True)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -142,8 +153,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog)
         if logmessage:
+            self.log.info('Committing "%s"...', logmessage[0])
             logmessage = '\n'.join(logmessage)
         else:
+            self.log.info('Committing...')
             logmessage = "Empty changelog"
         timestamp = int(mktime(date.timetuple()))
 
@@ -164,6 +177,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _removePathnames(self, entries):
         """Remove a sequence of entries"""
 
+        self.log.info('Removing %s...', ', '.join(entries))
         self._b.working_tree().remove(entries)
 
     def _renamePathname(self, oldentry, newentry):
@@ -173,8 +187,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from os.path import join
 
         # bzr does the rename itself as well
+        self.log.debug('Renaming "%s" back to "%s"', newentry, oldentry)
         rename(join(self.basedir, newentry), join(self.basedir, oldentry))
 
+        self.log.info('Renaming "%s" to "%s"...', oldentry, newentry)
         self._b.rename_one(oldentry, newentry)
 
     def _prepareTargetRepository(self):
@@ -206,6 +222,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 bzrignore = open(join(self.basedir, IGNORE_FILENAME), 'wU')
                 bzrignore.write('\n'.join(ignored))
 
+            self.log.info('Initializing new repository in "%s"...',
+                          self.basedir)
             self._b = Branch.initialize(self.basedir)
         else:
             self._b = Branch.open(self.basedir)
