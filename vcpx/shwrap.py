@@ -53,8 +53,12 @@ class ExternalCommand:
     """Force the output encoding to some other charset instead of user prefs."""
 
     def __init__(self, command=None, cwd=None):
-        """Initialize a ExternalCommand instance, specifying the command
-           to be executed and eventually the working directory."""
+        """
+        Initialize a ExternalCommand instance, specifying the command
+        to be executed and eventually the working directory.
+
+        The instance will use the logger ``tailor.shell``.
+        """
 
         from logging import getLogger
 
@@ -73,12 +77,20 @@ class ExternalCommand:
         self.log = getLogger('tailor.shell')
 
     def __str__(self):
+        """
+        Return a string representation of the command prefixed by working dir.
+        """
+
         r = '$'+repr(self)
         if self.cwd:
             r = self.cwd + ' ' + r
         return r
 
     def __repr__(self):
+        """
+        Compute a reasonable shell-like representation of the external command.
+        """
+
         result = []
         needquote = False
         for arg in self._last_command or self.command:
