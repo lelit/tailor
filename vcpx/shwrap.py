@@ -13,7 +13,6 @@ try:
 except ImportError:
     # Older snakes
     from _process import Popen, PIPE, STDOUT
-import logging
 
 class ReopenableNamedTemporaryFile:
     """
@@ -57,6 +56,8 @@ class ExternalCommand:
         """Initialize a ExternalCommand instance, specifying the command
            to be executed and eventually the working directory."""
 
+        from logging import getLogger
+
         self.command = command
         """The command to be executed."""
 
@@ -69,7 +70,7 @@ class ExternalCommand:
         self._last_command = None
         """Last executed command."""
 
-        self.log = logging.getLogger('tailor.shell')
+        self.log = getLogger('tailor.shell')
 
     def __str__(self):
         r = '$'+repr(self)
