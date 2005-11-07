@@ -371,8 +371,6 @@ def main():
             config.set(target, 'module', options.target_module)
 
         if options.verbose:
-            import sys
-
             sys.stderr.write("You should put the following configuration "
                              "in some file, adjust it as needed\n"
                              "and use --configfile option with that "
