@@ -94,10 +94,11 @@ class Tailorizer(Project):
         try:
             pendings = dwd.getPendingChangesets()
         except KeyboardInterrupt:
-            self.log.warning("Leaving %s unchanged, stopped by user", self.name)
+            self.log.warning('Leaving "%s" unchanged, stopped by user',
+                             self.name)
             raise
         except:
-            self.log.critical("Unable to get changes for %s", self.name)
+            self.log.critical('Unable to get changes for "%s"', self.name)
             raise
 
         if pendings.pending():
@@ -107,7 +108,7 @@ class Tailorizer(Project):
                 last, conflicts = dwd.applyPendingChangesets(
                     applyable=self._applyable, applied=self._applied)
             except KeyboardInterrupt:
-                self.log.warning("Leaving %s incomplete, stopped by user",
+                self.log.warning('Leaving "%s" incomplete, stopped by user',
                                  self.name)
                 raise
             except:
@@ -115,7 +116,7 @@ class Tailorizer(Project):
                 raise
 
             if last:
-                self.log.info("Update completed, now at revision %s",
+                self.log.info('Update completed, now at revision "%s"',
                               last.revision)
         else:
             self.log.info("Update completed with no upstream changes")
