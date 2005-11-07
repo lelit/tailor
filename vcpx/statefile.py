@@ -47,8 +47,8 @@ class StateFile(object):
 
     def _load(self):
         """
-        Open the pickle file and load the first two items, respectively
-        the revision and the number of pending changesets.
+        Open the pickle file and load the last applied changeset.
+        The second pickled object is ignored for backward compatibility.
         """
 
         # Take care of the journal file, if present.
@@ -66,7 +66,8 @@ class StateFile(object):
 
     def _write(self, changesets):
         """
-        Write the state file.
+        Write the state file, that is dump last applied changeset,
+        a dummy None, then one changeset at a time.
         """
 
         previous = signal(SIGINT, SIG_IGN)
