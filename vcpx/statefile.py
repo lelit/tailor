@@ -40,10 +40,17 @@ class StateFile(object):
     """
 
     def __init__(self, fname, config):
+        """
+        Initialize a new instance, logging to `tailor.statefile`.
+        """
+
+        from logging import getLogger
+
         self.filename = fname
         self.archive = None
         self.last_applied = None
         self.current = None
+        self.log = getLogger('tailor.statefile')
 
     def _load(self):
         """
@@ -70,6 +77,7 @@ class StateFile(object):
         a dummy None, then one changeset at a time.
         """
 
+        count = 0
         previous = signal(SIGINT, SIG_IGN)
         try:
             sf = open(self.filename, 'w')
@@ -77,9 +85,11 @@ class StateFile(object):
             dump(None, sf)
             for cs in changesets:
                 dump(cs, sf)
+                count += 1
             sf.close()
         finally:
             signal(SIGINT, previous)
+        self.log.info('Cached information about %d pending changesets', count)
 
     def __str__(self):
         return self.filename
@@ -169,6 +179,7 @@ class StateFile(object):
                 self.archive = None
 
             if exists(self.filename + '.journal'):
+                self.log.debug('Adjusting the state accordingly to journal')
                 # Load last applied changeset from the journal
                 journal = open(self.filename + '.journal')
                 last_applied = load(journal)
@@ -193,12 +204,16 @@ class StateFile(object):
                     dump(last_applied, sf)
                     dump(None, sf)
                     if cs is not None:
+                        count = 0
                         while True:
                             try:
                                 cs = load(old)
                             except EOFError:
                                 break
                             dump(cs, sf)
+                            count += 1
+                        self.log.info('%d pending changesets in state file',
+                                       count)
                     sf.close()
                     old.close()
 
