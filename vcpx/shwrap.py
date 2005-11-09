@@ -162,6 +162,11 @@ class ExternalCommand:
             for v in ['LANG', 'TZ', 'PATH']:
                 if kwargs.has_key(v):
                     env[v] = kwargs[v]
+            # Override also LC_ALL that has a higher priority over LANG,
+            # and LC_MESSAGES as well.
+            if kwargs.has_key('LANG'):
+                env['LC_ALL'] = kwargs['LANG']
+                env['LC_MESSAGES'] = kwargs['LANG']
 
         input = kwargs.get('input')
         output = kwargs.get('stdout')
