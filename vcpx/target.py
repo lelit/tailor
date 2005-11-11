@@ -343,6 +343,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         if self.state_file.filename.startswith(self.basedir):
             sfrelname = self.state_file.filename[len(self.basedir)+1:]
             exclude.append(sfrelname)
+            exclude.append(sfrelname+'.old')
             exclude.append(sfrelname+'.journal')
 
         if self.logfile.startswith(self.basedir):

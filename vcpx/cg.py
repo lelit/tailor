@@ -172,6 +172,8 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
             sfrelname = self.state_file.filename[len(self.basedir)+1:]
             ignore.write(sfrelname)
             ignore.write('\n')
+            ignore.write(sfrelname+'.old')
+            ignore.write('\n')
             ignore.write(sfrelname+'.journal')
             ignore.write('\n')
         ignore.close()

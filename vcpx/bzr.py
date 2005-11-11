@@ -217,6 +217,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             dir, file = split(sfname)
             if dir == self.basedir:
                 ignored.append(file)
+                ignored.append(file+'.old')
                 ignored.append(file+'.journal')
 
             if ignored:

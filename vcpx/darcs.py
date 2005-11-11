@@ -524,6 +524,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             if sfname.startswith(self.basedir):
                 sfrelname = sfname[len(self.basedir)+1:]
                 ignored.append('^%s$' % escape(sfrelname))
+                ignored.append('^%s$' % escape(sfrelname+'.old'))
                 ignored.append('^%s$' % escape(sfrelname+'.journal'))
 
             boring = open(join(self.basedir, '_darcs/prefs/boring'), 'wU')
