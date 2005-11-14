@@ -157,14 +157,18 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
         Create the .git/info/exclude.
         """
 
-        from os.path import join
+        from os.path import join, exists
+        from os import mkdir
         from re import escape
         from dualwd import IGNORED_METADIRS
 
+        infodir = join(self.basedir, self.repository.METADIR, 'info')
+        if not exists(infodir):
+            mkdir(infodir)
+
         # Create the .git/info/exclude file, that contains an
         # fnmatch per line with metadirs to be skipped.
-        ignore = open(join(self.basedir, self.repository.METADIR,
-                           'info', 'exclude'), 'a')
+        ignore = open(join(infodir, 'exclude'), 'a')
         ignore.write('\n')
         ignore.write('\n'.join(['%s' % md
                                 for md in IGNORED_METADIRS]))
