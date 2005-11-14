@@ -16,7 +16,7 @@ __docformat__ = 'reStructuredText'
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from mercurial import ui, hg, commands, util
-import os, pdb
+import os
 
 class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     # UpdatableSourceWorkingDir
@@ -109,7 +109,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             e.action_kind = ChangesetEntry.DELETED
 
         from mercurial.node import hex
-        revision = hex(repo.changelog.lookup(revision))
+        revision = hex(node)
         return Changeset(revision, date, user, message, entries)
 
     def _getUI(self):
