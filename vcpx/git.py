@@ -73,16 +73,22 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
         (name, email) = self.__parse_author(author)
         if name:
             env['GIT_AUTHOR_NAME']=name
+            env['GIT_COMMITTER_NAME']=name
         if email:
             env['GIT_AUTHOR_EMAIL']=email
+            env['GIT_COMMITTER_EMAIL']=email
         if date:
-            env['GIT_AUTHOR_DATE']=str(date)
+            env['GIT_AUTHOR_DATE']=date.strftime("%Y-%m-%d %H:%M:%S")
+            env['GIT_COMMITTER_DATE']=env['GIT_AUTHOR_DATE']
         # '-f' flag means we can get empty commits, which
         # shouldn't be a problem.
         cmd = self.repository.command("commit", "-a", "-F", "-")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
-        (out, _) = c.execute(stdout=PIPE, env=env, input='\n'.join(logmessage))
+        logmessage = '\n'.join(logmessage)
+        if not logmessage.endswith('\n'):
+            logmessage += '\n'
+        (out, _) = c.execute(stdout=PIPE, env=env, input=logmessage)
         if c.exit_status:
             if out is None or out.readline().strip() != 'nothing to commit':
                 raise ChangesetApplicationFailure("%s returned status %d" %
