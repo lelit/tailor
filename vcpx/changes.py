@@ -142,6 +142,8 @@ class Changeset(object):
         return e
 
     def __str__(self):
+        import codecs
+
         s = []
         s.append('Revision: %s' % self.revision)
         s.append('Date: %s' % str(self.date))
@@ -156,7 +158,10 @@ class Changeset(object):
                     entries = [e.name for e in entries]
                 s.append('%s: %s' % (ak, ','.join(entries)))
         s.append('Log: %s' % self.log)
-        return '\n'.join(s)
+        s = '\n'.join(s)
+        if isinstance(s, unicode):
+            s = s.encode('ascii', 'replace')
+        return s
 
     def applyPatch(self, working_dir, patch_options="-p1"):
         """
