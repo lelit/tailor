@@ -2,6 +2,7 @@
 # :Progetto: vcpx -- Mercurial native backend
 # :Creato:   dom 11 set 2005 22:58:38 CEST
 # :Autore:   Lele Gaifax <lele@nautilus.homeip.net>
+#            Brendan Cully <brendan@kublai.com>
 # :Licenza:  GNU General Public License
 #
 
@@ -12,10 +13,136 @@ instead of thru the command line.
 
 __docformat__ = 'reStructuredText'
 
+from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from mercurial import ui, hg, commands, util
+import os, pdb
 
-class HglibWorkingDir(SyncronizableTargetWorkingDir):
+class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+    # UpdatableSourceWorkingDir
+    def _checkoutUpstreamRevision(self, revision):
+        """
+        Initial checkout (hg clone)
+        """
+
+        self._getUI()
+        # We have to clone the entire repository to be able to pull from it
+        # later. So a partial checkout is a full clone followed by an update
+        # directly to the desired revision.
+
+        # Hg won't check out into an existing directory
+        checkoutdir = os.path.join(self.basedir,".hgtmp")
+        commands.clone(self._ui, self.repository.repository, checkoutdir,
+                       noupdate=True, ssh=None, remotecmd=None)
+        os.rename(os.path.join(checkoutdir, ".hg"),
+                  os.path.join(self.basedir,".hg"))
+        os.rmdir(checkoutdir)
+
+        repo = self._getRepo()
+        node = self._getNode(repo, revision)
+
+        self.log.info('Extracting revision %s from %s into %s',
+                      revision, self.repository.repository, self.basedir)
+        repo.update(node)
+
+        return self._changesetForRevision(repo, revision)
+
+    def _getUpstreamChangesets(self, sincerev):
+        """Fetch new changesets from the source"""
+        ui = self._getUI()
+        repo = self._getRepo()
+
+        commands.pull(ui, repo, "default", ssh=None, remotecmd=None, update=None)
+
+        from mercurial.node import bin
+        for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1, repo.changelog.count()):
+            yield self._changesetForRevision(repo, str(rev))
+
+    def _applyChangeset(self, changeset):
+        repo = self._getRepo()
+        node = self._getNode(repo, changeset.revision)
+
+        return repo.update(node)
+
+    def _changesetForRevision(self, repo, revision):
+        from changes import Changeset, ChangesetEntry
+        from datetime import datetime
+
+        entries = []
+        node = self._getNode(repo, revision)
+        (manifest, user, date, files, message) = repo.changelog.read(node)
+        manifest = repo.manifest.read(manifest)
+
+        # To find adds, we get the manifests of any parents. If a file doesn't
+        # occur there, it's new.
+        pms = {}
+        for parent in repo.changelog.parents(node):
+            pms.update(repo.manifest.read(repo.changelog.read(parent)[0]))
+
+        # Different targets seem to handle the TZ differently. It looks like
+        # darcs may be the most correct.
+        (dt, tz) = date.split(' ')
+        date = datetime.fromtimestamp(int(dt) + int(tz))
+
+        # Every time we find a file in the current manifest, we pop it from the parents.
+        # Anything left over in parents is a deleted file.
+        for f in files:
+            e = ChangesetEntry(f)
+            # find renames
+            fl = repo.file(f)
+            oldname = fl.renamed(manifest[f])
+            if oldname:
+                e.action_kind = ChangesetEntry.RENAMED
+                e.old_name = oldname[0]
+                pms.pop(oldname[0])
+            else:
+                try:
+                    del pms[f]
+                    e.action_kind = ChangesetEntry.UPDATED
+                except KeyError:
+                    e.action_kind = ChangesetEntry.ADDED
+
+            entries.append(e)
+
+        for df in pms.iterkeys():
+            e = ChangesetEntry(df)
+            e.action_kind = ChangesetEntry.DELETED
+
+        from mercurial.node import hex
+        revision = hex(repo.changelog.lookup(revision))
+        return Changeset(revision, date, user, message, entries)
+
+    def _getUI(self):
+        try:
+            return self._ui
+        except AttributeError:
+            project = self.repository.projectref()
+            self._ui = ui.ui(project.verbose,
+                             project.config.get(self.repository.name,
+                                                'debug', False),
+                             not project.verbose, False)
+            return self._ui
+
+    def _getRepo(self):
+        try:
+            return self._hg
+        except AttributeError:
+            ui = self._getUI()
+            self._hg = hg.repository(ui=ui, path=self.basedir, create=False)
+            return self._hg
+
+    def _getNode(self, repo, revision):
+        """Convert a tailor revision ID into an hg node"""
+        if revision == "HEAD":
+            node = repo.changelog.tip()
+        else:
+            if revision == "INITIAL":
+                rev = "0"
+            else:
+                rev = revision
+            node = repo.changelog.lookup(rev)
+
+        return node
 
     def _normalizeEntryPaths(self, entry):
         """
@@ -91,11 +218,7 @@ class HglibWorkingDir(SyncronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        project = self.repository.projectref()
-        self._ui = ui.ui(project.verbose,
-                         project.config.get(self.repository.name,
-                                            'debug', False),
-                         project.verbose, False)
+        self._getUI()
 
         if exists(join(self.basedir, self.repository.METADIR)):
             create = 0

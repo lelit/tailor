@@ -42,12 +42,11 @@ two way sync::
                (cron)            (cron)
 
 
-.. [#] ArX, Codeville, Git and Mercurial systems may be
-       used only as the `target` backend, since the `source` support
-       isn't coded yet. Contributions on these backends will be very
-       appreciated, since I do not use them enough to figure out the
-       best way to get pending changes and build tailor ChangeSets out
-       of them.
+.. [#] ArX, Codeville and Git systems may be used only as the `target`
+       backend, since the `source` support isn't coded yet.
+       Contributions on these backends will be very appreciated,
+       since I do not use them enough to figure out the best way to
+       get pending changes and build tailor ChangeSets out of them.
 
        To the opposite, Bazaar (1.0, not Bazaar-NG) and Tla are
        supported only as source systems.
@@ -267,7 +266,7 @@ a) It does not handle "empty" CVS checkouts, in other words you cannot
 b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
-c) ArX, Baazar-NG, Codeville, Git, and Mercurial are (currently) only
+c) ArX, Baazar-NG, Codeville and Git are (currently) only
    supported as *target*; Bazaar and Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
