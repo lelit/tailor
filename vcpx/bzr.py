@@ -61,9 +61,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         See what other revisions exist upstream and return them
         """
-        parent = Branch.open(self.repository.repository)
+        from bzrlib import fetch
 
-        revisions = self._b.missing_revisions(parent)
+        parent = Branch.open(self.repository.repository)
+        repo = self._getRepo()
+
+        revisions = repo.missing_revisions(parent)
+        fetch.greedy_fetch(repo, parent)
 
         for ri in revisions:
             yield self._changesetFromRevision(parent, ri)
@@ -74,10 +78,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         from bzrlib.merge import merge
 
-        oldrevno = self._b.revno()
+        repo = self._getRepo()
+        parent = Branch.open(self.repository.repository)
+
+        oldrevno = repo.revno()
         self.log.info('Applying "%s" to current r%s', changeset.revision,
                       oldrevno)
-        self._b.append_revision(changeset.revision)
+        repo.append_revision(changeset.revision)
         merge((self.basedir, -1), (self.basedir, oldrevno),
               check_clean=False, this_dir=self.basedir)
         self.log.debug("%s updated to %s",
@@ -229,3 +236,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             self._b = Branch.initialize(self.basedir)
         else:
             self._b = Branch.open(self.basedir)
+
+    def _getRepo(self):
+        try:
+            return self._b
+        except AttributeError:
+            self._b = Branch.open(self.basedir)
+            return self._b
