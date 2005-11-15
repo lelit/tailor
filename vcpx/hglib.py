@@ -197,6 +197,15 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                         logmessage, author.encode(encoding),
                         "%d 0" % mktime(date.timetuple()))
 
+    def _tag(self, tag):
+        opts = self._defaultOpts('tag')
+        commands.tag(self._getUI(), self._getRepo(), str(tag), **opts)
+
+    def _defaultOpts(self, cmd):
+        # Not sure this is public. commands.parse might be, but this
+        # is easier, and while dispatch is easiest, you lose ui.
+        return dict([(f[1], f[2]) for f in commands.find(cmd)[1][1]])
+
     def _removePathnames(self, names):
         """Remove a sequence of entries"""
 
