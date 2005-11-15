@@ -93,12 +93,14 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if files == ['.hgtags']:
             tags = [tag for (tag, tagnode) in repo.tags().iteritems()
                     if tagnode in parents]
-            # Since this is a tag, the parent manifest contains everything.
-            # The only question is whether or not .hgtags existed before
-            if pms.has_key('.hgtags'):
-                pms = {'.hgtags': pms['.hgtags']}
-            else:
-                pms = {}
+
+        # Don't include the file itself in the changeset. It's only useful
+        # to mercurial, and if we do end up making a tailor round trip
+        # the nodes will be wrong anyway.
+        if '.hgtags' in files:
+            files.remove('.hgtags')
+        if pms.has_key('.hgtags'):
+            del pms['.hgtags']
 
         for f in files:
             e = ChangesetEntry(f)
