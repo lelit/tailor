@@ -565,11 +565,15 @@ class CvsWorkingDir(CvspsWorkingDir):
                     cmd.append("-rHEAD:HEAD")
             else:
                 cmd.append("-r:HEAD")
+                if not branch:
+                    cmd.append("-b")
         elif ' by ' in sincerev:
             since, author = _splitGlobalCVSRevision(sincerev)
             cmd.extend(["-d", "%(since)s UTC<"])
             if branch:
                 cmd.append("-r%(branch)s")
+            else:
+                cmd.append("-b")
         elif sincerev[0] in '0123456789':
             since = sincerev
             cmd.extend(["-d", "%(since)s UTC<"])
