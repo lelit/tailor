@@ -70,7 +70,14 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         entries = []
         node = self._getNode(repo, revision)
+        parents = repo.changelog.parents(node)
         (manifest, user, date, files, message) = repo.changelog.read(node)
+
+        # Different targets seem to handle the TZ differently. It looks like
+        # darcs may be the most correct.
+        (dt, tz) = date.split(' ')
+        date = datetime.fromtimestamp(int(dt) + int(tz))
+
         manifest = repo.manifest.read(manifest)
 
         # To find adds, we get the manifests of any parents. If a file doesn't
@@ -79,10 +86,19 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         for parent in repo.changelog.parents(node):
             pms.update(repo.manifest.read(repo.changelog.read(parent)[0]))
 
-        # Different targets seem to handle the TZ differently. It looks like
-        # darcs may be the most correct.
-        (dt, tz) = date.split(' ')
-        date = datetime.fromtimestamp(int(dt) + int(tz))
+        # if files contains only '.hgtags', this is probably a tag cset.
+        # Tailor appears to only support tagging the current version, so only
+        # pass on tags that are for the immediate parents of the current node
+        tags = None
+        if files == ['.hgtags']:
+            tags = [tag for (tag, tagnode) in repo.tags().iteritems()
+                    if tagnode in parents]
+            # Since this is a tag, the parent manifest contains everything.
+            # The only question is whether or not .hgtags existed before
+            if pms.has_key('.hgtags'):
+                pms = {'.hgtags': pms['.hgtags']}
+            else:
+                pms = {}
 
         # Every time we find a file in the current manifest, we pop it from the parents.
         # Anything left over in parents is a deleted file.
@@ -110,7 +126,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         from mercurial.node import hex
         revision = hex(node)
-        return Changeset(revision, date, user, message, entries)
+        return Changeset(revision, date, user, message, entries, tags=tags)
 
     def _getUI(self):
         try:
