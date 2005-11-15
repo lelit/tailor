@@ -97,6 +97,16 @@ class GitWorkingDir(SyncronizableTargetWorkingDir):
                 # empty changeset, which git-core doesn't support
                 pass
 
+    def _tag(self, tag):
+        # Allow a new tag to overwrite an older one with -f
+        cmd = self.repository.command("tag", "-f", tag)
+        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c.execute()
+
+        if c.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %d" %
+                                              (str(c), c.exit_status))
+
     def _removePathnames(self, names):
         """
         Remove some filesystem object.
