@@ -573,6 +573,25 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Apply a tag.
         """
 
+        # Sanitize tagnames for CVS: start with [a-zA-z], only include letters,
+        # numbers, '-' and '_'.
+        # str.isalpha et al are locale-dependent
+        def iscvsalpha(chr):
+            return (chr >= 'a' and chr <= 'z') or (chr >= 'A' and chr <= 'Z')
+        def iscvsdigit(chr):
+            return chr >= '0' and chr <= '9'
+        def iscvschar(chr):
+            return iscvsalpha(chr) or iscvsdigit(chr) or chr == '-' or chr == '_'
+        def cvstagify(chr):
+            if iscvschar(chr):
+                return chr
+            else:
+                return '_'
+
+        tagname = ''.join([cvstagify(chr) for chr in tagname])
+        if not iscvsalpha(tagname[0]):
+            tagname = 'tag-' + tagname
+
         cmd = self.repository.command("tag")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
         c.execute(tagname)
