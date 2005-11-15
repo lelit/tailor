@@ -100,8 +100,6 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             else:
                 pms = {}
 
-        # Every time we find a file in the current manifest, we pop it from the parents.
-        # Anything left over in parents is a deleted file.
         for f in files:
             e = ChangesetEntry(f)
             # find renames
@@ -112,17 +110,17 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 e.old_name = oldname[0]
                 pms.pop(oldname[0])
             else:
-                try:
-                    del pms[f]
+                if pms.has_key(f):
                     e.action_kind = ChangesetEntry.UPDATED
-                except KeyError:
+                else:
                     e.action_kind = ChangesetEntry.ADDED
 
             entries.append(e)
 
-        for df in pms.iterkeys():
+        for df in [file for file in pms.iterkeys() if not manifest.has_key(file)]:
             e = ChangesetEntry(df)
             e.action_kind = ChangesetEntry.DELETED
+            entries.append(e)
 
         from mercurial.node import hex
         revision = hex(node)
