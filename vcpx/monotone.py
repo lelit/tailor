@@ -856,6 +856,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         upstream source tree, when overriden by subclasses.
         """
 
+        from re import escape
+
         if not self.repository.repository or exists(join(self.basedir, 'MT')):
             return
 
@@ -879,6 +881,26 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             monotonerc = open(join(self.basedir, 'MT', 'monotonerc'), 'w')
             monotonerc.write(MONOTONERC % self.repository.passphrase)
             monotonerc.close()
+
+        # Add the tailor log file and state file to MT's list of
+        # ignored files
+        ignored = []
+        logfile = self.repository.projectref().logfile
+        if logfile.startswith(self.basedir):
+            ignored.append('^%s$' %
+                           escape(logfile[len(self.basedir)+1:]))
+
+        sfname = self.repository.projectref().state_file.filename
+        if sfname.startswith(self.basedir):
+            sfrelname = sfname[len(self.basedir)+1:]
+            ignored.append('^%s$' % escape(sfrelname))
+            ignored.append('^%s$' % escape(sfrelname + '.old'))
+            ignored.append('^%s$' % escape(sfrelname + '.journal'))
+
+        if len(ignored) > 0:
+            mt_ignored = open(join(self.basedir, '.mt-ignore'), 'aU')
+            mt_ignored.write('\n'.join(ignored))
+            mt_ignored.close()
 
     def _initializeWorkingDir(self):
         """
