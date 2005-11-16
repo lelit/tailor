@@ -198,8 +198,31 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                         "%d 0" % mktime(date.timetuple()))
 
     def _tag(self, tag):
+        """ Tag the tip with a given identifier """
+        # TODO: keep a handle on the changeset holding this tag? Then
+        # we can extract author, log, date from it.
         opts = self._defaultOpts('tag')
-        commands.tag(self._getUI(), self._getRepo(), str(tag), **opts)
+
+        # This seems gross. I don't get why I'm getting a unicode tag when
+        # it's just ascii underneath. Something weird is happening in CVS.
+        tag = tag.encode(self.repository.encoding)
+        # CVS can't tell when a tag was applied so it tends to pass around
+        # too many. We want to support retagging so we can't just ignore
+        # duplicates. But we can safely ignore a tag if it is contained
+        # in the commit history from tip back to the last non-tag commit.
+        repo = self._getRepo()
+        tagnodes = repo.tags().values()
+        try:
+            tagnode = repo.tags()[tag]
+            # tag commit can't be merge, right?
+            parent = repo.changelog.parents(repo.changelog.tip())[0]
+            while parent in tagnodes:
+                if tagnode == parent:
+                    return
+                parent = repo.changelog.parents(parent)[0]
+        except KeyError:
+            pass
+        commands.tag(self._getUI(), repo, tag, **opts)
 
     def _defaultOpts(self, cmd):
         # Not sure this is public. commands.parse might be, but this
