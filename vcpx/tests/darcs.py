@@ -193,3 +193,27 @@ class DarcsChangesParser(TestCase):
 
         csets = list(changesets_from_darcschanges(log, chunksize=100))
         self.assertEqual(len(csets), 4)
+
+    OLD_DATE_FORMAT_TEST = """\
+<changelog>
+<patch author='David Roundy &lt;droundy@abridgegame.org&gt;' date='Tue Oct 14 09:42:00 EDT 2003' local_date='Tue Oct 14 15:42:00 CEST 2003' inverted='False' hash='20031014094200-53a90-5896ac929692179d06a42af70f273800e4842603.gz'>
+        <name>use new select code in record.</name>
+</patch>
+<patch author='David Roundy &lt;droundy@abridgegame.org&gt;' date='20031014140231' local_date='Tue Oct 14 16:02:31 CEST 2003' inverted='False' hash='20031014140231-53a90-f5b6f441d32bd49d8ceacd6d804f31a462f94b88.gz'>
+        <name>use iso format for dates in record.</name>
+</patch>
+</changelog>
+"""
+
+    def testOldDateFormat(self):
+        """Verify that the parser understands date format used by old darcs"""
+
+        log = StringIO(self.OLD_DATE_FORMAT_TEST)
+
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+        self.assertEqual(cset.date, datetime(2003, 10, 14, 9, 42, 0))
+
+        cset = csets.next()
+        self.assertEqual(cset.date, datetime(2003, 10, 14, 14, 2, 31))
