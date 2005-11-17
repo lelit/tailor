@@ -302,8 +302,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                                       "--xml-output", "--summ")
         changes = ExternalCommand(cwd=self.basedir, command=cmd)
         last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0])
-        if last:
+        try:
             changeset.entries.extend(last.next().entries)
+        except StopIteration:
+            pass
 
         return conflicts
 
