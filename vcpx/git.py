@@ -2,6 +2,7 @@
 # :Progetto: vcpx -- Git target (using git-core)
 # :Creato:   Thu  1 Sep 2005 04:01:37 EDT
 # :Autore:   Todd Mokros <tmokros@tmokros.net>
+#            Brendan Cully <brendan@kublai.com>
 # :Licenza:  GNU General Public License
 #
 
@@ -12,10 +13,145 @@ This module implements the backend for Git using git-core.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from source import ChangesetApplicationFailure
+from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 
-class GitWorkingDir(SyncronizableTargetWorkingDir):
+class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+    ## UpdatableSourceWorkingDir
+    def _checkoutUpstreamRevision(self, revision):
+        """ git clone """
+        from os import rename, rmdir
+        from os.path import join
+
+        # Right now we clone the entire repository and just check out to the
+        # current rev because it makes revision parsing easier. We can't
+        # easily check out arbitrary revisions anyway, but we could probably
+        # handle HEAD (master) as a special case...
+        # git clone won't checkout into an existing directory
+        target = join(self.basedir, '.gittmp')
+        # might want -s if we can determine that the path is local. Then again,
+        # that makes it a little unsafe to do git write actions here
+        self._tryCommand(['clone', '-n', self.repository.repository, target],
+                         ChangesetApplicationFailure, False)
+
+        rename(join(target, '.git'), join(self.basedir, '.git'))
+        rmdir(target)
+
+        rev = self._getRev(revision)
+        if rev != revision:
+            self.log.info('Checking out revision %s (%s)' % (rev, revision))
+        else:
+            self.log.info('Checking out revision ' + rev)
+        self._tryCommand(['reset', '--hard', rev], ChangesetApplicationFailure, False)
+
+        return self._changesetForRevision(rev)
+
+    def _getUpstreamChangesets(self, since):
+        self._tryCommand(['fetch'], GetUpstreamChangesetsFailure, False)
+
+        revs = self._tryCommand(['rev-list', '^' + since, 'origin'],
+                                GetUpstreamChangesetsFailure)[:-1]
+        revs.reverse()
+        for rev in revs:
+            self.log.info('Updating to revision ' + rev)
+            yield self._changesetForRevision(rev)
+
+    def _applyChangeset(self, changeset):
+        from changes import ChangesetEntry
+        from os import remove
+        from os.path import join
+
+        self._tryCommand(['read-tree', '-m', changeset.revision],
+                         ChangesetApplicationFailure, False)
+        # Delete removed files by hand
+        for entry in [entry for entry in changeset.entries
+                      if entry.action_kind == ChangesetEntry.DELETED]:
+            remove(join(self.basedir, entry.name))
+            
+        self._tryCommand(['checkout-index', '-f', '-u', '-a'],
+                         ChangesetApplicationFailure, False)
+        # Somewhat cosmetic: point HEAD to current revision. Nothing should
+        # really rely on this, but if something goes wrong this will give
+        # an indication of how far along tailor got...
+        head = file(join(join(self.basedir, '.git'), 'HEAD'), 'w')
+        head.write(changeset.revision + '\n')
+        head.close()
+
+        # Does not handle conflicts
+        return None
+
+    def _changesetForRevision(self, revision):
+        from changes import Changeset, ChangesetEntry
+        from datetime import datetime
+
+        action_map = {'A': ChangesetEntry.ADDED, 'D': ChangesetEntry.DELETED,
+                      'M': ChangesetEntry.UPDATED, 'R': ChangesetEntry.RENAMED}
+
+        # find parent
+        lines = self._tryCommand(['rev-list', '--pretty=raw', '--max-count=1', revision],
+                                 GetUpstreamChangesetsFailure)
+        parents = []
+        user = Changeset.ANONYMOUS_USER
+        loglines = []
+        date = None
+        for line in lines:
+            if line.startswith('parent'):
+                parents.append(line.split(' ').pop())
+            if line.startswith('author'):
+                author_fields = line.split(' ')[1:]
+                tz = int(author_fields.pop())
+                dt = int(author_fields.pop())
+                user = ' '.join(author_fields)
+                tzsecs = abs(tz)
+                tzsecs = (tz / 100 * 60 + tz % 100) * 60
+                if tz < 0:
+                    tzsecs = -tzsecs
+                date = datetime.utcfromtimestamp(dt + tzsecs)
+            if line.startswith('    '):
+                loglines.append(line.lstrip('    '))
+
+        message = '\n'.join(loglines)
+        entries = []
+        cmd = ['diff-tree', '--root', '-M', '--name-status']
+        # haven't thought about merges yet...
+        if parents:
+            cmd.append(parents[0])
+        cmd.append(revision)
+        files = self._tryCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
+        if not parents:
+            # git lets us know what it's diffing against if we omit parent
+            files.pop(0)
+        for line in files:
+            fields = line.split('\t')
+            state = fields.pop(0)
+            name = fields.pop()
+            e = ChangesetEntry(name)
+            e.action_kind = action_map[state[0]]
+            if e.action_kind == ChangesetEntry.RENAMED:
+                e.old_name = fields.pop()
+
+            entries.append(e)
+
+        return Changeset(revision, date, user, message, entries)
+            
+    def _getRev(self, revision):
+        """ Return the git object corresponding to the symbolic revision """
+        if revision == 'INITIAL':
+            return self._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
+
+        return self._tryCommand('rev-parse', '--verify', revision, GetUpstreamChangesetsFailure)[0]
+
+    def _tryCommand(self, cmd, exception=Exception, pipe=True):
+        c = ExternalCommand(command = self.repository.command(*cmd), cwd = self.basedir)
+        if pipe:
+            output = c.execute(stdout=PIPE)[0]
+        else:
+            c.execute()
+        if c.exit_status:
+            raise exception(str(c) + ' failed')
+        if pipe:
+            return output.read().split('\n')
 
     ## SyncronizableTargetWorkingDir
 
