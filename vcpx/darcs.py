@@ -75,14 +75,13 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                 self.current = {}
                 self.current['author'] = attributes['author']
                 date = attributes['date']
-                # 20040619130027
-                y = int(date[:4])
-                m = int(date[4:6])
-                d = int(date[6:8])
-                hh = int(date[8:10])
-                mm = int(date[10:12])
-                ss = int(date[12:14])
-                timestamp = datetime(y, m, d, hh, mm, ss)
+                from time import strptime
+                try:
+                    # 20040619130027
+                    timestamp = datetime(*strptime(date, '%Y%m%d%H%M%S')[:6])
+                except ValueError:
+                    # Old darcs patches use the form Sun Oct 20 20:01:05 EDT 2002
+                    timestamp = datetime(*strptime(date[:19] + date[-5:], '%a %b %d %H:%M:%S %Y')[:6])
                 self.current['date'] = timestamp
                 self.current['comment'] = ''
                 self.current['hash'] = attributes['hash']
