@@ -212,7 +212,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         cmd = self.repository.command("log", "--verbose", "--xml",
                                       "--revision", "%d:HEAD" % (sincerev+1))
         svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
-        log = svnlog.execute('.', stdout=PIPE, TZ='UTC')[0]
+        log = svnlog.execute('.', stdout=PIPE, TZ='UTC0')[0]
 
         if svnlog.exit_status:
             return []

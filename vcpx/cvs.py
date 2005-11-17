@@ -596,7 +596,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             log = cvslog.execute(self.repository.module, stdout=PIPE,
                                  stderr=STDOUT, since=since,
                                  repository=self.repository.repository,
-                                 branch=branch or 'HEAD', TZ='UTC')[0]
+                                 branch=branch or 'HEAD', TZ='UTC0')[0]
             if cvslog.exit_status:
                 retry += 1
                 if retry>3:

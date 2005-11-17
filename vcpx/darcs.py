@@ -178,7 +178,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         cmd = self.repository.command("pull", "--dry-run")
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
-                              stdout=PIPE, stderr=STDOUT, TZ='UTC')[0]
+                              stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
 
         if pull.exit_status:
             raise GetUpstreamChangesetsFailure(

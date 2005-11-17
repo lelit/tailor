@@ -163,7 +163,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                                       "--root", self.repository.repository,
                                       cvsps=True)
         cvsps = ExternalCommand(command=cmd)
-        log = cvsps.execute(self.repository.module, stdout=PIPE, TZ='UTC')[0]
+        log = cvsps.execute(self.repository.module, stdout=PIPE, TZ='UTC0')[0]
 
         for cs in changesets_from_cvsps(log, sincerev):
             yield cs
