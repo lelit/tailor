@@ -197,6 +197,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from time import mktime
         from os import environ
 
+        encode = self.repository.encode
+
         logmessage = []
         if patchname:
             logmessage.append(patchname)
@@ -208,8 +210,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         (name, email) = self.__parse_author(author)
         if name:
-            env['GIT_AUTHOR_NAME']=name
-            env['GIT_COMMITTER_NAME']=name
+            env['GIT_AUTHOR_NAME'] = encode(name)
+            env['GIT_COMMITTER_NAME'] = encode(name)
         if email:
             env['GIT_AUTHOR_EMAIL']=email
             env['GIT_COMMITTER_EMAIL']=email
@@ -221,7 +223,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         cmd = self.repository.command("commit", "-a", "-F", "-")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
-        logmessage = '\n'.join(logmessage)
+        logmessage = encode('\n'.join(logmessage))
         if not logmessage.endswith('\n'):
             logmessage += '\n'
         (out, _) = c.execute(stdout=PIPE, env=env, input=logmessage)

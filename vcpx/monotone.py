@@ -706,23 +706,21 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Commit the changeset.
         """
 
-        from locale import getpreferredencoding
-
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
 
         rontf = ReopenableNamedTemporaryFile('mtn', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(logmessage))
+        log.write(encode('\n'.join(logmessage)))
         log.close()
 
         cmd = self.repository.command("commit",
-                                      "--author", author.encode(encoding),
+                                      "--author", encode(author),
                                       "--date", date.isoformat(),
                                       "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)

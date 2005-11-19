@@ -41,24 +41,23 @@ class HgWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from time import mktime
-        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
 
-        cmd = self.repository.command("commit", "-u", author.encode(encoding),
+        cmd = self.repository.command("commit", "-u", encode(author),
                                       "-l", "%(logfile)s",
                                       "-d", "%(time)d 0")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         rontf = ReopenableNamedTemporaryFile('hg', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(logmessage) or "Empty changelog")
+        log.write(encode('\n'.join(logmessage)) or "Empty changelog")
         log.close()
 
         c.execute(logfile=rontf.name, time=mktime(date.timetuple()))

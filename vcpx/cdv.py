@@ -43,18 +43,16 @@ class CdvWorkingDir(SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from locale import getpreferredencoding
-
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.replace('%', '%%').encode(encoding))
+            logmessage.append(changelog.replace('%', '%%'))
 
-        cmd = self.repository.command("-u", author.encode(encoding), "commit",
-                                      "-m", '\n'.join(logmessage),
+        cmd = self.repository.command("-u", encode(author), "commit",
+                                      "-m", encode('\n'.join(logmessage)),
                                       "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC'))
 
         if not entries:

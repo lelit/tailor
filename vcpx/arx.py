@@ -34,18 +34,18 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         """
 
         from time import mktime
-        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.replace('%', '%%').encode(encoding))
+            logmessage.append(changelog.replace('%', '%%'))
 
-        cmd = self.repository.command("commit", "-s", '\n'.join(logmessage),
-                                      "--author", author.encode(encoding),
+        cmd = self.repository.command("commit",
+                                      "-s", encode('\n'.join(logmessage)),
+                                      "--author", encode(author),
                                       "--date", date.isoformat())
         c = ExternalCommand(cwd=self.basedir, command=cmd)
         c.execute()

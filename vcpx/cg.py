@@ -61,6 +61,8 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
         from time import mktime
         from os import environ
 
+        encode = self.repository.encode
+
         logmessage = []
         if patchname:
             logmessage.append(patchname)
@@ -72,7 +74,7 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
 
         (name, email) = self.__parse_author(author)
         if name:
-            env['GIT_AUTHOR_NAME']=name
+            env['GIT_AUTHOR_NAME'] = encode(name)
         if email:
             env['GIT_AUTHOR_EMAIL']=email
         if date:
@@ -82,7 +84,7 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
         cmd = self.repository.command("commit", "-f")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
-        c.execute(env=env, input='\n'.join(logmessage))
+        c.execute(env=env, input=encode('\n'.join(logmessage)))
         if c.exit_status:
             raise ChangesetApplicationFailure("%s returned status %d" %
                                               (str(c), c.exit_status))
@@ -177,4 +179,3 @@ class CgWorkingDir(SyncronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('\n')
         ignore.close()
-

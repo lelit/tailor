@@ -184,7 +184,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _commit(self, date, author, patchname, changelog=None, names=None):
         from time import mktime
 
-        encoding = self.repository.encoding
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
@@ -192,11 +192,11 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog)
         if logmessage:
-            logmessage = '\n'.join(logmessage).encode(encoding)
+            logmessage = encode('\n'.join(logmessage))
         else:
             logmessage = "Empty changelog"
-        self._hg.commit(names and [n.encode(encoding) for n in names] or [],
-                        logmessage, author.encode(encoding),
+        self._hg.commit(names and [encode(n) for n in names] or [],
+                        logmessage, encode(author),
                         "%d 0" % mktime(date.timetuple()))
 
     def _tag(self, tag):
@@ -207,7 +207,8 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # This seems gross. I don't get why I'm getting a unicode tag when
         # it's just ascii underneath. Something weird is happening in CVS.
-        tag = tag.encode(self.repository.encoding)
+        tag = self.repository.encode(tag)
+
         # CVS can't tell when a tag was applied so it tends to pass around
         # too many. We want to support retagging so we can't just ignore
         # duplicates. But we can safely ignore a tag if it is contained

@@ -454,7 +454,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
             entries = ['.']
 
         record = ExternalCommand(cwd=self.basedir, command=cmd)
-        record.execute(input='\n'.join(logmessage))
+        record.execute(input=self.repository.encode('\n'.join(logmessage)))
 
         if record.exit_status:
             raise ChangesetApplicationFailure(

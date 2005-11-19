@@ -523,22 +523,21 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from shwrap import ReopenableNamedTemporaryFile
-        from locale import getpreferredencoding
 
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
         logmessage.append('')
-        logmessage.append('Original author: %s' % author.encode(encoding))
+        logmessage.append('Original author: %s' % author)
         logmessage.append('Date: %s' % date)
 
         rontf = ReopenableNamedTemporaryFile('cvs', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(logmessage))
+        log.write(encode('\n'.join(logmessage)))
         log.close()
 
         cmd = self.repository.command("-q", "ci", "-F", rontf.name)

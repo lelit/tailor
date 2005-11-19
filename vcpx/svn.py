@@ -408,27 +408,25 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from locale import getpreferredencoding
-
-        encoding = ExternalCommand.FORCE_ENCODING or getpreferredencoding()
+        encode = self.repository.encode
 
         logmessage = []
         if patchname:
-            logmessage.append(patchname.encode(encoding))
+            logmessage.append(patchname)
         if changelog:
-            logmessage.append(changelog.encode(encoding))
+            logmessage.append(changelog)
 
         # If we cannot use propset, fall back to old behaviour of
         # appending these info to the changelog
 
         if not self.USE_PROPSET:
             logmessage.append('')
-            logmessage.append('Original author: %s' % author.encode(encoding))
+            logmessage.append('Original author: %s' % encode(author))
             logmessage.append('Date: %s' % date)
 
         rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
         log = open(rontf.name, "w")
-        log.write('\n'.join(logmessage))
+        log.write(encode('\n'.join(logmessage)))
         log.close()
 
         cmd = self.repository.command("commit", "--file", rontf.name)
@@ -471,7 +469,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             propset = ExternalCommand(cwd=self.basedir, command=cmd)
 
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
-            propset.execute(author.encode(encoding), propname='svn:author')
+            propset.execute(encode(author), propname='svn:author')
 
         cmd = self.repository.command("update", "--quiet",
                                       "--revision", revision)

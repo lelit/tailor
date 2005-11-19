@@ -125,24 +125,11 @@ class Tailorizer(Project):
         from shwrap import ExternalCommand
         from target import SyncronizableTargetWorkingDir
         from changes import Changeset
-        from locale import getpreferredencoding
 
         def pconfig(option, raw=False):
             return self.config.get(self.name, option, raw=raw)
 
         ExternalCommand.DEBUG = pconfig('debug')
-        encoding = pconfig('encoding')
-        if encoding:
-            ExternalCommand.FORCE_ENCODING = encoding
-
-            # Make printouts be encoded as well. A better solution would be
-            # using the replace mechanism of the encoder, and keep printing
-            # in the user's LC_CTYPE/LANG setting.
-
-            import codecs, sys
-            sys.stdout = codecs.getwriter(encoding)(sys.stdout)
-        else:
-            encoding = getpreferredencoding()
 
         pname_format = pconfig('patch-name-format', raw=True)
         if pname_format is not None:
@@ -157,12 +144,16 @@ class Tailorizer(Project):
                     return
             self.update()
         except UnicodeEncodeError, exc:
-            raise ConfigurationError('%s: it seems that current encoding "%s" '
+            raise ConfigurationError('%s: it seems that the encoding '
+                                     'used by either the source ("%s") or the '
+                                     'target ("%s") repository '
                                      'cannot properly represent at least one '
                                      'of the characters in the upstream '
                                      'changelog. You need to use a wider '
-                                     'character set, using "encoding" option.'
-                                     % (exc, encoding))
+                                     'character set, using "encoding" option, '
+                                     'or even "encoding-errors-policy".'
+                                     % (exc, self.source.encoding,
+                                        self.target.encoding))
 
 class RecogOption(Option):
     """

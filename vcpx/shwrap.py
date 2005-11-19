@@ -49,9 +49,6 @@ class ExternalCommand:
     DRY_RUN = False
     """Don't really execute the command."""
 
-    FORCE_ENCODING = None
-    """Force the output encoding to some other charset instead of user prefs."""
-
     def __init__(self, command=None, cwd=None):
         """
         Initialize a ExternalCommand instance, specifying the command
@@ -200,7 +197,11 @@ class ExternalCommand:
                 raise
 
         if input and isinstance(input, unicode):
-            input = input.encode(self.FORCE_ENCODING or getpreferredencoding())
+            encoding = getpreferredencoding()
+            self.log.warning("Using default %s encoding, ignoring errors; "
+                             "caller should use repository's encoding and "
+                             "pass an already encoded input")
+            input = input.encode(encoding, 'ignore')
 
         out, err = process.communicate(input=input)
 
