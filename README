@@ -420,6 +420,10 @@ Projects
 A project is identified by a section whose name does not contain any
 colon (":") character, and configured with the following values:
 
+.. note:: If a particular option is missing from the project section,
+          its value is obtained looking up the same option in the
+          ``[DEFAULT]`` section.
+
 root-directory : string
   This is where all the fun will happen: this directory will contain
   the source and the target working copy, and usually the state and
@@ -523,6 +527,11 @@ more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
 ``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``hglib``, ``monotone``, 
 ``svn``, ``svndump`` and ``tla``.
+
+.. note:: If a particular option is missing from the repository section,
+          its value is obtained looking up the same option in the
+          section of the project *currently* using the repository,
+          falling back to the ``[DEFAULT]`` section.
 
 repository : string
   When a repository is used as a `source`, it must indicate its origin
