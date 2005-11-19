@@ -95,6 +95,8 @@ class Repository(object):
         self.encoding = cget(self.name, 'encoding')
         if not self.encoding:
             self.encoding = getpreferredencoding()
+        self.encoding_errors_policy = cget(self.name,
+                                           'encoding-errors-policy', 'strict')
 
     def _validateConfiguration(self):
         """
@@ -130,6 +132,17 @@ class Repository(object):
                                          "by %r does not exist in %r!" %
                                          (self.EXECUTABLE, self.name,
                                           getenv('PATH')))
+
+    def encode(self, s):
+        """
+        If `s` is an unicode object, encode it in the the right charset.
+        Return a standard Python string.
+        """
+
+        if isinstance(s, unicode):
+            return s.encode(self.encoding, self.encoding_errors_policy)
+        else:
+            return s
 
     def workingDir(self):
         """

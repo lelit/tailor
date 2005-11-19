@@ -565,6 +565,12 @@ encoding : string
 
     python -m locale
 
+encoding-errors-policy : string
+  By default is *strict*, that means that Python will raise an
+  exception on Unicode conversion errors. Valid options are *ignore*
+  that simply skips offending glyphs and *replace* where unrecognized
+  entities are replaced with a place holder.
+
 delay-before-apply : integer
   Sometime the migration is fast enough to put the upstream server
   under an excessive load. When this is the case, you may specify
