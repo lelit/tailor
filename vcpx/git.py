@@ -68,7 +68,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         for entry in [entry for entry in changeset.entries
                       if entry.action_kind == ChangesetEntry.DELETED]:
             remove(join(self.basedir, entry.name))
-            
+
         self._tryCommand(['checkout-index', '-f', '-u', '-a'],
                          ChangesetApplicationFailure, False)
         # Somewhat cosmetic: point HEAD to current revision. Nothing should
@@ -134,7 +134,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             entries.append(e)
 
         return Changeset(revision, date, user, message, entries)
-            
+
     def _getRev(self, revision):
         """ Return the git object corresponding to the symbolic revision """
         if revision == 'INITIAL':
@@ -331,4 +331,3 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('\n')
         ignore.close()
-
