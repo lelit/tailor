@@ -490,18 +490,33 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        cmd = self.repository.command("mv", "--quiet")
+        from os import rename, walk, remove
+        from os.path import join, isdir, exists
+
+        # --force in case the file has been changed and moved in one revision
+        cmd = self.repository.command("mv", "--quiet", "--force")
+        # Subversion does not seem to allow
+        #   $ mv a.txt b.txt
+        #   $ svn mv a.txt b.txt
+        # Here we are in this situation, since upstream VCS already
+        # moved the item.
+        # It may be better to let subversion do the move itself. For one thing,
+        # svn's cp+rm is different from rm+add (cp preserves history).
+        unmoved = False
+        oldpath = join(self.basedir, oldname)
+        newpath = join(self.basedir, newname)
+        if not exists(oldpath):
+            rename(newpath, oldpath)
+            unmoved = True
         move = ExternalCommand(cwd=self.basedir, command=cmd)
         move.execute(oldname, newname)
         if move.exit_status:
-            # Subversion does not seem to allow
-            #   $ mv a.txt b.txt
-            #   $ svn mv a.txt b.txt
-            # Here we are in this situation, since upstream VCS already
-            # moved the item. OTOH, svn really treats "mv" as "cp+rm",
             # so we do the same here
-            self._removePathnames([oldname])
-            self._addPathnames([newname])
+            if unmoved:
+                rename(oldpath, newpath)
+            raise ChangesetApplicationFailure("%s returned status %d"
+                                              % (str(move), move.exit_status,
+                                                 err.read()))
 
     def __createRepository(self, target_repository, target_module):
         """
