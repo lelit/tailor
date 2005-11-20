@@ -614,7 +614,7 @@ class CvsWorkingDir(CvspsWorkingDir):
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
-        log = reader(log)
+        log = reader(log, self.repository.encoding_errors_policy)
         return changesets_from_cvslog(log, self.repository.module, branch,
                                       CvsEntries(self.repository.rootdir),
                                       since)
