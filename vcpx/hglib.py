@@ -181,6 +181,16 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if notdirs:
             self._hg.add(notdirs)
 
+    def _getCommitEntries(self, changeset):
+        # We need to extract the old name for renames and commit that too
+        from changes import Changeset, ChangesetEntry
+        from datetime import datetime
+
+        entries = SyncronizableTargetWorkingDir._getCommitEntries(self, changeset)
+        entries.extend([e.old_name for e in changeset.entries
+                        if e.action_kind == ChangesetEntry.RENAMED])
+        return entries
+
     def _commit(self, date, author, patchname, changelog=None, names=None):
         from time import mktime
 
