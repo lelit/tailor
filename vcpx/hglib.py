@@ -182,13 +182,19 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             self._hg.add(notdirs)
 
     def _getCommitEntries(self, changeset):
-        # We need to extract the old name for renames and commit that too
-        from changes import Changeset, ChangesetEntry
-        from datetime import datetime
+        from changes import ChangesetEntry
+        from os.path import join, isdir, normpath
 
         entries = SyncronizableTargetWorkingDir._getCommitEntries(self, changeset)
-        entries.extend([e.old_name for e in changeset.entries
-                        if e.action_kind == ChangesetEntry.RENAMED])
+        # We need to extract the old name for renames and commit that too
+        for e in [e for e in changeset.entries
+                  if e.action_kind == ChangesetEntry.RENAMED]:
+            # Have to walk directories by hand looking for files
+            if isdir(join(self.basedir, normpath(e.name))):
+                entries.extend([join(e.old_name, tail) for tail in self._walk(e.name)])
+            else:
+                entries.append(e.old_name)
+
         return entries
 
     def _commit(self, date, author, patchname, changelog=None, names=None):
@@ -257,17 +263,19 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         from os.path import join, isdir, normpath
 
+        repo = self._getRepo()
+
         if isdir(join(self.basedir, normpath(newname))):
             # Given lack of support for directories in current HG,
             # loop over all files under the old directory and
             # do a copy on them.
-            for src, oldpath in self._hg.dirstate.walk(oldname):
-                tail = oldpath[len(oldname)+2:]
-                self._hg.copy(oldpath, join(newname, tail))
-                self._hg.remove([oldpath])
+            for f in self._walk(oldname):
+                oldpath = join(oldname, f)
+                repo.copy(oldpath, join(newname, f))
+                repo.remove([oldpath])
         else:
-            self._hg.copy(oldname, newname)
-            self._hg.remove([oldname])
+            repo.copy(oldname, newname)
+            repo.remove([oldname])
 
     def _prepareTargetRepository(self):
         """
@@ -319,3 +327,16 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _initializeWorkingDir(self):
         commands.add(self._ui, self._hg, self.basedir)
+
+    def _walk(self, subdir):
+        """ Returns the files mercurial knows about under subdir, relative to subdir """
+        from os.path import join, split, isdir
+
+        files = []
+        for src, path in self._getRepo().dirstate.walk([subdir]):
+            (hd, tl) = split(path)
+            while hd != subdir:
+                hd, nt = split(hd)
+                tl = join(nt, tl)
+            files.append(tl)
+        return files
