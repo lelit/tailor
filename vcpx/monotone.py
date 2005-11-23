@@ -725,6 +725,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                       "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.basedir, command=cmd)
 
+        entries = None
         if not entries:
             entries = ['.']
 
@@ -806,7 +807,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                               target_repository)
 
         if target_repository.keyid:
-            self.repository.log_info("Using key %s for commits" % (target_repository.keyid,))
+            self.log.info("Using key %s for commits" % (target_repository.keyid,))
         else:
             # keystore key id unspecified, look at other options
             if target_repository.keyfile:
@@ -875,9 +876,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         setup = ExternalCommand(command=cmd)
         setup.execute(self.basedir)
 
-        if self.repository.passphrase:
+        if self.repository.passphrase or self.repository.custom_lua:
             monotonerc = open(join(self.basedir, 'MT', 'monotonerc'), 'w')
-            monotonerc.write(MONOTONERC % self.repository.passphrase)
+            if self.repository.passphrase:
+                monotonerc.write(MONOTONERC % self.repository.passphrase)
+            else:
+                raise TargetInitializationFailure("The passphrase must be specified")
+            if self.repository.custom_lua:
+                self.log.info("Adding custom lua script")
+                monotonerc.write(self.repository.custom_lua)
             monotonerc.close()
 
         # Add the tailor log file and state file to MT's list of

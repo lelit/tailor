@@ -659,7 +659,10 @@ keygenid : string
   specified.
 
 passphrase : string
-  Passphrase to use for commits. 
+  Passphrase to use for commits. Must be specified.
+
+custom_lua : string
+  Optional custom lua script. If present, is written into MT/monotonerc.
 
 svn
 %%%

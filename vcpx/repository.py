@@ -302,6 +302,7 @@ class MonotoneRepository(Repository):
         self.passphrase = cget(self.name, 'passphrase')
         self.keyfile = cget(self.name, 'keyfile')
         self.keygenid = cget(self.name, 'keygenid')
+        self.custom_lua = cget(self.name, 'custom_lua')
 
 class SvnRepository(Repository):
     METADIR = '.svn'
