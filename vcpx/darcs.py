@@ -496,7 +496,18 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from re import escape, compile
         from dualwd import IGNORED_METADIRS
 
-        if not exists(join(self.basedir, self.repository.METADIR)):
+        metadir = join(self.basedir, '_darcs')
+        prefsdir = join(metadir, 'prefs')
+        prefsname = join(prefsdir, 'prefs')
+        boringname = join(prefsdir, 'boring')
+        if exists(prefsname):
+            for pref in open(prefsname, 'rU'):
+                if pref:
+                    pname, pvalue = pref.split(' ', 1)
+                    if pname == 'boringfile':
+                        boringname = pvalue
+
+        if not exists(metadir):
             cmd = self.repository.command("initialize")
             init = ExternalCommand(cwd=self.basedir, command=cmd)
             init.execute()
@@ -505,7 +516,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(init), init.exit_status))
 
-            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'rU')
+            boring = open(boringname, 'rU')
             ignored = boring.read().split('\n')
             boring.close()
 
@@ -528,11 +539,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 ignored.append('^%s$' % escape(sfrelname+'.old'))
                 ignored.append('^%s$' % escape(sfrelname+'.journal'))
 
-            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'wU')
+            boring = open(boringname, 'wU')
             boring.write('\n'.join(ignored))
             boring.close()
         else:
-            boring = open(join(self.basedir, '_darcs/prefs/boring'), 'rU')
+            boring = open(boringname, 'rU')
             ignored = boring.read().split('\n')
             boring.close()
 
