@@ -15,6 +15,7 @@ __docformat__ = 'reStructuredText'
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.branch import Branch
+from bzrlib.delta import compare_trees
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
@@ -119,20 +120,22 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # This method may get invoked several times with the same
         # entries; and Branch.add complains if a file is already
         # versioned.  So go through the list and sort out entries that
-        # is already versioned, since there is no need to add them.
-        # Do not try to catch any errors from Branch.add, since the
-        # they are _real_ errors.
+        # is already versioned, since there is no need to add them.  A
+        # file can also already have been marked to be added in this
+        # changeset. Remove those files too. Do not try to catch any
+        # errors from Branch.add, since the they are _real_ errors.
         new_entries = []
         inv = self._b.get_inventory(self._b.last_revision())
+        added = [new[0] for new in compare_trees(self._b.revision_tree(self._b.last_revision()), self._b.working_tree()).added]
         for e in entries:
-            if not inv.has_filename(e):
+            if not inv.has_filename(e) and not e in added:
                 new_entries.extend([e])
             else:
                 self.log.debug('"%s" already in inventory, skipping', e)
 
         if len(new_entries) == 0:
             return
-        self.log.info('Adding %s...', ', '.join(entries))
+        self.log.info('Adding %s...', ', '.join(new_entries))
         self._b.add(new_entries)
 
     def _addSubtree(self, subdir):
@@ -177,7 +180,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
                                     hexlify(rand_bytes(8)))
-        self._b.commit(logmessage, committer=author,
+        self._b.working_tree().commit(logmessage, committer=author,
                        specific_files=entries, rev_id=revision_id,
                        verbose=self.repository.projectref().verbose,
                        timestamp=timestamp)
