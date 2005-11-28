@@ -505,7 +505,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                 if pref:
                     pname, pvalue = pref.split(' ', 1)
                     if pname == 'boringfile':
-                        boringname = pvalue
+                        boringname = join(self.basedir, pvalue[:-1])
 
         if not exists(metadir):
             cmd = self.repository.command("initialize")
