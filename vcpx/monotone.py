@@ -20,7 +20,11 @@ from changes import ChangesetEntry,Changeset
 from os.path import exists, join, isdir, split
 from os import renames, access, F_OK
 from string import whitespace
-from sets import Set
+
+try:
+  set
+except NameError: 
+  from sets import Set as set
 
 MONOTONERC = """\
 function get_passphrase(KEYPAIR_ID)
@@ -343,8 +347,8 @@ class MonotoneDiffParser:
             raise GetUpstreamChangesetsFailure(
                 "monotone diff returned status %d" % mtl.exit_status)
 
-        implicit_dirs_add = Set()
-        dirs_add = Set()
+        implicit_dirs_add = set()
+        dirs_add = set()
 
         # monotone diffs are prefixed by a section containing
         # metainformations about files
