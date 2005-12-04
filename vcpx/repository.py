@@ -339,7 +339,10 @@ class SvnRepository(Repository):
             raise ConfigurationError("Must specify the path within the "
                                      "Subversion repository as 'module'")
 
-        if not self.module.startswith('/'):
+        if self.module == '.':
+            self.log.warning("Replacing '.' with '/' in module name")
+            self.module = '/'
+        elif not self.module.startswith('/'):
             self.log.debug("Prepending '/' to module %r", self.module)
             self.module = '/' + self.module
 
