@@ -451,6 +451,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             if line <> '\n' and not line.startswith('Sending ') and \
                not line.startswith('Transmitting file data ') and \
                not line.startswith('Adding ') and \
+               not line.startswith('Replacing ') and \
                not line.startswith('Deleting '):
                 break
             line = out.readline()
