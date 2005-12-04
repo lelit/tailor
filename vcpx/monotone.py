@@ -395,6 +395,8 @@ class MonotoneDiffParser:
                         chentry.old_name= fname[1:-1]
                         if token=="rename_directory":
                             self._addPathToSet(dirs_add, chentry.name)
+                        else:
+                            self._addPathToSet(implicit_dirs_add, split(chentry.name)[0])
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
