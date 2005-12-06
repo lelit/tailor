@@ -162,6 +162,10 @@ class Repository(object):
             raise InvocationError("Cannot import %r: %s" % (wdname, e))
         except (AttributeError, ImportError), e:
             self.log.critical("Cannot import %r from %r", wdname, modname)
+            if self.kind == 'bzr':
+                from sys import version_info
+                if version_info < (2,4):
+                    self.log.warning("Bazaar-NG backend requires Python 2.4")
             raise InvocationError("%r is not a known VCS kind: %s" %
                                   (self.kind, e))
 
