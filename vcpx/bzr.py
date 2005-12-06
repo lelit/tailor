@@ -135,8 +135,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if len(new_entries) == 0:
             return
+
+        from bzrlib.add import smart_add_tree
+        import os.path
         self.log.info('Adding %s...', ', '.join(new_entries))
-        self._b.add(new_entries)
+        smart_add_tree(self._b.working_tree(),[os.path.join(self.basedir,e) for e in new_entries],recurse=False)
 
     def _addSubtree(self, subdir):
         """
@@ -147,10 +150,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
 
         from os.path import join
-        from bzrlib.add import smart_add_branch
+        from bzrlib.add import smart_add_tree
 
         self.log.info('Recursively adding directory "%s"...', subdir)
-        smart_add_branch(self._b, [join(self.basedir, subdir)], recurse=True)
+        smart_add_tree(self._b.working_tree(), [join(self.basedir, subdir)], recurse=True)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
