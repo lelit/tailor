@@ -222,12 +222,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 assert listdir(join(self.basedir, e.name)) == ['CVS'], '%s should be empty' % e.name
                 rmtree(join(self.basedir, e.name))
             else:
-                cmd = self.repository.command("-q", "update", "-d",
+                cmd = self.repository.command("-d", "%(repository)s",
+                                              "-q", "update", "-d",
                                               "-r", e.new_revision)
                 cvsup = ExternalCommand(cwd=self.basedir, command=cmd)
                 retry = 0
                 while True:
-                    cvsup.execute(e.name)
+                    cvsup.execute(e.name, repository=self.repository.repository)
 
                     if cvsup.exit_status:
                         retry += 1
