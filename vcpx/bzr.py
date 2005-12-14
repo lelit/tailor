@@ -205,7 +205,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         rename(join(self.basedir, newentry), join(self.basedir, oldentry))
 
         self.log.info('Renaming "%s" to "%s"...', oldentry, newentry)
-        self._b.rename_one(oldentry, newentry)
+        self._b.working_tree().rename_one(oldentry, newentry)
 
     def _prepareTargetRepository(self):
         """
