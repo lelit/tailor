@@ -134,7 +134,21 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
             entries.append(e)
 
-        return Changeset(revision, date, user, message, entries)
+	# Brute-force tag search
+	from os.path import join, isdir
+	from os import listdir
+
+	tags = None
+	tagdir = join(self.basedir, '.git', 'refs', 'tags')
+	try:
+	    alltags = [(name, join(tagdir, name)) for name in listdir(tagdir)]
+	    tags = [tag[0] for tag in alltags
+		    if file(tag[1]).read().strip() == revision]
+	except OSError:
+	    # No tag dir
+	    pass
+
+        return Changeset(revision, date, user, message, entries, tags=tags)
 
     def _getRev(self, revision):
         """ Return the git object corresponding to the symbolic revision """
