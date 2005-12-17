@@ -280,6 +280,7 @@ class HgRepository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'hg-command', 'hg')
+	self.EXTRA_METADIRS = ['.hgtags']
 
 
 class HglibRepository(Repository):
@@ -293,6 +294,7 @@ class HglibRepository(Repository):
 
             if ppath not in path:
                 path.insert(0, ppath)
+	self.EXTRA_METADIRS = ['.hgtags']
 
 
 class MonotoneRepository(Repository):
