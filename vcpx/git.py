@@ -245,12 +245,14 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             logmessage += '\n'
         (out, _) = c.execute(stdout=PIPE, env=env, input=logmessage)
         if c.exit_status:
-            if out is None or out.readline().strip() != 'nothing to commit':
+	    failed = True
+	    if out:
+		for line in [x.strip() for x in out if x[0] != '#']:
+		    if line == 'nothing to commit':
+			failed = False
+	    if failed:
                 raise ChangesetApplicationFailure("%s returned status %d" %
                                                   (str(c), c.exit_status))
-            else:
-                # empty changeset, which git-core doesn't support
-                pass
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
