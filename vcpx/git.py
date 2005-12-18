@@ -138,12 +138,14 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 	from os.path import join, isdir
 	from os import listdir
 
-	tags = None
+	tags = []
 	tagdir = join(self.basedir, '.git', 'refs', 'tags')
 	try:
-	    alltags = [(name, join(tagdir, name)) for name in listdir(tagdir)]
-	    tags = [tag[0] for tag in alltags
-		    if file(tag[1]).read().strip() == revision]
+            for tag in listdir(tagdir):
+                # Consider caching stat info per tailor run
+                tagrev = self._tryCommand(['rev-list', '--max-count=1', tag])[0]
+                if (tagrev == revision):
+                    tags.append(tag)
 	except OSError:
 	    # No tag dir
 	    pass
