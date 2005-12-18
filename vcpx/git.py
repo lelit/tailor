@@ -121,7 +121,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         files = self._tryCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
         if not parents:
             # git lets us know what it's diffing against if we omit parent
-            files.pop(0)
+            if len(files) > 0:
+                files.pop(0)
         for line in files:
             fields = line.split('\t')
             state = fields.pop(0)
