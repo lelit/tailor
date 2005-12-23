@@ -207,6 +207,7 @@ class BzrRepository(Repository):
             if ppath not in path:
                 path.insert(0, ppath)
 
+
 class CdvRepository(Repository):
     METADIR = '.cdv'
 
@@ -309,6 +310,7 @@ class MonotoneRepository(Repository):
         self.keyfile = cget(self.name, 'keyfile')
         self.keygenid = cget(self.name, 'keygenid')
         self.custom_lua = cget(self.name, 'custom_lua')
+
 
 class SvnRepository(Repository):
     METADIR = '.svn'
