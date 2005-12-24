@@ -707,7 +707,9 @@ ignore-externals : bool
 svndump
 %%%%%%%
 
-..
+.. warning:: The svndump backend is totally wrong and almost unusable
+             at this time, and will be replaced by a third party
+             framework.
 
 tla
 %%%
