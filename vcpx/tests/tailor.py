@@ -26,13 +26,13 @@ start-revision = Version 0.9.17
 
 [darcs2bzr]
 target = bzr:tailor
-root-directory = /tmp/tailor-tests/darcs2bzr
+root-directory = %(testdir)s/darcs2bzr
 source = darcs:tailor
 patch-name-format = %(revision)s
 
 [bzr2darcs]
 source = bzr:tailor
-root-directory = /tmp/tailor-tests/bzr2darcs
+root-directory = %(testdir)s/bzr2darcs
 target = darcs:bzrtailor
 patch-name-format = %(revision)s
 start-revision = INITIAL
@@ -41,14 +41,14 @@ start-revision = INITIAL
 
 [bzr:tailor]
 python-path = /opt/src/bzr.dev
-repository = /tmp/tailor-tests/darcs2bzr
+repository = %(testdir)s/darcs2bzr
 
 [darcs:bzrtailor]
 
 
 [darcs2cdv]
 target = cdv:tailor
-root-directory = /tmp/tailor-tests/darcs2cdv
+root-directory = %(testdir)s/darcs2cdv
 source = darcs:tailor
 
 [cdv:tailor]
@@ -56,7 +56,7 @@ source = darcs:tailor
 
 [darcs2hg]
 target = hg:tailor
-root-directory = /tmp/tailor-tests/darcs2hg
+root-directory = %(testdir)s/darcs2hg
 source = darcs:tailor
 
 [hg:tailor]
@@ -64,41 +64,42 @@ source = darcs:tailor
 
 [darcs2svn]
 target = svn:tailor
-root-directory = /tmp/tailor-tests/darcs2svn
+root-directory = %(testdir)s/darcs2svn
 source = darcs:svntailor
 start-revision = INITIAL
 
 [svn2darcs]
 target = darcs:svntailor
-root-directory = /tmp/tailor-tests/svn2darcs
+root-directory = %(testdir)s/svn2darcs
 source = svn:tailor
 start-revision = 1
 
 [svn:tailor]
-repository = file:///tmp/tailor-tests/svnrepo
+repository = file://%(testdir)s/svnrepo
 module = tailor
 subdir = svnside
 use-propset = True
 
 [darcs:svntailor]
+repository = /home/lele/public_html/projects/tailor
 subdir = darcside
 
 
 [darcs2monotone]
 target = monotone:tailor
-root-directory = /tmp/tailor-tests/darcs2monotone
+root-directory = %(testdir)s/darcs2monotone
 source = darcs:tailor
 
 [monotone2darcs]
 source = monotone:tailor
-root-directory = /tmp/tailor-tests/monotone2darcs
+root-directory = %(testdir)s/monotone2darcs
 target = darcs:mtntailor
 start-revision = INITIAL
 
 [monotone:tailor]
 keyid = tailor
 passphrase = fin che la barca va
-repository = /tmp/tailor-tests/tailor-mtn.db
+repository = %(testdir)s/tailor-mtn.db
 module = tailor.test
 subdir = mntside
 
@@ -108,7 +109,7 @@ subdir = darcside
 
 [cvs2darcs]
 target = darcs:pxlib
-root-directory = /tmp/tailor-tests/cvs2darcs
+root-directory = %(testdir)s/cvs2darcs
 source = cvs:pxlib
 start-revision = R-0-5-1
 subdir = pxlib
@@ -122,7 +123,7 @@ encoding = iso-8859-1
 
 
 [cvs2hglib]
-root-directory = /tmp/tailor-tests/cvs2hglib
+root-directory = %(testdir)s/cvs2hglib
 source = cvs:cmsmini
 target = hglib:cmsmini
 start-revision = INITIAL
@@ -137,7 +138,7 @@ module = cmsmini
 
 
 [cvs2bzr]
-root-directory = /tmp/tailor-tests/cvs2bzr
+root-directory = %(testdir)s/cvs2bzr
 source = cvs:atse
 target = bzr:atse
 start-revision = spamies-improvement-branch INITIAL
@@ -154,7 +155,7 @@ python-path = /opt/src/bzr.dev
 [svndump2darcs]
 source = svndump:simple
 target = darcs:simple
-root-directory = /tmp/tailor-tests/svndump2darcs
+root-directory = %(testdir)s/svndump2darcs
 subdir = simple
 start-revision = INITIAL
 
@@ -169,7 +170,7 @@ subdir = .
 [svndump2hg]
 source = svndump:pyobjc
 target = hg:pyobjc
-root-directory = /tmp/tailor-tests/svndump2hg
+root-directory = %(testdir)s/svndump2hg
 start-revision = INITIAL
 
 [svndump:pyobjc]
@@ -183,7 +184,7 @@ subdir = hg
 [svndump2hg-partial]
 source = svndump:simple-partial
 target = hg:simple-partial
-root-directory = /tmp/tailor-tests/svndump2hg-partial
+root-directory = %(testdir)s/svndump2hg-partial
 start-revision = INITIAL
 
 [svndump:simple-partial]
@@ -200,7 +201,7 @@ subdir = hg
 source = cvs:cmfeditions-houston-sprint
 target = svn:cmfeditions
 start-revision = houston-sprint-branch INITIAL
-root-directory = /tmp/tailor-tests/cvs2svn
+root-directory = %(testdir)s/cvs2svn
 
 [cvs:cmfeditions-houston-sprint]
 repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
@@ -208,7 +209,7 @@ module = CMFEditions
 subdir = cvside
 
 [svn:cmfeditions]
-repository = file:///tmp/tailor-tests/cmfeditions.svnrepo
+repository = file://%(testdir)s/cmfeditions.svnrepo
 module = cmfeditions
 subdir = svnside
 
@@ -217,7 +218,7 @@ subdir = svnside
 source = svn:plonebook
 target = hg:plonebook
 start-revision = 1101
-root-directory = /tmp/tailor-tests/svn2hg
+root-directory = %(testdir)s/svn2hg
 
 [svn:plonebook]
 repository = http://docit.bice.dyndns.org
@@ -229,7 +230,7 @@ module = /Plone/PloneBook2/it
 source = svn:plonebook_we
 target = hg:plonebook
 start-revision = HEAD
-root-directory = /tmp/tailor-tests/svn2hg_we
+root-directory = %(testdir)s/svn2hg_we
 
 [svn:plonebook_we]
 repository = http://docit.bice.dyndns.org
@@ -251,6 +252,8 @@ from vcpx.shwrap import ExternalCommand, PIPE
 
 class OperationalTest(TestCase):
 
+    TESTDIR = '/tmp/tailor-tests'
+
     def setUp(self):
         from os import mkdir, getcwd
         from os.path import exists, split, join
@@ -262,10 +265,11 @@ class OperationalTest(TestCase):
             tailor_repo = split(tailor_repo)[0]
         assert exists(join(tailor_repo, '_darcs')), "Tailor Darcs repository not found!"
         self.tailor_repo = tailor_repo
-        self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo})
-        if not exists('/tmp/tailor-tests'):
-            mkdir('/tmp/tailor-tests')
-            register(rmtree, '/tmp/tailor-tests')
+        self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo,
+                                                 'testdir': self.TESTDIR})
+        if not exists(self.TESTDIR):
+            mkdir(self.TESTDIR)
+            register(rmtree, self.TESTDIR)
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
@@ -288,7 +292,8 @@ class OperationalTest(TestCase):
         "The actual test"
 
         tailorizer = Tailorizer(project, self.config)
-        self.assert_(not tailorizer.exists())
+        self.assert_(not tailorizer.exists(),
+                     "For test purposes, better start from scratch!")
         tailorizer()
         self.assertEqual(self.diffWhenPossible(tailorizer), "")
 
@@ -302,12 +307,12 @@ class Darcs(OperationalTest):
 
         p = Tailorizer('darcs2svn', self.config)
         self.assertEqual(p.source.subdir, 'darcside')
-        self.assertEqual(p.rootdir, '/tmp/tailor-tests/darcs2svn')
+        self.assertEqual(p.rootdir, '%s/darcs2svn' % self.TESTDIR)
         self.assertEqual(p.source.repository, self.tailor_repo)
         self.assertEqual(p.target.repository,
-                         'file:///tmp/tailor-tests/svnrepo')
+                         'file://%s/svnrepo' % self.TESTDIR)
         self.assertEqual(p.state_file.filename,
-                         '/tmp/tailor-tests/darcs2svn/tailor.state')
+                         '%s/darcs2svn/tailor.state' % self.TESTDIR)
 
         tailorizer = Tailorizer('cvs2darcs', self.config)
         self.assertEqual(tailorizer.subdir, 'pxlib')
@@ -374,7 +379,7 @@ class Svn(OperationalTest):
 
         from os.path import exists
 
-        external = '/tmp/tailor-tests/svn2hg%s/test/make/docutils.make'
+        external = self.TESTDIR + '/svn2hg%s/test/make/docutils.make'
         self.tailorize('svn2hg')
         self.failIf(exists(external % ''))
 
