@@ -699,6 +699,10 @@ trust-root : bool
   and cannot be listed.  Setting this option to *True* disable the
   check and tailor takes the given ``repository`` and ``module`` as-is.
 
+ignore-externals : bool
+  By default the Subversion backend does not consider the external
+  references defined in the source repository.  This option force
+  Tailor to behave as it did up to 0.9.20.
 
 svndump
 %%%%%%%

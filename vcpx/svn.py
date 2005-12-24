@@ -243,13 +243,15 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _applyChangeset(self, changeset):
         from time import sleep
 
-        cmd = self.repository.command("update",
-                                      "--revision", changeset.revision, ".")
+        cmd = self.repository.command("update")
+        if self.repository.ignore_externals:
+            cmd.append("--ignore-externals")
+        cmd.extend(["--revision", changeset.revision])
         svnup = ExternalCommand(cwd=self.basedir, command=cmd)
 
         retry = 0
         while True:
-            out, err = svnup.execute(stdout=PIPE, stderr=PIPE)
+            out, err = svnup.execute(".", stdout=PIPE, stderr=PIPE)
 
             if svnup.exit_status == 1:
                 retry += 1
@@ -342,9 +344,13 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         if not exists(join(self.basedir, '.svn')):
             self.log.debug("Checking out a working copy")
-            cmd = self.repository.command("co", "--quiet",
-                                          "--revision", revision)
+
+            cmd = self.repository.command("co", "--quiet")
+            if self.repository.ignore_externals:
+                cmd.append("--ignore-externals")
+            cmd.extend(["--revision", revision])
             svnco = ExternalCommand(command=cmd)
+            
             out, err = svnco.execute("%s%s" % (self.repository.repository,
                                                self.repository.module),
                                      self.basedir, stdout=PIPE, stderr=PIPE)
@@ -472,8 +478,11 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(encode(author), propname='svn:author')
 
-        cmd = self.repository.command("update", "--quiet",
-                                      "--revision", revision)
+        cmd = self.repository.command("update", "--quiet")
+        if self.repository.ignore_externals:
+            cmd.append("--ignore-externals")
+        cmd.extend(["--revision", revision])
+        
         ExternalCommand(cwd=self.basedir, command=cmd).execute()
 
     def _removePathnames(self, names):
@@ -597,6 +606,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             return
 
         cmd = self.repository.command("co", "--quiet")
+        if self.repository.ignore_externals:
+            cmd.append("--ignore-externals")
+        
         svnco = ExternalCommand(command=cmd)
         svnco.execute("%s%s" % (self.repository.repository,
                                 self.repository.module), self.basedir)

@@ -211,6 +211,30 @@ subdir = cvside
 repository = file:///tmp/tailor-tests/cmfeditions.svnrepo
 module = cmfeditions
 subdir = svnside
+
+
+[svn2hg]
+source = svn:plonebook
+target = hg:plonebook
+start-revision = 1101
+root-directory = /tmp/tailor-tests/svn2hg
+
+[svn:plonebook]
+repository = http://docit.bice.dyndns.org
+module = /Plone/PloneBook2/it
+
+[hg:plonebook]
+
+[svn2hg_with_externals]
+source = svn:plonebook_we
+target = hg:plonebook
+start-revision = HEAD
+root-directory = /tmp/tailor-tests/svn2hg_we
+
+[svn:plonebook_we]
+repository = http://docit.bice.dyndns.org
+module = /Plone/PloneBook2/it
+ignore-externals = False
 '''
 
 def remap_authors(context, changeset):
@@ -340,6 +364,22 @@ class Cvs(OperationalTest):
         "Test CVS branch to Subversion"
 
         self.tailorize('cvs2svn')
+
+
+class Svn(OperationalTest):
+    "Test the subversion backend"
+
+    def testExternals(self):
+        "Exercise svn to mercurial with and without svn:externals"
+
+        from os.path import exists
+
+        external = '/tmp/tailor-tests/svn2hg%s/test/make/docutils.make'
+        self.tailorize('svn2hg')
+        self.failIf(exists(external % ''))
+
+        self.tailorize('svn2hg_with_externals')
+        self.failUnless(exists(external % '_we'))
 
 
 class Svndump(OperationalTest):
