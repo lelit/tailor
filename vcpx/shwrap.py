@@ -49,6 +49,9 @@ class ExternalCommand:
     DRY_RUN = False
     """Don't really execute the command."""
 
+    MAX_CMDLINE_LENGTH = 8000
+    """Don't execute commands longer than this number of characters."""
+
     def __init__(self, command=None, cwd=None):
         """
         Initialize a ExternalCommand instance, specifying the command
@@ -127,6 +130,49 @@ class ExternalCommand:
         return ''.join(result)
 
     def execute(self, *args, **kwargs):
+        """Execute the command, avoiding too long command line."""
+
+        from cStringIO import StringIO
+
+        if len(args) == 1 and type(args[0]) == type([]):
+            allargs = list(args[0])
+        else:
+            allargs = list(args)
+
+        maxlen = self.MAX_CMDLINE_LENGTH
+        if maxlen is None or len(allargs) < 2:
+            return self._execute(allargs, **kwargs)
+
+        startlen = len(' '.join(self.command))
+        allout = None
+        allerr = None
+        while allargs:
+            thisrun = []
+            clen = startlen
+            pop = allargs.pop
+            append = thisrun.append
+            while allargs and clen<maxlen:
+                thisarg = pop(0)
+                clen += len(thisarg)+1
+                append(thisarg)
+            thisout, thiserr = self._execute(*thisrun, **kwargs)
+            if thisout is not None:
+                if allout is None:
+                    allout = StringIO()
+                allout.write(thisout.read())
+            if thiserr is not None:
+                if allerr is None:
+                    allerr = StringIO()
+                allerr.write(thiserr.read())
+            if self.exit_status:
+                break
+        if allout is not None:
+            allout.seek(0)
+        if allerr is not None:
+            allerr.seek(0)
+        return allout, allerr
+
+    def _execute(self, *args, **kwargs):
         """Execute the command."""
 
         from sys import stderr

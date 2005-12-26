@@ -74,3 +74,18 @@ class SystemCommand(TestCase):
 
         c = ExternalCommand([r'a \" backslashed quote mark\\'])
         self.assertEqual(str(c), r'$ "a \\\" backslashed quote mark\\\\"')
+
+    def testSplittedExecution(self):
+        """Verify the mechanism that avoids too long command lines"""
+
+        args = [str(i) * 20 for i in range(10)]
+        c = ExternalCommand(['echo'])
+        c.MAX_CMDLINE_LENGTH = 30
+        out = c.execute(args, stdout=PIPE)[0]
+        self.assertEqual(out.read(), '\n'.join([args[i]+' '+args[i+1]
+                                                for i in range(0,10,2)])+'\n')
+
+        c = ExternalCommand(['echo'])
+        c.MAX_CMDLINE_LENGTH = None
+        out = c.execute(args, stdout=PIPE)[0]
+        self.assertEqual(out.read(), ' '.join(args)+'\n')
