@@ -122,38 +122,31 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # versioned.  So go through the list and sort out entries that
         # is already versioned, since there is no need to add them.  A
         # file can also already have been marked to be added in this
-        # changeset. Remove those files too. Do not try to catch any
-        # errors from Branch.add, since the they are _real_ errors.
-        new_entries = []
-        inv = self._b.get_inventory(self._b.last_revision())
-        added = [new[0] for new in compare_trees(self._b.revision_tree(self._b.last_revision()), self._b.working_tree()).added]
-        for e in entries:
-            if not inv.has_filename(e) and not e in added:
-                new_entries.extend([e])
-            else:
-                self.log.debug('"%s" already in inventory, skipping', e)
+        # changeset, or may be a target of a rename operation. Remove
+        # those files too. Do not try to catch any errors from
+        # Branch.add, since the they are _real_ errors.
+        last_revision = self._b.last_revision()
+        if last_revision is None:
+            # initial revision
+            new_entries = entries
+        else:
+            new_entries = []
+            inv = self._b.get_inventory(self._b.last_revision())
+            diff = compare_trees(self._b.revision_tree(last_revision),
+                                 self._b.working_tree())
+            added = ([new[0] for new in diff.added] +
+                     [renamed[1] for renamed in diff.renamed])
+            for e in entries:
+                if not inv.has_filename(e) and not e in added:
+                    new_entries.extend([e])
+                else:
+                    self.log.debug('"%s" already in inventory, skipping', e)
 
         if len(new_entries) == 0:
             return
 
-        from bzrlib.add import smart_add_tree
-        import os.path
         self.log.info('Adding %s...', ', '.join(new_entries))
-        smart_add_tree(self._b.working_tree(),[os.path.join(self.basedir,e) for e in new_entries],recurse=False)
-
-    def _addSubtree(self, subdir):
-        """
-        Add a whole subtree.
-
-        Use smart_add_branch() to add a whole new subtree to the
-        repository.
-        """
-
-        from os.path import join
-        from bzrlib.add import smart_add_tree
-
-        self.log.info('Recursively adding directory "%s"...', subdir)
-        smart_add_tree(self._b.working_tree(), [join(self.basedir, subdir)], recurse=True)
+        self._b.working_tree().add(new_entries)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
