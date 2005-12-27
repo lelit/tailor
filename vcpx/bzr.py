@@ -136,9 +136,18 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                  self._b.working_tree())
             added = ([new[0] for new in diff.added] +
                      [renamed[1] for renamed in diff.renamed])
+
+            def parent_was_copied(n):
+                for p in added:
+                    if n.startswith(p+'/'):
+                        return True
+                return False
+
             for e in entries:
-                if not inv.has_filename(e) and not e in added:
-                    new_entries.extend([e])
+                if (not inv.has_filename(e)
+                    and not e in added
+                    and not parent_was_copied(e)):
+                    new_entries.append(e)
                 else:
                     self.log.debug('"%s" already in inventory, skipping', e)
 
