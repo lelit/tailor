@@ -273,7 +273,7 @@ class SvnLogParser(TestCase):
 
         log = self.getSvnLog('svn-external_copies_test')
         csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/trunk')
-        
+
         cset = csets.next()
         cset = csets.next()
         self.assertEqual(len(cset.entries), 5)

@@ -351,7 +351,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 cmd.append("--ignore-externals")
             cmd.extend(["--revision", revision])
             svnco = ExternalCommand(command=cmd)
-            
+
             out, err = svnco.execute("%s%s" % (self.repository.repository,
                                                self.repository.module),
                                      self.basedir, stdout=PIPE, stderr=PIPE)
@@ -483,7 +483,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if self.repository.ignore_externals:
             cmd.append("--ignore-externals")
         cmd.extend(["--revision", revision])
-        
+
         ExternalCommand(cwd=self.basedir, command=cmd).execute()
 
     def _removePathnames(self, names):
@@ -609,7 +609,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         cmd = self.repository.command("co", "--quiet")
         if self.repository.ignore_externals:
             cmd.append("--ignore-externals")
-        
+
         svnco = ExternalCommand(command=cmd)
         svnco.execute("%s%s" % (self.repository.repository,
                                 self.repository.module), self.basedir)
