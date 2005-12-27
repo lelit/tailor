@@ -267,3 +267,19 @@ class SvnLogParser(TestCase):
         csets = list(changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/',
                                             chunksize=100))
         self.assertEqual(len(csets), 4)
+
+    def testExternalCopies(self):
+        """Verify that external copies+deletions are handled ok"""
+
+        log = self.getSvnLog('svn-external_copies_test')
+        csets = changesets_from_svnlog(log, 'svn+ssh://caia/tmp/svn', '/trunk')
+        
+        cset = csets.next()
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 5)
+
+        entry = cset.removedEntries()[0]
+        self.assertEqual(entry.name, 'README_LOGIN')
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 4)

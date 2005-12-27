@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log>
+<logentry
+   revision="172">
+<author>tobi</author>
+<date>2005-04-13T16:51:40.875491Z</date>
+<paths>
+<path
+   action="M">/trunk/public/images/admin/sections_bg.png</path>
+<path
+   action="M">/trunk/public/images/admin/branding_logo.png</path>
+<path
+   copyfrom-path="/branches/users/app/views/admin"
+   copyfrom-rev="171"
+   action="A">/trunk/app/views/admin</path>
+<path
+   action="M">/trunk/public/images/admin/Untitled-2.gif</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/forms.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/forms.css</path>
+<path
+   action="M">/trunk/app/views/layouts/articles.rhtml</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/admin.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/admin.css</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/header.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/header.css</path>
+<path
+   copyfrom-path="/branches/users/test/functional/admin"
+   copyfrom-rev="171"
+   action="A">/trunk/test/functional/admin</path>
+<path
+   copyfrom-path="/branches/users/public/images/admin"
+   copyfrom-rev="171"
+   action="A">/trunk/public/images/admin</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/undohtml.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/undohtml.css</path>
+<path
+   action="M">/trunk/test/functional/backend_controller_test.rb</path>
+<path
+   copyfrom-path="/branches/users/test/unit/user_test.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/test/unit/user_test.rb</path>
+<path
+   copyfrom-path="/branches/users/app/controllers/admin"
+   copyfrom-rev="171"
+   action="A">/trunk/app/controllers/admin</path>
+<path
+   action="M">/trunk/public/images/admin/content_bg.png</path>
+<path
+   action="M">/trunk/app/apis/meta_weblog_service.rb</path>
+<path
+   copyfrom-path="/branches/users/app/views/layouts/scaffold.rhtml"
+   copyfrom-rev="171"
+   action="A">/trunk/app/views/layouts/scaffold.rhtml</path>
+<path
+   action="M">/trunk/public/images/admin/spot-title.gif</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/popup.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/popup.css</path>
+<path
+   action="M">/trunk/public/images/admin/sections_hover.png</path>
+<path
+   action="M">/trunk/app/helpers/articles_helper.rb</path>
+<path
+   action="M">/trunk/app/apis/moveable_type_service.rb</path>
+<path
+   copyfrom-path="/branches/users/test/fixtures/users.yml"
+   copyfrom-rev="171"
+   action="A">/trunk/test/fixtures/users.yml</path>
+<path
+   copyfrom-path="/branches/users/app/views/layouts/admin.rhtml"
+   copyfrom-rev="171"
+   action="A">/trunk/app/views/layouts/admin.rhtml</path>
+<path
+   action="D">/trunk/public/stylesheets/base.css</path>
+<path
+   action="M">/trunk/public/images/admin/not-checked copy.gif</path>
+<path
+   action="M">/trunk/public/images/admin/delete.png</path>
+<path
+   action="M">/trunk/app/controllers/articles_controller.rb</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/scaffold.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/scaffold.css</path>
+<path
+   copyfrom-path="/branches/users/app/helpers/accounts_helper.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/app/helpers/accounts_helper.rb</path>
+<path
+   action="M">/trunk/public/images/admin/go.png</path>
+<path
+   action="M">/trunk/public/images/admin/not-checked.gif</path>
+<path
+   action="M">/trunk/public/images/admin/body_bg.png</path>
+<path
+   copyfrom-path="/branches/users/test/functional/accounts_controller_test.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/test/functional/accounts_controller_test.rb</path>
+<path
+   action="M">/trunk/public/images/admin/checked.gif</path>
+<path
+   action="M">/trunk/public/images/admin/global_bg.png</path>
+<path
+   action="M">/trunk/public/images/admin/section_bg.png</path>
+<path
+   copyfrom-path="/branches/users/app/controllers/accounts_controller.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/app/controllers/accounts_controller.rb</path>
+<path
+   copyfrom-path="/branches/users/app/helpers/admin"
+   copyfrom-rev="171"
+   action="A">/trunk/app/helpers/admin</path>
+<path
+   copyfrom-path="/branches/users/public/stylesheets/typo.css"
+   copyfrom-rev="171"
+   action="A">/trunk/public/stylesheets/typo.css</path>
+<path
+   action="M">/trunk/public/images/admin/global_logo.png</path>
+<path
+   action="M">/trunk/app/apis/blogger_service.rb</path>
+<path
+   action="M">/trunk/public/images/admin/sections_hilite.png</path>
+<path
+   copyfrom-path="/branches/users/app/models/user.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/app/models/user.rb</path>
+<path
+   copyfrom-path="/branches/users/lib/login_system.rb"
+   copyfrom-rev="171"
+   action="A">/trunk/lib/login_system.rb</path>
+<path
+   copyfrom-path="/branches/users/README_LOGIN"
+   copyfrom-rev="171"
+   action="A">/trunk/README_LOGIN</path>
+<path
+   action="M">/trunk/app/helpers/application_helper.rb</path>
+<path
+   action="M">/trunk/db/schema.mysql.sql</path>
+<path
+   action="M">/trunk/config/routes.rb</path>
+<path
+   action="M">/trunk/public/images/admin/spot-header.gif</path>
+<path
+   action="M">/trunk/public/images/admin/branding_bg.png</path>
+<path
+   action="M">/trunk/app/controllers/application.rb</path>
+<path
+   action="M">/trunk/app/controllers/settings_controller.rb</path>
+<path
+   action="M">/trunk/test/functional/articles_controller_test.rb</path>
+<path
+   action="M">/trunk/public/images/admin/footer.png</path>
+<path
+   copyfrom-path="/branches/users/app/views/accounts"
+   copyfrom-rev="171"
+   action="A">/trunk/app/views/accounts</path>
+</paths>
+<msg>merged admin interface in (unstable but needed as base for more spamport features)
+
+preview at http://home.leetsoft.com/dropbox/typoadmin.png
+</msg>
+</logentry>
+<logentry
+   revision="193">
+<author>tobi</author>
+<date>2005-04-22T16:12:18.298949Z</date>
+<paths>
+<path
+   action="M">/trunk/README</path>
+<path
+   action="M">/trunk/db/schema.psql.sql</path>
+<path
+   action="M">/trunk/db/schema.sqlite.sql</path>
+<path
+   action="D">/trunk/README_LOGIN</path>
+<path
+   action="M">/trunk/db/schema.mysql.sql</path>
+</paths>
+<msg>updated mysql and pg schema with proper indexes and constrains (fixes #52) and updated README file 
+for the impending release
+</msg>
+</logentry>
+<logentry
+   revision="419">
+<author>tobi</author>
+<date>2005-07-24T20:25:00.895894Z</date>
+<paths>
+<path
+   action="M">/trunk/lib/theme_system.rb</path>
+<path
+   action="D">/trunk/themes/azure_controller.rb</path>
+<path
+   copyfrom-path="/trunk/components/plugins/themes"
+   copyfrom-rev="417"
+   action="A">/trunk/themes</path>
+<path
+   action="A">/trunk/themes/azure/about.markdown</path>
+<path
+   action="D">/trunk/components/plugins/themes</path>
+<path
+   copyfrom-path="/trunk/components/plugins/themes/azure"
+   copyfrom-rev="418"
+   action="R">/trunk/themes/azure</path>
+</paths>
+<msg>moved themes from components/plugins/themes to /themes
+</msg>
+</logentry>
+</log>

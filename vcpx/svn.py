@@ -68,13 +68,14 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
             self.current = None
             self.current_field = []
             self.renamed = {}
-            self.external_copies = []
+            self.copies = []
 
         def startElement(self, name, attributes):
             if name == 'logentry':
                 self.current = {}
                 self.current['revision'] = attributes['revision']
                 self.current['entries'] = []
+                self.copies = []
             elif name in ['author', 'date', 'msg']:
                 self.current_field = []
             elif name == 'path':
@@ -116,9 +117,9 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
                     if e.action_kind == e.ADDED and e.old_name is not None:
                         mv_or_cp[e.old_name] = e
 
-                def parent_was_copied_externally(n):
-                    for p in self.external_copies:
-                        if n.startswith(p):
+                def parent_was_copied(n):
+                    for p in self.copies:
+                        if n.startswith(p+'/'):
                             return True
                     return False
 
@@ -136,7 +137,7 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
                             mv_or_cp[e.name].action_kind = e.RENAMED
                         e.action_kind = e.ADDED
                         entries.append(e)
-                    elif parent_was_copied_externally(e.name):
+                    elif parent_was_copied(e.name):
                         if e.action_kind != e.DELETED:
                             e.action_kind = e.ADDED
                             entries.append(e)
@@ -166,13 +167,13 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
                     entry = ChangesetEntry(entrypath)
 
                     if type(self.current_path_action) == type( () ):
+                        self.copies.append(entry.name)
                         old = get_entry_from_path(self.current_path_action[1])
                         if old:
                             entry.action_kind = self.ACTIONSMAP[self.current_path_action[0]]
                             entry.old_name = old
                             self.renamed[entry.old_name] = True
                         else:
-                            self.external_copies.append(entry.name)
                             entry.action_kind = entry.ADDED
                     else:
                         entry.action_kind = self.ACTIONSMAP[self.current_path_action]
