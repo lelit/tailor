@@ -138,7 +138,7 @@ class SyncronizableTargetWorkingDir(WorkingDir):
         """
 
         project = self.repository.projectref()
-        ssubdir = project.target.subdir
+        ssubdir = project.source.subdir
         tsubdir = project.target.subdir
         if self.shared_basedirs and ssubdir <> tsubdir:
             if tsubdir == '.':
