@@ -227,7 +227,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             # with Twisted Matrix master repository. To be safe, we replace
             # all of them with a question mark.
 
-            if isinstance(self.repository.filter_badchars, string):
+            if isinstance(self.repository.filter_badchars, basestring):
                 allbadchars = self.repository.filter_badchars
             else:
                 allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09" \
