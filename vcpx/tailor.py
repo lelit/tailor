@@ -16,7 +16,7 @@ __version__ = '0.9.20'
 from optparse import OptionParser, OptionGroup, Option
 from config import Config, ConfigurationError
 from project import Project
-from source import InvocationError
+from source import InvocationError, GetUpstreamChangesetsFailure
 
 class Tailorizer(Project):
     """
@@ -328,7 +328,11 @@ def main():
 
         for projname in args:
             tailorizer = Tailorizer(projname, config)
-            tailorizer()
+            try:
+                tailorizer()
+            except GetUpstreamChangesetsFailure:
+                # Do not stop on this kind of error, but keep going
+                pass
     else:
         for omit in ['source-kind', 'target-kind',
                      'source-module', 'target-module',
