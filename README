@@ -671,7 +671,18 @@ filter-badchars : bool (or string)
   Activate (with *True*) or activate and specify (with a *string*) the
   filter on the svn log to eliminate illegal XML characters.
 
-  *False* by default.
+  *False* by default, when set to *True* the following characters are
+  washed out from the upstream changes::
+
+    allbadchars = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09" \
+                  "\x0B\x0C\x0E\x0F\x10\x11\x12\x13\x14\x15" \
+                  "\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7f"
+
+  If this is not right or enough, you can specify a string value
+  instead of the boolean flag, containing the characters to omit, as
+  in::
+
+    filter-badchars=\x00\x01
   
 use-propset : bool
   Indicate that tailor is allowed to properly inject the upstream
