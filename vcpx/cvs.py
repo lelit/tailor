@@ -120,6 +120,7 @@ def changesets_from_cvslog(log, module, branch=None, entries=None, since=None):
                         last.entries.append(e)
                 else:
                     last.entries.append(e)
+            last.tags = cs.tags
             if lastts < cs.date:
                 lastts = cs.date
         else:
