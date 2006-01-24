@@ -54,6 +54,7 @@ target = darcs:project4repo
 
 [darcs:project4repo]
 subdir = darcs
+look-for-adds = True
 '''
 
 def maybe_skip(context, changeset):

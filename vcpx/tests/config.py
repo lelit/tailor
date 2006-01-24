@@ -82,3 +82,14 @@ class Configuration(TestCase):
 
         logger = getLogger()
         self.assertEqual(logger.handlers[0].formatter._fmt, 'DUMMY')
+
+    def testLookForAdds(self):
+        """Verify the darcs Repository knows about --look-for-adds"""
+
+        config = Config(self.getTestConfiguration("config-basic_test"),
+                        {'tailor_repo': self.tailor_repo})
+
+        project4 = Project('project4', config)
+        self.assertEqual(project4.target.command('record', '-a'),
+                         ['darcs', 'record', '-a', '--look-for-adds'])
+        

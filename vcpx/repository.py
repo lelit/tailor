@@ -264,7 +264,14 @@ class DarcsRepository(Repository):
 
     def _load(self, project):
         Repository._load(self, project)
-        self.EXECUTABLE = project.config.get(self.name, 'darcs-command', 'darcs')
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
+        self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+
+    def command(self, *args, **kwargs):
+        if args[0] == 'record' and self.use_look_for_adds:
+            args = args + ('--look-for-adds',)
+        return Repository.command(self, *args, **kwargs)
 
 
 class GitRepository(Repository):

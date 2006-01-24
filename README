@@ -622,7 +622,11 @@ tag-entries : bool
 darcs
 %%%%%
 
-..
+look-for-adds : bool
+  By default tailor commits only the entries explicitly mentioned by
+  the upstream changeset. Sometimes this is not desiderable, maybe
+  even as a quick workaround to a tailor bug. This option allows a
+  more relaxed view of life using ``record --look-for-adds``.
 
 git
 %%%
