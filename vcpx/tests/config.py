@@ -89,6 +89,9 @@ class Configuration(TestCase):
         config = Config(self.getTestConfiguration("config-basic_test"),
                         {'tailor_repo': self.tailor_repo})
 
+        project3 = Project('project3', config)
+        self.assertEqual(project3.target.command('record', '-a'),
+                         ['darcs', 'record', '-a'])
         project4 = Project('project4', config)
         self.assertEqual(project4.target.command('record', '-a'),
                          ['darcs', 'record', '-a', '--look-for-adds'])
