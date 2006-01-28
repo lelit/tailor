@@ -92,6 +92,8 @@ class Repository(object):
         self.subdir = cget(self.name, 'subdir',
                            vars={'subdir': project.subdir})
         self.delay_before_apply = cget(self.name, 'delay-before-apply')
+        if self.delay_before_apply:
+            self.delay_before_apply = float(self.delay_before_apply)
         self.encoding = cget(self.name, 'encoding')
         if not self.encoding:
             self.encoding = getpreferredencoding()
