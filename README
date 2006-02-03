@@ -940,7 +940,7 @@ __ http://www.fsf.org/licensing/licenses/gpl.html
 About this document
 ===================
 
-This document and most of the internal documention use the
+This document and most of the internal documentation use the
 reStructuredText format so that it can be easily converted into other
 formats, such as HTML.  For more information about this, please see:
 
