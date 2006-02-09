@@ -122,6 +122,16 @@ module = pxlib
 encoding = iso-8859-1
 
 
+[darcs2cvs]
+target = cvs:tailor
+root-directory = %(testdir)s/darcs2cvs
+source = darcs:tailor
+
+[cvs:tailor]
+repository = :local:%(testdir)s/cvsrepo
+module = tailor
+
+
 [cvs2hglib]
 root-directory = %(testdir)s/cvs2hglib
 source = cvs:cmsmini
@@ -354,6 +364,11 @@ class Cvs(OperationalTest):
         "Test CVS to darcs"
 
         self.tailorize('cvs2darcs')
+
+    def testDarcsToCvs(self):
+        "Test Darcs to CVS"
+
+        self.tailorize('darcs2cvs')
 
     def testCvsToMercurial(self):
         "Test CVS to mercurial"

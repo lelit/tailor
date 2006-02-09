@@ -457,6 +457,68 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     ## SyncronizableTargetWorkingDir
 
+    def __createRepository(self, path, target_module):
+        """
+        Create a local CVS repository.
+        """
+
+        from os import rmdir, makedirs
+        from tempfile import mkdtemp
+
+        makedirs(path)
+        cmd = self.repository.command("-d", path, "init")
+        c = ExternalCommand(command=cmd)
+        c.execute()
+        if c.exit_status:
+            raise TargetInitializationFailure("Could not create CVS repository")
+
+        tempwc = mkdtemp('cvs', 'tailor')
+        cmd = self.repository.command("-d", path, "import",
+                                      "-m", "This directory will host the "
+                                      "upstream sources",
+                                      target_module, "tailor", "start")
+        c = ExternalCommand(cwd=tempwc, command=cmd)
+        c.execute()
+        rmdir(tempwc)
+        if c.exit_status:
+            raise TargetInitializationFailure("Could not create initial module")
+
+    def _prepareTargetRepository(self):
+        """
+        Create the CVS repository if it's local and does not exist.
+        """
+
+        from os.path import exists
+
+        if not self.repository.repository:
+            return
+
+        if self.repository.repository.startswith(':local:'):
+            rpath = self.repository.repository[7:]
+        elif self.repository.repository.startswith('/'):
+            rpath = self.repository.repository
+        else:
+            # Remote repository
+            return
+
+        if not exists(rpath):
+            self.__createRepository(rpath, self.repository.module)
+
+    def _prepareWorkingDirectory(self, source_repo):
+        """
+        Checkout a working copy of the target CVS.
+        """
+
+        from os.path import join, exists
+
+        if not self.repository.repository or exists(join(self.basedir, 'CVS')):
+            return
+
+        cmd = self.repository.command("-d", self.repository.repository, "co",
+                                      "-d", self.basedir)
+        cvsco = ExternalCommand(command=cmd)
+        cvsco.execute(self.repository.module)
+
     def _addPathnames(self, names):
         """
         Add some new filesystem objects.
