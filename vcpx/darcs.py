@@ -355,7 +355,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         else:
             initial = False
 
-        if self.repository.subdir == '.':
+        if self.repository.subdir == '.' or exists(self.basedir):
             # This is currently *very* slow, compared to the darcs get
             # below!
             if not exists(join(self.basedir, '_darcs')):
