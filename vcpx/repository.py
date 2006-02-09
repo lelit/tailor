@@ -244,7 +244,7 @@ class CvsRepository(Repository):
             self.module = split(self.repository)[1]
 
         if not self.module:
-            self.log.critical('Missing module information')
+            self.log.critical('Missing module information in %r', self.name)
             raise ConfigurationError("Must specify a repository and maybe "
                                      "a module also")
 
@@ -346,22 +346,24 @@ class SvnRepository(Repository):
         Repository._validateConfiguration(self)
 
         if not self.repository:
-            self.log.critical('Missing repository information')
+            self.log.critical('Missing repository information in %r', self.name)
             raise ConfigurationError("Must specify the root of the "
                                      "Subversion repository used "
                                      "as %s with the option "
                                      "'repository'" % self.which)
 
         if not self.module:
-            self.log.critical('Missing module information')
+            self.log.critical('Missing module information in %r', self.name)
             raise ConfigurationError("Must specify the path within the "
                                      "Subversion repository as 'module'")
 
         if self.module == '.':
-            self.log.warning("Replacing '.' with '/' in module name")
+            self.log.warning("Replacing '.' with '/' in module name in %r",
+                             self.name)
             self.module = '/'
         elif not self.module.startswith('/'):
-            self.log.debug("Prepending '/' to module %r", self.module)
+            self.log.debug("Prepending '/' to module %r in %r",
+                           self.module, self.name)
             self.module = '/' + self.module
 
     def workingDir(self):
@@ -376,7 +378,8 @@ class SvndumpRepository(Repository):
         Repository._validateConfiguration(self)
 
         if self.module and self.module.startswith('/'):
-            self.log.debug("Removing starting '/' from module %r", self.module)
+            self.log.debug("Removing starting '/' from module %r in %r",
+                           self.module, self.name)
             self.module = self.module[1:]
         if self.module and not self.module.endswith('/'):
             self.module = self.module+'/'
