@@ -216,22 +216,19 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         c = ExternalCommand(cwd=self.basedir,
                             command=self.repository.command("tree-lint", "-tu"))
         out = c.execute(stdout=PIPE)[0]
-        tempdir = None
-        if c.exit_status:
-            tempdir = mkdtemp("", "++tailor-", self.basedir)
-            try:
-                for e in out:
-                    e = e.strip()
-                    ht = os.path.split(e)
-                    # only accept inventory violations at the root
-                    if ht[0] and ht[1]:
-                        raise ChangesetApplicationFailure(
-                            "%s complains about \"%s\"" % (str(c), e))
-                    os.rename(os.path.join(self.basedir, e),
-                              os.path.join(tempdir, e))
-            except:
-                self.__restore_foreign_entries(tempdir)
-                raise
+        tempdir = mkdtemp("", "++tailor-", self.basedir)
+        try:
+            for e in out:
+                e = e.strip()
+                ht = os.path.split(e)
+                # only move inventory violations at the root
+                if ht[0] and ht[1]:
+                    continue
+                os.rename(os.path.join(self.basedir, e),
+                          os.path.join(tempdir, e))
+        except:
+            self.__restore_foreign_entries(tempdir)
+            raise
         return tempdir
 
     def __restore_foreign_entries(self, tempdir):
