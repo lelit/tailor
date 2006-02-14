@@ -415,6 +415,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Commit the changeset.
         """
 
+        from re import search
+
         encode = self.repository.encode
 
         logmessage = []
@@ -442,7 +444,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        out, err = commit.execute(entries, stdout=PIPE, stderr=PIPE, LANG='C')
+        out, err = commit.execute(entries, stdout=PIPE, stderr=PIPE)
 
         if commit.exit_status:
             raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
@@ -454,21 +456,17 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             # svn did not find anything to commit
             return
 
-        while line and not line.startswith('Committed revision '):
-            if line <> '\n' and not line.startswith('Sending ') and \
-               not line.startswith('Transmitting file data ') and \
-               not line.startswith('Adding ') and \
-               not line.startswith('Replacing ') and \
-               not line.startswith('Deleting '):
-                break
+        # Assume svn output the revision number in the last output line
+        while line:
+            lastline = line
             line = out.readline()
-
-        if not line.startswith('Committed revision '):
+        revno = search('\d+', lastline)
+        if revno is None:
             out.seek(0)
-            raise ChangesetApplicationFailure("%s wrote unexpected line %r. "
-                                              "This the whole output:\n%s" %
-                                              (str(commit), line, out.read()))
-        revision = line[19:-2]
+            raise ChangesetApplicationFailure("%s wrote unrecognizable "
+                                              "revision number:\n%s" %
+                                              (str(commit), out.read()))
+        revision = revno.group(0)
 
         if self.USE_PROPSET:
             cmd = self.repository.command("propset", "%(propname)s",
