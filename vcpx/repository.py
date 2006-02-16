@@ -306,6 +306,15 @@ class HglibRepository(Repository):
                 path.insert(0, ppath)
         self.EXTRA_METADIRS = ['.hgtags']
 
+    def _validateConfiguration(self):
+        """
+        Mercurial expects all data to be in utf-8, so we disallow other encodings
+        """
+        Repository._validateConfiguration(self)
+
+        if self.encoding.upper() != 'UTF-8':
+            self.log.warning("Forcing UTF-8 encoding instead of " + self.encoding)
+            self.encoding = 'UTF-8'
 
 class MonotoneRepository(Repository):
     METADIR = 'MT'
