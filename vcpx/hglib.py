@@ -169,9 +169,9 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         forward slash"/" as separator, also under insane operating systems.
         """
 
-        entry.name = util.normpath(entry.name)
+        entry.name = util.normpath(self.repository.encode(entry.name))
         if entry.old_name:
-            entry.old_name = util.normpath(entry.old_name)
+            entry.old_name = util.normpath(self.repository.encode(entry.old_name))
 
     def _addPathnames(self, names):
         from os.path import join, isdir, normpath
