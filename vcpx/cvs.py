@@ -694,10 +694,7 @@ class CvsEntries(object):
 
                 if entry.startswith('/'):
                     e = CvsEntry(entry)
-                    if file and e.filename==file:
-                        return e
-                    else:
-                        self.files[e.filename] = e
+                    self.files[e.filename] = e
                 elif entry.startswith('D/'):
                     d = entry.split('/')[1]
                     subdir = CvsEntries(join(root, d))
