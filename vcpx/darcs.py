@@ -630,7 +630,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         in a tag from another darcs repository, then the assumption
         could be violated and mistagging could result.
         """
-        cmd = self.repository.command("changes", "--from-match=not name ^TAG",
+        cmd = self.repository.command("changes",
+                                      "--from-match", "not name ^TAG",
                                       "--xml-output", "--reverse")
         changes =  ExternalCommand(cwd=self.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
