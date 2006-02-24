@@ -106,7 +106,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             e = ChangesetEntry(f)
             # find renames
             fl = repo.file(f)
-            oldname = fl.renamed(manifest[f])
+            oldname = f in manifest and fl.renamed(manifest[f])
             if oldname:
                 e.action_kind = ChangesetEntry.RENAMED
                 e.old_name = oldname[0]
