@@ -75,7 +75,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         # Different targets seem to handle the TZ differently. It looks like
         # darcs may be the most correct.
-        (dt, tz) = date.split(' ')
+        dt, tz = date
         date = datetime.fromtimestamp(int(dt) + int(tz))
 
         manifest = repo.manifest.read(manifest)
