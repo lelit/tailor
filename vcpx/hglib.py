@@ -33,7 +33,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # Hg won't check out into an existing directory
         checkoutdir = os.path.join(self.basedir,".hgtmp")
         commands.clone(self._ui, self.repository.repository, checkoutdir,
-                       noupdate=True, ssh=None, remotecmd=None)
+                       noupdate=True, ssh=None, remotecmd=None, pull=None, rev=None)
         os.rename(os.path.join(checkoutdir, ".hg"),
                   os.path.join(self.basedir,".hg"))
         os.rmdir(checkoutdir)
@@ -52,7 +52,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         ui = self._getUI()
         repo = self._getRepo()
 
-        commands.pull(ui, repo, "default", ssh=None, remotecmd=None, update=None)
+        commands.pull(ui, repo, "default", ssh=None, remotecmd=None, update=None, rev=None)
 
         from mercurial.node import bin
         for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1, repo.changelog.count()):
