@@ -190,13 +190,13 @@ class MonotoneLogParser:
             elif pr("Tag"):
                 # unused data, just resetting state
                 state = self.SINGLE
-            elif pr("Deleted files:") or pr("Deleted directories:"):
+            elif pr("Deleted files:") or pr("Deleted directories:") or pr("Deleted entries"):
                 state=self.DEL
-            elif pr("Renamed files:") or pr("Renamed directories:"):
-                state=self.DEL
+            elif pr("Renamed files:") or pr("Renamed directories:") or pr("Renamed entries"):
+                state=self.REN
             elif pr("Added files:") or pr("Added directories:"):
                 state=self.ADD
-            elif pr("Modified files:") or pr("Modified directories:"):
+            elif pr("Modified files:"):
                 state=self.ADD
             elif pr("ChangeLog:"):
                 state=self.LOG
@@ -347,9 +347,6 @@ class MonotoneDiffParser:
             raise GetUpstreamChangesetsFailure(
                 "monotone diff returned status %d" % mtl.exit_status)
 
-        implicit_dirs_add = set()
-        dirs_add = set()
-
         # monotone diffs are prefixed by a section containing
         # metainformations about files
         # The section terminates with the first file diff, and each
@@ -366,28 +363,26 @@ class MonotoneDiffParser:
                     break
                 else:
                     in_item = False
-                    # now, next token should be a filename
+                    # now, next token should be a string or an hash
                     fname = tkiter.next()
-                    if fname[0] != '"':
+                    if fname[0] != '"' and fname[0] != '[':
                         raise GetUpstreamChangesetsFailure(
                             "Unexpected token sequence: '%s' "
                             "followed by '%s'" %(token, fname))
 
-                    # ok, is a file, control changesets data
-                    if token == "add_file":
+                    if token == "content":
+                        pass  # ignore it
+                    # ok, is a file/dir, control changesets data
+                    elif token == "add_file" or token=="add_directory":
                         chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.ADDED
-                        # split filespec in parts, skipping the filename
-                        # (monotone always uses '/' as path separator)
-                        self._addPathToSet(implicit_dirs_add, split(chentry.name)[0])
-                    elif token=="add_directory":
+                    elif token=="add_dir":
                         chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.ADDED
-                        self._addPathToSet(dirs_add, chentry.name)
-                    elif token == "delete_file" or token=="delete_directory":
+                    elif token=="delete":
                         chentry = chset.addEntry(fname[1:-1], chset.revision)
                         chentry.action_kind = chentry.DELETED
-                    elif token == "rename_file" or token=="rename_directory":
+                    elif token=="rename":
                         # renames are in the form:  oldname to newname
                         tow = tkiter.next()
                         newname = tkiter.next()
@@ -398,10 +393,6 @@ class MonotoneDiffParser:
                         chentry = chset.addEntry(newname[1:-1], chset.revision)
                         chentry.action_kind = chentry.RENAMED
                         chentry.old_name= fname[1:-1]
-                        if token=="rename_directory":
-                            self._addPathToSet(dirs_add, chentry.name)
-                        else:
-                            self._addPathToSet(implicit_dirs_add, split(chentry.name)[0])
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
@@ -414,24 +405,10 @@ class MonotoneDiffParser:
                                 "followed by '%s','%s','%s'" % (fromw, oldr,
                                                                 tow, newr))
 
-                        # patch entries are generated also for files
-                        # added, so we must ignore the entry if
-                        # already present
-                        if len( [e for e in chset.entries if e.name==fname[1:-1]])==0:
-                            # is a real update
-                            chentry = chset.addEntry(fname[1:-1], chset.revision)
-                            chentry.action_kind = chentry.UPDATED
-
         except StopIteration:
             if in_item:
                 raise GetUpstreamChangesetsFailure("Unexpected end of 'diff' parsing changeset info")
 
-        # remove explicit dir adds from implicit set, then create "add" changesets
-        # for the remaining dirs
-        implicit_dirs_add = implicit_dirs_add.difference(dirs_add)
-        for d in implicit_dirs_add:
-            chentry = chset.addEntry(d, chset.revision)
-            chentry.action_kind = chentry.ADDED
 
 
 class MonotoneRevToCset:
@@ -754,24 +731,15 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         Remove some filesystem object.
         """
 
-        # Monotone currently doesn't allow removing a directory, so we
-        # must remove every item separately and intercept monotone
-        # directory error messages.  We can't just filter the
-        # directories, because the wc doesn't contain them anymore ...
         cmd = self.repository.command("drop")
         drop = ExternalCommand(cwd=self.basedir, command=cmd)
-        for fn in names:
-            dum, error = drop.execute(fn, stderr=PIPE)
-            if drop.exit_status:
-                errtext = error.read()
-                if not "drop <directory>" in errtext:
-                    self.log.error("Monotone drop said: %s", errtext)
-                    raise ChangesetApplicationFailure("%s returned status %s" %
-                                                      (str(drop),
-                                                       drop.exit_status))
-                else:
-                    self.log.debug("Ignoring monotone whining about drop "
-                                   "of directory %r",  fn)
+        dum, error = drop.execute(names, stderr=PIPE)
+        if drop.exit_status:
+            errtext = error.read()
+            self.log.error("Monotone drop said: %s", errtext)
+            raise ChangesetApplicationFailure("%s returned status %s" %
+                                                  (str(drop),
+                                                   drop.exit_status))
 
     def _renamePathname(self, oldname, newname):
         """
@@ -780,23 +748,23 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # this function is called *after* the file/dir has changed name,
         # and monotone doesn't like it.
         # we put names back to make it happy ...
-        if access(join(self.basedir, newname), F_OK):
-            if access(join(self.basedir, oldname), F_OK):
-                raise ChangesetApplicationFailure("Can't rename %s to %s. "
-                                                  "Both names already exist" %
-                                                  (oldname, newname))
-            renames(join(self.basedir, newname), join(self.basedir, oldname))
-            self.log.debug('Renamed "%s" back to "%s"', newname, oldname)
+#        if access(join(self.basedir, newname), F_OK):
+#            if access(join(self.basedir, oldname), F_OK):
+#                raise ChangesetApplicationFailure("Can't rename %s to %s. "
+#                                                  "Both names already exist" %
+#                                                  (oldname, newname))
+#            renames(join(self.basedir, newname), join(self.basedir, oldname))
+#            self.log.debug('Renamed "%s" back to "%s"', newname, oldname)
 
         cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.basedir, command=cmd)
         rename.execute(oldname, newname)
 
         # redo the rename ...
-        renames(join(self.basedir, oldname), join(self.basedir, newname))
-        if rename.exit_status:
-            raise ChangesetApplicationFailure("%s returned status %s" %
-                                              (str(rename),rename.exit_status))
+#        renames(join(self.basedir, oldname), join(self.basedir, newname))
+#        if rename.exit_status:
+#            raise ChangesetApplicationFailure("%s returned status %s" %
+#                                              (str(rename),rename.exit_status))
 
     def __createRepository(self, target_repository):
         """
