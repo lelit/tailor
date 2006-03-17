@@ -517,7 +517,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
                     "%s returned status %s" % (str(init), init.exit_status))
 
             boring = open(boringname, 'rU')
-            ignored = boring.read().split('\n')
+            ignored = boring.read().rstrip().split('\n')
             boring.close()
 
             # Augment the boring file, that contains a regexp per line
@@ -541,10 +541,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
             boring = open(boringname, 'wU')
             boring.write('\n'.join(ignored))
+            boring.write('\n')
             boring.close()
         else:
             boring = open(boringname, 'rU')
-            ignored = boring.read().split('\n')
+            ignored = boring.read().rstrip().split('\n')
             boring.close()
 
         # Build a list of compiled regular expressions, that will be
