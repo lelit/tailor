@@ -131,9 +131,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             new_entries = entries
         else:
             new_entries = []
-            inv = self._b.get_inventory(self._b.last_revision())
-            diff = compare_trees(self._b.revision_tree(last_revision),
-                                 self._b.working_tree())
+            basis_tree = self._b.basis_tree()
+            inv = basis_tree.inventory
+            diff = compare_trees(basis_tree, self._b.working_tree())
             added = ([new[0] for new in diff.added] +
                      [renamed[1] for renamed in diff.renamed])
 
