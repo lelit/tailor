@@ -586,22 +586,22 @@ delay-before-apply : integer
 arx
 %%%
 
-..
+.. no specific options
 
 baz
 %%%
 
-..
+.. no specific options
 
 bzr
 %%%
 
-..
+.. no specific options
 
 cdv
 %%%
 
-..
+.. no specific options
 
 cvs
 %%%
@@ -635,17 +635,17 @@ look-for-adds : bool
 git
 %%%
 
-..
+.. no specific options
 
 hg
 %%
 
-..
+.. no specific options
 
 hglib
 %%%%%
 
-..
+.. no specific options
 
 monotone
 %%%%%%%%
@@ -733,7 +733,7 @@ svndump
 tla
 %%%
 
-..
+.. no specific options
 
 
 
