@@ -35,7 +35,7 @@ Ideally you should be able to swap and replace "CVS server" and "darcs
 repository" with any combination of the supported systems.
 
 A more convoluted setup shows how brave people are using it to get a
-two way sync::
+`two way sync`_::
 
   +----------+        +--------+        +--------+       +---------+
   |          | -----> | hybrid | darcs  |        | ----> |   my    |
@@ -66,6 +66,7 @@ two way sync::
 .. _monotone: http://www.venge.net/monotone/
 .. _subversion: http://subversion.tigris.org/
 .. _tla: http://www.gnuarch.org/arch/index.html
+.. _two way sync: http://progetti.arstecnica.it/tailor/wiki/TwoWaySync
 
 
 Installation
@@ -736,7 +737,6 @@ tla
 .. no specific options
 
 
-
 Using a Python script as configuration file
 -------------------------------------------
 
@@ -755,9 +755,15 @@ argument to ``--configfile`` or executed as above, tailor will
 actually execute it as a full fledged Python script, that may define
 functions that alter the behaviour of tailor itself.
 
+Pre-commit and post-commit hooks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 A common usage of this functionality is to define so called `hooks`,
 sequences of functions that are executed at particular points in
 the tailorization process.
+
+Example 1
+%%%%%%%%%
 
 Just to illustrate the functionality, consider the following example::
 
@@ -802,9 +808,60 @@ With the above in a `script` called say ``tester``, just doing::
 will migrate the history from a darcs repository to a bazaar-ng one,
 forcing the author to a well-known name :-)
 
+Example 2
+%%%%%%%%%
+
+A pre commit hook may even alter the content of the files. The
+following function replaces the DOS end-of-line convention with the
+UNIX one::
+
+    def newlinefix(wd, changeset):
+        from pyutil import lineutil
+        lineutil.lineify_all_files(wd.basedir, strip=True,
+                                   dirpruner=lineutil.darcs_metadir_dirpruner,
+                                   filepruner=lineutil.source_code_filepruner)
+        return True
+
+It uses zooko's pyutil[#]_ toolset.  Another approach would be looping
+over changeset.entries and operating only on added or changed entries.
+
+Example 3
+%%%%%%%%%
+
+This loops over the file touched by a particular changeset and tries
+to reindent it if it's a Python file::
+
+    def reindent_em(wd, changeset):
+        import reindent
+        import os
+        
+        for entry in changeset.entries:
+            fname = os.path.join(wd.basedir, entry.name)
+
+            try:
+                if fname[-3:] == '.py':
+                    reindent.check(fname)
+            except Exception, le:
+                print "got an exception from attempt to reindent" \
+                      " (maybe that file wasn't Python code?):" \
+                      " changeset entry: %s, exception:" \
+                      " %s %s %s" % (entry, type(le), repr(le),
+                                     hasattr(le, 'args') and le.args,)
+                raise le
+        return True
+
+You have to find reindent.py in your Python distribution and put it
+in your python path. **Beware** that this has some drawbacks: be sure
+to read `ticket 8`_ annotations if you use it.
+
 .. [#] Tailor does actually read just the first two bytes from the
        file, and compare them with "#!", so you are free to choose
        whatever syntax works in your environment.
+
+.. [#] Available either at https://yumyum.zooko.com:19144/pub/repos/pyutil
+       or http://zooko.com/repos/pyutil.
+
+.. _ticket 8: http://progetti.arstecnica.it/tailor/ticket/8
 
 
 State file
