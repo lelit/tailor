@@ -142,7 +142,7 @@ class Tailorizer(Project):
                 if pconfig('start-revision') == 'HEAD':
                     return
             self.update()
-        except UnicodeEncodeError, exc:
+        except (UnicodeDecodeError, UnicodeEncodeError), exc:
             raise ConfigurationError('%s: it seems that the encoding '
                                      'used by either the source ("%s") or the '
                                      'target ("%s") repository '
