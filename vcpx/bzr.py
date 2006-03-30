@@ -3,6 +3,7 @@
 # :Creato:   Fri Aug 19 01:06:08 CEST 2005
 # :Autore:   Johan Rydberg <jrydberg@gnu.org>
 #            Jelmer Vernooij <jelmer@samba.org>
+#            Lalo Martins <lalo.martins@gmail.com>
 # :Licenza:  GNU General Public License
 #
 
@@ -12,12 +13,39 @@ This module implements the backends for Bazaar-NG.
 
 __docformat__ = 'reStructuredText'
 
+import os
+from workdir import WorkingDir
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from bzrlib.bzrdir import BzrDir
 from bzrlib.branch import Branch
 from bzrlib.delta import compare_trees
+from bzrlib import errors
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+    def __init__(self, repository):
+        WorkingDir.__init__(self, repository)
+        # TODO: check if there is a "repository" in the configuration,
+        # and use it as a bzr repository
+        self._branch = None
+        self._working_tree = None
+        try:
+            self._bzrdir = BzrDir.open(self.basedir)
+        except errors.NotBranchError:
+            self._bzrdir = None
+        else:
+            self.__open_branch()
+
+    def __open_branch(self):
+        if self._branch is not None:
+            print repr(self._branch), 'already opened'
+            return
+        if self._bzrdir is None:
+            raise RuntimeError("Can't open branch if bzrdir doesn't exist")
+        self._branch = self._bzrdir.open_branch()
+        self._working_tree = self._bzrdir.open_workingtree()
+
+    #############################
     ## UpdatableSourceWorkingDir
 
     def _changesetFromRevision(self, parent, revision):
@@ -26,7 +54,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         from changes import ChangesetEntry, Changeset
         from datetime import datetime
-        r = parent.get_revision(revision)
+        r = parent.repository.get_revision(revision)
 
         deltatree = parent.get_revision_delta(parent.revision_id_to_revno(revision))
         entries = []
@@ -62,13 +90,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         See what other revisions exist upstream and return them
         """
-        from bzrlib import fetch
+        self.__open_branch()
 
-        parent = Branch.open(self.repository.repository)
-        repo = self._getRepo()
+        parent = BzrDir.open(self.repository.repository).open_branch()
 
-        revisions = repo.missing_revisions(parent)
-        fetch.greedy_fetch(repo, parent)
+        revisions = self._branch.missing_revisions(parent)
+        self._branch.fetch(parent)
 
         for ri in revisions:
             yield self._changesetFromRevision(parent, ri)
@@ -77,15 +104,19 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         Apply given remote revision to workingdir
         """
+        raise NotImplemented("this method wasn't upgraded to "
+                             "bzrlib 0.8 yet, sorry")
+
         from bzrlib.merge import merge
 
-        repo = self._getRepo()
-        parent = Branch.open(self.repository.repository)
+        self.__open_branch()
 
-        oldrevno = repo.revno()
+        parent = BzrDir.open(self.repository.repository).open_branch()
+
+        oldrevno = self._branch.revno()
         self.log.info('Applying "%s" to current r%s', changeset.revision,
                       oldrevno)
-        repo.append_revision(changeset.revision)
+        self._branch.append_revision(changeset.revision)
         merge((self.basedir, -1), (self.basedir, oldrevno),
               check_clean=False, this_dir=self.basedir)
         self.log.debug("%s updated to %s",
@@ -97,12 +128,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         Initial checkout, equivalent of 'bzr branch -r ... '
         """
-        from bzrlib.clone import copy_branch
-
-        parent = Branch.open(self.repository.repository)
+        parent = BzrDir.open(self.repository.repository)
+        parent_branch = parent.open_branch()
 
         if revision == "INITIAL":
-            revid = parent.get_rev_id(1)
+            revid = parent_branch.get_rev_id(1)
         elif revision == "HEAD":
             revid = None
         else:
@@ -110,10 +140,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         self.log.info('Extracting r%s out of "%s" in "%s"...',
                       revid, parent, self.basedir)
-        self._b = copy_branch(parent, self.basedir, revid)
+        self._bzrdir = parent.clone(self.basedir, revid)
 
-        return self._changesetFromRevision(parent, revid)
+        return self._changesetFromRevision(parent_branch, revid)
 
+    #################################
     ## SyncronizableTargetWorkingDir
 
     def _addPathnames(self, entries):
@@ -125,15 +156,17 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # changeset, or may be a target of a rename operation. Remove
         # those files too. Do not try to catch any errors from
         # Branch.add, since the they are _real_ errors.
-        last_revision = self._b.last_revision()
+        self.__open_branch()
+
+        last_revision = self._branch.last_revision()
         if last_revision is None:
             # initial revision
             new_entries = entries
         else:
             new_entries = []
-            basis_tree = self._b.basis_tree()
+            basis_tree = self._branch.basis_tree()
             inv = basis_tree.inventory
-            diff = compare_trees(basis_tree, self._b.working_tree())
+            diff = compare_trees(basis_tree, self._working_tree)
             added = ([new[0] for new in diff.added] +
                      [renamed[1] for renamed in diff.renamed])
 
@@ -155,7 +188,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             return
 
         self.log.info('Adding %s...', ', '.join(new_entries))
-        self._b.working_tree().add(new_entries)
+        self._working_tree.add(new_entries)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         from time import mktime
@@ -185,7 +218,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
                                     hexlify(rand_bytes(8)))
-        self._b.working_tree().commit(logmessage, committer=author,
+        self._bzrdir.open_workingtree().commit(logmessage, committer=author,
                        specific_files=entries, rev_id=revision_id,
                        verbose=self.repository.projectref().verbose,
                        timestamp=timestamp)
@@ -194,7 +227,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """Remove a sequence of entries"""
 
         self.log.info('Removing %s...', ', '.join(entries))
-        self._b.working_tree().remove(entries)
+        self._working_tree.remove(entries)
 
     def _renamePathname(self, oldentry, newentry):
         """Rename an entry"""
@@ -207,7 +240,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         rename(join(self.basedir, newentry), join(self.basedir, oldentry))
 
         self.log.info('Renaming "%s" to "%s"...', oldentry, newentry)
-        self._b.working_tree().rename_one(oldentry, newentry)
+        self._working_tree.rename_one(oldentry, newentry)
 
     def _prepareTargetRepository(self):
         """
@@ -218,7 +251,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from os.path import join, exists, split
         from bzrlib import IGNORE_FILENAME
 
-        if not exists(join(self.basedir, self.repository.METADIR)):
+        if self._bzrdir is None:
             ignored = []
 
             # Omit our own log...
@@ -241,13 +274,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
             self.log.info('Initializing new repository in "%s"...',
                           self.basedir)
-            self._b = Branch.initialize(self.basedir)
+            self._bzrdir = BzrDir.create(self.basedir)
+            self._branch = self._bzrdir.create_branch()
+            self._working_tree = self._bzrdir.create_workingtree()
         else:
-            self._b = Branch.open(self.basedir)
-
-    def _getRepo(self):
-        try:
-            return self._b
-        except AttributeError:
-            self._b = Branch.open(self.basedir)
-            return self._b
+            self.__open_branch()
