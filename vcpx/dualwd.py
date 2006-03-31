@@ -38,12 +38,13 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def __init__(self, source_repo, target_repo):
         global IGNORED_METADIRS
+        from os.path import sep
 
         self.source = source_repo.workingDir()
         self.target = target_repo.workingDir()
 
-        sbdir = self.source.basedir
-        tbdir = self.target.basedir
+        sbdir = self.source.basedir.rstrip(sep)+sep
+        tbdir = self.target.basedir.rstrip(sep)+sep
         if sbdir == tbdir:
             shared = True
         elif tbdir.startswith(sbdir):
