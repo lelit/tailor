@@ -333,6 +333,10 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         from os.path import join, exists
         from os import mkdir
         from re import escape
+        from source import InvocationError
+
+        if not self.repository.repository:
+            raise InvocationError("Must specify a the darcs source repository")
 
         if revision == 'INITIAL':
             initial = True
