@@ -15,7 +15,7 @@ __docformat__ = 'reStructuredText'
 
 import os
 from workdir import WorkingDir
-from source import UpdatableSourceWorkingDir
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.bzrdir import BzrDir
 from bzrlib.branch import Branch
@@ -38,7 +38,6 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def __open_branch(self):
         if self._branch is not None:
-            print repr(self._branch), 'already opened'
             return
         if self._bzrdir is None:
             raise RuntimeError("Can't open branch if bzrdir doesn't exist")
@@ -104,25 +103,22 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """
         Apply given remote revision to workingdir
         """
-        raise NotImplemented("this method wasn't upgraded to "
-                             "bzrlib 0.8 yet, sorry")
-
-        from bzrlib.merge import merge
-
         self.__open_branch()
-
         parent = BzrDir.open(self.repository.repository).open_branch()
-
-        oldrevno = self._branch.revno()
-        self.log.info('Applying "%s" to current r%s', changeset.revision,
-                      oldrevno)
-        self._branch.append_revision(changeset.revision)
-        merge((self.basedir, -1), (self.basedir, oldrevno),
-              check_clean=False, this_dir=self.basedir)
+        self._working_tree.lock_write()
+        self.log.info('Updating to "%s"', changeset.revision)
+        try:
+            count = self._working_tree.pull(parent,
+                                            stop_revision=changeset.revision)
+            conflicts = self._working_tree.update()
+        finally:
+            self._working_tree.unlock()
         self.log.debug("%s updated to %s",
                        ', '.join([e.name for e in changeset.entries]),
                        changeset.revision)
-        return [] # No conflicts for now
+        if (count != 1) or conflicts:
+            raise ChangesetApplicationFailure('unknown reason')
+        return [] # No conflict handling yet
 
     def _checkoutUpstreamRevision(self, revision):
         """
@@ -140,7 +136,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         self.log.info('Extracting r%s out of "%s" in "%s"...',
                       revid, parent, self.basedir)
-        self._bzrdir = parent.clone(self.basedir, revid)
+        self._bzrdir = parent.sprout(self.basedir, revid)
 
         return self._changesetFromRevision(parent_branch, revid)
 
