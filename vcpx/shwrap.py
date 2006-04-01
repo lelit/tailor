@@ -178,7 +178,9 @@ class ExternalCommand:
         from sys import stderr
         from locale import getpreferredencoding
         from os import environ, getcwd
+        from os.path import isdir
         from cStringIO import StringIO
+        from errno import ENOENT
 
         self.exit_status = None
 
@@ -193,10 +195,11 @@ class ExternalCommand:
         if self.DRY_RUN:
             return
 
-        if not kwargs.has_key('cwd') and self.cwd:
-            kwargs['cwd'] = self.cwd
+        cwd = kwargs.setdefault('cwd', self.cwd or getcwd())
+        if not isdir(cwd):
+            raise OSError(ENOENT, "Working directory does not exist", cwd)
 
-        self.log.debug("Executing %r (%r)", self, kwargs.get('cwd', getcwd()))
+        self.log.debug("Executing %r (%r)", self, cwd)
 
         if not kwargs.has_key('env'):
             env = kwargs['env'] = {}
@@ -232,13 +235,11 @@ class ExternalCommand:
                             stdout=output,
                             stderr=error,
                             env=kwargs.get('env'),
-                            cwd=kwargs.get('cwd'),
+                            cwd=cwd,
                             universal_newlines=True)
         except OSError, e:
-            from errno import ENOENT
-
             if e.errno == ENOENT:
-                raise OSError("'%s' does not exist!" % self._last_command[0])
+                raise OSError("%r does not exist!" % self._last_command[0])
             else:
                 raise
 
