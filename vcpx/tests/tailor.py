@@ -40,7 +40,6 @@ start-revision = INITIAL
 [darcs:tailor]
 
 [bzr:tailor]
-python-path = /opt/src/bzr.dev
 repository = %(testdir)s/darcs2bzr
 
 [darcs:bzrtailor]
@@ -159,7 +158,6 @@ repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
 module = ATSchemaEditorNG
 
 [bzr:atse]
-python-path = /opt/src/bzr.dev
 
 
 [svndump2darcs]
