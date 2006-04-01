@@ -244,6 +244,17 @@ root-directory = %(testdir)s/svn2hg_we
 repository = http://docit.bice.dyndns.org
 module = /Plone/PloneBook2/it
 ignore-externals = False
+
+
+[bazaarng2darcs]
+source = bzr:oodoctest
+target = darcs:oodoctest
+root-directory = %(testdir)s/bazaarng2darcs
+
+[bzr:oodoctest]
+repository = http://download.gna.org/oodoctest/oodoctest.og.main/
+
+[darcs:oodoctest]
 '''
 
 def remap_authors(context, changeset):
@@ -353,6 +364,15 @@ class Darcs(OperationalTest):
 
         self.tailorize('darcs2monotone')
         self.tailorize('monotone2darcs')
+
+
+class Bazaarng(OperationalTest):
+    "Test the BazaarNG source backend"
+
+    def testBazaarngToDarcs(self):
+        "Test bazaar-ng to darcs"
+
+        self.tailorize('bazaarng2darcs')
 
 
 class Cvs(OperationalTest):
