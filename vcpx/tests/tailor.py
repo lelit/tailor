@@ -250,6 +250,7 @@ ignore-externals = False
 source = bzr:oodoctest
 target = darcs:oodoctest
 root-directory = %(testdir)s/bazaarng2darcs
+start-revision = INITIAL
 
 [bzr:oodoctest]
 repository = http://download.gna.org/oodoctest/oodoctest.og.main/
