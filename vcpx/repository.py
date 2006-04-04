@@ -258,7 +258,6 @@ class CvspsRepository(CvsRepository):
     def _load(self, project):
         CvsRepository._load(self, project)
         self.__cvsps = project.config.get(self.name, 'cvsps-command', 'cvsps')
-        self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
 
 
 class DarcsRepository(Repository):
