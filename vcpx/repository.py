@@ -316,12 +316,12 @@ class HglibRepository(Repository):
             self.encoding = 'UTF-8'
 
 class MonotoneRepository(Repository):
-    METADIR = 'MT'
+    METADIR = '_MTN'
 
     def _load(self, project):
         Repository._load(self, project)
         cget = project.config.get
-        self.EXECUTABLE = cget(self.name, 'monotone-command', 'monotone')
+        self.EXECUTABLE = cget(self.name, 'monotone-command', 'mtn')
         self.keyid = cget(self.name, 'keyid')
         self.passphrase = cget(self.name, 'passphrase')
         self.keyfile = cget(self.name, 'keyfile')

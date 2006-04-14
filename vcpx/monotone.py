@@ -105,7 +105,7 @@ class MonotoneChangeset(Changeset):
 
 class MonotoneLogParser:
     """
-    Obtain and parse a *single* "monotone log" output, reconstructing
+    Obtain and parse a *single* "mtn log" output, reconstructing
     the revision information
     """
 
@@ -152,7 +152,7 @@ class MonotoneLogParser:
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE)
         if mtl.exit_status:
-            raise GetUpstreamChangesetsFailure("monotone log returned status %d" % mtl.exit_status)
+            raise GetUpstreamChangesetsFailure("mtn log returned status %d" % mtl.exit_status)
 
         logs = ""
         comments = ""
@@ -345,7 +345,7 @@ class MonotoneDiffParser:
         outstr = mtl.execute(stdout=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure(
-                "monotone diff returned status %d" % mtl.exit_status)
+                "mtn diff returned status %d" % mtl.exit_status)
 
         # monotone diffs are prefixed by a section containing
         # metainformations about files
@@ -568,7 +568,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
     ## UpdatableSourceWorkingDir
 
     def _getUpstreamChangesets(self, sincerev=None):
-        # monotone descendents returns results sorted in alpha order
+        # mtn descendents returns results sorted in alpha order
         # here we want ancestry order, so descendents output is feed back to
         # mtn for a toposort ...
         cmd = [ self.repository.command("automate","descendents",
@@ -581,7 +581,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         cld = ExternalCommandChain(cwd=self.repository.rootdir, command=cmd)
         outstr = cld.execute()
         if cld.exit_status:
-            raise InvocationError("monotone descendents returned "
+            raise InvocationError("mtn descendents returned "
                                   "status %d" % cld.exit_status)
 
         # now childs is a list of revids, we must transform it in a
@@ -618,7 +618,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         effrev = self._convert_head_initial(self.repository.repository,
                                            self.repository.module, revision,
                                            self.repository.rootdir)
-        if not exists(join(self.basedir, 'MT')):
+        if not exists(join(self.basedir, '_MTN')):
 
             # actually check out the revision
             self.log.info("Checking out a working copy")
@@ -631,7 +631,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             mtl.execute()
             if mtl.exit_status:
                 raise TargetInitializationFailure(
-                    "'monotone co' returned status %s" % mtl.exit_status)
+                    "'mtn co' returned status %s" % mtl.exit_status)
         else:
             self.log.debug("%r already exists, assuming it's a monotone "
                            "working dir already populated", self.basedir)
@@ -719,7 +719,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         # we ignore those errors ...
         if commit.exit_status:
             text = error.read()
-            if not "monotone: misuse: no changes to commit" in text:
+            if not "mtn: misuse: no changes to commit" in text:
                 self.log.error("Monotone commit said: %s", text)
                 raise ChangesetApplicationFailure(
                     "%s returned status %s" % (str(commit),commit.exit_status))
@@ -832,7 +832,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
         from re import escape
 
-        if not self.repository.repository or exists(join(self.basedir, 'MT')):
+        if not self.repository.repository or exists(join(self.basedir, '_MTN')):
             return
 
         if not self.repository.module:
@@ -852,7 +852,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         setup.execute(self.basedir)
 
         if self.repository.passphrase or self.repository.custom_lua:
-            monotonerc = open(join(self.basedir, 'MT', 'monotonerc'), 'w')
+            monotonerc = open(join(self.basedir, '_MTN', 'monotonerc'), 'w')
             if self.repository.passphrase:
                 monotonerc.write(MONOTONERC % self.repository.passphrase)
             else:
@@ -862,7 +862,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                 monotonerc.write(self.repository.custom_lua)
             monotonerc.close()
 
-        # Add the tailor log file and state file to MT's list of
+        # Add the tailor log file and state file to _MTN's list of
         # ignored files
         ignored = []
         logfile = self.repository.projectref().logfile
@@ -878,7 +878,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
             ignored.append('^%s$' % escape(sfrelname + '.journal'))
 
         if len(ignored) > 0:
-            mt_ignored = open(join(self.basedir, '.mt-ignore'), 'aU')
+            mt_ignored = open(join(self.basedir, '.mtn-ignore'), 'aU')
             mt_ignored.write('\n'.join(ignored))
             mt_ignored.close()
 
@@ -888,12 +888,12 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
 
         The user must setup a monotone working directory himself or use the
         tailor config file to provide parameters for creation. Then
-        we simply use 'monotone commit', without having to specify a database
-        file or branch. Monotone looks up the database and branch in it's MT
+        we simply use 'mtn commit', without having to specify a database
+        file or branch. Monotone looks up the database and branch in it's _MTN
         directory.
         """
 
-        if not exists(join(self.basedir, 'MT')):
+        if not exists(join(self.basedir, '_MTN')):
             raise TargetInitializationFailure("Please setup '%s' as a "
                                               "monotone working directory" %
                                               self.basedir)
