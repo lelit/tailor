@@ -24,7 +24,7 @@ def normalize_cvs_rev(rev):
 
     # handle locked files by taking only the first part of the
     # revision string to handle gracefully lines like "1.1 locked"
-    rev = rev.split(' ')[0]
+    rev = rev.split()[0]
 
     r = [int(n) for n in rev.split('.')]
     # convert "magic branch numbers" like 1.2.0.2 to regular
@@ -260,8 +260,8 @@ class ChangeSetCollector(object):
             return None
         # Don't just knock off the leading 'revision ' here.
         # There may be locks, in which case we get output like:
-        # 'revision 1.4    locked by: mem;'.
-        rev = revision[:-1].split(' ')[1]
+        # 'revision 1.4    locked by: mem;', with a tab char.
+        rev = revision[:-1].split()[1]
 
         infoline = self.__readline()
 
