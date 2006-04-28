@@ -303,24 +303,23 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
             svnls.execute(self.repository.repository)
             if svnls.exit_status:
                 lastok = None
-                break
+            else:
+                # Then verify it really points to the root of the
+                # repository: this is needed because later the svn log
+                # parser needs to know the "offset".
 
-            # Then verify it really points to the root of the
-            # repository: this is needed because later the svn log
-            # parser needs to know the "offset".
+                reporoot = lastok[:lastok.rfind('/')]
 
-            reporoot = lastok[:lastok.rfind('/')]
-
-            # Even if it would be enough asserting that the uplevel
-            # directory is not a repository, find the real root to
-            # suggest it in the exception.  But don't go too far, that
-            # is, stop when you hit schema://...
-            while '//' in reporoot:
-                svnls.execute(reporoot)
-                if svnls.exit_status:
-                    break
-                lastok = reporoot
-                reporoot = reporoot[:reporoot.rfind('/')]
+                # Even if it would be enough asserting that the uplevel
+                # directory is not a repository, find the real root to
+                # suggest it in the exception.  But don't go too far, that
+                # is, stop when you hit schema://...
+                while '//' in reporoot:
+                    svnls.execute(reporoot)
+                    if svnls.exit_status:
+                        break
+                    lastok = reporoot
+                    reporoot = reporoot[:reporoot.rfind('/')]
 
         if lastok is None:
             raise ConfigurationError("%r is not the root of a svn repository." %
