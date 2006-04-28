@@ -412,5 +412,6 @@ class BazRepository(TlaRepository):
     def command(self, *args, **kwargs):
         if args:
             if args[0] == 'tree-lint':
+                args = list(args)
                 args[0] = 'lint'
         return TlaRepository.command(self, *args, **kwargs)
