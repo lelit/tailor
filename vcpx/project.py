@@ -79,6 +79,8 @@ class Project(object):
         Initialize a new instance representing the project `name`.
         """
 
+        self.loghandler = None
+
         if not config.has_section(name):
             raise UnknownProjectError("'%s' is not a known project" % name)
 
@@ -160,8 +162,9 @@ class Project(object):
                     h.setLevel(CRITICAL)
 
     def __del__(self):
-        from logging import getLogger
-        getLogger('tailor').removeHandler(self.loghandler)
+        if self.loghandler is not None:
+            from logging import getLogger
+            getLogger('tailor').removeHandler(self.loghandler)
 
     def __loadRepository(self, which):
         """
