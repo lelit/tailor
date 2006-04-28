@@ -30,13 +30,28 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         # later. So a partial checkout is a full clone followed by an update
         # directly to the desired revision.
 
-        # Hg won't check out into an existing directory
-        checkoutdir = os.path.join(self.basedir,".hgtmp")
-        commands.clone(self._ui, self.repository.repository, checkoutdir,
-                       noupdate=True, ssh=None, remotecmd=None, pull=None, rev=None)
-        os.rename(os.path.join(checkoutdir, ".hg"),
-                  os.path.join(self.basedir,".hg"))
-        os.rmdir(checkoutdir)
+        # If the basedir does not exist, create it
+        if not os.path.exists(self.basedir):
+            os.mkdir(self.basedir)
+
+        # clone it only if .hg does not exist
+        if not os.path.exists(os.path.join(self.basedir, ".hg")):
+            # Hg won't check out into an existing directory
+            checkoutdir = os.path.join(self.basedir,".hgtmp")
+            commands.clone(self._ui, self.repository.repository, checkoutdir,
+                           noupdate=True, ssh=None, remotecmd=None, pull=None, rev=None)
+            os.rename(os.path.join(checkoutdir, ".hg"),
+                      os.path.join(self.basedir,".hg"))
+            os.rmdir(checkoutdir)
+        else:
+            # Does hgrc exist? If not, we write one
+            hgrc = os.path.join(self.basedir, ".hg", "hgrc")
+            if not os.path.exists(hgrc):
+                hgrc = file(hgrc, "w")
+                hgrc.write("[paths]\ndefault = %s\ndefault-push = %s\n" %
+                           (self.repository.repository,
+                            self.repository.repository))
+                hgrc.close()
 
         repo = self._getRepo()
         node = self._getNode(repo, revision)
