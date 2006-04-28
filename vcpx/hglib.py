@@ -64,10 +64,9 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _getUpstreamChangesets(self, sincerev):
         """Fetch new changesets from the source"""
-        ui = self._getUI()
         repo = self._getRepo()
 
-        commands.pull(ui, repo, "default", ssh=None, remotecmd=None, update=None, rev=None)
+        commands.pull(repo.ui, repo, "default", ssh=None, remotecmd=None, update=None, rev=None)
 
         from mercurial.node import bin
         for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1, repo.changelog.count()):
@@ -256,7 +255,7 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                 parent = repo.changelog.parents(parent)[0]
         except KeyError:
             pass
-        commands.tag(self._getUI(), repo, tag, **opts)
+        commands.tag(repo.ui, repo, tag, **opts)
 
     def _defaultOpts(self, cmd):
         # Not sure this is public. commands.parse might be, but this
