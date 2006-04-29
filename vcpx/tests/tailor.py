@@ -80,7 +80,7 @@ subdir = svnside
 use-propset = True
 
 [darcs:svntailor]
-repository = /home/lele/public_html/projects/tailor
+repository = %(tailor_repo)s
 subdir = darcside
 
 
