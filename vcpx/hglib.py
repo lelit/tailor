@@ -15,8 +15,7 @@ __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
-from mercurial import ui, hg, commands, util
-import os
+from mercurial import ui, hg, commands
 
 class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     # UpdatableSourceWorkingDir
@@ -25,28 +24,31 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         Initial checkout (hg clone)
         """
 
+        from os import mkdir, rename, rmdir
+        from os.path import exists, join
+
         self._getUI()
         # We have to clone the entire repository to be able to pull from it
         # later. So a partial checkout is a full clone followed by an update
         # directly to the desired revision.
 
         # If the basedir does not exist, create it
-        if not os.path.exists(self.basedir):
-            os.mkdir(self.basedir)
+        if not exists(self.basedir):
+            mkdir(self.basedir)
 
         # clone it only if .hg does not exist
-        if not os.path.exists(os.path.join(self.basedir, ".hg")):
+        if not exists(join(self.basedir, ".hg")):
             # Hg won't check out into an existing directory
-            checkoutdir = os.path.join(self.basedir,".hgtmp")
+            checkoutdir = join(self.basedir,".hgtmp")
             commands.clone(self._ui, self.repository.repository, checkoutdir,
-                           noupdate=True, ssh=None, remotecmd=None, pull=None, rev=None)
-            os.rename(os.path.join(checkoutdir, ".hg"),
-                      os.path.join(self.basedir,".hg"))
-            os.rmdir(checkoutdir)
+                           noupdate=True, ssh=None, remotecmd=None, pull=None,
+                           rev=None)
+            rename(join(checkoutdir, ".hg"), join(self.basedir,".hg"))
+            rmdir(checkoutdir)
         else:
             # Does hgrc exist? If not, we write one
-            hgrc = os.path.join(self.basedir, ".hg", "hgrc")
-            if not os.path.exists(hgrc):
+            hgrc = join(self.basedir, ".hg", "hgrc")
+            if not exists(hgrc):
                 hgrc = file(hgrc, "w")
                 hgrc.write("[paths]\ndefault = %s\ndefault-push = %s\n" %
                            (self.repository.repository,
@@ -66,10 +68,12 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         """Fetch new changesets from the source"""
         repo = self._getRepo()
 
-        commands.pull(repo.ui, repo, "default", ssh=None, remotecmd=None, update=None, rev=None)
+        commands.pull(repo.ui, repo, "default", ssh=None, remotecmd=None,
+                      update=None, rev=None)
 
         from mercurial.node import bin
-        for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1, repo.changelog.count()):
+        for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1,
+                          repo.changelog.count()):
             yield self._changesetForRevision(repo, str(rev))
 
     def _applyChangeset(self, changeset):
@@ -133,7 +137,8 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
             entries.append(e)
 
-        for df in [file for file in pms.iterkeys() if not manifest.has_key(file)]:
+        for df in [file for file in pms.iterkeys()
+                   if not manifest.has_key(file)]:
             e = ChangesetEntry(df)
             e.action_kind = ChangesetEntry.DELETED
             entries.append(e)
@@ -183,9 +188,11 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         forward slash"/" as separator, also under insane operating systems.
         """
 
-        entry.name = util.normpath(self.repository.encode(entry.name))
+        from mercurial.util import normpath
+
+        entry.name = normpath(self.repository.encode(entry.name))
         if entry.old_name:
-            entry.old_name = util.normpath(self.repository.encode(entry.old_name))
+            entry.old_name = normpath(self.repository.encode(entry.old_name))
 
     def _addPathnames(self, names):
         from os.path import join, isdir, normpath
@@ -199,13 +206,15 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from changes import ChangesetEntry
         from os.path import join, isdir, normpath
 
-        entries = SyncronizableTargetWorkingDir._getCommitEntries(self, changeset)
+        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+                                                                  changeset)
         # We need to extract the old name for renames and commit that too
         for e in [e for e in changeset.entries
                   if e.action_kind == ChangesetEntry.RENAMED]:
             # Have to walk directories by hand looking for files
             if isdir(join(self.basedir, normpath(e.name))):
-                entries.extend([join(e.old_name, tail) for tail in self._walk(e.name)])
+                entries.extend([join(e.old_name, tail)
+                                for tail in self._walk(e.name)])
             else:
                 entries.append(e.old_name)
 
@@ -343,7 +352,10 @@ class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         commands.add(self._ui, self._hg, self.basedir)
 
     def _walk(self, subdir):
-        """ Returns the files mercurial knows about under subdir, relative to subdir """
+        """
+        Returns the files mercurial knows about under subdir, relative
+        to subdir.
+        """
         from os.path import join, split, isdir
 
         files = []
