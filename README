@@ -967,7 +967,8 @@ Bazaar-NG support
 -----------------
 
 `Bazaar-NG`_ support was contributed by `Johan Rydberg
-<jrydberg@gnu.org>`_.
+<jrydberg@gnu.org>`_.  Nowadays it's being maintained by `Lalo Martins
+<lalo.martins@gmail.com>`_.
 
 Git support
 -----------
