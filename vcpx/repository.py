@@ -414,4 +414,7 @@ class BazRepository(TlaRepository):
             if args[0] == 'tree-lint':
                 args = list(args)
                 args[0] = 'lint'
+            elif args[0] == 'missing' and args[1] == '-f':
+                args = list(args)
+                del args[1]
         return TlaRepository.command(self, *args, **kwargs)
