@@ -131,10 +131,10 @@ repository = :local:%(testdir)s/cvsrepo
 module = tailor
 
 
-[cvs2hglib]
-root-directory = %(testdir)s/cvs2hglib
+[cvs2hg]
+root-directory = %(testdir)s/cvs2hg
 source = cvs:cmsmini
-target = hglib:cmsmini
+target = hg:cmsmini
 start-revision = INITIAL
 subdir = cmsmini
 before-commit = remap_authors
@@ -143,7 +143,7 @@ before-commit = remap_authors
 repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
 module = cmsmini
 
-[hglib:cmsmini]
+[hg:cmsmini]
 
 
 [cvs2bzr]
@@ -392,7 +392,7 @@ class Cvs(OperationalTest):
     def testCvsToMercurial(self):
         "Test CVS to mercurial"
 
-        self.tailorize('cvs2hglib')
+        self.tailorize('cvs2hg')
 
     def testCvsToBazaarng(self):
         "Test CVS to bazaar-ng"

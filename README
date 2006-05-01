@@ -530,7 +530,7 @@ All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
-``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``hglib``, ``monotone``, 
+``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``monotone``, 
 ``svn``, ``svndump`` and ``tla``.
 
 .. note:: If a particular option is missing from the repository section,
@@ -560,7 +560,7 @@ command : string
   be used, as done in the example above for ``hg``.
 
 python-path : string
-  For pythonique backends such as *bzr* and *hglib* this indicates
+  For pythonique backends such as *bzr* and *hg* this indicates
   where the respective library is located.
 
 encoding : string
@@ -640,11 +640,6 @@ git
 
 hg
 %%
-
-.. no specific options
-
-hglib
-%%%%%
 
 .. no specific options
 

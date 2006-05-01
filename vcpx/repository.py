@@ -288,15 +288,6 @@ class HgRepository(Repository):
 
     def _load(self, project):
         Repository._load(self, project)
-        self.EXECUTABLE = project.config.get(self.name, 'hg-command', 'hg')
-        self.EXTRA_METADIRS = ['.hgtags']
-
-
-class HglibRepository(Repository):
-    METADIR = '.hg'
-
-    def _load(self, project):
-        Repository._load(self, project)
         ppath = project.config.get(self.name, 'python-path')
         if ppath:
             from sys import path
