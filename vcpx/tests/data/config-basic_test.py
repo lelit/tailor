@@ -38,18 +38,19 @@ before-commit = refill
 
 [project3]
 root-directory = /tmp/tailor-tests
-source = svndump:project3repo
+source = svn:project3repo
 target = darcs:project3repo
 
-[svndump:project3repo]
-repository = %(tailor_repo)s/vcpx/tests/data/simple.svndump
+[svn:project3repo]
+repository = svn://sample.org/svn
+module = /trunk
 subdir = plain
 
 [darcs:project3repo]
 subdir = .
 
 [project4]
-source = svndump:project3repo
+source = svn:project3repo
 target = darcs:project4repo
 
 [darcs:project4repo]

@@ -531,7 +531,7 @@ denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
 ``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``monotone``, 
-``svn``, ``svndump`` and ``tla``.
+``svn`` and ``tla``.
 
 .. note:: If a particular option is missing from the repository section,
           its value is obtained looking up the same option in the
@@ -718,13 +718,6 @@ ignore-externals : bool
   By default the Subversion backend does not consider the external
   references defined in the source repository.  This option force
   Tailor to behave as it did up to 0.9.20.
-
-svndump
-%%%%%%%
-
-.. warning:: The svndump backend is totally wrong and almost unusable
-             at this time, and will be replaced by a third party
-             framework.
 
 tla
 %%%

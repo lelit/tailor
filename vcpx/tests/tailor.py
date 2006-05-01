@@ -160,51 +160,6 @@ module = ATSchemaEditorNG
 [bzr:atse]
 
 
-[svndump2darcs]
-source = svndump:simple
-target = darcs:simple
-root-directory = %(testdir)s/svndump2darcs
-subdir = simple
-start-revision = INITIAL
-
-[svndump:simple]
-repository = %(tailor_repo)s/vcpx/tests/data/simple.svndump
-subdir = plain
-
-[darcs:simple]
-subdir = .
-
-
-[svndump2hg]
-source = svndump:pyobjc
-target = hg:pyobjc
-root-directory = %(testdir)s/svndump2hg
-start-revision = INITIAL
-
-[svndump:pyobjc]
-repository = %(tailor_repo)s/pyobjc.svndump
-subdir = plain
-
-[hg:pyobjc]
-subdir = hg
-
-
-[svndump2hg-partial]
-source = svndump:simple-partial
-target = hg:simple-partial
-root-directory = %(testdir)s/svndump2hg-partial
-start-revision = INITIAL
-
-[svndump:simple-partial]
-repository = %(tailor_repo)s/vcpx/tests/data/simple.svndump
-#repository = /usr/local/tmp/docit.svndump
-module = subdir
-subdir = plain
-
-[hg:simple-partial]
-subdir = hg
-
-
 [cvs2svn]
 source = cvs:cmfeditions-houston-sprint
 target = svn:cmfeditions
@@ -419,22 +374,3 @@ class Svn(OperationalTest):
 
         self.tailorize('svn2hg_with_externals')
         self.failUnless(exists(external % '_we'))
-
-
-class Svndump(OperationalTest):
-    "Test the svndump source backend (deprecated)"
-
-    def testSvndumpToDarcs(self):
-        "Test subversion dump to darcs"
-
-        self.tailorize('svndump2darcs')
-
-    def testSvndumpToMercurial(self):
-        "Test subversion dump to mercurial"
-
-        self.tailorize('svndump2hg')
-
-    def testPartialSvndumpToMercurial(self):
-        "Test partial subversion dump to mercurial"
-
-        self.tailorize('svndump2hg-partial')
