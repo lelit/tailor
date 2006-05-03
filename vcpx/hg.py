@@ -17,7 +17,7 @@ from source import UpdatableSourceWorkingDir
 from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
 from mercurial import ui, hg, commands
 
-class HglibWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class HgWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     # UpdatableSourceWorkingDir
     def _checkoutUpstreamRevision(self, revision):
         """
