@@ -40,9 +40,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not exists(join(self.basedir, ".hg")):
             # Hg won't check out into an existing directory
             checkoutdir = join(self.basedir,".hgtmp")
+            opts = self._defaultOpts('clone')
             commands.clone(self._ui, self.repository.repository, checkoutdir,
-                           noupdate=True, ssh=None, remotecmd=None, pull=None,
-                           rev=None)
+                           **opts)
             rename(join(checkoutdir, ".hg"), join(self.basedir,".hg"))
             rmdir(checkoutdir)
         else:
@@ -67,9 +67,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
     def _getUpstreamChangesets(self, sincerev):
         """Fetch new changesets from the source"""
         repo = self._getRepo()
+        opts = self._defaultOpts('pull')
 
-        commands.pull(repo.ui, repo, "default", ssh=None, remotecmd=None,
-                      update=None, rev=None)
+        commands.pull(repo.ui, repo, "default", **opts)
 
         from mercurial.node import bin
         for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1,
