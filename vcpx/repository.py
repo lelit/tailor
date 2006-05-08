@@ -350,6 +350,10 @@ class SvnRepository(Repository):
                                      "Subversion repository used "
                                      "as %s with the option "
                                      "'repository'" % self.which)
+        elif self.repository.endswith('/'):
+            self.log.debug("Removing final slash from %r in %r",
+                           self.repository, self.name)
+            self.repository = self.repository.rstrip('/')
 
         if not self.module:
             self.log.critical('Missing module information in %r', self.name)
