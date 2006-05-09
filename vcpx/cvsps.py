@@ -536,7 +536,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         after a manual ``cvs update`` in the working directory.
         """
 
-        from os import walk, rename
+        from os import walk, rename, remove
         from os.path import join, exists
 
         for dir, subdirs, files in walk(self.basedir):
@@ -551,7 +551,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 f = open(efn)
                 entries = f.readlines()
                 f.close()
-                rename(efn, efn+'.old')
 
                 newentries = []
                 for e in entries:
@@ -563,9 +562,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     else:
                         newentries.append(e)
 
+                rename(efn, efn+'.tailor-old')
+
                 f = open(efn, 'w')
                 f.writelines(newentries)
                 f.close()
+
+                remove(efn+'.tailor-old')
+
 
     def _getCommitEntries(self, changeset):
         """
