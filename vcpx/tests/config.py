@@ -96,3 +96,13 @@ class Configuration(TestCase):
         self.assertEqual(project4.target.command('record', '-a'),
                          ['darcs', 'record', '-a', '--look-for-adds'])
         
+
+    def testTagEntries(self):
+        """Verify the darcs Repository knows when force CVS tag on entries"""
+
+        config = Config(self.getTestConfiguration("config-basic_test"),
+                        {'tailor_repo': self.tailor_repo})
+
+        project5 = Project('project5', config)
+        self.assertEqual(project5.source.tag_entries, True)
+        self.assertEqual(project5.target.tag_entries, False)

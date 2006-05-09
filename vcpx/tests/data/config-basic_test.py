@@ -56,6 +56,18 @@ target = darcs:project4repo
 [darcs:project4repo]
 subdir = darcs
 look-for-adds = True
+
+[project5]
+source = cvs:project5srepo
+target = cvs:project5trepo
+
+[cvs:project5srepo]
+repository = /tmp/tailor-tests
+
+[cvs:project5trepo]
+repository = /tmp/tailor-tests
+tag-entries = False
+
 '''
 
 def maybe_skip(context, changeset):
