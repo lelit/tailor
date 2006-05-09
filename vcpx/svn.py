@@ -14,7 +14,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, STDOUT, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from config import ConfigurationError
 
 def changesets_from_svnlog(log, repository, module, chunksize=2**15):
@@ -200,7 +200,7 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
         yield cs
 
 
-class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     ## UpdatableSourceWorkingDir
 
@@ -401,7 +401,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
         return last
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """
@@ -419,7 +419,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         committed.
         """
 
-        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+        entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
                                                                   changeset)
         entries.extend([e.old_name for e in changeset.renamedEntries()])
 
@@ -637,4 +637,4 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if not exists(join(self.basedir, '.svn')):
             raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % self.basedir)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
+        SynchronizableTargetWorkingDir._initializeWorkingDir(self)

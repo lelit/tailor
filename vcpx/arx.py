@@ -13,12 +13,12 @@ This module implements the backends for ArX.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
-class ArxWorkingDir(SyncronizableTargetWorkingDir):
+class ArxWorkingDir(SynchronizableTargetWorkingDir):
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """
@@ -89,4 +89,4 @@ class ArxWorkingDir(SyncronizableTargetWorkingDir):
         if not exists(join(self.basedir, '_arx')):
             raise TargetInitializationFailure("Please setup '%s' as an ArX working directory" % self.basedir)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
+        SynchronizableTargetWorkingDir._initializeWorkingDir(self)

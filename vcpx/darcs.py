@@ -14,7 +14,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, STDOUT
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from xml.sax import SAXException
 
 MOTD = """\
@@ -157,7 +157,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
     for cs in handler.changesets:
         yield cs
 
-class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
+class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
     """
     A working directory under ``darcs``.
     """
@@ -417,7 +417,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
         return last.next()
 
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """
@@ -575,7 +575,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SyncronizableTargetWorkingDir):
 
         from copy import copy
 
-        adapted = SyncronizableTargetWorkingDir._adaptEntries(self, changeset)
+        adapted = SynchronizableTargetWorkingDir._adaptEntries(self, changeset)
 
         # If there are no entries or no rules, there's nothing to do
         if not adapted or not adapted.entries or not self.__unwanted_entries:

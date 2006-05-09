@@ -31,7 +31,7 @@ class TargetInitializationFailure(Exception):
 class ChangesetReplayFailure(Exception):
     "Failure replaying the changeset on the target system"
 
-class SyncronizableTargetWorkingDir(WorkingDir):
+class SynchronizableTargetWorkingDir(WorkingDir):
     """
     This is an abstract working dir usable as a *shadow* of another
     kind of VC, sharing the same working directory.

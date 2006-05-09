@@ -16,7 +16,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, STDOUT
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
 class EmptyRepositoriesFoolsMe(Exception):
     "Cannot handle empty repositories. Maybe wrong module/repository?"
@@ -132,7 +132,7 @@ def changesets_from_cvsps(log, sincerev=None):
 
 
 class CvspsWorkingDir(UpdatableSourceWorkingDir,
-                      SyncronizableTargetWorkingDir):
+                      SynchronizableTargetWorkingDir):
 
     """
     An instance of this class represents a read/write CVS working
@@ -455,7 +455,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         return cvsarea
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def __createRepository(self, path, target_module):
         """
@@ -574,7 +574,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         remove+add, and both entries must be committed.
         """
 
-        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+        entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
                                                                   changeset)
         entries.extend([e.old_name for e in changeset.renamedEntries()])
 

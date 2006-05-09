@@ -17,12 +17,12 @@ __docformat__ = 'reStructuredText'
 import os
 from workdir import WorkingDir
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib import errors
 
-class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
         WorkingDir.__init__(self, repository)
         # TODO: check if there is a "repository" in the configuration,

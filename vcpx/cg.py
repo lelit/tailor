@@ -12,12 +12,12 @@ This module implements the backend for Git by using Cogito.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
-class CgWorkingDir(SyncronizableTargetWorkingDir):
+class CgWorkingDir(SynchronizableTargetWorkingDir):
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """

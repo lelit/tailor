@@ -12,19 +12,19 @@ This module implements the backends for Codeville.
 __docformat__ = 'reStructuredText'
 
 from shwrap import ExternalCommand
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
-class CdvWorkingDir(SyncronizableTargetWorkingDir):
+class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _replayChangeset(self, changeset):
         """
         Under Codeville, it's safer to explicitly edit modified items.
         """
 
-        SyncronizableTargetWorkingDir._replayChangeset(self, changeset)
+        SynchronizableTargetWorkingDir._replayChangeset(self, changeset)
 
         names = [e.name for e in changeset.modifiedEntries()]
         cmd = self.repository.command("edit")

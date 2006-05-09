@@ -15,7 +15,7 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile, STDOUT
 from source import UpdatableSourceWorkingDir, InvocationError, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from changes import ChangesetEntry,Changeset
 from os.path import exists, join, isdir, split
 from os import renames, access, F_OK
@@ -507,7 +507,7 @@ class MonotoneRevToCset:
         return cslist
 
 
-class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _convert_head_initial(self, dbrepo, module, revision, working_dir):
         """
@@ -651,7 +651,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
         mtr.updateCset(chset)
         return chset
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """
@@ -898,4 +898,4 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDi
                                               "monotone working directory" %
                                               self.basedir)
 
-        SyncronizableTargetWorkingDir._initializeWorkingDir(self)
+        SynchronizableTargetWorkingDir._initializeWorkingDir(self)

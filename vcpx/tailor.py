@@ -122,7 +122,7 @@ class Tailorizer(Project):
 
     def __call__(self):
         from shwrap import ExternalCommand
-        from target import SyncronizableTargetWorkingDir
+        from target import SynchronizableTargetWorkingDir
         from changes import Changeset
 
         def pconfig(option, raw=False):
@@ -132,8 +132,8 @@ class Tailorizer(Project):
 
         pname_format = pconfig('patch-name-format', raw=True)
         if pname_format is not None:
-            SyncronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
-        SyncronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
+            SynchronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
+        SynchronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
         Changeset.REFILL_MESSAGE = pconfig('refill-changelogs')
 
         try:

@@ -14,10 +14,10 @@ instead of thru the command line.
 __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from mercurial import ui, hg, commands
 
-class HgWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     # UpdatableSourceWorkingDir
     def _checkoutUpstreamRevision(self, revision):
         """
@@ -206,7 +206,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         from changes import ChangesetEntry
         from os.path import join, isdir, normpath
 
-        entries = SyncronizableTargetWorkingDir._getCommitEntries(self,
+        entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
                                                                   changeset)
         # We need to extract the old name for renames and commit that too
         for e in [e for e in changeset.entries

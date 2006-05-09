@@ -21,13 +21,13 @@ the job.
 __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir, InvocationError
-from target import SyncronizableTargetWorkingDir
+from target import SynchronizableTargetWorkingDir
 from shwrap import ExternalCommand
 from datetime import datetime
 
 IGNORED_METADIRS = []
 
-class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     """
     Dual working directory, one that is under two different VC systems at
     the same time.
@@ -72,7 +72,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         self.getPendingChangesets = self.source.getPendingChangesets
         self.checkoutUpstreamRevision = self.source.checkoutUpstreamRevision
 
-        # SyncronizableTargetWorkingDir
+        # SynchronizableTargetWorkingDir
 
         self.prepareWorkingDirectory = self.target.prepareWorkingDirectory
 

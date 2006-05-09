@@ -15,9 +15,9 @@ __docformat__ = 'reStructuredText'
 from shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE
 from source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from source import ChangesetApplicationFailure
-from target import SyncronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
-class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
+class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
     def _checkoutUpstreamRevision(self, revision):
         """ git clone """
@@ -170,7 +170,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if pipe:
             return output.read().split('\n')
 
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
         """
