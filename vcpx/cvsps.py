@@ -539,6 +539,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os import walk, rename, remove
         from os.path import join, exists
 
+        self.log.info("Forcing CVS sticky tag in %s", self.basedir)
+
         for dir, subdirs, files in walk(self.basedir):
             if dir[-3:] == 'CVS':
                 efn = join(dir, 'Entries')
