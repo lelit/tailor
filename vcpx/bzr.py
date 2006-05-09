@@ -4,6 +4,7 @@
 # :Autore:   Johan Rydberg <jrydberg@gnu.org>
 #            Jelmer Vernooij <jelmer@samba.org>
 #            Lalo Martins <lalo.martins@gmail.com>
+#            Olaf Conradi <olaf@conradi.org>
 # :Licenza:  GNU General Public License
 #
 
@@ -88,7 +89,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _applyChangeset(self, changeset):
         """
-        Apply given remote revision to workingdir
+        Apply the given changeset to the working tree
         """
         parent_branch = BzrDir.open(self.repository.repository).open_branch()
         self._working_tree.lock_write()
@@ -108,7 +109,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _checkoutUpstreamRevision(self, revision):
         """
-        Initial checkout, equivalent of 'bzr branch -r ... '
+        Initial checkout of upstream branch, equivalent of 'bzr branch -r',
+        and return the last changeset.
         """
         parent_bzrdir = BzrDir.open(self.repository.repository)
         parent_branch = parent_bzrdir.open_branch()
@@ -128,19 +130,22 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         return self._changesetFromRevision(parent_branch, revid)
 
     #################################
-    ## SyncronizableTargetWorkingDir
+    ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, entries):
-        # This method may get invoked several times with the same
-        # entries; and Branch.add complains if a file is already
-        # versioned.  So go through the list and sort out entries that
-        # is already versioned, since there is no need to add them.  A
-        # file can also already have been marked to be added in this
-        # changeset, or may be a target of a rename operation. Remove
-        # those files too. Do not try to catch any errors from
-        # Branch.add, since the they are _real_ errors.
+        """
+        Add entries to working tree.
 
-        last_revision = self._working_tree.branch.last_revision()        
+        This method may get invoked several times with the same files
+        (entries). Bzrlib complains if you try to add a file which is already
+        versioned. This method filters these out. A file might already been
+        marked to be added in this changeset, or might be a target in a rename
+        operation. Remove those entries too.
+
+        This method does not catch any errors from the adding through bzrlib,
+        since they are **real** errors.
+        """
+        last_revision = self._working_tree.branch.last_revision()
         if last_revision is None:
             # initial revision
             new_entries = entries
@@ -169,10 +174,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
         if len(new_entries) == 0:
             return
 
-        self.log.info('Adding %s...', ', '.join(new_entries))
+        self.log.info('Adding "%s"...', ', '.join(new_entries))
         self._working_tree.add(new_entries)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
+        """
+        Commit the changeset.
+        """
         from time import mktime
         from binascii import hexlify
         from re import search
@@ -206,14 +214,16 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
                                   timestamp=timestamp)
 
     def _removePathnames(self, entries):
-        """Remove a sequence of entries"""
-
+        """
+        Remove entries from the tree.
+        """
         self.log.info('Removing %s...', ', '.join(entries))
         self._working_tree.remove(entries)
 
     def _renamePathname(self, oldentry, newentry):
-        """Rename an entry"""
-
+        """
+        Rename a file from oldentry to newentry.
+        """
         from os import rename
         from os.path import join
 
@@ -226,10 +236,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SyncronizableTargetWorkingDir):
 
     def _prepareTargetRepository(self):
         """
-        Create the base directory if it doesn't exist, and the
-        repository as well in the new working directory.
+        Create a branch with a working tree at the base directory. If the base
+        directory is inside a Bazaar-NG style "shared repository", it will use
+        that to create a branch and working tree (make sure it allows working
+        trees).
         """
-
         from os.path import join, exists, split
         from bzrlib import IGNORE_FILENAME
 
