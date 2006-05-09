@@ -132,15 +132,15 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     #################################
     ## SynchronizableTargetWorkingDir
 
-    def _addPathnames(self, entries):
+    def _addPathnames(self, names):
         """
-        Add entries to working tree.
+        Add new files to working tree.
 
-        This method may get invoked several times with the same files
-        (entries). Bzrlib complains if you try to add a file which is already
+        This method may get invoked several times with the same files.
+        Bzrlib complains if you try to add a file which is already
         versioned. This method filters these out. A file might already been
         marked to be added in this changeset, or might be a target in a rename
-        operation. Remove those entries too.
+        operation. Remove those too.
 
         This method does not catch any errors from the adding through bzrlib,
         since they are **real** errors.
@@ -148,9 +148,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         last_revision = self._working_tree.branch.last_revision()
         if last_revision is None:
             # initial revision
-            new_entries = entries
+            fnames = names
         else:
-            new_entries = []
+            fnames = []
             basis_tree = self._working_tree.branch.basis_tree()
             inv = basis_tree.inventory
             diff = compare_trees(basis_tree, self._working_tree)
@@ -163,19 +163,17 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                         return True
                 return False
 
-            for e in entries:
-                if (not inv.has_filename(e)
-                    and not e in added
-                    and not parent_was_copied(e)):
-                    new_entries.append(e)
+            for fn in names:
+                if (not inv.has_filename(fn)
+                    and not fn in added
+                    and not parent_was_copied(fn)):
+                    fnames.append(fn)
                 else:
                     self.log.debug('"%s" already in inventory, skipping', e)
 
-        if len(new_entries) == 0:
-            return
-
-        self.log.info('Adding "%s"...', ', '.join(new_entries))
-        self._working_tree.add(new_entries)
+        if len(fnames):
+            self.log.info('Adding "%s"...', ', '.join(fnames))
+            self._working_tree.add(fnames)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -213,26 +211,26 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                   verbose=self.repository.projectref().verbose,
                                   timestamp=timestamp)
 
-    def _removePathnames(self, entries):
+    def _removePathnames(self, names):
         """
-        Remove entries from the tree.
+        Remove files from the tree.
         """
-        self.log.info('Removing %s...', ', '.join(entries))
-        self._working_tree.remove(entries)
+        self.log.info('Removing %s...', ', '.join(names))
+        self._working_tree.remove(names)
 
-    def _renamePathname(self, oldentry, newentry):
+    def _renamePathname(self, oldname, newname):
         """
-        Rename a file from oldentry to newentry.
+        Rename a file from oldname to newname.
         """
         from os import rename
         from os.path import join
 
         # bzr does the rename itself as well
-        self.log.debug('Renaming "%s" back to "%s"', newentry, oldentry)
-        rename(join(self.basedir, newentry), join(self.basedir, oldentry))
+        self.log.debug('Renaming "%s" back to "%s"', newname, oldname)
+        rename(join(self.basedir, newname), join(self.basedir, oldname))
 
-        self.log.info('Renaming "%s" to "%s"...', oldentry, newentry)
-        self._working_tree.rename_one(oldentry, newentry)
+        self.log.info('Renaming "%s" to "%s"...', oldname, newname)
+        self._working_tree.rename_one(oldname, newname)
 
     def _prepareTargetRepository(self):
         """
