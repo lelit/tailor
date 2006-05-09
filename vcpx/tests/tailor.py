@@ -140,7 +140,7 @@ subdir = cmsmini
 before-commit = remap_authors
 
 [cvs:cmsmini]
-repository = :ext:anoncvs@savannah.nongnu.org:/cvsroot/cmsmini
+repository = :pserver:anonymous@cvs.savannah.nongnu.org:/sources/cmsmini
 module = cmsmini
 
 [hg:cmsmini]
