@@ -8,7 +8,8 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.cvs import changesets_from_cvslog
+from vcpx.cvs import changesets_from_cvslog, compare_cvs_revs, \
+                     cvs_revs_same_branch, normalize_cvs_rev
 
 class CvsEntry(TestCase):
     """Tests for the CvsEntry class"""
@@ -355,3 +356,25 @@ head: 1.2
 
         cset = csets[-1]
         self.assertEqual(cset.date, datetime(1995, 12, 30, 18, 32, 46))
+
+class CvsRevisions(TestCase):
+    """Tests the basic CVS revisions handling"""
+
+    def testComparison(self):
+        """Verify CVS revision comparison is done right"""
+
+        self.assertEqual(0, compare_cvs_revs('1.1', '1.1'))
+        self.assertEqual(-1, compare_cvs_revs('1.1', '1.3'))
+        self.assertEqual(-1, compare_cvs_revs('1.5', '1.51'))
+        self.assertEqual(-1, compare_cvs_revs('1.1', '1.1.2.2'))
+
+    def testBranches(self):
+        """Verify how the backend recognizes branches"""
+
+        n = normalize_cvs_rev
+        self.assertEqual(True, cvs_revs_same_branch(n('1.2'), n('1.2')))
+        self.assertEqual(True, cvs_revs_same_branch(n('1.2.2'), n('1.2.2')))
+        self.assertEqual(False, cvs_revs_same_branch(n('1.2.2'), n('1.2.2.3.3')))
+        self.assertEqual(True, cvs_revs_same_branch(n('1.2.3.4'), n('1.2.3.4')))
+        self.assertEqual(True, cvs_revs_same_branch(n('1.2'), n('1.2.3')))
+        self.assertEqual(True, cvs_revs_same_branch(n('1.2.3'), n('1.2')))
