@@ -241,6 +241,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         logmessage = encode('\n'.join(logmessage))
+        if not logmessage:
+            logmessage = 'No commit message\n'
         if not logmessage.endswith('\n'):
             logmessage += '\n'
         (out, _) = c.execute(stdout=PIPE, env=env, input=logmessage)
