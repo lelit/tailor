@@ -137,7 +137,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if oldname:
                 e.action_kind = ChangesetEntry.RENAMED
                 e.old_name = oldname[0]
-                pms.pop(oldname[0])
+                # hg copy can copy the same file to multiple destinations
+                # Currently this is handled as multiple renames. It would
+                # probably be better to have ChangesetEntry.COPIED.
+                if pms.has_key(oldname[0]):
+                    pms.pop(oldname[0])
             else:
                 if pms.has_key(f):
                     e.action_kind = ChangesetEntry.UPDATED
