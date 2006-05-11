@@ -17,13 +17,13 @@ from source import UpdatableSourceWorkingDir, \
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from config import ConfigurationError
 
-def changesets_from_svnlog(log, repository, module, chunksize=2**15):
+def changesets_from_svnlog(log, repository, chunksize=2**15):
     from xml.sax import make_parser
     from xml.sax.handler import ContentHandler, ErrorHandler
     from changes import ChangesetEntry, Changeset
     from datetime import datetime
 
-    def get_entry_from_path(path, module=module):
+    def get_entry_from_path(path, module=repository.module):
         # Given the repository url of this wc, say
         #   "http://server/plone/CMFPlone/branches/Plone-2_0-branch"
         # extract the "entry" portion (a relative path) from what
@@ -39,6 +39,8 @@ def changesets_from_svnlog(log, repository, module, chunksize=2**15):
                 return relative
 
         # The path is outside our tracked tree...
+        repository.log.warning('Ignoring %r since it is not under %r',
+                               path, module)
         return None
 
     class SvnXMLLogHandler(ContentHandler):
@@ -237,9 +239,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             tt = maketrans(allbadchars, "?"*len(allbadchars))
             log = StringIO(log.read().translate(tt))
 
-        return changesets_from_svnlog(log,
-                                      self.repository.repository,
-                                      self.repository.module)
+        return changesets_from_svnlog(log, self.repository)
 
     def _applyChangeset(self, changeset):
         from time import sleep
@@ -350,9 +350,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     "%s returned status %d saying\n%s" %
                     (str(svnlog), svnlog.exit_status, err.read()))
 
-            csets = changesets_from_svnlog(out,
-                                           self.repository.repository,
-                                           self.repository.module)
+            csets = changesets_from_svnlog(out, self.repository)
             last = csets.next()
             revision = last.revision
         else:
@@ -392,9 +390,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     "%s returned status %d saying\n%s" %
                     (str(svnlog), svnlog.exit_status, err.read()))
 
-            csets = changesets_from_svnlog(out,
-                                           self.repository.repository,
-                                           self.repository.module)
+            csets = changesets_from_svnlog(out, self.repository)
             last = csets.next()
 
         self.log.debug("Working copy up to svn revision %s", last.revision)
