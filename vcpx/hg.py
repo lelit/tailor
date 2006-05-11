@@ -41,6 +41,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # Hg won't check out into an existing directory
             checkoutdir = join(self.basedir,".hgtmp")
             opts = self._defaultOpts('clone')
+            opts['noupdate'] = True
             commands.clone(self._ui, self.repository.repository, checkoutdir,
                            **opts)
             rename(join(checkoutdir, ".hg"), join(self.basedir,".hg"))
