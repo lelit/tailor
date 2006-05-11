@@ -81,7 +81,15 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repo = self._getRepo()
         node = self._getNode(repo, changeset.revision)
 
-        return repo.update(node)
+        res = repo.update(node)
+        if res:
+            # Files in to-be-merged changesets not on the trunk will
+            # cause a merge error on update. If no files are modified,
+            # added, removed, or deleted, do update -C
+            modified = [x for x in repo.changes()[0:4] if x]
+            if modified:
+                return modified
+            return repo.update(node, force=True)
 
     def _changesetForRevision(self, repo, revision):
         from changes import Changeset, ChangesetEntry
