@@ -132,12 +132,12 @@ class UpdatableSourceWorkingDir(WorkingDir):
                         try:
                             replay(c)
                         except ChangesetApplicationFailure, e:
-                            self.log.critical("Couldn't reply changeset")
+                            self.log.critical("Couldn't replay changeset")
                             self.log.debug("Reason: %s", str(e))
                             self.log.debug("Changeset: %s", c)
                             raise
                         except:
-                            self.log.exception("Couldn't reply changeset\n%s",
+                            self.log.exception("Couldn't replay changeset\n%s",
                                                c)
                             raise
 
