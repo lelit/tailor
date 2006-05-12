@@ -169,7 +169,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     and not parent_was_copied(fn)):
                     fnames.append(fn)
                 else:
-                    self.log.debug('"%s" already in inventory, skipping', e)
+                    self.log.debug('"%s" already in inventory, skipping', fn)
 
         if len(fnames):
             self.log.info('Adding "%s"...', ', '.join(fnames))
