@@ -203,6 +203,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             email = email.group(1)
         else:
             email = author
+        # Remove whitespace
+        email = ''.join(email.split())
 
         revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
                                     hexlify(rand_bytes(8)))
