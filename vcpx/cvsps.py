@@ -177,6 +177,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         absentrydir = join(self.basedir, entrydir)
         if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
+            # Oh, the directory is empty: if there are no other added entries
+            # in the directory, insert a REMOVE event against it.
+            for added in changeset.addedEntries():
+                if added.name.startswith(entrydir):
+                    # entrydir got empty, but only temporarily
+                    return
+
             deldir = changeset.addEntry(entrydir, None)
             deldir.action_kind = deldir.DELETED
 
