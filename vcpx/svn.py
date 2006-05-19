@@ -532,7 +532,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             rename(newpath, oldpath)
             unmoved = True
         move = ExternalCommand(cwd=self.basedir, command=cmd)
-        move.execute(oldname, newname)
+        out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
         if move.exit_status:
             # so we do the same here
             if unmoved:
