@@ -633,6 +633,15 @@ look-for-adds : bool
   even as a quick workaround to a tailor bug. This option allows a
   more relaxed view of life using ``record --look-for-adds``.
 
+start-revision : string
+  Under darcs this may be either the name of a tag or the hash of an
+  arbitrary patch in the repository, plus the ordinary ``INITIAL`` or
+  ``HEAD`` symbols.
+
+  .. note:: If you want to start from a particular patch, giving it's
+            hash value as ``start-revision``, you **must** use a
+            ``subdir`` different from ``.``. [#]_
+
 git
 %%%
 
@@ -723,6 +732,11 @@ tla
 %%%
 
 .. no specific options
+
+
+.. [#] This is because when you use ``subdir = .`` tailor uses
+       ``darcs pull`` instead of ``darcs get``, and the former does
+       not accept the option ``--to-match``.
 
 
 Using a Python script as configuration file

@@ -16,6 +16,7 @@ from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from xml.sax import SAXException
+import re
 
 MOTD = """\
 Tailorized equivalent of
@@ -162,6 +163,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
     A working directory under ``darcs``.
     """
 
+    is_hash_rx = re.compile('[0-9a-f]{14}-[0-9a-f]{5}-[0-9a-f]{40}\.gz')
+
     ## UpdatableSourceWorkingDir
 
     def _getUpstreamChangesets(self, sincerev):
@@ -251,8 +254,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         Do the actual work of applying the changeset to the working copy.
         """
 
-        from re import escape
-
         needspatchesopt = False
         if hasattr(changeset, 'darcs_hash'):
             selector = '--match'
@@ -278,7 +279,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
                                       selector, revtag)
 
         if needspatchesopt:
-            cmd.extend(['--patches', escape(changeset.revision)])
+            cmd.extend(['--patches', re.escape(changeset.revision)])
 
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
         output = pull.execute(stdout=PIPE, stderr=STDOUT, input='y')[0]
@@ -332,30 +333,33 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
-        from re import escape
         from source import InvocationError
 
         if not self.repository.repository:
             raise InvocationError("Must specify a the darcs source repository")
 
-        if revision == 'INITIAL':
+        if revision == 'INITIAL' or self.is_hash_rx.match(revision):
             initial = True
-            cmd = self.repository.command("changes", "--xml-output",
-                                          "--repo", self.repository.repository,
-                                           "--reverse")
-            changes = ExternalCommand(command=cmd)
-            output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
-            if changes.exit_status:
-                raise ChangesetApplicationFailure(
-                    "%s returned status %d saying\n%s" %
-                    (str(changes), changes.exit_status,
-                     output and output.read() or ''))
+            if revision == 'INITIAL':
+                cmd = self.repository.command("changes", "--xml-output",
+                                              "--repo", self.repository.repository,
+                                               "--reverse")
+                changes = ExternalCommand(command=cmd)
+                output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
-            csets = changesets_from_darcschanges(output)
-            changeset = csets.next()
+                if changes.exit_status:
+                    raise ChangesetApplicationFailure(
+                        "%s returned status %d saying\n%s" %
+                        (str(changes), changes.exit_status,
+                         output and output.read() or ''))
 
-            revision = 'hash %s' % changeset.darcs_hash
+                csets = changesets_from_darcschanges(output)
+                changeset = csets.next()
+
+                revision = 'hash %s' % changeset.darcs_hash
+            else:
+                revision = 'hash %s' % revision
         else:
             initial = False
 
@@ -497,7 +501,6 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
-        from re import escape, compile
         from dualwd import IGNORED_METADIRS
 
         metadir = join(self.basedir, '_darcs')
@@ -526,22 +529,22 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
             # Augment the boring file, that contains a regexp per line
             # with all known VCs metadirs to be skipped.
-            ignored.extend(['(^|/)%s($|/)' % escape(md)
+            ignored.extend(['(^|/)%s($|/)' % re.escape(md)
                             for md in IGNORED_METADIRS])
 
             # Eventually omit our own log...
             logfile = self.repository.projectref().logfile
             if logfile.startswith(self.basedir):
                 ignored.append('^%s$' %
-                               escape(logfile[len(self.basedir)+1:]))
+                               re.escape(logfile[len(self.basedir)+1:]))
 
             # ... and state file
             sfname = self.repository.projectref().state_file.filename
             if sfname.startswith(self.basedir):
                 sfrelname = sfname[len(self.basedir)+1:]
-                ignored.append('^%s$' % escape(sfrelname))
-                ignored.append('^%s$' % escape(sfrelname+'.old'))
-                ignored.append('^%s$' % escape(sfrelname+'.journal'))
+                ignored.append('^%s$' % re.escape(sfrelname))
+                ignored.append('^%s$' % re.escape(sfrelname+'.old'))
+                ignored.append('^%s$' % re.escape(sfrelname+'.journal'))
 
             boring = open(boringname, 'wU')
             boring.write('\n'.join(ignored))
@@ -554,7 +557,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         # Build a list of compiled regular expressions, that will be
         # used later to filter the entries.
-        self.__unwanted_entries = [compile(rx) for rx in ignored
+        self.__unwanted_entries = [re.compile(rx) for rx in ignored
                                    if rx and not rx.startswith('#')]
 
     def _prepareWorkingDirectory(self, source_repo):
