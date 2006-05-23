@@ -71,10 +71,10 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         self._tryCommand(['checkout-index', '-f', '-u', '-a'],
                          ChangesetApplicationFailure, False)
-        # Somewhat cosmetic: point HEAD to current revision. Nothing should
+        # Somewhat cosmetic: point master to current revision. Nothing should
         # really rely on this, but if something goes wrong this will give
         # an indication of how far along tailor got...
-        head = file(join(join(self.basedir, '.git'), 'HEAD'), 'w')
+        head = file(join(self.basedir, '.git', 'refs', 'heads', 'master'), 'w')
         head.write(changeset.revision + '\n')
         head.close()
 
