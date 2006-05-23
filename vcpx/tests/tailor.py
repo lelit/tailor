@@ -211,6 +211,23 @@ start-revision = INITIAL
 repository = http://download.gna.org/oodoctest/oodoctest.og.main/
 
 [darcs:oodoctest]
+
+
+[darcs_add_remove]
+source = darcs:darcs_add_remove
+target = svn:darcs_add_remove
+root-directory = %(testdir)s/darcs_add_remove
+start-revision = 20050214010941-5007d-0c6d72fdbd6bb35b8a511d2cce0aec2dd3d6288d.gz
+
+[darcs:darcs_add_remove]
+repository = http://darcs.vexi.org/_mike/experimental/org.ibex.util
+subdir = util
+
+[svn:darcs_add_remove]
+repository = file://%(testdir)s/darcs_add_remove.svnrepo
+module = /ibex
+use-propset = True
+
 '''
 
 def remap_authors(context, changeset):
@@ -374,3 +391,8 @@ class Svn(OperationalTest):
 
         self.tailorize('svn2hg_with_externals')
         self.failUnless(exists(external % '_we'))
+
+    def testDarcsAddRemove(self):
+        "Try to migrate a buggy darcs patch that adds and removes the same file"
+
+        self.tailorize('darcs_add_remove')
