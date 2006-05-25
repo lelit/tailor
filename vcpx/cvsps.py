@@ -526,6 +526,34 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         cvsco = ExternalCommand(command=cmd)
         cvsco.execute(self.repository.module)
 
+    def _parents(self, path):
+        from os.path import exists, join, split
+
+        parents = []
+        parent = split(path)[0]
+        while parent:
+            if exists(join(self.basedir, parent, 'CVS')):
+                break
+            parents.insert(0, parent)
+            parent = split(parent)[0]
+
+        return parents
+
+    def _addEntries(self, entries):
+        """
+        Synthesize missing parent directory additions
+        """
+
+        allnames = [e.name for e in entries]
+        newdirs = []
+        for entry in allnames:
+            for parent in [p for p in self._parents(entry) if p not in allnames]:
+                if p not in newdirs:
+                    newdirs.append(parent)
+
+        newdirs.extend(allnames)
+        self._addPathnames(newdirs)
+
     def _addPathnames(self, names):
         """
         Add some new filesystem objects.
