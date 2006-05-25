@@ -531,7 +531,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Add some new filesystem objects.
         """
 
-        cmd = self.repository.command("-q", "add")
+        cmd = self.repository.command('-q', 'add', '-ko')
         ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
 
     def __forceTagOnEachEntry(self):
