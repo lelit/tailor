@@ -269,7 +269,6 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         added = []
         actions = { ChangesetEntry.ADDED: self._addEntries,
                     ChangesetEntry.DELETED: self._removeEntries,
-                    # ChangesetEntry.UPDATED: nothing
                     ChangesetEntry.RENAMED: self._renameEntries
                     }
 
@@ -280,12 +279,16 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 last = e
                 group.append(e)
             if last.action_kind != e.action_kind:
-                actions[last.action_kind](group)
+                action = actions.get(last.action_kind)
+                if action is not None:
+                    action(group)
                 group = [e]
             if e.action_kind == e.ADDED:
                 added.append(e)
         if group:
-            actions[group[0].action_kind](group)
+            action = actions.get(group[0].action_kind)
+            if action is not None:
+                action(group)
 
 
         # Finally, deal with "copied" directories. The simple way is
