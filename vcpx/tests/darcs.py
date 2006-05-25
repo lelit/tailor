@@ -171,12 +171,12 @@ class DarcsChangesParser(TestCase):
         self.assertEqual(len(cset.entries), 2)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'bdir')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-
-        entry = cset.entries[1]
         self.assertEqual(entry.name, 'dir')
         self.assertEqual(entry.action_kind, entry.RENAMED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'bdir')
+        self.assertEqual(entry.action_kind, entry.ADDED)
 
         cset = csets[3]
         self.assertEqual(cset.revision, 'modified')
@@ -217,3 +217,30 @@ class DarcsChangesParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.date, datetime(2003, 10, 14, 14, 2, 31))
+
+    RENAME_THEN_REMOVE_TEST = """
+<changelog>
+<patch author='lele@nautilus.homeip.net' date='20060525213905' local_date='Thu May 25 23:39:05 CEST 2006' inverted='False' hash='20060525213905-97f81-292b84413dfdfca140fe104eb29273b50cb5701a.gz'>
+        <name>Move A to B and delete B</name>
+    <summary>
+    <move from="fileA" to="fileB"/>
+    <remove_file>
+    fileB
+    </remove_file>
+    </summary>
+</patch>
+</changelog>
+"""
+
+    def testRenameAndRemove(self):
+        """Verify that the parser degrades rename A B+remove B  to remove A"""
+
+        log = StringIO(self.RENAME_THEN_REMOVE_TEST)
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 1)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'fileA')
+        self.assertEqual(entry.action_kind, entry.DELETED)

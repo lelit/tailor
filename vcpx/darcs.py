@@ -96,8 +96,33 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
 
         def endElement(self, name):
             if name == 'patch':
-                # Sort the paths to make tests easier
-                self.current['entries'].sort(lambda x,y: cmp(x.name, y.name))
+                entries = []
+                todo = self.current['entries']
+                # Darcs allows "rename A B; remove B": collapse those
+                # into "remove A"
+                while todo:
+                    e = todo.pop(0)
+                    if e.action_kind == e.RENAMED:
+                        lookfor = e.name
+                        forget = []
+                        for i,n in enumerate(todo):
+                            if n.action_kind == n.DELETED and n.name == lookfor:
+                                e.action_kind = e.DELETED
+                                e.name = e.old_name
+                                e.old_name = None
+                                entries.append(e)
+                                forget.append(i)
+                                forget.reverse()
+                                for i in forget:
+                                    del todo[i]
+                                break
+                            elif n.action_kind == n.RENAMED and n.old_name == lookfor:
+                                forget.append(i)
+                                lookfor = n.name
+                        if not forget:
+                            entries.append(e)
+                    else:
+                        entries.append(e)
                 name = self.current['name']
                 log = self.current['comment']
                 if log:
@@ -108,7 +133,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                                  self.current['date'],
                                  self.current['author'],
                                  changelog,
-                                 self.current['entries'],
+                                 entries,
                                  tags=self.current.get('tags',[]))
                 cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
