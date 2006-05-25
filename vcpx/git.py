@@ -96,7 +96,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         message = '\n'.join(loglines)
         entries = []
-        cmd = ['diff-tree', '--root', '-M', '--name-status']
+        cmd = ['diff-tree', '--root', '-r', '-M', '--name-status']
         # haven't thought about merges yet...
         if parents:
             cmd.append(parents[0])
