@@ -107,7 +107,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.target.replayChangeset(changeset)
 
     def _syncTargetWithSource(self):
-        cmd = ['rsync', '--delete', '--archive']
+        cmd = ['rsync', '--archive']
         now = datetime.now()
         if hasattr(self, '_last_rsync'):
             last = self._last_rsync

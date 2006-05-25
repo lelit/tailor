@@ -213,20 +213,36 @@ repository = http://download.gna.org/oodoctest/oodoctest.og.main/
 [darcs:oodoctest]
 
 
-[darcs_add_remove]
-source = darcs:darcs_add_remove
-target = svn:darcs_add_remove
-root-directory = %(testdir)s/darcs_add_remove
-start-revision = 20050214010941-5007d-0c6d72fdbd6bb35b8a511d2cce0aec2dd3d6288d.gz
+[darcs_rename_delete]
+source = darcs:darcs_rename_delete
+target = svn:darcs_rename_delete
+root-directory = %(testdir)s/darcs_rename_delete
+start-revision = INITIAL
 
-[darcs:darcs_add_remove]
-repository = http://darcs.vexi.org/_mike/experimental/org.ibex.util
-subdir = util
+[darcs:darcs_rename_delete]
+repository = %(testdir)s/rename_delete
+subdir = darcs
 
-[svn:darcs_add_remove]
-repository = file://%(testdir)s/darcs_add_remove.svnrepo
-module = /ibex
-use-propset = True
+[svn:darcs_rename_delete]
+repository = file://%(testdir)s/darcs_rename_delete.svnrepo
+module = /
+subdir = svn
+
+
+[darcs_rename_delete_dir]
+source = darcs:darcs_rename_delete_dir
+target = svn:darcs_rename_delete_dir
+root-directory = %(testdir)s/darcs_rename_delete_dir
+start-revision = INITIAL
+
+[darcs:darcs_rename_delete_dir]
+repository = %(testdir)s/rename_delete_dir
+subdir = darcs
+
+[svn:darcs_rename_delete_dir]
+repository = file://%(testdir)s/darcs_rename_delete_dir.svnrepo
+module = /
+subdir = svn
 
 '''
 
@@ -392,7 +408,69 @@ class Svn(OperationalTest):
         self.tailorize('svn2hg_with_externals')
         self.failUnless(exists(external % '_we'))
 
-    def testDarcsAddRemove(self):
-        "Try to migrate a buggy darcs patch that adds and removes the same file"
+    def testDarcsRenameDelete(self):
+        "Try to migrate a darcs patch that renames and removes the same file"
 
-        self.tailorize('darcs_add_remove')
+        from os import mkdir
+        from os.path import join
+
+        drepo = join(self.TESTDIR, 'rename_delete')
+        mkdir(drepo)
+
+        dinit = ExternalCommand(command=['darcs', 'init'], cwd=drepo)
+        dinit.execute()
+
+        fileA = join(drepo, 'fileA')
+        open(fileA, 'w')
+        dadd = ExternalCommand(command=['darcs', 'add'], cwd=drepo)
+        dadd.execute(fileA)
+
+        drecord = ExternalCommand(command=['darcs', 'record',
+                                           '-a', '-m'], cwd=drepo)
+        drecord.execute('Add A')
+
+        fileB = join(drepo, 'fileB')
+        drename = ExternalCommand(command=['darcs', 'mv'], cwd=drepo)
+        drename.execute(fileA, fileB)
+
+        dremove = ExternalCommand(command=['darcs', 'remove'], cwd=drepo)
+        dremove.execute(fileB)
+
+        drecord.execute('Move A to B and delete B')
+
+        self.tailorize('darcs_rename_delete')
+
+    def testDarcsRenameDeleteDir(self):
+        "Test if darcs to svn fails on moves combined with directory deletes"
+
+        from os import mkdir
+        from os.path import join
+
+        drepo = join(self.TESTDIR, 'rename_delete_dir')
+        mkdir(drepo)
+
+        dinit = ExternalCommand(command=['darcs', 'init'], cwd=drepo)
+        dinit.execute()
+
+        dir = join(drepo, 'dir')
+        mkdir(dir)
+        dadd = ExternalCommand(command=['darcs', 'add'], cwd=drepo)
+        dadd.execute(dir)
+        fileA = join(dir, 'fileA')
+        open(fileA, 'w')
+        dadd.execute(fileA)
+
+        drecord = ExternalCommand(command=['darcs', 'record',
+                                           '-a', '-m'], cwd=drepo)
+        drecord.execute('Add dir and dir/A')
+
+        fileB = join(drepo, 'fileA')
+        drename = ExternalCommand(command=['darcs', 'mv'], cwd=drepo)
+        drename.execute(fileA, fileB)
+
+        dremove = ExternalCommand(command=['darcs', 'remove'], cwd=drepo)
+        dremove.execute(dir)
+
+        drecord.execute('Move dir/A to A and delete dir')
+
+        self.tailorize('darcs_rename_delete_dir')

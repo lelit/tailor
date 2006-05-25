@@ -264,38 +264,29 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         """
 
         from os.path import join, isdir
+        from changes import ChangesetEntry
 
-        added = changeset.addedEntries()
-        renamed = changeset.renamedEntries()
-        removed = changeset.removedEntries()
+        added = []
+        actions = { ChangesetEntry.ADDED: self._addEntries,
+                    ChangesetEntry.DELETED: self._removeEntries,
+                    # ChangesetEntry.UPDATED: nothing
+                    ChangesetEntry.RENAMED: self._renameEntries
+                    }
 
-        # Sort added entries, to be sure that /root/addedDir/ comes
-        # before /root/addedDir/addedSubdir
-        added.sort(lambda x,y: cmp(x.name, y.name))
+        last = None
+        group = []
+        for e in changeset.entries:
+            if last is None or last.action_kind == e.action_kind:
+                last = e
+                group.append(e)
+            if last.action_kind != e.action_kind:
+                actions[last.action_kind](group)
+                group = [e]
+            if e.action_kind == e.ADDED:
+                added.append(e)
+        if group:
+            actions[group[0].action_kind](group)
 
-        # Sort removes in reverse order, to delete directories after
-        # their contents.
-        removed.sort(lambda x,y: cmp(y.name, x.name))
-
-        # Replay the actions
-
-        if renamed and removed:
-            # Handle the "replace" operation, that is a remove+rename
-
-            renames = [e.name for e in renamed]
-            removesfirst = []
-            for rem in removed:
-                if rem.name in renames:
-                    removesfirst.append(rem)
-
-            if removesfirst:
-                self._removeEntries(removesfirst)
-                for rem in removesfirst:
-                    removed.remove(rem)
-
-        if renamed: self._renameEntries(renamed)
-        if removed: self._removeEntries(removed)
-        if added: self._addEntries(added)
 
         # Finally, deal with "copied" directories. The simple way is
         # executing an _addSubtree on each of them, evenif this may
@@ -392,7 +383,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         of each entry.
         """
 
-        from os import rename
+        from os import rename, unlink
         from os.path import split, join, exists
 
         added = []
@@ -408,22 +399,40 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 parents.reverse()
                 self._addPathnames(parents)
 
-            # Check to see if the oldentry is still there. If it is,
-            # that probably means one thing: it's been moved and then
-            # replaced, see svn 'R' event. In this case, rename the
-            # existing old entry to something else to trick targets
-            # (that will assume the move was already done manually) and
-            # finally restore its name.
+            if self.shared_basedirs:
+                # Check to see if the oldentry is still there. If it is,
+                # that probably means one thing: it's been moved and then
+                # replaced, see svn 'R' event. In this case, rename the
+                # existing old entry to something else to trick targets
+                # (that will assume the move was already done manually) and
+                # finally restore its name.
 
-            absold = join(self.basedir, e.old_name)
-            renamed = exists(absold)
-            if renamed:
-                rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
+                absold = join(self.basedir, e.old_name)
+                renamed = exists(absold)
+                if renamed:
+                    rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
+            else:
+                # With disjunct directories, old entries are *always*
+                # there because we dropped the --delete option to rsync.
+                # So, instead of renaming the old entry, we temporarily
+                # rename the new one, perform the target system rename
+                # and replace back the real content (it may be a
+                # renamed+edited event).
+                renamed = False
+                absnew = join(self.basedir, e.name)
+                renamed = exists(absnew)
+                if renamed:
+                    rename(absnew, absnew + '-TAILOR-HACKED-TEMP-NAME')
+
             try:
                 self._renamePathname(e.old_name, e.name)
             finally:
                 if renamed:
-                    rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
+                    if self.shared_basedirs:
+                        rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
+                    else:
+                        unlink(absnew)
+                        rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
 
     def _renamePathname(self, oldname, newname):
         """
