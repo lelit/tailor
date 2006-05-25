@@ -525,7 +525,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         oldpath = join(self.basedir, oldname)
         newpath = join(self.basedir, newname)
         if not exists(oldpath):
-            rename(newpath, oldpath)
+            try:
+                rename(newpath, oldpath)
+            except OSError:
+                self.log.critical('Cannot rename %r back to %r',
+                                  newpath, oldpath)
+                raise
             unmoved = True
         move = ExternalCommand(cwd=self.basedir, command=cmd)
         out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
