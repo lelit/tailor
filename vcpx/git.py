@@ -65,9 +65,11 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self._tryCommand(['read-tree', '-m', changeset.revision],
                          ChangesetApplicationFailure, False)
         # Delete removed files by hand
-        for entry in [entry for entry in changeset.entries
-                      if entry.action_kind == ChangesetEntry.DELETED]:
-            remove(join(self.basedir, entry.name))
+        for entry in changeset.entries:
+            if entry.action_kind == ChangesetEntry.DELETED:
+                remove(join(self.basedir, entry.name))
+            elif entry.action_kind == ChangesetEntry.RENAMED:
+                remove(join(self.basedir, entry.old_name))
 
         self._tryCommand(['checkout-index', '-f', '-u', '-a'],
                          ChangesetApplicationFailure, False)
