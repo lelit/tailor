@@ -58,27 +58,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             yield self._changesetForRevision(rev)
 
     def _applyChangeset(self, changeset):
-        from changes import ChangesetEntry
-        from os import remove
-        from os.path import join
-
-        self._tryCommand(['read-tree', '-m', changeset.revision],
+        self._tryCommand(['merge', '-n', '--no-commit', 'fastforward', 'HEAD', changeset.revision],
                          ChangesetApplicationFailure, False)
-        # Delete removed files by hand
-        for entry in changeset.entries:
-            if entry.action_kind == ChangesetEntry.DELETED:
-                remove(join(self.basedir, entry.name))
-            elif entry.action_kind == ChangesetEntry.RENAMED:
-                remove(join(self.basedir, entry.old_name))
-
-        self._tryCommand(['checkout-index', '-f', '-u', '-a'],
-                         ChangesetApplicationFailure, False)
-        # Somewhat cosmetic: point master to current revision. Nothing should
-        # really rely on this, but if something goes wrong this will give
-        # an indication of how far along tailor got...
-        head = file(join(self.basedir, '.git', 'refs', 'heads', 'master'), 'w')
-        head.write(changeset.revision + '\n')
-        head.close()
 
         # Does not handle conflicts
         return None
