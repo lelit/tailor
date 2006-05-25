@@ -58,11 +58,19 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             yield self._changesetForRevision(rev)
 
     def _applyChangeset(self, changeset):
-        self._tryCommand(['merge', '-n', '--no-commit', 'fastforward', 'HEAD', changeset.revision],
-                         ChangesetApplicationFailure, False)
+        out = self._tryCommand(['merge', '-n', '--no-commit', 'fastforward',
+                                'HEAD', changeset.revision],
+                         ChangesetApplicationFailure)
 
-        # Does not handle conflicts
-        return None
+        conflicts = []
+        for line in out:
+            if line.endswith(': needs update'):
+                conflicts.append(line[:-14])
+
+        if conflicts:
+            self.log.warning("Conflict after 'git merge': %s", ' '.join(conflicts))
+
+        return conflicts
 
     def _changesetForRevision(self, revision):
         from changes import Changeset, ChangesetEntry
