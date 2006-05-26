@@ -535,7 +535,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         move = ExternalCommand(cwd=self.basedir, command=cmd)
         out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
         if move.exit_status:
-            # so we do the same here
             if unmoved:
                 rename(oldpath, newpath)
             raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
