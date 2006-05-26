@@ -244,3 +244,115 @@ class DarcsChangesParser(TestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'fileA')
         self.assertEqual(entry.action_kind, entry.DELETED)
+
+    BAD_XML_ORDER_TEST = """
+<changelog>
+<patch author='robert.mcqueen@collabora.co.uk' date='20060121232733' local_date='Sun Jan 22 00:27:33 CET 2006' inverted='False' hash='20060121232733-0e791-01925e82713877d33452566a27eaad4184e287df.gz'>
+        <name>remove any possibility for darcs crack when moving from generated XML or generated source to the live tree, by putting the generated code in the live tree, and make whoever is doing the generation pull the changes over manually</name>
+    <summary>
+    <move from="tools/Makefile.am" to="generate/Makefile.am"/>
+    <move from="tools/generrors.py" to="generate/generrors.py"/>
+    <move from="tools/gengobject.py" to="generate/gengobject.py"/>
+    <move from="gabble-connection-manager.xml" to="generate/xml-modified/gabble-connection-manager.xml"/>
+    <move from="gabble-connection.xml" to="generate/xml-modified/gabble-connection.xml"/>
+    <move from="gabble-im-channel.xml" to="generate/xml-modified/gabble-im-channel.xml"/>
+    <move from="tools/README-do_gen" to="generate/README"/>
+    <move from="tools/do_gen.sh" to="generate/do_src.sh"/>
+    <modify_file>
+    Makefile.am<removed_lines num='1'/><added_lines num='1'/>
+    </modify_file>
+    <add_directory>
+    generate
+    </add_directory>
+    <modify_file>
+    generate/README<removed_lines num='2'/><added_lines num='14'/>
+    </modify_file>
+    <modify_file>
+    generate/do_src.sh<removed_lines num='8'/><added_lines num='19'/>
+    </modify_file>
+    <add_file>
+    generate/do_xml.sh
+    </add_file>
+    <add_file>
+    generate/gabble.def
+    </add_file>
+    <remove_file>
+    generate/generrors.py
+    </remove_file>
+    <remove_file>
+    generate/gengobject.py
+    </remove_file>
+    <add_directory>
+    generate/src
+    </add_directory>
+    <add_file>
+    generate/src/gabble-connection-manager-signals-marshal.list
+    </add_file>
+    <add_file>
+    generate/src/gabble-connection-manager.c
+    </add_file>
+    <add_file>
+    generate/src/gabble-connection-manager.h
+    </add_file>
+    <add_file>
+    generate/src/gabble-connection-signals-marshal.list
+    </add_file>
+    <add_file>
+    generate/src/gabble-connection.c
+    </add_file>
+    <add_file>
+    generate/src/gabble-connection.h
+    </add_file>
+    <add_file>
+    generate/src/gabble-im-channel-signals-marshal.list
+    </add_file>
+    <add_file>
+    generate/src/gabble-im-channel.c
+    </add_file>
+    <add_file>
+    generate/src/gabble-im-channel.h
+    </add_file>
+    <add_file>
+    generate/src/telepathy-errors.h
+    </add_file>
+    <add_directory>
+    generate/xml-modified
+    </add_directory>
+    <add_directory>
+    generate/xml-pristine
+    </add_directory>
+    <add_file>
+    generate/xml-pristine/gabble-connection-manager.xml
+    </add_file>
+    <add_file>
+    generate/xml-pristine/gabble-connection.xml
+    </add_file>
+    <add_file>
+    generate/xml-pristine/gabble-im-channel.xml
+    </add_file>
+    <remove_directory>
+    tools
+    </remove_directory>
+    </summary>
+</patch>
+</changelog>
+"""
+
+    def testBadOrderedXML(self):
+        "Verify if the parser is able to correct the bad order produced by changes --xml"
+
+        log = StringIO(self.BAD_XML_ORDER_TEST)
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+
+        # Verify that each renamed entry is not within a directory added or renamed
+        # by a following hunk
+        for i,e in enumerate(cset.entries):
+            if e.action_kind == e.RENAMED:
+                postadds = [n for n in cset.entries[i+1:]
+                            if e.name.startswith(n.name+'/') and (n.action_kind==n.ADDED or
+                                                                  n.action_kind==n.RENAMED)]
+                for ee in postadds:
+                    print ee
+                self.assertEqual(postadds, [])

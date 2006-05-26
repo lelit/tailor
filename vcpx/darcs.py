@@ -123,6 +123,26 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                             entries.append(e)
                     else:
                         entries.append(e)
+
+                # Darcs changes --xml (as of 1.0.7) emits bad ordered hunks: it
+                # begins with file moves, apparently for no good reason. Do as
+                # little reordering as needed to adjust the meaning, ie moving all
+                # add_dirs before add_file and ren_file that have that dir as
+                # target
+
+                sorted = False
+                while not sorted:
+                    sorted = True
+                    for i,e in enumerate(entries):
+                        if e.action_kind == e.RENAMED:
+                            for j,n in enumerate(entries[i+1:]):
+                                if (e.name.startswith(n.name+'/') and
+                                    (n.action_kind == n.ADDED or
+                                     n.action_kind == n.RENAMED)):
+                                    m = entries.pop(i+1+j)
+                                    entries.insert(i, m)
+                                    sorted = False
+
                 name = self.current['name']
                 log = self.current['comment']
                 if log:
