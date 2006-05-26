@@ -388,7 +388,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         of each entry.
         """
 
-        from os import rename, unlink
+        from os import rename
         from os.path import split, join, exists
 
         added = []
@@ -436,7 +436,6 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                     if self.shared_basedirs:
                         rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
                     else:
-                        unlink(absnew)
                         rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
 
     def _renamePathname(self, oldname, newname):
