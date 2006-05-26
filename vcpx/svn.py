@@ -538,7 +538,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # so we do the same here
             if unmoved:
                 rename(oldpath, newpath)
-            raise ChangesetApplicationFailure("%s returned status %d"
+            raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
                                               % (str(move), move.exit_status,
                                                  err.read()))
 
