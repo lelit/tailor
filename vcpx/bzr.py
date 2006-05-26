@@ -225,14 +225,28 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Rename a file from oldname to newname.
         """
         from os import rename
-        from os.path import join
+        from os.path import join, exists
 
         # bzr does the rename itself as well
-        self.log.debug('Renaming "%s" back to "%s"', newname, oldname)
-        rename(join(self.basedir, newname), join(self.basedir, oldname))
+        unmoved = False
+        oldpath = join(self.basedir, oldname)
+        newpath = join(self.basedir, newname)
+        if not exists(oldpath):
+            try:
+                rename(newpath, oldpath)
+            except OSError:
+                self.log.critical('Cannot rename %r back to %r',
+                                  newpath, oldpath)
+                raise
+            unmoved = True
 
         self.log.info('Renaming "%s" to "%s"...', oldname, newname)
-        self._working_tree.rename_one(oldname, newname)
+        try:
+            self._working_tree.rename_one(oldname, newname)
+        except:
+            if unmoved:
+                rename(oldpath, newpath)
+            raise
 
     def _prepareTargetRepository(self):
         """
