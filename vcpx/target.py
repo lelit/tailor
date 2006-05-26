@@ -272,6 +272,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                     ChangesetEntry.RENAMED: self._renameEntries
                     }
 
+        # Group the changes by kind and perform the corresponding action
+
         last = None
         group = []
         for e in changeset.entries:
@@ -283,13 +285,13 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 if action is not None:
                     action(group)
                 group = [e]
+                last = e
             if e.action_kind == e.ADDED:
                 added.append(e)
         if group:
             action = actions.get(group[0].action_kind)
             if action is not None:
                 action(group)
-
 
         # Finally, deal with "copied" directories. The simple way is
         # executing an _addSubtree on each of them, evenif this may
