@@ -401,7 +401,18 @@ class ChangeSetCollector(object):
                 cs = self.__parseRevision(entry)
                 if cs is None:
                     break
+
                 date,author,changelog,e,rev,state,newentry = cs
+
+                # CVS seems to sometimes mess up what it thinks the branch is...
+                if not cvs_revs_same_branch(normalize_cvs_rev(rev), branchnum):
+                    self.log.warning("Skipped revision %s on entry %s "
+                                     "as revision didn't match branch revision %s "
+                                     "for branch %s"
+                                     % (str(normalize_cvs_rev(rev)), entry,
+                                        str(branchnum), str(branch)))
+                    expected_revisions -= 1
+                    continue
 
                 # Skip spurious entries added in a branch
                 if not (rev == '1.1' and state == 'dead' and
