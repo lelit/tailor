@@ -59,7 +59,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repo = self._getRepo()
         node = self._getNode(repo, revision)
 
-        self.log.info('Extracting revision %s from %s into %s',
+        self.log.info('Extracting revision %r from %r into %r',
                       revision, self.repository.repository, self.basedir)
         repo.update(node)
 
@@ -81,6 +81,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repo = self._getRepo()
         node = self._getNode(repo, changeset.revision)
 
+        self.log.info('Updating to %r', changeset.revision)
         res = repo.update(node)
         if res:
             # Files in to-be-merged changesets not on the trunk will
@@ -213,6 +214,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         notdirs = [n for n in names
                    if not isdir(join(self.basedir, normpath(n)))]
         if notdirs:
+            self.log.info('Adding %s...', ', '.join(notdirs))
             self._hg.add(notdirs)
 
     def _getCommitEntries(self, changeset):
@@ -244,8 +246,10 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog)
         if logmessage:
+            self.log.info('Committing %r...', logmessage[0])
             logmessage = encode('\n'.join(logmessage))
         else:
+            self.log.info('Committing...')
             logmessage = "Empty changelog"
         self._hg.commit(names and [encode(n) for n in names] or [],
                         logmessage, encode(author),
@@ -292,6 +296,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         notdirs = [n for n in names
                    if not isdir(join(self.basedir, normpath(n)))]
         if notdirs:
+            self.log.info('Removing %s...', ', '.join(notdirs))
             self._hg.remove(notdirs)
 
     def _renamePathname(self, oldname, newname):
@@ -301,6 +306,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         repo = self._getRepo()
 
+        self.log.info('Renaming %r to %r...', oldname, newname)
         if isdir(join(self.basedir, normpath(newname))):
             # Given lack of support for directories in current HG,
             # loop over all files under the old directory and
@@ -327,6 +333,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             create = 0
         else:
             create = 1
+        self.log.info('Initializing new repository in %r...', self.basedir)
         self._hg = hg.repository(ui=self._ui, path=self.basedir, create=create)
 
     def _prepareWorkingDirectory(self, source_repo):
