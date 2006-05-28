@@ -93,7 +93,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         parent_branch = BzrDir.open(self.repository.repository).open_branch()
         self._working_tree.lock_write()
-        self.log.info('Updating to "%s"', changeset.revision)
+        self.log.info('Updating to %r', changeset.revision)
         try:
             count = self._working_tree.pull(parent_branch,
                                             stop_revision=changeset.revision)
@@ -122,7 +122,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             revid = revision
 
-        self.log.info('Extracting %s out of "%s" in "%s"...',
+        self.log.info('Extracting %r out of %r in %r...',
                       revid, parent_bzrdir.root_transport.base, self.basedir)
         bzrdir = parent_bzrdir.sprout(self.basedir, revid)
         self._working_tree = bzrdir.open_workingtree()
@@ -172,7 +172,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     self.log.debug('"%s" already in inventory, skipping', fn)
 
         if len(fnames):
-            self.log.info('Adding "%s"...', ', '.join(fnames))
+            self.log.info('Adding %s...', ', '.join(fnames))
             self._working_tree.add(fnames)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -190,7 +190,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog)
         if logmessage:
-            self.log.info('Committing "%s"...', logmessage[0])
+            self.log.info('Committing %r...', logmessage[0])
             logmessage = '\n'.join(logmessage)
         else:
             self.log.info('Committing...')
@@ -240,7 +240,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 raise
             unmoved = True
 
-        self.log.info('Renaming "%s" to "%s"...', oldname, newname)
+        self.log.info('Renaming %r to %r...', oldname, newname)
         try:
             self._working_tree.rename_one(oldname, newname)
         except:
@@ -279,8 +279,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 bzrignore = open(join(self.basedir, IGNORE_FILENAME), 'wU')
                 bzrignore.write('\n'.join(ignored))
 
-            self.log.info('Initializing new repository in "%s"...',
-                          self.basedir)
+            self.log.info('Initializing new repository in %r...', self.basedir)
             try:
                 bzrdir = BzrDir.open(self.basedir)
             except errors.NotBranchError:
