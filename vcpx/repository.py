@@ -233,6 +233,7 @@ class CvsRepository(Repository):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'cvs-command', 'cvs')
         self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
+        self.freeze_keywords = project.config.get(self.name, 'freeze-keywords', 'False')
 
     def _validateConfiguration(self):
         from os.path import split

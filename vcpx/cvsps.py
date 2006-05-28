@@ -232,6 +232,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cmd = self.repository.command("-d", "%(repository)s",
                                               "-q", "update", "-d",
                                               "-r", e.new_revision)
+                if self.repository.freeze_keywords:
+                    cmd.append('-kk')
                 cvsup = ExternalCommand(cwd=self.basedir, command=cmd)
                 retry = 0
                 while True:
@@ -310,6 +312,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 cmd.extend(["-r", revision])
             if timestamp:
                 cmd.extend(["-D", "%s UTC" % timestamp])
+            if self.repository.freeze_keywords:
+                cmd.append('-kk')
 
             checkout = ExternalCommand(cwd=parentdir, command=cmd)
             retry = 0

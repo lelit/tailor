@@ -607,6 +607,14 @@ cdv
 cvs
 %%%
 
+freeze-keywords : bool
+  With this enabled (it is off by default) tailor will use ``-kk`` flag
+  on `checkouts` and `updates` to turn off the keyword expansion. This
+  may help minimizing the chance of spurious conflicts with later
+  merges between different branches.
+
+  *False* by default.
+
 tag-entries : bool
   CVS and CVSPS repositories may turn off automatic tagging of
   entries, that tailor does by default to prevent manual interventions
@@ -616,6 +624,14 @@ tag-entries : bool
 
 cvsps
 %%%%%
+
+freeze-keywords : bool
+  With this enabled (it is off by default) tailor will use ``-kk`` flag
+  on `checkouts` and `updates` to turn off the keyword expansion. This
+  may help minimizing the chance of spurious conflicts with later
+  merges between different branches.
+
+  *False* by default.
 
 tag-entries : bool
   CVS and CVSPS repositories may turn off automatic tagging of
