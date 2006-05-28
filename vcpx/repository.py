@@ -249,6 +249,11 @@ class CvsRepository(Repository):
             raise ConfigurationError("Must specify a repository and maybe "
                                      "a module also")
 
+        if self.module.endswith('/'):
+            self.log.debug("Removing final slash from %r in %r",
+                           self.module, self.name)
+            self.module = self.module.rstrip('/')
+
 
 class CvspsRepository(CvsRepository):
     def command(self, *args, **kwargs):
