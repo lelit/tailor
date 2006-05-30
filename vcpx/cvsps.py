@@ -182,10 +182,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             for added in changeset.addedEntries():
                 if added.name.startswith(entrydir):
                     # entrydir got empty, but only temporarily
-                    return
-
-            deldir = changeset.addEntry(entrydir, None)
-            deldir.action_kind = deldir.DELETED
+                    return False
+            return True
+        return False
 
     def _applyChangeset(self, changeset):
         from os.path import join, exists, dirname, split
@@ -196,6 +195,10 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         entries = CvsEntries(self.basedir)
 
+        # Collect added and deleted directories
+        addeddirs = []
+        deleteddirs = []
+
         for e in changeset.entries:
             if e.action_kind == e.UPDATED:
                 info = entries.getFileInfo(e.name)
@@ -203,7 +206,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     self.log.debug('promoting "%s" to ADDED at '
                                    'revision %s', e.name, e.new_revision)
                     e.action_kind = e.ADDED
-                    self.__createParentCVSDirectories(changeset, e.name)
+                    addeddirs.extend(self.__createParentCVSDirectories(changeset, e.name))
                 elif info.cvs_version == e.new_revision:
                     self.log.debug('skipping "%s" since it is already '
                                    'at revision %s', e.name, e.new_revision)
@@ -212,7 +215,9 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 if not exists(join(self.basedir, e.name)):
                     self.log.debug('skipping "%s" since it is already '
                                    'deleted', e.name)
-                    self.__maybeDeleteDirectory(split(e.name)[0], changeset)
+                    entrydir = split(e.name)[0]
+                    if self.__maybeDeleteDirectory(entrydir, changeset):
+                        deleteddirs.append(entrydir)
                     continue
             elif e.action_kind == e.ADDED and e.new_revision is None:
                 # This is a new directory entry, there is no need to update it
@@ -259,7 +264,20 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 self.log.debug("%s updated to %s", e.name, e.new_revision)
 
             if e.action_kind == e.DELETED:
-                self.__maybeDeleteDirectory(split(e.name)[0], changeset)
+                entrydir = split(e.name)[0]
+                if self.__maybeDeleteDirectory(entrydir, changeset):
+                    deleteddirs.append(entrydir)
+
+        # Fake up ADD and DEL events for the directories implicitly
+        # added/removed, so that the replayer gets their name.
+
+        for path in addeddirs:
+            entry = changeset.addEntry(path, None)
+            entry.action_kind = entry.ADDED
+
+        for path in deleteddirs:
+            deldir = changeset.addEntry(path, None)
+            deldir.action_kind = deldir.DELETED
 
     def _checkoutUpstreamRevision(self, revision):
         """
@@ -414,23 +432,39 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         If the directory containing the entry does not exist,
         create it and make it appear as under CVS so that a subsequent
         'cvs update' will work.
+
+        Returns the list of eventually added directories.
         """
 
         from os.path import split, join, exists
         from os import mkdir
 
+        tobeadded = []
+
         path = split(entry)[0]
-        if path:
-            basedir = join(self.basedir, path)
-        else:
-            basedir = self.basedir
-        cvsarea = join(basedir, 'CVS')
 
-        if path and not exists(cvsarea):
-            parentcvs = self.__createParentCVSDirectories(changeset, path)
+        parentcvs = join(self.basedir, path, 'CVS')
+        while not exists(parentcvs):
+            tobeadded.insert(0, join(self.basedir, path))
+            if not path:
+                break
+            path = split(path)[0]
+            parentcvs = join(self.basedir, path, 'CVS')
 
-            assert exists(parentcvs), "Uhm, strange things happen: " \
-                "unable to find or create parent CVS area for %r" % path
+        assert exists(parentcvs), "Uhm, strange things happen: " \
+               "unable to find or create parent CVS area for %r" % entry
+
+        if tobeadded:
+            reposf = open(join(parentcvs, 'Repository'))
+            rep = reposf.readline()[:-1]
+            reposf.close()
+
+            rootf = open(join(parentcvs, 'Root'))
+            root = rootf.readline()
+            rootf.close()
+
+        for basedir in tobeadded:
+            cvsarea = join(basedir, 'CVS')
 
             if not exists(basedir):
                 mkdir(basedir)
@@ -442,29 +476,16 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             entries = open(join(cvsarea, 'Entries'), 'w')
             entries.close()
 
-            reposf = open(join(parentcvs, 'Repository'))
-            rep = reposf.readline()[:-1]
-            reposf.close()
-
             reposf = open(join(cvsarea, 'Repository'), 'w')
-            reposf.write("%s/%s\n" % (rep, split(basedir)[1]))
+            rep = '/'.join((rep, split(basedir)[1]))
+            reposf.write("%s\n" % rep)
             reposf.close()
-
-            rootf = open(join(parentcvs, 'Root'))
-            root = rootf.readline()
-            rootf.close()
 
             rootf = open(join(cvsarea, 'Root'), 'w')
             rootf.write(root)
             rootf.close()
 
-            # Add the "new" directory to the changeset, so that the
-            # replayer gets its name
-
-            entry = changeset.addEntry(path, None)
-            entry.action_kind = entry.ADDED
-
-        return cvsarea
+        return tobeadded
 
     ## SynchronizableTargetWorkingDir
 
