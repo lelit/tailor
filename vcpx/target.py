@@ -255,7 +255,27 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Extract the names of the entries for the commit phase.
         """
 
-        return [e.name for e in changeset.entries]
+        # Since the commit may use cli tools to do its job, and the
+        # machinery may split the list into smaller chunks to avoid
+        # too long command lines, anticipates added stuff.  I think
+        # this is needed only when coming from CVS (or HG or in
+        # general from systems that don't handle directories): its
+        # _applyChangeset *appends* to the entries a fake ADD for
+        # each new subdir.
+
+        entries = []
+        added = 0
+        for e in changeset.entries:
+            if e.action_kind == e.ADDED:
+                entries.insert(added, e.name)
+                added += 1
+            else:
+                # Add also the name of the old file: for some systems
+                # it may not be strictly needed, but it is for most.
+                if e.action_kind == e.RENAMED:
+                    entries.append(e.old_name)
+                entries.append(e.name)
+        return entries
 
     def _replayChangeset(self, changeset):
         """

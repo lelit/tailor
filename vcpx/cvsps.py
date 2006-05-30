@@ -633,19 +633,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 remove(efn+'.tailor-old')
 
 
-    def _getCommitEntries(self, changeset):
-        """
-        Extract the names of the entries for the commit phase.  Since CVS
-        does not have a "rename" operation, this is simulated by a
-        remove+add, and both entries must be committed.
-        """
-
-        entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
-                                                                  changeset)
-        entries.extend([e.old_name for e in changeset.renamedEntries()])
-
-        return entries
-
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
         Commit the changeset.

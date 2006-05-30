@@ -223,15 +223,13 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
                                                                   changeset)
-        # We need to extract the old name for renames and commit that too
+        # We must explicitly append siblings of renamed directories
         for e in [e for e in changeset.entries
                   if e.action_kind == ChangesetEntry.RENAMED]:
             # Have to walk directories by hand looking for files
             if isdir(join(self.basedir, normpath(e.name))):
                 entries.extend([join(e.old_name, tail)
                                 for tail in self._walk(e.name)])
-            else:
-                entries.append(e.old_name)
 
         return entries
 
