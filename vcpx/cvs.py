@@ -405,7 +405,8 @@ class ChangeSetCollector(object):
                 date,author,changelog,e,rev,state,newentry = cs
 
                 # CVS seems to sometimes mess up what it thinks the branch is...
-                if not cvs_revs_same_branch(normalize_cvs_rev(rev), branchnum):
+                if branchnum and not cvs_revs_same_branch(normalize_cvs_rev(rev),
+                                                          branchnum):
                     self.log.warning("Skipped revision %s on entry %s "
                                      "as revision didn't match branch revision %s "
                                      "for branch %s"
