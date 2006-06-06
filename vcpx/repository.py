@@ -230,10 +230,14 @@ class CvsRepository(Repository):
     METADIR = 'CVS'
 
     def _load(self, project):
+        from datetime import timedelta
+
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'cvs-command', 'cvs')
         self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
         self.freeze_keywords = project.config.get(self.name, 'freeze-keywords', 'False')
+        threshold = project.config.get(self.name, 'changeset-threshold', '180')
+        self.changeset_threshold = timedelta(seconds=float(threshold))
 
     def _validateConfiguration(self):
         from os.path import split

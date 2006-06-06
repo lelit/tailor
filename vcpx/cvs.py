@@ -83,20 +83,21 @@ def rev2branch(rev):
     return rev[0:-1]
 
 
-def changesets_from_cvslog(log, module, branch=None, entries=None, since=None):
+def changesets_from_cvslog(log, module, branch=None, entries=None, since=None, threshold=None):
     """
     Parse CVS log.
     """
 
-    from datetime import timedelta
-
     collected = ChangeSetCollector(log, module, branch, entries, since)
 
-    threshold = timedelta(seconds=180)
     last = None
 
+    if threshold is None:
+        from datetime import timedelta
+        threshold = timedelta(seconds=180)
+
     # Loop over collected changesets, and collapse those with same author,
-    # same changelog and that were committed within 3 minutes one from the
+    # same changelog and that were committed within a threshold one from the
     # other. If they have entries in common, keep them separated. Special
     # treatment to deleted entries, given that sometime there are two
     # deletions on the same file: in that case, keep only the last one,
@@ -327,7 +328,6 @@ class ChangeSetCollector(object):
         from changes import Changeset
         from os.path import split, join
         import sre
-        from datetime import timedelta
         from time import strptime
         from datetime import datetime
 
@@ -541,7 +541,6 @@ class CvsWorkingDir(CvspsWorkingDir):
 
     def _getUpstreamChangesets(self, sincerev):
         from os.path import join, exists
-        from datetime import timedelta
         from time import sleep
 
         from codecs import getreader
@@ -628,9 +627,11 @@ class CvsWorkingDir(CvspsWorkingDir):
                 "%s returned status %d" % (str(cvslog), cvslog.exit_status))
 
         log = reader(log, self.repository.encoding_errors_policy)
-        return changesets_from_cvslog(log, self.repository.module, branch,
+        return changesets_from_cvslog(log, self.repository.module,
+                                      branch,
                                       CvsEntries(self.repository.rootdir),
-                                      since)
+                                      since,
+                                      self.repository.changeset_threshold)
 
     def _checkoutUpstreamRevision(self, revision):
         """

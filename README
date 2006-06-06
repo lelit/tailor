@@ -607,6 +607,12 @@ cdv
 cvs
 %%%
 
+changeset-threshold : integer
+  Maximum number of seconds allowed to separated commits to different
+  files for them to be considered part of the same changeset.
+
+  180 by default.
+
 freeze-keywords : bool
   With this enabled (it is off by default) tailor will use ``-kk`` flag
   on `checkouts` and `updates` to turn off the keyword expansion. This
