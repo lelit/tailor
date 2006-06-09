@@ -79,6 +79,8 @@ class Project(object):
         Initialize a new instance representing the project `name`.
         """
 
+        from ConfigParser import Error
+
         self.loghandler = None
 
         if not config.has_section(name):
@@ -87,7 +89,10 @@ class Project(object):
         self.config = config
         self.name = name
         self.dwd = None
-        self._load()
+        try:
+            self._load()
+        except Error, e:
+            raise ConfigurationError('Invalid configuration: %s' % str(e))
 
     def __str__(self):
         return "Project %s at %s:\n\t" % (self.name, self.rootdir) + \
