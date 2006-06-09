@@ -116,7 +116,7 @@ subdir = pxlib
 [darcs:pxlib]
 
 [cvs:pxlib]
-repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
+repository = :pserver:anonymous@pxlib.cvs.sourceforce.net:/cvsroot/pxlib
 module = pxlib
 encoding = iso-8859-1
 
@@ -154,7 +154,7 @@ start-revision = spamies-improvement-branch INITIAL
 subdir = atse
 
 [cvs:atse]
-repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
+repository = :pserver:anonymous@collective.cvs.sourceforge.net:/cvsroot/collective
 module = ATSchemaEditorNG
 
 [bzr:atse]
@@ -167,7 +167,7 @@ start-revision = houston-sprint-branch INITIAL
 root-directory = %(testdir)s/cvs2svn
 
 [cvs:cmfeditions-houston-sprint]
-repository = :pserver:anonymous@cvs.sourceforge.net:/cvsroot/collective
+repository = :pserver:anonymous@collective.cvs.sourceforge.net:/cvsroot/collective
 module = CMFEditions
 subdir = cvside
 
@@ -277,7 +277,7 @@ class OperationalTest(TestCase):
                                                  'testdir': self.TESTDIR})
         if not exists(self.TESTDIR):
             mkdir(self.TESTDIR)
-            register(rmtree, self.TESTDIR)
+            #register(rmtree, self.TESTDIR)
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
