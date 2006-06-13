@@ -14,7 +14,7 @@ instead of thru the command line.
 __docformat__ = 'reStructuredText'
 
 from source import UpdatableSourceWorkingDir
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir
 from mercurial import ui, hg, commands
 
 class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
@@ -374,7 +374,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Returns the files mercurial knows about under subdir, relative
         to subdir.
         """
-        from os.path import join, split, isdir
+        from os.path import join, split
 
         files = []
         for src, path in self._getRepo().dirstate.walk([subdir]):

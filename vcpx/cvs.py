@@ -769,8 +769,6 @@ class CvsEntries(object):
     def getFileVersions(self, prefix=''):
         """Return a set of (entry name, version number) pairs."""
 
-        from os.path import join
-
         pairs = [(prefix+e.filename, normalize_cvs_rev(e.cvs_version))
                  for e in self.files.values()]
 

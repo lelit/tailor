@@ -13,7 +13,7 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, STDOUT
+from shwrap import ExternalCommand, PIPE
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
@@ -187,7 +187,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         return False
 
     def _applyChangeset(self, changeset):
-        from os.path import join, exists, dirname, split
+        from os.path import join, exists, split
         from os import listdir
         from shutil import rmtree
         from cvs import CvsEntries

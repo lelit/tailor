@@ -14,10 +14,9 @@ This module implements the backends for Bazaar-NG.
 
 __docformat__ = 'reStructuredText'
 
-import os
 from workdir import WorkingDir
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from target import SynchronizableTargetWorkingDir
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib import errors
@@ -255,7 +254,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         that to create a branch and working tree (make sure it allows working
         trees).
         """
-        from os.path import join, exists, split
+        from os.path import join, split
         from bzrlib import IGNORE_FILENAME
 
         if self._working_tree is None:

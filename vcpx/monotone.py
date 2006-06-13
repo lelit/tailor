@@ -12,19 +12,13 @@ This module contains supporting classes for Monotone.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile, STDOUT
+from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from source import UpdatableSourceWorkingDir, InvocationError, \
      ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from changes import ChangesetEntry,Changeset
-from os.path import exists, join, isdir, split
-from os import renames, access, F_OK
+from changes import Changeset
+from os.path import exists, join, isdir
 from string import whitespace
-
-try:
-  set
-except NameError: 
-  from sets import Set as set
 
 MONOTONERC = """\
 function get_passphrase(KEYPAIR_ID)

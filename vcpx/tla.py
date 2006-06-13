@@ -38,18 +38,15 @@ revision
 __docformat__ = 'reStructuredText'
 
 import os
-import re
 from datetime import datetime
 from time import strptime
 from tempfile import mkdtemp
-from cStringIO import StringIO
 from email.Parser import Parser
-from email.Errors import MessageParseError
 
 from changes import Changeset
 from shwrap import ExternalCommand, PIPE
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
-     GetUpstreamChangesetsFailure, InvocationError
+     GetUpstreamChangesetsFailure
 from target import TargetInitializationFailure
 
 

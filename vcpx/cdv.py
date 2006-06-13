@@ -105,7 +105,6 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         from os import getenv
-        from os.path import join
 
         cmd = self.repository.command("set", "user")
         user = getenv('CDV_USER') or getenv('LOGNAME')

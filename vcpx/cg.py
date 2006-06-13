@@ -11,7 +11,7 @@ This module implements the backend for Git by using Cogito.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, ReopenableNamedTemporaryFile
+from shwrap import ExternalCommand
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from source import ChangesetApplicationFailure
 
@@ -58,7 +58,6 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from time import mktime
         from os import environ
 
         encode = self.repository.encode
@@ -156,7 +155,6 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         from os.path import join
-        from re import escape
         from dualwd import IGNORED_METADIRS
 
         # Create the .git/info/exclude file, that contains an

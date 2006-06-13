@@ -11,9 +11,8 @@ This module contains supporting classes for Subversion.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, STDOUT, ReopenableNamedTemporaryFile
-from source import UpdatableSourceWorkingDir, \
-     ChangesetApplicationFailure, GetUpstreamChangesetsFailure
+from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from config import ConfigurationError
 
@@ -496,8 +495,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        from os import rename, walk, remove
-        from os.path import join, isdir, exists
+        from os import rename
+        from os.path import join, exists
 
         # --force in case the file has been changed and moved in one revision
         cmd = self.repository.command("mv", "--quiet", "--force")

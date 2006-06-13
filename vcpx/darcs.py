@@ -15,7 +15,6 @@ from shwrap import ExternalCommand, PIPE, STDOUT
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      GetUpstreamChangesetsFailure
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from xml.sax import SAXException
 import re
 
 MOTD = """\

@@ -77,7 +77,7 @@ class Repository(object):
         take the one from the project.
         """
 
-        from os.path import split, expanduser
+        from os.path import expanduser
         from locale import getpreferredencoding
 
         cget = project.config.get

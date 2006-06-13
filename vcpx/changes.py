@@ -142,8 +142,6 @@ class Changeset(object):
         return e
 
     def __str__(self):
-        import codecs
-
         s = []
         s.append('Revision: %s' % self.revision)
         s.append('Date: %s' % str(self.date))

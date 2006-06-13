@@ -12,7 +12,7 @@ This module implements the backend for Git using git-core.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE
+from shwrap import ExternalCommand, PIPE
 from source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from source import ChangesetApplicationFailure
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
@@ -202,7 +202,6 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from time import mktime
         from os import environ
 
         encode = self.repository.encode
@@ -319,7 +318,6 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
-        from re import escape
         from dualwd import IGNORED_METADIRS
 
         infodir = join(self.basedir, self.repository.METADIR, 'info')

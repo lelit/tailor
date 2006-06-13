@@ -7,7 +7,6 @@
 
 from unittest import TestCase
 from datetime import datetime
-from StringIO import StringIO
 from vcpx.cvsps import changesets_from_cvsps
 
 class CvspsParser(TestCase):

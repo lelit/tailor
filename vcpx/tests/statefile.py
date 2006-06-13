@@ -6,7 +6,6 @@
 #
 
 from unittest import TestCase
-from cStringIO import StringIO
 from vcpx.statefile import StateFile
 from vcpx.shwrap import ReopenableNamedTemporaryFile
 

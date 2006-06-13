@@ -311,8 +311,6 @@ class Darcs(OperationalTest):
     def testConfiguration(self):
         "Test basic configuration"
 
-        from os.path import expanduser
-
         p = Tailorizer('darcs2svn', self.config)
         self.assertEqual(p.source.subdir, 'darcside')
         self.assertEqual(p.rootdir, '%s/darcs2svn' % self.TESTDIR)

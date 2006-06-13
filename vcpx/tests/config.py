@@ -6,7 +6,6 @@
 #
 
 from unittest import TestCase
-from cStringIO import StringIO
 from vcpx.config import Config, ConfigurationError
 from vcpx.project import Project
 
