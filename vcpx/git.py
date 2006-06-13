@@ -125,21 +125,21 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
             entries.append(e)
 
-	# Brute-force tag search
-	from os.path import join, isdir
-	from os import listdir
+        # Brute-force tag search
+        from os.path import join
+        from os import listdir
 
-	tags = []
-	tagdir = join(self.basedir, '.git', 'refs', 'tags')
-	try:
+        tags = []
+        tagdir = join(self.basedir, '.git', 'refs', 'tags')
+        try:
             for tag in listdir(tagdir):
                 # Consider caching stat info per tailor run
                 tagrev = self._tryCommand(['rev-list', '--max-count=1', tag])[0]
                 if (tagrev == revision):
                     tags.append(tag)
-	except OSError:
-	    # No tag dir
-	    pass
+        except OSError:
+            # No tag dir
+            pass
 
         return Changeset(revision, date, user, message, entries, tags=tags)
 
@@ -237,12 +237,12 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             logmessage += '\n'
         (out, _) = c.execute(stdout=PIPE, env=env, input=logmessage)
         if c.exit_status:
-	    failed = True
-	    if out:
-		for line in [x.strip() for x in out if x[0] != '#']:
-		    if line == 'nothing to commit':
-			failed = False
-	    if failed:
+            failed = True
+            if out:
+                for line in [x.strip() for x in out if x[0] != '#']:
+                    if line == 'nothing to commit':
+                        failed = False
+            if failed:
                 raise ChangesetApplicationFailure("%s returned status %d" %
                                                   (str(c), c.exit_status))
 
