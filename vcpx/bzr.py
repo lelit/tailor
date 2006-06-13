@@ -17,6 +17,7 @@ __docformat__ = 'reStructuredText'
 from workdir import WorkingDir
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from target import SynchronizableTargetWorkingDir
+from bzrlib.osutils import normpath
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib import errors
@@ -163,9 +164,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 return False
 
             for fn in names:
+                normfn = normpath(fn)
                 if (not inv.has_filename(fn)
-                    and not fn in added
-                    and not parent_was_copied(fn)):
+                    and not normfn in added
+                    and not parent_was_copied(normfn)):
                     fnames.append(fn)
                 else:
                     self.log.debug('"%s" already in inventory, skipping', fn)
@@ -205,6 +207,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Remove whitespace
         email = ''.join(email.split())
 
+        # Normalize file names
+        if entries:
+            entries = [normpath(entry) for entry in entries]
+        
         revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
                                     hexlify(rand_bytes(8)))
         self._working_tree.commit(logmessage, committer=author,
