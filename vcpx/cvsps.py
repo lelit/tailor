@@ -155,6 +155,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             tag = open(fname).read()
             if tag.startswith('T'):
                 branch=tag[1:-1]
+        else:
+            if sincerev is not None and isinstance(sincerev, basestring) \
+                   and not sincerev[0] in '0123456789':
+                branch = sincerev
+                sincerev = None
 
         if sincerev:
             sincerev = int(sincerev)
