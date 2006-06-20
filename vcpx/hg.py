@@ -178,6 +178,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         except AttributeError:
             ui = self._getUI()
             self._hg = hg.repository(ui=ui, path=self.basedir, create=False)
+            # Pick up repository-specific UI settings.
+            self._ui = self._hg.ui
             return self._hg
 
     def _getNode(self, repo, revision):
