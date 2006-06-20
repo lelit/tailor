@@ -68,9 +68,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _getUpstreamChangesets(self, sincerev):
         """Fetch new changesets from the source"""
         repo = self._getRepo()
-        opts = self._defaultOpts('pull')
 
-        commands.pull(repo.ui, repo, "default", **opts)
+        self._hgCommand('pull', 'default')
 
         from mercurial.node import bin
         for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1,
@@ -259,7 +258,6 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """ Tag the tip with a given identifier """
         # TODO: keep a handle on the changeset holding this tag? Then
         # we can extract author, log, date from it.
-        opts = self._defaultOpts('tag')
 
         # This seems gross. I don't get why I'm getting a unicode tag when
         # it's just ascii underneath. Something weird is happening in CVS.
@@ -281,12 +279,20 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 parent = repo.changelog.parents(parent)[0]
         except KeyError:
             pass
-        commands.tag(repo.ui, repo, tag, **opts)
+        self._hgCommand('tag', tag)
 
     def _defaultOpts(self, cmd):
         # Not sure this is public. commands.parse might be, but this
         # is easier, and while dispatch is easiest, you lose ui.
         return dict([(f[1], f[2]) for f in commands.find(cmd)[1][1]])
+
+    def _hgCommand(self, cmd, *args, **opts):
+        import os
+
+        allopts = self._defaultOpts(cmd)
+        allopts.update(opts)
+        cmd = getattr(commands, cmd)
+        cmd(self._ui, self._hg, *args, **allopts)
 
     def _removePathnames(self, names):
         """Remove a sequence of entries"""
@@ -369,7 +375,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         ignore.close()
 
     def _initializeWorkingDir(self):
-        commands.add(self._ui, self._hg, self.basedir)
+        self._hgCommand('add', self.basedir)
 
     def _walk(self, subdir):
         """
