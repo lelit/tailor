@@ -218,23 +218,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self.log.info('Adding %s...', ', '.join(notdirs))
             self._hg.add(notdirs)
 
-    def _getCommitEntries(self, changeset):
-        from changes import ChangesetEntry
-        from os.path import join, isdir, normpath
-
-        entries = SynchronizableTargetWorkingDir._getCommitEntries(self,
-                                                                  changeset)
-        # We must explicitly append siblings of renamed directories
-        for e in [e for e in changeset.entries
-                  if e.action_kind == ChangesetEntry.RENAMED]:
-            # Have to walk directories by hand looking for files
-            if isdir(join(self.basedir, normpath(e.name))):
-                entries.extend([join(e.old_name, tail)
-                                for tail in self._walk(e.name)])
-
-        return entries
-
-    def _commit(self, date, author, patchname, changelog=None, names=None):
+    def _commit(self, date, author, patchname, changelog=None, names=[]):
         from time import mktime
 
         encode = self.repository.encode
@@ -250,9 +234,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             self.log.info('Committing...')
             logmessage = "Empty changelog"
-        self._hg.commit(names and [encode(n) for n in names] or [],
-                        logmessage, encode(author),
-                        "%d 0" % mktime(date.timetuple()))
+        opts = {}
+        opts['message'] = logmessage
+        opts['user'] = encode(author)
+        opts['date'] =  '%d 0' % mktime(date.timetuple())
+        self._hgCommand('commit', *[encode(n) for n in names], **opts)
 
     def _tag(self, tag):
         """ Tag the tip with a given identifier """
