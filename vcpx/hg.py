@@ -283,13 +283,20 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _removePathnames(self, names):
         """Remove a sequence of entries"""
 
-        from os.path import join, isdir, normpath
+        from os.path import join
 
-        notdirs = [n for n in names
-                   if not isdir(join(self.basedir, normpath(n)))]
-        if notdirs:
-            self.log.info('Removing %s...', ', '.join(notdirs))
-            self._hg.remove(notdirs)
+        repo = self._getRepo()
+
+        self.log.info('Removing %s...', ', '.join(names))
+        for name in names:
+            files = self._walk(name)
+            # We can't use isdir because the source has already
+            # removed the entry, so we do a dirstate lookup.
+            if files:
+                for f in self._walk(name):
+                    repo.remove([join(name, f)])
+            else:
+                repo.remove([name])
 
     def _renamePathname(self, oldname, newname):
         """Rename an entry"""
@@ -372,6 +379,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         files = []
         for src, path in self._getRepo().dirstate.walk([subdir]):
+            # If subdir is a plain file, just return
+            if path == subdir:
+                return None
             (hd, tl) = split(path)
             while hd != subdir:
                 hd, nt = split(hd)
