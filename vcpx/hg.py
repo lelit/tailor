@@ -175,8 +175,13 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         try:
             return self._hg
         except AttributeError:
+            # dirstate walker uses simple string comparison between
+            # repo root and os.getcwd, so root should be canonified.
+            from os.path import realpath
+
             ui = self._getUI()
-            self._hg = hg.repository(ui=ui, path=self.basedir, create=False)
+            self._hg = hg.repository(ui=ui, path=realpath(self.basedir),
+                                     create=False)
             # Pick up repository-specific UI settings.
             self._ui = self._hg.ui
             return self._hg
@@ -329,7 +334,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repository as well in the new working directory.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, realpath
 
         self._getUI()
 
@@ -337,8 +342,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             create = 0
         else:
             create = 1
-        self.log.info('Initializing new repository in %r...', self.basedir)
-        self._hg = hg.repository(ui=self._ui, path=self.basedir, create=create)
+            self.log.info('Initializing new repository in %r...', self.basedir)
+        self._hg = hg.repository(ui=self._ui, path=realpath(self.basedir),
+                                 create=create)
 
     def _prepareWorkingDirectory(self, source_repo):
         """
