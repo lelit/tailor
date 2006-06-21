@@ -379,7 +379,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         ignore.close()
 
     def _initializeWorkingDir(self):
-        self._hgCommand('add', self.basedir)
+        self._hgCommand('add')
 
     def _walk(self, subdir):
         """
