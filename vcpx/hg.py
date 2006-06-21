@@ -278,7 +278,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         allopts = self._defaultOpts(cmd)
         allopts.update(opts)
         cmd = getattr(commands, cmd)
-        cmd(self._ui, self._hg, *args, **allopts)
+        cwd = os.getcwd()
+        os.chdir(self.basedir)
+        try:
+            cmd(self._ui, self._hg, *args, **allopts)
+        finally:
+            os.chdir(cwd)
 
     def _removePathnames(self, names):
         """Remove a sequence of entries"""
