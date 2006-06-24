@@ -148,7 +148,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if revision == 'INITIAL':
             return self._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
 
-        return self._tryCommand('rev-parse', '--verify', revision, GetUpstreamChangesetsFailure)[0]
+        return self._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
 
     def _tryCommand(self, cmd, exception=Exception, pipe=True):
         c = ExternalCommand(command = self.repository.command(*cmd), cwd = self.basedir)
