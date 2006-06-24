@@ -13,8 +13,10 @@ __docformat__ = 'reStructuredText'
 
 from cStringIO import StringIO
 from ConfigParser import SafeConfigParser, NoSectionError, DEFAULTSECT
+from vcpx import TailorException
 
-class ConfigurationError(Exception):
+
+class ConfigurationError(TailorException):
     """Configuration error"""
 
 LOGGING_SUPER_SECTION = '[[logging]]'

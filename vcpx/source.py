@@ -12,6 +12,7 @@ directory under some kind of version control system.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx import TailorException
 from workdir import WorkingDir
 
 CONFLICTS_PROMPT = """
@@ -33,13 +34,16 @@ with a Ctrl-Z, explore and correct, and coming back from the shell with
 What would you like to do?
 """
 
-class GetUpstreamChangesetsFailure(Exception):
+
+class GetUpstreamChangesetsFailure(TailorException):
     "Failure getting upstream changes"
 
-class ChangesetApplicationFailure(Exception):
+
+class ChangesetApplicationFailure(TailorException):
     "Failure applying upstream changes"
 
-class InvocationError(Exception):
+
+class InvocationError(TailorException):
     "Bad invocation, use --help for details"
 
 class UpdatableSourceWorkingDir(WorkingDir):

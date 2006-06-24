@@ -13,10 +13,12 @@ update, layering on top of DualWorkingDir.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx import TailorException
 from vcpx.config import ConfigurationError
 from vcpx.statefile import StateFile
 
-class UnknownProjectError(Exception):
+
+class UnknownProjectError(TailorException):
     "Project does not exist"
 
 

@@ -24,14 +24,14 @@ if __name__ == '__main__':
         from vcpx.tests import main
         main()
     else:
-        from vcpx import *
+        from vcpx.tailor import main, TailorException
 
         if len(sys.argv) == 1:
             sys.argv.append('--help')
 
         try:
             main()
-        except TailorExceptions, exc:
+        except TailorException, exc:
             print "%s: %s" % (exc.__doc__, exc)
         except KeyboardInterrupt:
             print "Stopped by user"

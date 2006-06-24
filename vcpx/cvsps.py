@@ -13,12 +13,14 @@ uses `cvsps` to fetch the changes from the upstream repository.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx import TailorException
 from shwrap import ExternalCommand, PIPE
 from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
      InvocationError
 from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
-class EmptyRepositoriesFoolsMe(Exception):
+
+class EmptyRepositoriesFoolsMe(TailorException):
     "Cannot handle empty repositories. Maybe wrong module/repository?"
 
     # This is the exception raised when we try to tailor an empty CVS

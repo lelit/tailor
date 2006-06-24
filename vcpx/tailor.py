@@ -14,6 +14,7 @@ __docformat__ = 'reStructuredText'
 __version__ = '0.9.23'
 
 from optparse import OptionParser, OptionGroup, Option
+from vcpx import TailorException
 from config import Config, ConfigurationError
 from project import Project
 from source import GetUpstreamChangesetsFailure
@@ -269,10 +270,12 @@ VC_SPECIFIC_OPTIONS = [
                 help="Ignore .arch-ids directories when using a tla source."),
 ]
 
-class ExistingProjectError(Exception):
+
+class ExistingProjectError(TailorException):
     "Project seems already tailored"
 
-class ProjectNotTailored(Exception):
+
+class ProjectNotTailored(TailorException):
     "Not a tailored project"
 
 def main():

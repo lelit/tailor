@@ -14,6 +14,7 @@ __docformat__ = 'reStructuredText'
 
 import socket
 from signal import signal, SIGINT, SIG_IGN
+from vcpx import TailorException
 from workdir import WorkingDir
 
 HOST = socket.getfqdn()
@@ -25,10 +26,12 @@ Import of the upstream sources from
    Revision: %(revision)s
 """
 
-class TargetInitializationFailure(Exception):
+
+class TargetInitializationFailure(TailorException):
     "Failure initializing the target VCS"
 
-class ChangesetReplayFailure(Exception):
+
+class ChangesetReplayFailure(TailorException):
     "Failure replaying the changeset on the target system"
 
 class SynchronizableTargetWorkingDir(WorkingDir):
