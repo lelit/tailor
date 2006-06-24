@@ -247,7 +247,7 @@ class ExternalCommand:
             encoding = getpreferredencoding()
             self.log.warning("Using default %s encoding, ignoring errors; "
                              "caller should use repository's encoding and "
-                             "pass an already encoded input")
+                             "pass an already encoded input" % encoding)
             input = input.encode(encoding, 'ignore')
 
         out, err = process.communicate(input=input)
