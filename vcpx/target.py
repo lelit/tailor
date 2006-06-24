@@ -289,7 +289,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         added = []
         actions = { ChangesetEntry.ADDED: self._addEntries,
                     ChangesetEntry.DELETED: self._removeEntries,
-                    ChangesetEntry.RENAMED: self._renameEntries
+                    ChangesetEntry.RENAMED: self._renameEntries,
+                    ChangesetEntry.UPDATED: self._recordUpdatedEntries
                     }
 
         # Group the changes by kind and perform the corresponding action
@@ -401,6 +402,20 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         """
 
         raise "%s should override this method" % self.__class__
+
+    def _recordUpdatedEntries(self, entries):
+        """
+        Records a sequence of entries as updated.
+        """
+
+        self._recordUpdatedPathnames([e.name for e in entries])
+
+    def _recordUpdatedPathnames(self, names):
+        """
+        Records a sequence of filesystem objects as updated.
+        """
+
+	pass
 
     def _renameEntries(self, entries):
         """
