@@ -232,6 +232,20 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         env = {}
         env.update(environ)
 
+        treeid = self._tryCommand(['write-tree'])[0]
+
+	# find the parent commit if any
+        c = ExternalCommand(cwd=self.basedir,
+			 command=self.repository.command('rev-parse', 'HEAD'))
+        (out, err) = c.execute(stdout=PIPE, stderr=PIPE)
+        if c.exit_status:
+	    # Do we need to check err to be sure there was no error ?
+	    self.log.info("Doing initial commit")
+	    parent = False
+        else:
+	    # FIXME: I'd prefer to avoid all those "if parent"
+	    parent = out.read().split('\n')[0]
+
         (name, email) = self.__parse_author(author)
         if name:
             env['GIT_AUTHOR_NAME'] = encode(name)
@@ -242,7 +256,10 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if date:
             env['GIT_AUTHOR_DATE']=date.strftime("%Y-%m-%d %H:%M:%S")
             env['GIT_COMMITTER_DATE']=env['GIT_AUTHOR_DATE']
-        cmd = self.repository.command("commit", "-F", "-")
+	if parent:
+            cmd = self.repository.command('commit-tree', treeid, '-p', parent)
+	else:
+            cmd = self.repository.command('commit-tree', treeid)
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         logmessage = encode('\n'.join(logmessage))
@@ -260,6 +277,12 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if failed:
                 raise ChangesetApplicationFailure("%s returned status %d" %
                                                   (str(c), c.exit_status))
+	else:
+	    commitid=out.read().split('\n')[0]
+	    if parent:
+	        self._tryCommand(['update-ref', 'HEAD', commitid, parent])
+            else:
+	        self._tryCommand(['update-ref', 'HEAD', commitid])
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
