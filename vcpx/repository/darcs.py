@@ -11,16 +11,34 @@ This module contains supporting classes for the ``darcs`` versioning system.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, STDOUT
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
-     GetUpstreamChangesetsFailure
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 import re
+
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
+from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
+                        GetUpstreamChangesetsFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+
 
 MOTD = """\
 Tailorized equivalent of
 %s
 """
+
+class DarcsRepository(Repository):
+    METADIR = '_darcs'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
+        self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+
+    def command(self, *args, **kwargs):
+        if args[0] == 'record' and self.use_look_for_adds:
+            args = args + ('--look-for-adds',)
+        return Repository.command(self, *args, **kwargs)
+
 
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
                                  chunksize=2**15):
@@ -55,8 +73,8 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
     """
     from xml.sax import make_parser
     from xml.sax.handler import ContentHandler, ErrorHandler
-    from changes import ChangesetEntry, Changeset
     from datetime import datetime
+    from vcpx.changes import ChangesetEntry, Changeset
 
     class DarcsXMLChangesHandler(ContentHandler):
         def __init__(self):
@@ -218,8 +236,8 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         from datetime import datetime
         from time import strptime
-        from changes import Changeset
         from sha import new
+        from vcpx.changes import Changeset
 
         cmd = self.repository.command("pull", "--dry-run")
         pull = ExternalCommand(cwd=self.basedir, command=cmd)
@@ -377,7 +395,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
-        from source import InvocationError
+        from vcpx.source import InvocationError
 
         if not self.repository.repository:
             raise InvocationError("Must specify a the darcs source repository")
@@ -545,7 +563,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         metadir = join(self.basedir, '_darcs')
         prefsdir = join(metadir, 'prefs')

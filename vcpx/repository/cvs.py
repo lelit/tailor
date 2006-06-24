@@ -11,10 +11,15 @@ Given `cvsps` shortcomings, this backend uses CVS only.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, STDOUT, PIPE
-from cvsps import CvspsWorkingDir
-from source import GetUpstreamChangesetsFailure
-from config import ConfigurationError
+from vcpx.repository.cvsps import CvspsRepository, CvspsWorkingDir
+from vcpx.shwrap import ExternalCommand, STDOUT, PIPE
+from vcpx.source import GetUpstreamChangesetsFailure
+from vcpx.config import ConfigurationError
+
+
+class CvsRepository(CvspsRepository):
+    pass
+
 
 def normalize_cvs_rev(rev):
     """Convert a revision string to a tuple of numbers, eliminating the
@@ -197,7 +202,7 @@ class ChangeSetCollector(object):
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
 
-        from changes import Changeset
+        from vcpx.changes import Changeset
 
         key = (timestamp, author, changelog)
         if self.changesets.has_key(key):
@@ -325,11 +330,11 @@ class ChangeSetCollector(object):
     def __parseCvsLog(self, branch, entries, since):
         """Parse a complete CVS log."""
 
-        from changes import Changeset
         from os.path import split, join
         import sre
         from time import strptime
         from datetime import datetime
+        from vcpx.changes import Changeset
 
         revcount_regex = sre.compile('\\bselected revisions:\\s*(\\d+)\\b')
 

@@ -8,8 +8,9 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.darcs import changesets_from_darcschanges
-from shwrap import ExternalCommand, PIPE
+from vcpx.repository.darcs import changesets_from_darcschanges
+from vcpx.shwrap import ExternalCommand, PIPE
+
 
 class DarcsChangesParser(TestCase):
     """Tests for the parser of darcs changes"""

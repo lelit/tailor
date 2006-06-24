@@ -12,10 +12,20 @@ This module implements the backend for Git using git-core.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE
-from source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
-from source import ChangesetApplicationFailure
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
+from vcpx.source import ChangesetApplicationFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+
+
+class GitRepository(Repository):
+    METADIR = '.git'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
+
 
 class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     ## UpdatableSourceWorkingDir
@@ -73,8 +83,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         return conflicts
 
     def _changesetForRevision(self, revision):
-        from changes import Changeset, ChangesetEntry
         from datetime import datetime
+        from vcpx.changes import Changeset, ChangesetEntry
 
         action_map = {'A': ChangesetEntry.ADDED, 'D': ChangesetEntry.DELETED,
                       'M': ChangesetEntry.UPDATED, 'R': ChangesetEntry.RENAMED}
@@ -190,7 +200,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Parse the author field, returning (name, email)
         """
         from email.Utils import parseaddr
-        from target import AUTHOR, HOST
+        from vcpx.target import AUTHOR, HOST
 
         if author.find('@') > -1:
             name, email = parseaddr(author)
@@ -284,7 +294,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # in git.  It currently just does and add and remove.
         from os.path import join, isdir
         from os import walk
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current Git,
@@ -328,7 +338,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
         from os import mkdir
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         infodir = join(self.basedir, self.repository.METADIR, 'info')
         if not exists(infodir):

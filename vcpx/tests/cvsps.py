@@ -7,7 +7,8 @@
 
 from unittest import TestCase
 from datetime import datetime
-from vcpx.cvsps import changesets_from_cvsps
+from vcpx.repository.cvsps import changesets_from_cvsps
+
 
 class CvspsParser(TestCase):
     """Ensure the cvsps parser does its job"""

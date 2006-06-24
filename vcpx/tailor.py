@@ -15,9 +15,10 @@ __version__ = '0.9.23'
 
 from optparse import OptionParser, OptionGroup, Option
 from vcpx import TailorException
-from config import Config, ConfigurationError
-from project import Project
-from source import GetUpstreamChangesetsFailure
+from vcpx.config import Config, ConfigurationError
+from vcpx.project import Project
+from vcpx.source import GetUpstreamChangesetsFailure
+
 
 class Tailorizer(Project):
     """

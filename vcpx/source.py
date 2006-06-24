@@ -13,7 +13,8 @@ directory under some kind of version control system.
 __docformat__ = 'reStructuredText'
 
 from vcpx import TailorException
-from workdir import WorkingDir
+from vcpx.workdir import WorkingDir
+
 
 CONFLICTS_PROMPT = """
 The changeset

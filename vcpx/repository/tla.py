@@ -43,11 +43,23 @@ from time import strptime
 from tempfile import mkdtemp
 from email.Parser import Parser
 
-from changes import Changeset
-from shwrap import ExternalCommand, PIPE
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
-     GetUpstreamChangesetsFailure
-from target import TargetInitializationFailure
+from vcpx.repository import Repository
+from vcpx.changes import Changeset
+from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
+                        GetUpstreamChangesetsFailure
+from vcpx.target import TargetInitializationFailure
+
+
+class TlaRepository(Repository):
+    METADIR = '{arch}'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'tla-command', 'tla')
+        self.IGNORE_IDS = project.config.get(self.name, 'ignore-ids', False)
+        if self.IGNORE_IDS:
+            self.EXTRA_METADIRS = ['.arch-ids']
 
 
 class TlaWorkingDir(UpdatableSourceWorkingDir):

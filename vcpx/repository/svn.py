@@ -11,16 +11,73 @@ This module contains supporting classes for Subversion.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from config import ConfigurationError
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.config import ConfigurationError
+
+
+class SvnRepository(Repository):
+    METADIR = '.svn'
+
+    def command(self, *args, **kwargs):
+        if kwargs.get('svnadmin', False):
+            kwargs['executable'] = self.__svnadmin
+        return Repository.command(self, *args, **kwargs)
+
+    def _load(self, project):
+        Repository._load(self, project)
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'svn-command', 'svn')
+        self.__svnadmin = cget(self.name, 'svnadmin-command', 'svnadmin')
+        self.use_propset = cget(self.name, 'use-propset', False)
+        self.filter_badchars = cget(self.name, 'filter-badchars', False)
+        self.use_limit = cget(self.name, 'use-limit', True)
+        self.trust_root = cget(self.name, 'trust-root', False)
+        self.ignore_externals = cget(self.name, 'ignore-externals', True)
+
+    def _validateConfiguration(self):
+        from vcpx.config import ConfigurationError
+
+        Repository._validateConfiguration(self)
+
+        if not self.repository:
+            self.log.critical('Missing repository information in %r', self.name)
+            raise ConfigurationError("Must specify the root of the "
+                                     "Subversion repository used "
+                                     "as %s with the option "
+                                     "'repository'" % self.which)
+        elif self.repository.endswith('/'):
+            self.log.debug("Removing final slash from %r in %r",
+                           self.repository, self.name)
+            self.repository = self.repository.rstrip('/')
+
+        if not self.module:
+            self.log.critical('Missing module information in %r', self.name)
+            raise ConfigurationError("Must specify the path within the "
+                                     "Subversion repository as 'module'")
+
+        if self.module == '.':
+            self.log.warning("Replacing '.' with '/' in module name in %r",
+                             self.name)
+            self.module = '/'
+        elif not self.module.startswith('/'):
+            self.log.debug("Prepending '/' to module %r in %r",
+                           self.module, self.name)
+            self.module = '/' + self.module
+
+    def workingDir(self):
+        wd = Repository.workingDir(self)
+        wd.USE_PROPSET = self.use_propset
+        return wd
+
 
 def changesets_from_svnlog(log, repository, chunksize=2**15):
     from xml.sax import make_parser
     from xml.sax.handler import ContentHandler, ErrorHandler
-    from changes import ChangesetEntry, Changeset
     from datetime import datetime
+    from vcpx.changes import ChangesetEntry, Changeset
 
     def get_entry_from_path(path, module=repository.module):
         # Given the repository url of this wc, say

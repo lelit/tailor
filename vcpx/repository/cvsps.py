@@ -14,10 +14,11 @@ uses `cvsps` to fetch the changes from the upstream repository.
 __docformat__ = 'reStructuredText'
 
 from vcpx import TailorException
-from shwrap import ExternalCommand, PIPE
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
-     InvocationError
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
+                        InvocationError
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
 
 class EmptyRepositoriesFoolsMe(TailorException):
@@ -27,14 +28,54 @@ class EmptyRepositoriesFoolsMe(TailorException):
     # repository. This is more a shortcoming of tailor, rather than a
     # real problem with those repositories.
 
+
+class CvspsRepository(Repository):
+    METADIR = 'CVS'
+
+    def _load(self, project):
+        from datetime import timedelta
+
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'cvs-command', 'cvs')
+        self.__cvsps = project.config.get(self.name, 'cvsps-command', 'cvsps')
+        self.tag_entries = project.config.get(self.name, 'tag-entries', 'True')
+        self.freeze_keywords = project.config.get(self.name, 'freeze-keywords', 'False')
+        threshold = project.config.get(self.name, 'changeset-threshold', '180')
+        self.changeset_threshold = timedelta(seconds=float(threshold))
+
+    def _validateConfiguration(self):
+        from os.path import split
+        from vcpx.config import ConfigurationError
+
+        Repository._validateConfiguration(self)
+
+        if not self.module and self.repository:
+            self.module = split(self.repository)[1]
+
+        if not self.module:
+            self.log.critical('Missing module information in %r', self.name)
+            raise ConfigurationError("Must specify a repository and maybe "
+                                     "a module also")
+
+        if self.module.endswith('/'):
+            self.log.debug("Removing final slash from %r in %r",
+                           self.module, self.name)
+            self.module = self.module.rstrip('/')
+
+    def command(self, *args, **kwargs):
+        if kwargs.get('cvsps', False):
+            kwargs['executable'] = self.__cvsps
+        return Repository.command(self, *args, **kwargs)
+
+
 def changesets_from_cvsps(log, sincerev=None):
     """
     Parse CVSps log.
     """
 
-    from changes import Changeset, ChangesetEntry
     from datetime import datetime
-    from cvs import compare_cvs_revs
+    from vcpx.changes import Changeset, ChangesetEntry
+    from vcpx.repository.cvs import compare_cvs_revs
 
     # cvsps output sample:
     ## ---------------------
@@ -197,8 +238,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists, split
         from os import listdir
         from shutil import rmtree
-        from cvs import CvsEntries
         from time import sleep
+        from vcpx.cvs import CvsEntries
 
         entries = CvsEntries(self.basedir)
 
@@ -296,8 +337,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         """
 
         from os.path import join, exists, split
-        from cvs import CvsEntries, compare_cvs_revs
         from time import sleep
+        from vcpx.cvs import CvsEntries, compare_cvs_revs
 
         if not self.repository.module:
             raise InvocationError("Must specify a module name")
@@ -645,7 +686,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Commit the changeset.
         """
 
-        from shwrap import ReopenableNamedTemporaryFile
+        from vcpx.shwrap import ReopenableNamedTemporaryFile
 
         encode = self.repository.encode
 

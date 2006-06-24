@@ -14,13 +14,29 @@ This module implements the backends for Bazaar-NG.
 
 __docformat__ = 'reStructuredText'
 
-from workdir import WorkingDir
-from source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
-from target import SynchronizableTargetWorkingDir
 from bzrlib.osutils import normpath
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib import errors
+
+from vcpx.repository import Repository
+from vcpx.workdir import WorkingDir
+from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
+from vcpx.target import SynchronizableTargetWorkingDir
+
+
+class BzrRepository(Repository):
+    METADIR = '.bzr'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        ppath = project.config.get(self.name, 'python-path')
+        if ppath:
+            from sys import path
+
+            if ppath not in path:
+                path.insert(0, ppath)
+
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
@@ -41,8 +57,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         Generate changeset for the given Bzr revision
         """
-        from changes import ChangesetEntry, Changeset
         from datetime import datetime
+        from vcpx.changes import ChangesetEntry, Changeset
 
         revision = branch.repository.get_revision(revision_id)
         deltatree = branch.get_revision_delta(branch.revision_id_to_revno(revision_id))

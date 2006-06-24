@@ -8,8 +8,9 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.cvs import changesets_from_cvslog, compare_cvs_revs, \
-                     cvs_revs_same_branch, normalize_cvs_rev
+from vcpx.repository.cvs import changesets_from_cvslog, compare_cvs_revs, \
+                                cvs_revs_same_branch, normalize_cvs_rev
+
 
 class CvsEntry(TestCase):
     """Tests for the CvsEntry class"""

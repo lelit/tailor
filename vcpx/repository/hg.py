@@ -13,9 +13,36 @@ instead of thru the command line.
 
 __docformat__ = 'reStructuredText'
 
-from source import UpdatableSourceWorkingDir
-from target import SynchronizableTargetWorkingDir
 from mercurial import ui, hg, commands
+
+from vcpx.repository import Repository
+from vcpx.source import UpdatableSourceWorkingDir
+from vcpx.target import SynchronizableTargetWorkingDir
+
+
+class HgRepository(Repository):
+    METADIR = '.hg'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        ppath = project.config.get(self.name, 'python-path')
+        if ppath:
+            from sys import path
+
+            if ppath not in path:
+                path.insert(0, ppath)
+        self.EXTRA_METADIRS = ['.hgtags']
+
+    def _validateConfiguration(self):
+        """
+        Mercurial expects all data to be in utf-8, so we disallow other encodings
+        """
+        Repository._validateConfiguration(self)
+
+        if self.encoding.upper() != 'UTF-8':
+            self.log.warning("Forcing UTF-8 encoding instead of " + self.encoding)
+            self.encoding = 'UTF-8'
+
 
 class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     # UpdatableSourceWorkingDir
@@ -92,8 +119,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             return repo.update(node, force=True)
 
     def _changesetForRevision(self, repo, revision):
-        from changes import Changeset, ChangesetEntry
         from datetime import datetime
+        from vcpx.changes import Changeset, ChangesetEntry
 
         entries = []
         node = self._getNode(repo, revision)
@@ -353,7 +380,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join
         from re import escape
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         # Create the .hgignore file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.

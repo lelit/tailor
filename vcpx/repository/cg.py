@@ -11,9 +11,19 @@ This module implements the backend for Git by using Cogito.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from source import ChangesetApplicationFailure
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.source import ChangesetApplicationFailure
+
+
+class CgRepository(Repository):
+    METADIR = '.git'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'cg-command', 'cg')
+
 
 class CgWorkingDir(SynchronizableTargetWorkingDir):
 
@@ -39,7 +49,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         Parse the author field, returning (name, email)
         """
         from email.Utils import parseaddr
-        from target import AUTHOR, HOST
+        from vcpx.target import AUTHOR, HOST
 
         if author.find('@') > -1:
             name, email = parseaddr(author)
@@ -112,7 +122,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         # in git.  It currently just does and add and remove.
         from os.path import join, isdir
         from os import walk
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         if isdir(join(self.basedir, newname)):
             # Given lack of support for directories in current Git,
@@ -155,7 +165,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         from os.path import join
-        from dualwd import IGNORED_METADIRS
+        from vcpx.dualwd import IGNORED_METADIRS
 
         # Create the .git/info/exclude file, that contains an
         # fnmatch per line with metadirs to be skipped.

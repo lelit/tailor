@@ -12,19 +12,35 @@ This module contains supporting classes for Monotone.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
-from source import UpdatableSourceWorkingDir, InvocationError, \
-     ChangesetApplicationFailure, GetUpstreamChangesetsFailure
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from changes import Changeset
 from os.path import exists, join, isdir
 from string import whitespace
+
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from vcpx.source import UpdatableSourceWorkingDir, InvocationError, \
+                        ChangesetApplicationFailure, GetUpstreamChangesetsFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.changes import Changeset
+
 
 MONOTONERC = """\
 function get_passphrase(KEYPAIR_ID)
   return "%s"
 end
 """
+
+class MonotoneRepository(Repository):
+    METADIR = '_MTN'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        cget = project.config.get
+        self.EXECUTABLE = cget(self.name, 'monotone-command', 'mtn')
+        self.keyid = cget(self.name, 'keyid')
+        self.passphrase = cget(self.name, 'passphrase')
+        self.keyfile = cget(self.name, 'keyfile')
+        self.keygenid = cget(self.name, 'keygenid')
+        self.custom_lua = cget(self.name, 'custom_lua')
 
 class ExternalCommandChain:
     """

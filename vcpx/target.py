@@ -15,7 +15,8 @@ __docformat__ = 'reStructuredText'
 import socket
 from signal import signal, SIGINT, SIG_IGN
 from vcpx import TailorException
-from workdir import WorkingDir
+from vcpx.workdir import WorkingDir
+
 
 HOST = socket.getfqdn()
 AUTHOR = "tailor"

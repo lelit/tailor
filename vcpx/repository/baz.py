@@ -11,7 +11,24 @@ This module implements the backends for baz (Arch 1.x).
 
 __docformat__ = 'reStructuredText'
 
-from tla import TlaWorkingDir
+from vcpx.repository.tla import TlaRepository, TlaWorkingDir
+
+
+class BazRepository(TlaRepository):
+    def _load(self, project):
+        TlaRepository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'baz-command', 'baz')
+
+    def command(self, *args, **kwargs):
+        if args:
+            if args[0] == 'tree-lint':
+                args = list(args)
+                args[0] = 'lint'
+            elif args[0] == 'missing' and args[1] == '-f':
+                args = list(args)
+                del args[1]
+        return TlaRepository.command(self, *args, **kwargs)
+
 
 class BazWorkingDir(TlaWorkingDir):
     """

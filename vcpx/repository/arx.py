@@ -12,9 +12,19 @@ This module implements the backends for ArX.
 
 __docformat__ = 'reStructuredText'
 
-from shwrap import ExternalCommand
-from target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from source import ChangesetApplicationFailure
+from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.source import ChangesetApplicationFailure
+
+
+class ArxRepository(Repository):
+    METADIR = '_arx'
+
+    def _load(self, project):
+        Repository._load(self, project)
+        self.EXECUTABLE = project.config.get(self.name, 'arx-command', 'arx')
+
 
 class ArxWorkingDir(SynchronizableTargetWorkingDir):
 
