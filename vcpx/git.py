@@ -175,8 +175,15 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.basedir, n))]
         if notdirs:
-            cmd = self.repository.command("add")
-            ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
+            self._tryCommand(['update-index', '--add'] + notdirs)
+
+    def _recordUpdatedPathnames(self, names):
+        """
+        Records a sequence of filesystem objects as updated.
+        """
+
+	# can we assume we don't have directories in the list ?
+ 	self._tryCommand(['update-index'] + names)
 
     def __parse_author(self, author):
         """
@@ -225,9 +232,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if date:
             env['GIT_AUTHOR_DATE']=date.strftime("%Y-%m-%d %H:%M:%S")
             env['GIT_COMMITTER_DATE']=env['GIT_AUTHOR_DATE']
-        # '-f' flag means we can get empty commits, which
-        # shouldn't be a problem.
-        cmd = self.repository.command("commit", "-a", "-F", "-")
+        cmd = self.repository.command("commit", "-F", "-")
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
         logmessage = encode('\n'.join(logmessage))
@@ -259,11 +264,16 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _removePathnames(self, names):
         """
         Remove some filesystem object.
-        git commit -a will automatically handle files deleted on the
-        filesystem, which should have already been done by the source
-        or rsync.
         """
-        pass
+
+        from os.path import join, isdir
+
+        # Currently git does not handle directories at all, so filter
+        # them out.
+
+        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        if notdirs:
+            self._tryCommand(['update-index', '--remove'] + notdirs)
 
     def _renamePathname(self, oldname, newname):
         """
