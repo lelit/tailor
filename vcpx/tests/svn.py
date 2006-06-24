@@ -14,12 +14,14 @@ class FakeLogger:
     def warning(self, *args):
         pass
 
+
 class FakeRepository:
     def __init__(self, repo, module):
         self.repository = repo
         self.module = module
         self.log = FakeLogger()
 FR = FakeRepository
+
 
 class SvnLogParser(TestCase):
     """Ensure the svn log parser does its job"""

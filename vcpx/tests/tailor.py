@@ -258,6 +258,7 @@ from vcpx.config import Config
 from vcpx.tailor import Tailorizer
 from vcpx.shwrap import ExternalCommand, PIPE
 
+
 class OperationalTest(TestCase):
 
     TESTDIR = '/tmp/tailor-tests'

@@ -35,6 +35,7 @@ class TargetInitializationFailure(TailorException):
 class ChangesetReplayFailure(TailorException):
     "Failure replaying the changeset on the target system"
 
+
 class SynchronizableTargetWorkingDir(WorkingDir):
     """
     This is an abstract working dir usable as a *shadow* of another
@@ -419,7 +420,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Records a sequence of filesystem objects as updated.
         """
 
-	pass
+        pass
 
     def _renameEntries(self, entries):
         """

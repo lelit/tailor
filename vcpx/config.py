@@ -19,6 +19,7 @@ from vcpx import TailorException
 class ConfigurationError(TailorException):
     """Configuration error"""
 
+
 LOGGING_SUPER_SECTION = '[[logging]]'
 BASIC_LOGGING_CONFIG = """\
 [formatters]
@@ -44,6 +45,7 @@ formatter = console
 args = (sys.stdout,)
 level = INFO
 """
+
 
 class Config(SafeConfigParser):
     '''

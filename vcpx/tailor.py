@@ -156,6 +156,7 @@ class Tailorizer(Project):
                                      % (exc, self.source.encoding,
                                         self.target.encoding))
 
+
 class RecogOption(Option):
     """
     Make it possible to recognize an option explicitly given on the
@@ -278,6 +279,7 @@ class ExistingProjectError(TailorException):
 
 class ProjectNotTailored(TailorException):
     "Not a tailored project"
+
 
 def main():
     """

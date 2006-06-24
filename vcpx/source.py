@@ -47,6 +47,7 @@ class ChangesetApplicationFailure(TailorException):
 class InvocationError(TailorException):
     "Bad invocation, use --help for details"
 
+
 class UpdatableSourceWorkingDir(WorkingDir):
     """
     This is an abstract working dir able to follow an upstream

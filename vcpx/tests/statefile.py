@@ -9,6 +9,7 @@ from unittest import TestCase
 from vcpx.statefile import StateFile
 from vcpx.shwrap import ReopenableNamedTemporaryFile
 
+
 class Statefile(TestCase):
     "Exercise the state file machinery"
 

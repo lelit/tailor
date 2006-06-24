@@ -8,6 +8,7 @@
 from unittest import TestCase
 from vcpx.shwrap import ExternalCommand, PIPE
 
+
 class SystemCommand(TestCase):
     """Perform some basic tests of the wrapper"""
 
