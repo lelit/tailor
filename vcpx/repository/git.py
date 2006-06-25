@@ -25,7 +25,7 @@ class GitRepository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
-        self.PARENT_REPO = project.config.get(self.name, 'parent-repo', '')
+        self.PARENT_REPO = project.config.get(self.name, 'parent-repo')
         self.BRANCHPOINT = project.config.get(self.name, 'branchpoint', 'HEAD')
 
 
@@ -349,7 +349,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            if self.repository.PARENT_REPO == '':
+            if not self.repository.PARENT_REPO:
                 cmd = self.repository.command("init-db")
                 init = ExternalCommand(cwd=self.basedir, command=cmd)
                 init.execute()
@@ -413,4 +413,4 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # If we have a parent repository, always track from INITIAL
         SynchronizableTargetWorkingDir.importFirstRevision(
             self, source_repo, changeset,
-            initial or self.target.PARENT_REPO)
+            initial or self.repository.PARENT_REPO)
