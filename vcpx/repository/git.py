@@ -408,3 +408,9 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('\n')
         ignore.close()
+
+    def importFirstRevision(self, source_repo, changeset, initial):
+        # If we have a parent repository, always track from INITIAL
+        SynchronizableTargetWorkingDir.importFirstRevision(
+            self, source_repo, changeset,
+            initial or self.target.PARENT_REPO)

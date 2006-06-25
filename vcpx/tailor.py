@@ -76,9 +76,7 @@ class Tailorizer(Project):
             raise
 
         try:
-            dwd.importFirstRevision(self.source, actual,
-                                    self.target.PARENT_REPO != '' or
-                                    'INITIAL'==revision)
+            dwd.importFirstRevision(self.source, actual, 'INITIAL'==revision)
         except:
             self.log.critical('Could not import checked out tree in "%s"!',
                               self.rootdir)
