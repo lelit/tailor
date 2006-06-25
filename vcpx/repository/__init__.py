@@ -29,6 +29,8 @@ class Repository(object):
         Return the right subclass for kind, if it exists.
         """
 
+        from vcpx.source import InvocationError
+
         kind = name[:name.index(':')]
         subclass = klass
         subclassname = kind.capitalize() + 'Repository'
