@@ -29,7 +29,7 @@ class Repository(object):
         Return the right subclass for kind, if it exists.
         """
 
-        from vcpx.source import InvocationError
+        from vcpx import TailorException
 
         kind = name[:name.index(':')]
         subclass = klass
@@ -39,16 +39,9 @@ class Repository(object):
             concrete = __import__(modname, globals(), locals(), [kind])
             subclass = getattr(concrete, subclassname, klass)
         except SyntaxError, e:
-            self.log.exception("Cannot import %r from %r", kind, modname)
-            raise InvocationError("Cannot import %r: %s" % (kind, e))
-        except (AttributeError, ImportError), e:
-            self.log.critical("Cannot import %r from %r", kind, modname)
-            if kind == 'bzr':
-                from sys import version_info
-                if version_info < (2,4):
-                    self.log.warning("Bazaar-NG backend requires Python 2.4")
-            raise InvocationError("%r is not a known VCS kind: %s" %
-                                  (self.kind, e))
+            raise TailorException("Cannot import %r: %s" % (kind, e))
+        except (AttributeError, ImportError, AssertionError), e:
+            raise TailorException("%r is not a known VCS kind: %s" % (kind, e))
         instance = super(Repository, klass).__new__(subclass, name,
                                                     project, which)
         instance.kind = kind
@@ -167,7 +160,7 @@ class Repository(object):
         repository.
         """
 
-        from vcpx.source import InvocationError
+        from vcpx import TailorException
 
         wdname = self.kind.capitalize() + 'WorkingDir'
         modname = 'vcpx.repository.' + self.kind
@@ -176,14 +169,10 @@ class Repository(object):
             workingdir = getattr(wdmod, wdname)
         except SyntaxError, e:
             self.log.exception("Cannot import %r from %r", wdname, modname)
-            raise InvocationError("Cannot import %r: %s" % (wdname, e))
+            raise TailorException("Cannot import %r: %s" % (wdname, e))
         except (AttributeError, ImportError), e:
             self.log.critical("Cannot import %r from %r", wdname, modname)
-            if self.kind == 'bzr':
-                from sys import version_info
-                if version_info < (2,4):
-                    self.log.warning("Bazaar-NG backend requires Python 2.4")
-            raise InvocationError("%r is not a known VCS kind: %s" %
+            raise TailorException("%r is not a known VCS kind: %s" %
                                   (self.kind, e))
 
         return workingdir(self)

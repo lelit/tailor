@@ -254,6 +254,7 @@ def remap_authors(context, changeset):
 
 from unittest import TestCase
 from cStringIO import StringIO
+from vcpx import TailorException
 from vcpx.config import Config
 from vcpx.tailor import Tailorizer
 from vcpx.shwrap import ExternalCommand, PIPE
@@ -357,10 +358,43 @@ class Darcs(OperationalTest):
 class Bazaarng(OperationalTest):
     "Test the BazaarNG source backend"
 
+    def testBazaarngAndPython23(self):
+        "Test we detect early when running under Python < 2.4"
+
+        from sys import version_info
+
+        if version_info < (2,4):
+            try:
+                self.tailorize('bazaarng2darcs')
+            except TailorException, e:
+                self.assert_("Bazaar-NG backend requires Python 2.4"
+                             in str(e))
+            else:
+                self.fail("Expected a specific TailorException")
+
     def testBazaarngToDarcs(self):
         "Test bazaar-ng to darcs"
 
-        self.tailorize('bazaarng2darcs')
+        try:
+            self.tailorize('bazaarng2darcs')
+        except TailorException, e:
+            from sys import version_info
+
+            if version_info < (2,4):
+                # Under python 2.3 we expect an exception here, but
+                # different from the above: since we are still in a
+                # single python session importing the bzr stuff does
+                # not raise the same error, because from the python
+                # runtime pov the module is already loaded and thus
+                # the second import does not fail. The repository
+                # class will then instantiate the raw Repository
+                # class, not the specific bzr one. Still, when asked
+                # for a working dir, it will fail again
+                self.assert_("object has no attribute 'BzrWorkingDir'"
+                             in str(e))
+            else:
+                raise
+
 
 
 class Cvs(OperationalTest):

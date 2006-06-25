@@ -14,6 +14,11 @@ This module implements the backends for Bazaar-NG.
 
 __docformat__ = 'reStructuredText'
 
+
+from sys import version_info
+assert version_info >= (2,4), "Bazaar-NG backend requires Python 2.4"
+del version_info
+
 from bzrlib.osutils import normpath
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
