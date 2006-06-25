@@ -189,7 +189,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if notdirs:
             self._tryCommand(['update-index', '--add'] + notdirs)
 
-    def _recordUpdatedPathnames(self, names):
+    def _editPathnames(self, names):
         """
         Records a sequence of filesystem objects as updated.
         """
