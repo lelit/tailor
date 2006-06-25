@@ -19,6 +19,8 @@ from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
 
+    ## generic stuff
+
 class GitRepository(Repository):
     METADIR = '.git'
 
@@ -30,7 +32,20 @@ class GitRepository(Repository):
 
 
 class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
+
+    def _tryCommand(self, cmd, exception=Exception, pipe=True):
+        c = ExternalCommand(command = self.repository.command(*cmd), cwd = self.basedir)
+        if pipe:
+            output = c.execute(stdout=PIPE)[0]
+        else:
+            c.execute()
+        if c.exit_status:
+            raise exception(str(c) + ' failed')
+        if pipe:
+            return output.read().split('\n')
+
     ## UpdatableSourceWorkingDir
+
     def _checkoutUpstreamRevision(self, revision):
         """ git clone """
         from os import rename, rmdir
@@ -161,17 +176,6 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             return self._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
 
         return self._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
-
-    def _tryCommand(self, cmd, exception=Exception, pipe=True):
-        c = ExternalCommand(command = self.repository.command(*cmd), cwd = self.basedir)
-        if pipe:
-            output = c.execute(stdout=PIPE)[0]
-        else:
-            c.execute()
-        if c.exit_status:
-            raise exception(str(c) + ' failed')
-        if pipe:
-            return output.read().split('\n')
 
     ## SynchronizableTargetWorkingDir
 
