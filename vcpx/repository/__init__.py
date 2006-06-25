@@ -60,9 +60,9 @@ class Repository(object):
         self.name = name
         self.which = which
         self.projectref = ref(project)
-        self._load(project)
         self.log = getLogger('tailor.vcpx.%s.%s' % (self.__class__.__name__,
                                                     which))
+        self._load(project)
         self._validateConfiguration()
 
     def __str__(self):
