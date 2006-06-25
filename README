@@ -667,7 +667,22 @@ start-revision : string
 git
 %%%
 
-.. no specific options
+parent-repo : string
+  Relative path to a git directory to use as a parent.  This is useful
+  to import repository branches.  If this parameter is empty, the
+  branch has no parent (default behaviour).
+
+branchpoint : string
+  A reference to the git commit which is the parent for the first
+  revision on the branch to be imported.  It can be a tag name or any
+  syntax acceptable by git (eg. something like "tag~2", if you want to
+  correct the idea of where the branchpoint is).
+
+  Since tailor generates mostly-stable SHA-1 revisions, you can
+  usually also use a SHA-1 as branchpoint.  Just import your trunk
+  first, find the correct SHA-1, and setup and import your branch.
+  This is especially useful since the current cvs source
+  implementation misses many tags.
 
 hg
 %%

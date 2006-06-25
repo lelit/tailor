@@ -25,6 +25,8 @@ class GitRepository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
+        self.PARENT_REPO = project.config.get(self.name, 'parent-repo', '')
+        self.BRANCHPOINT = project.config.get(self.name, 'branchpoint', 'HEAD')
 
 
 class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
@@ -340,19 +342,39 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _prepareTargetRepository(self):
         """
-        Execute ``git init-db``.
+        Initialize .git through ``git init-db`` or ``git-clone``.
         """
 
+        from os import renames
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            init = ExternalCommand(cwd=self.basedir,
-                                   command=self.repository.command("init-db"))
-            init.execute()
+            if self.repository.PARENT_REPO == '':
+                cmd = self.repository.command("init-db")
+                init = ExternalCommand(cwd=self.basedir, command=cmd)
+                init.execute()
+                if init.exit_status:
+                    raise TargetInitializationFailure(
+                        "%s returned status %s" % (str(init), init.exit_status))
+            else:
+                cmd = self.repository.command("clone", "--shared", "-n",
+                                              self.repository.PARENT_REPO, 'tmp')
+                clone = ExternalCommand(cwd=self.basedir, command=cmd)
+                clone.execute()
+                if clone.exit_status:
+                    raise TargetInitializationFailure(
+                        "%s returned status %s" % (str(clone), clone.exit_status))
 
-            if init.exit_status:
-                raise TargetInitializationFailure(
-                    "%s returned status %s" % (str(init), init.exit_status))
+                renames('%s/%s/tmp/.git' % (self.repository.rootdir, self.repository.subdir),
+                        '%s/%s/.git' % (self.repository.rootdir, self.repository.subdir))
+                
+                cmd = self.repository.command("reset", "--soft", self.repository.BRANCHPOINT)
+                reset = ExternalCommand(cwd=self.basedir, command=cmd)
+                reset.execute()
+                if reset.exit_status:
+                    raise TargetInitializationFailure(
+                        "%s returned status %s" % (str(reset), reset.exit_status))
+
 
     def _prepareWorkingDirectory(self, source_repo):
         """
