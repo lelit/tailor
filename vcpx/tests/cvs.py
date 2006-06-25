@@ -19,7 +19,7 @@ class CvsEntry(TestCase):
         """Verify CvsEntry parser"""
 
         from datetime import datetime, timedelta
-        from vcpx.cvs import CvsEntry
+        from vcpx.repository.cvs import CvsEntry
 
         tagline = "/version.txt/1.16.2.1/Tue Jul 13 12:49:02 2004//T1.16.2.1"
         e = CvsEntry(tagline)

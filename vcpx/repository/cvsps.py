@@ -239,7 +239,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os import listdir
         from shutil import rmtree
         from time import sleep
-        from vcpx.cvs import CvsEntries
+        from vcpx.repository.cvs import CvsEntries
 
         entries = CvsEntries(self.basedir)
 
@@ -338,7 +338,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
         from os.path import join, exists, split
         from time import sleep
-        from vcpx.cvs import CvsEntries, compare_cvs_revs
+        from vcpx.repository.cvs import CvsEntries, compare_cvs_revs
 
         if not self.repository.module:
             raise InvocationError("Must specify a module name")
