@@ -190,7 +190,7 @@ class ChangeSetCollector(object):
         self.__lookahead = []
         """The look ahead line stack."""
 
-        self.log = getLogger('tailor.vcpx.repository.cvs.collector')
+        self.log = getLogger('tailor.vcpx.cvs.collector')
 
         self.__parseCvsLog(branch, entries, since)
 
