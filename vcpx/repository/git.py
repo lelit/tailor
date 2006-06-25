@@ -192,8 +192,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Records a sequence of filesystem objects as updated.
         """
 
-	# can we assume we don't have directories in the list ?
- 	self._tryCommand(['update-index'] + names)
+        # can we assume we don't have directories in the list ?
+        self._tryCommand(['update-index'] + names)
 
     def __parse_author(self, author):
         """
@@ -234,17 +234,17 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         treeid = self._tryCommand(['write-tree'])[0]
 
-	# find the parent commit if any
+        # find the parent commit if any
         c = ExternalCommand(cwd=self.basedir,
-			 command=self.repository.command('rev-parse', 'HEAD'))
+                         command=self.repository.command('rev-parse', 'HEAD'))
         (out, err) = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
-	    # Do we need to check err to be sure there was no error ?
-	    self.log.info("Doing initial commit")
-	    parent = False
+            # Do we need to check err to be sure there was no error ?
+            self.log.info("Doing initial commit")
+            parent = False
         else:
-	    # FIXME: I'd prefer to avoid all those "if parent"
-	    parent = out.read().split('\n')[0]
+            # FIXME: I'd prefer to avoid all those "if parent"
+            parent = out.read().split('\n')[0]
 
         (name, email) = self.__parse_author(author)
         if name:
@@ -256,9 +256,9 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if date:
             env['GIT_AUTHOR_DATE']=date.strftime("%Y-%m-%d %H:%M:%S")
             env['GIT_COMMITTER_DATE']=env['GIT_AUTHOR_DATE']
-	if parent:
+        if parent:
             cmd = self.repository.command('commit-tree', treeid, '-p', parent)
-	else:
+        else:
             cmd = self.repository.command('commit-tree', treeid)
         c = ExternalCommand(cwd=self.basedir, command=cmd)
 
@@ -277,12 +277,12 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if failed:
                 raise ChangesetApplicationFailure("%s returned status %d" %
                                                   (str(c), c.exit_status))
-	else:
-	    commitid=out.read().split('\n')[0]
-	    if parent:
-	        self._tryCommand(['update-ref', 'HEAD', commitid, parent])
+        else:
+            commitid=out.read().split('\n')[0]
+            if parent:
+                self._tryCommand(['update-ref', 'HEAD', commitid, parent])
             else:
-	        self._tryCommand(['update-ref', 'HEAD', commitid])
+                self._tryCommand(['update-ref', 'HEAD', commitid])
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
