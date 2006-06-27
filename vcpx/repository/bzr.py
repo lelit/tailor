@@ -244,6 +244,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Remove files from the tree.
         """
         self.log.info('Removing %s...', ', '.join(names))
+        names.sort(reverse=True) # remove files before the dir they're in
         self._working_tree.remove(names)
 
     def _renamePathname(self, oldname, newname):
