@@ -160,16 +160,10 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                                     entries.insert(i, m)
                                     sorted = False
 
-                name = self.current['name']
-                log = self.current['comment']
-                if log:
-                    changelog = name + '\n' + log
-                else:
-                    changelog = name
-                cset = Changeset(name,
+                cset = Changeset(self.current['name'],
                                  self.current['date'],
                                  self.current['author'],
-                                 changelog,
+                                 self.current['comment'],
                                  entries,
                                  tags=self.current.get('tags',[]))
                 cset.darcs_hash = self.current['hash']
