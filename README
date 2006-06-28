@@ -664,13 +664,26 @@ start-revision : string
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
-git
-%%%
+git target
+%%%%%%%%%%
 
 parent-repo : string
-  Relative path to a git directory to use as a parent.  This is useful
-  to import repository branches.  If this parameter is empty, the
-  branch has no parent (default behaviour).
+  Relative path to a git directory to use as a parent.  This is one
+  way to import branches into a git repository, which creates a new
+  git repository borrowing ancestry from the parent-repo.  It is quite
+  a simple way, and thus believed to be quite robust, but spreads
+  branches across several git repositories. If this parameter is
+  not set, and ``repository`` is not set either, the branch has no
+  parent.
+
+  The alternative is to specify a ``repository`` parameter, to contain
+  all git branches.  The .git directory in the working copy for each
+  branch will then only contain the ``.git/index`` file.
+
+branch : string
+  The name of the branch to which to commit.  It is only used in
+  single-repository mode (using ``repository``, see above).  The
+  default is to use the "master" branch.
 
 branchpoint : string
   A reference to the git commit which is the parent for the first

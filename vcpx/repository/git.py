@@ -3,6 +3,7 @@
 # :Creato:   Thu  1 Sep 2005 04:01:37 EDT
 # :Autore:   Todd Mokros <tmokros@tmokros.net>
 #            Brendan Cully <brendan@kublai.com>
+#            Yann Dirson <ydirson@altern.org>
 # :Licenza:  GNU General Public License
 #
 
@@ -14,6 +15,7 @@ __docformat__ = 'reStructuredText'
 
 from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.config import ConfigurationError
 from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
@@ -29,12 +31,53 @@ class GitRepository(Repository):
         self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
         self.PARENT_REPO = project.config.get(self.name, 'parent-repo')
         self.BRANCHPOINT = project.config.get(self.name, 'branchpoint', 'HEAD')
+        self.BRANCHNAME = project.config.get(self.name, 'branch')
+        if self.BRANCHNAME:
+            self.BRANCHNAME = 'refs/heads/' + self.BRANCHNAME
 
+        if self.repository and self.PARENT_REPO:
+            self.log.critical('Cannot make sense of both "repository" and "parent-repo" parameters')
+            raise ConfigurationError ('Must specify only one of "repository" and "parent-repo"')
+
+        if self.BRANCHNAME and not self.repository:
+            self.log.critical('Cannot make sense of "branch" if "repository" is not set')
+            raise ConfigurationError ('Missing "repository" to make use o "branch"')
+
+        self.env = {}
+
+        if self.repository:
+            self.storagedir = self.repository
+            self.env['GIT_DIR'] = self.storagedir
+            self.env['GIT_INDEX_FILE'] = self.METADIR + '/index'
+        else:
+            self.storagedir = self.METADIR
+
+class GitExternalCommand(ExternalCommand):
+    def __init__(self, repo, command=None, cwd=None):
+        """
+        Initialize an ExternalCommand instance tied to a GitRepository
+        from which it inherits a set of environment variables to use
+        fo each execute().
+        """
+
+        self.repo = repo
+        return ExternalCommand.__init__(self, command, cwd)
+
+    def execute(self, *args, **kwargs):
+        """Execute the command, with controlled environment."""
+
+        if not kwargs.has_key('env'):
+            kwargs['env'] = {}
+
+        kwargs['env'].update(self.repo.env)
+
+        return ExternalCommand.execute(self, *args, **kwargs)
 
 class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _tryCommand(self, cmd, exception=Exception, pipe=True):
-        c = ExternalCommand(command = self.repository.command(*cmd), cwd = self.basedir)
+        c = GitExternalCommand(self.repository,
+                               command = self.repository.command(*cmd), cwd = self.basedir)
         if pipe:
             output = c.execute(stdout=PIPE)[0]
         else:
@@ -240,9 +283,15 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         treeid = self._tryCommand(['write-tree'])[0]
 
-        # find the parent commit if any
-        c = ExternalCommand(cwd=self.basedir,
-                         command=self.repository.command('rev-parse', 'HEAD'))
+        # in single-repository mode, only update the relevant branch
+        if self.repository.BRANCHNAME:
+            refname = self.repository.BRANCHNAME
+        else:
+            refname = 'HEAD'
+
+        # find the previous commit on the branch if any
+        c = GitExternalCommand(self.repository, cwd=self.basedir,
+                               command=self.repository.command('rev-parse', refname))
         (out, err) = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
             # Do we need to check err to be sure there was no error ?
@@ -266,7 +315,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd = self.repository.command('commit-tree', treeid, '-p', parent)
         else:
             cmd = self.repository.command('commit-tree', treeid)
-        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
 
         logmessage = encode('\n'.join(logmessage))
         if not logmessage:
@@ -285,15 +334,16 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                                   (str(c), c.exit_status))
         else:
             commitid=out.read().split('\n')[0]
+
             if parent:
-                self._tryCommand(['update-ref', 'HEAD', commitid, parent])
+                self._tryCommand(['update-ref', refname, commitid, parent])
             else:
-                self._tryCommand(['update-ref', 'HEAD', commitid])
+                self._tryCommand(['update-ref', refname, commitid])
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
         cmd = self.repository.command("tag", "-f", tag)
-        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
         c.execute()
 
         if c.exit_status:
@@ -349,21 +399,14 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Initialize .git through ``git init-db`` or ``git-clone``.
         """
 
-        from os import renames
+        from os import renames, mkdir
         from os.path import join, exists
 
         if not exists(join(self.basedir, self.repository.METADIR)):
-            if not self.repository.PARENT_REPO:
-                cmd = self.repository.command("init-db")
-                init = ExternalCommand(cwd=self.basedir, command=cmd)
-                init.execute()
-                if init.exit_status:
-                    raise TargetInitializationFailure(
-                        "%s returned status %s" % (str(init), init.exit_status))
-            else:
+            if self.repository.PARENT_REPO:
                 cmd = self.repository.command("clone", "--shared", "-n",
                                               self.repository.PARENT_REPO, 'tmp')
-                clone = ExternalCommand(cwd=self.basedir, command=cmd)
+                clone = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
                 clone.execute()
                 if clone.exit_status:
                     raise TargetInitializationFailure(
@@ -373,12 +416,29 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                         '%s/%s/.git' % (self.repository.rootdir, self.repository.subdir))
                 
                 cmd = self.repository.command("reset", "--soft", self.repository.BRANCHPOINT)
-                reset = ExternalCommand(cwd=self.basedir, command=cmd)
+                reset = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
                 reset.execute()
                 if reset.exit_status:
                     raise TargetInitializationFailure(
                         "%s returned status %s" % (str(reset), reset.exit_status))
 
+            elif self.repository.repository and self.repository.BRANCHNAME:
+                # ...and exists(self.repository.storagedir) ?
+
+                # initialization of a new branch in single-repository mode
+                mkdir(join(self.basedir, self.repository.METADIR))
+
+                bp = self._tryCommand(['rev-parse', self.repository.BRANCHPOINT])[0]
+                self._tryCommand(['read-tree', bp])
+                self._tryCommand(['update-ref', self.repository.BRANCHNAME, bp])
+                #self._tryCommand(['checkout-index'])
+
+            else:
+                self._tryCommand(['init-db'])
+                if self.repository.repository:
+                    # in this mode, the db is not stored in working dir, so we
+                    # have to create .git ourselves
+                    mkdir(join(self.basedir, self.repository.METADIR))
 
     def _prepareWorkingDirectory(self, source_repo):
         """
@@ -389,7 +449,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import mkdir
         from vcpx.dualwd import IGNORED_METADIRS
 
-        infodir = join(self.basedir, self.repository.METADIR, 'info')
+        # create info/excludes in storagedir
+        infodir = join(self.basedir, self.repository.storagedir, 'info')
         if not exists(infodir):
             mkdir(infodir)
 
