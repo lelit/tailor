@@ -57,7 +57,7 @@ class GitExternalCommand(ExternalCommand):
         """
         Initialize an ExternalCommand instance tied to a GitRepository
         from which it inherits a set of environment variables to use
-        fo each execute().
+        for each execute().
         """
 
         self.repo = repo
