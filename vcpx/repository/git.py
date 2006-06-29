@@ -488,4 +488,4 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # If we have a parent repository, always track from INITIAL
         SynchronizableTargetWorkingDir.importFirstRevision(
             self, source_repo, changeset,
-            initial or self.repository.PARENT_REPO)
+            initial or self.repository.BRANCHPOINT)
