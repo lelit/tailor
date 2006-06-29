@@ -20,6 +20,10 @@ from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
+from vcpx import TailorException
+
+class BranchpointFailure(TailorException):
+    "Specified branchpoint not found in parent branch"
 
     ## generic stuff
 
@@ -428,12 +432,18 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 # initialization of a new branch in single-repository mode
                 mkdir(join(self.basedir, self.repository.METADIR))
 
-                bp = self._tryCommand(['rev-parse', self.repository.BRANCHPOINT])[0]
+                bp = self._tryCommand(['rev-parse', self.repository.BRANCHPOINT],
+                                      BranchpointFailure)[0]
                 self._tryCommand(['read-tree', bp])
                 self._tryCommand(['update-ref', self.repository.BRANCHNAME, bp])
                 #self._tryCommand(['checkout-index'])
 
             else:
+                if exists(join(self.basedir, self.repository.storagedir)):
+                    raise TargetInitializationFailure(
+                        "Repository %s already exists - "
+                        "did you forget to set \"branch\" parameter ?" % self.repository.storagedir)
+
                 self._tryCommand(['init-db'])
                 if self.repository.repository:
                     # in this mode, the db is not stored in working dir, so we
