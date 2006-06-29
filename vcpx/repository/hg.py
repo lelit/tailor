@@ -302,7 +302,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _defaultOpts(self, cmd):
         # Not sure this is public. commands.parse might be, but this
         # is easier, and while dispatch is easiest, you lose ui.
-        return dict([(f[1], f[2]) for f in commands.find(cmd)[1][1]])
+        return dict([(f[1].replace('-', '_'), f[2]) for f in commands.find(cmd)[1][1]])
 
     def _hgCommand(self, cmd, *args, **opts):
         import os
