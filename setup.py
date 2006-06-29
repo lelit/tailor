@@ -7,7 +7,7 @@ setup(name='tailor',
       version=VERSION,
       author='Lele Gaifax',
       author_email='lele@nautilus.homeip.net',
-      packages=['vcpx'],
+      packages=['vcpx', 'vcpx.repository'],
       scripts=['tailor'],
       description='A tool to migrate changesets between various kinds of '
       'version control system.',
