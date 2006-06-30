@@ -19,9 +19,10 @@ from sys import version_info
 assert version_info >= (2,4), "Bazaar-NG backend requires Python 2.4"
 del version_info
 
-from bzrlib.osutils import normpath
+from bzrlib.osutils import normpath, pathjoin
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
+from bzrlib.add import smart_add_tree
 from bzrlib import errors
 
 from vcpx.repository import Repository
@@ -154,48 +155,18 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     ## SynchronizableTargetWorkingDir
 
     def _addPathnames(self, names):
-        """
-        Add new files to working tree.
+        if len(names):
+            names = [ pathjoin(self.basedir, n) for n in names ]
+            smart_add_tree(self._working_tree, names, recurse=False)
 
-        This method may get invoked several times with the same files.
-        Bzrlib complains if you try to add a file which is already
-        versioned. This method filters these out. A file might already been
-        marked to be added in this changeset, or might be a target in a rename
-        operation. Remove those too.
+    def _addSubtree(self, subdir):
+        subdir = pathjoin(self.basedir, subdir)
+        added, ignored = smart_add_tree(self._working_tree, [subdir], recurse=True)
 
-        This method does not catch any errors from the adding through bzrlib,
-        since they are **real** errors.
-        """
-        last_revision = self._working_tree.branch.last_revision()
-        if last_revision is None:
-            # initial revision
-            fnames = names
-        else:
-            fnames = []
-            basis_tree = self._working_tree.branch.basis_tree()
-            inv = basis_tree.inventory
-            diff = compare_trees(basis_tree, self._working_tree)
-            added = ([new[0] for new in diff.added] +
-                     [renamed[1] for renamed in diff.renamed])
-
-            def parent_was_copied(n):
-                for p in added:
-                    if n.startswith(p+'/'):
-                        return True
-                return False
-
-            for fn in names:
-                normfn = normpath(fn)
-                if (not inv.has_filename(fn)
-                    and not normfn in added
-                    and not parent_was_copied(normfn)):
-                    fnames.append(fn)
-                else:
-                    self.log.debug('"%s" already in inventory, skipping', fn)
-
-        if len(fnames):
-            self.log.info('Adding %s...', ', '.join(fnames))
-            self._working_tree.add(fnames)
+        if len(ignored):
+            f = []
+            map(f.extend, ignored.values())
+            self._addPathnames(f)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
