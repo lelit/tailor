@@ -169,7 +169,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 dt = int(author_fields.pop())
                 user = ' '.join(author_fields)
                 tzsecs = abs(tz)
-                tzsecs = (tz / 100 * 60 + tz % 100) * 60
+                tzsecs = (tzsecs / 100 * 60 + tzsecs % 100) * 60
                 if tz < 0:
                     tzsecs = -tzsecs
                 date = datetime.utcfromtimestamp(dt + tzsecs)
