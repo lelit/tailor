@@ -24,6 +24,7 @@ from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib.add import smart_add_tree
 from bzrlib import errors
+from bzrlib import IGNORE_FILENAME
 
 from vcpx.repository import Repository
 from vcpx.workdir import WorkingDir
@@ -49,10 +50,16 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         WorkingDir.__init__(self, repository)
         # TODO: check if there is a "repository" in the configuration,
         # and use it as a bzr repository
+        self.ignored = []
         self._working_tree = None
         try:
             bzrdir = BzrDir.open(self.basedir)
-            self._working_tree = bzrdir.open_workingtree()
+            wt = self._working_tree = bzrdir.open_workingtree()
+
+            # read .bzrignore for _addSubtree()
+            if wt.has_filename(IGNORE_FILENAME):
+                f = wt.get_file_byname(IGNORE_FILENAME)
+                self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
         except errors.NotBranchError, errors.NoWorkingTree:
             pass
 
@@ -163,6 +170,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         subdir = pathjoin(self.basedir, subdir)
         added, ignored = smart_add_tree(self._working_tree, [subdir], recurse=True)
 
+        from vcpx.dualwd import IGNORED_METADIRS
+
+        for meta in IGNORED_METADIRS + self.ignored:
+            if ignored.has_key(meta):
+                del ignored[meta]
+
         if len(ignored):
             f = []
             map(f.extend, ignored.values())
@@ -254,10 +267,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         trees).
         """
         from os.path import join, split
-        from bzrlib import IGNORE_FILENAME
 
         if self._working_tree is None:
-            ignored = []
+            ignored = self.ignored
 
             # Omit our own log...
             logfile = self.repository.projectref().logfile
