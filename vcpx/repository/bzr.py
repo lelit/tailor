@@ -24,7 +24,7 @@ from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib.add import smart_add_tree
 from bzrlib import errors
-from bzrlib import IGNORE_FILENAME
+from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE
 
 from vcpx.repository import Repository
 from vcpx.workdir import WorkingDir
@@ -62,6 +62,25 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
         except errors.NotBranchError, errors.NoWorkingTree:
             pass
+
+        from os.path import split
+
+        # Omit our own log...
+        logfile = self.repository.projectref().logfile
+        dir, file = split(logfile)
+        if dir == self.basedir:
+            self.ignored.append(file)
+
+        # ... and state file
+        sfname = self.repository.projectref().state_file.filename
+        dir, file = split(sfname)
+        if dir == self.basedir:
+            self.ignored.append(file)
+            self.ignored.append(file+'.old')
+            self.ignored.append(file+'.journal')
+
+        DEFAULT_IGNORE.extend(self.ignored)
+
 
     #############################
     ## UpdatableSourceWorkingDir
@@ -266,29 +285,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         that to create a branch and working tree (make sure it allows working
         trees).
         """
-        from os.path import join, split
-
         if self._working_tree is None:
-            ignored = self.ignored
-
-            # Omit our own log...
-            logfile = self.repository.projectref().logfile
-            dir, file = split(logfile)
-            if dir == self.basedir:
-                ignored.append(file)
-
-            # ... and state file
-            sfname = self.repository.projectref().state_file.filename
-            dir, file = split(sfname)
-            if dir == self.basedir:
-                ignored.append(file)
-                ignored.append(file+'.old')
-                ignored.append(file+'.journal')
-
-            if ignored:
-                bzrignore = open(join(self.basedir, IGNORE_FILENAME), 'wU')
-                bzrignore.write('\n'.join(ignored))
-
             self.log.info('Initializing new repository in %r...', self.basedir)
             try:
                 bzrdir = BzrDir.open(self.basedir)
