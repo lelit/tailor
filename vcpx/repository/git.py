@@ -56,6 +56,18 @@ class GitRepository(Repository):
         else:
             self.storagedir = self.METADIR
 
+    def _tryCommand(self, cmd, exception=Exception, pipe=True):
+        c = GitExternalCommand(self,
+                               command = self.command(*cmd), cwd = self.basedir)
+        if pipe:
+            output = c.execute(stdout=PIPE)[0]
+        else:
+            c.execute()
+        if c.exit_status:
+            raise exception(str(c) + ' failed')
+        if pipe:
+            return output.read().split('\n')
+
 class GitExternalCommand(ExternalCommand):
     def __init__(self, repo, command=None, cwd=None):
         """
@@ -84,18 +96,6 @@ class GitExternalCommand(ExternalCommand):
 
 class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
-    def _tryCommand(self, cmd, exception=Exception, pipe=True):
-        c = GitExternalCommand(self.repository,
-                               command = self.repository.command(*cmd), cwd = self.repository.basedir)
-        if pipe:
-            output = c.execute(stdout=PIPE)[0]
-        else:
-            c.execute()
-        if c.exit_status:
-            raise exception(str(c) + ' failed')
-        if pipe:
-            return output.read().split('\n')
-
     ## UpdatableSourceWorkingDir
 
     def _checkoutUpstreamRevision(self, revision):
@@ -111,8 +111,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         target = join(self.repository.basedir, '.gittmp')
         # might want -s if we can determine that the path is local. Then again,
         # that makes it a little unsafe to do git write actions here
-        self._tryCommand(['clone', '-n', self.repository.repository, target],
-                         ChangesetApplicationFailure, False)
+        self.repository._tryCommand(['clone', '-n', self.repository.repository, target],
+                                    ChangesetApplicationFailure, False)
 
         rename(join(target, '.git'), join(self.repository.basedir, '.git'))
         rmdir(target)
@@ -122,24 +122,24 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self.log.info('Checking out revision %s (%s)' % (rev, revision))
         else:
             self.log.info('Checking out revision ' + rev)
-        self._tryCommand(['reset', '--hard', rev], ChangesetApplicationFailure, False)
+        self.repository._tryCommand(['reset', '--hard', rev], ChangesetApplicationFailure, False)
 
         return self._changesetForRevision(rev)
 
     def _getUpstreamChangesets(self, since):
-        self._tryCommand(['fetch'], GetUpstreamChangesetsFailure, False)
+        self.repository._tryCommand(['fetch'], GetUpstreamChangesetsFailure, False)
 
-        revs = self._tryCommand(['rev-list', '^' + since, 'origin'],
-                                GetUpstreamChangesetsFailure)[:-1]
+        revs = self.repository._tryCommand(['rev-list', '^' + since, 'origin'],
+                                           GetUpstreamChangesetsFailure)[:-1]
         revs.reverse()
         for rev in revs:
             self.log.info('Updating to revision ' + rev)
             yield self._changesetForRevision(rev)
 
     def _applyChangeset(self, changeset):
-        out = self._tryCommand(['merge', '-n', '--no-commit', 'fastforward',
-                                'HEAD', changeset.revision],
-                         ChangesetApplicationFailure)
+        out = self.repository._tryCommand(['merge', '-n', '--no-commit', 'fastforward',
+                                           'HEAD', changeset.revision],
+                                          ChangesetApplicationFailure)
 
         conflicts = []
         for line in out:
@@ -159,8 +159,8 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                       'M': ChangesetEntry.UPDATED, 'R': ChangesetEntry.RENAMED}
 
         # find parent
-        lines = self._tryCommand(['rev-list', '--pretty=raw', '--max-count=1', revision],
-                                 GetUpstreamChangesetsFailure)
+        lines = self.repository._tryCommand(['rev-list', '--pretty=raw', '--max-count=1', revision],
+                                            GetUpstreamChangesetsFailure)
         parents = []
         user = Changeset.ANONYMOUS_USER
         loglines = []
@@ -188,7 +188,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if parents:
             cmd.append(parents[0])
         cmd.append(revision)
-        files = self._tryCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
+        files = self.repository._tryCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
         if not parents:
             # git lets us know what it's diffing against if we omit parent
             if len(files) > 0:
@@ -213,7 +213,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         try:
             for tag in listdir(tagdir):
                 # Consider caching stat info per tailor run
-                tagrev = self._tryCommand(['rev-list', '--max-count=1', tag])[0]
+                tagrev = self.repository._tryCommand(['rev-list', '--max-count=1', tag])[0]
                 if (tagrev == revision):
                     tags.append(tag)
         except OSError:
@@ -225,9 +225,9 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _getRev(self, revision):
         """ Return the git object corresponding to the symbolic revision """
         if revision == 'INITIAL':
-            return self._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
+            return self.repository._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
 
-        return self._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
+        return self.repository._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
 
     ## SynchronizableTargetWorkingDir
 
@@ -243,7 +243,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
-            self._tryCommand(['update-index', '--add'] + notdirs)
+            self.repository._tryCommand(['update-index', '--add'] + notdirs)
 
     def _editPathnames(self, names):
         """
@@ -251,7 +251,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
 
         # can we assume we don't have directories in the list ?
-        self._tryCommand(['update-index'] + names)
+        self.repository._tryCommand(['update-index'] + names)
 
     def __parse_author(self, author):
         """
@@ -284,6 +284,9 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             logmessage.append(patchname)
         if changelog:
             logmessage.append(changelog)
+
+        env = {}
+        env.update(environ)
 
         treeid = self._tryCommand(['write-tree'])[0]
 
@@ -341,9 +344,9 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             commitid=out.read().split('\n')[0]
 
             if parent:
-                self._tryCommand(['update-ref', refname, commitid, parent])
+                self.repository._tryCommand(['update-ref', refname, commitid, parent])
             else:
-                self._tryCommand(['update-ref', refname, commitid])
+                self.repository._tryCommand(['update-ref', refname, commitid])
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
@@ -367,7 +370,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
-            self._tryCommand(['update-index', '--remove'] + notdirs)
+            self.repository._tryCommand(['update-index', '--remove'] + notdirs)
 
     def _renamePathname(self, oldname, newname):
         """
@@ -433,11 +436,11 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 # initialization of a new branch in single-repository mode
                 mkdir(join(self.repository.basedir, self.repository.METADIR))
 
-                bp = self._tryCommand(['rev-parse', self.repository.BRANCHPOINT],
-                                      BranchpointFailure)[0]
-                self._tryCommand(['read-tree', bp])
-                self._tryCommand(['update-ref', self.repository.BRANCHNAME, bp])
-                #self._tryCommand(['checkout-index'])
+                bp = self.repository._tryCommand(['rev-parse', self.repository.BRANCHPOINT],
+                                                 BranchpointFailure)[0]
+                self.repository._tryCommand(['read-tree', bp])
+                self.repository._tryCommand(['update-ref', self.repository.BRANCHNAME, bp])
+                #self.repository._tryCommand(['checkout-index'])
 
             else:
                 if exists(join(self.repository.basedir, self.repository.storagedir)):
@@ -445,7 +448,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                         "Repository %s already exists - "
                         "did you forget to set \"branch\" parameter ?" % self.repository.storagedir)
 
-                self._tryCommand(['init-db'])
+                self.repository._tryCommand(['init-db'])
                 if self.repository.repository:
                     # in this mode, the db is not stored in working dir, so we
                     # have to create .git ourselves
