@@ -8,7 +8,7 @@
 #
 
 """
-This module implements the backend for Git using git-core.
+This module implements the target backend for Git using git-core.
 """
 
 __docformat__ = 'reStructuredText'
@@ -16,11 +16,11 @@ __docformat__ = 'reStructuredText'
 from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.config import ConfigurationError
-from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
-from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 
 from vcpx import TailorException
+
+from vcpx.repository.git import GitExternalCommand
 
 class BranchpointFailure(TailorException):
     "Specified branchpoint not found in parent branch"
@@ -82,15 +82,10 @@ class GitExternalCommand(ExternalCommand):
     def execute(self, *args, **kwargs):
         """Execute the command, with controlled environment."""
 
-        from os import environ
+        if not kwargs.has_key('env'):
+            kwargs['env'] = {}
 
-        env = environ.copy()
-        env.update(self.repo.env)
-
-        if kwargs.has_key('env'):
-            env.update(kwargs['env'])
-
-        kwargs['env'] = env
+        kwargs['env'].update(self.repo.env)
 
         return ExternalCommand.execute(self, *args, **kwargs)
 
@@ -229,7 +224,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         return self.repository._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
 
-    ## SynchronizableTargetWorkingDir
+class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _addPathnames(self, names):
         """
