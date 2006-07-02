@@ -70,10 +70,15 @@ class GitExternalCommand(ExternalCommand):
     def execute(self, *args, **kwargs):
         """Execute the command, with controlled environment."""
 
-        if not kwargs.has_key('env'):
-            kwargs['env'] = {}
+        from os import environ
 
-        kwargs['env'].update(self.repo.env)
+        env = environ.copy()
+        env.update(self.repo.env)
+
+        if kwargs.has_key('env'):
+            env.update(kwargs['env'])
+
+        kwargs['env'] = env
 
         return ExternalCommand.execute(self, *args, **kwargs)
 
@@ -272,8 +277,6 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Commit the changeset.
         """
 
-        from os import environ
-
         encode = self.repository.encode
 
         logmessage = []
@@ -281,9 +284,6 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             logmessage.append(patchname)
         if changelog:
             logmessage.append(changelog)
-
-        env = {}
-        env.update(environ)
 
         treeid = self._tryCommand(['write-tree'])[0]
 
@@ -305,6 +305,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # FIXME: I'd prefer to avoid all those "if parent"
             parent = out.read().split('\n')[0]
 
+        env = {}
         (name, email) = self.__parse_author(author)
         if name:
             env['GIT_AUTHOR_NAME'] = encode(name)
