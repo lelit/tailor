@@ -39,10 +39,10 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         # Currently git/cogito does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
             cmd = self.repository.command("add")
-            ExternalCommand(cwd=self.basedir, command=cmd).execute(notdirs)
+            ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(notdirs)
 
     def __parse_author(self, author):
         """
@@ -91,7 +91,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         # '-f' flag means we can get empty commits, which
         # shouldn't be a problem.
         cmd = self.repository.command("commit", "-f")
-        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
         c.execute(env=env, input=encode('\n'.join(logmessage)))
         if c.exit_status:
@@ -107,10 +107,10 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         # Currently git does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
             cmd = self.repository.command("rm")
-            c=ExternalCommand(cwd=self.basedir, command=cmd)
+            c=ExternalCommand(cwd=self.repository.basedir, command=cmd)
             c.execute(notdirs)
 
     def _renamePathname(self, oldname, newname):
@@ -124,12 +124,12 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         from os import walk
         from vcpx.dualwd import IGNORED_METADIRS
 
-        if isdir(join(self.basedir, newname)):
+        if isdir(join(self.repository.basedir, newname)):
             # Given lack of support for directories in current Git,
             # loop over all files under the new directory and
             # do a add/remove on them.
-            skip = len(self.basedir)+len(newname)+2
-            for dir, subdirs, files in walk(join(self.basedir, newname)):
+            skip = len(self.repository.basedir)+len(newname)+2
+            for dir, subdirs, files in walk(join(self.repository.basedir, newname)):
                 prefix = dir[skip:]
 
                 for excd in IGNORED_METADIRS:
@@ -150,9 +150,9 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        if not exists(join(self.basedir, self.repository.METADIR)):
+        if not exists(join(self.repository.basedir, self.repository.METADIR)):
             cmd = self.repository.command("init", "-I")
-            init = ExternalCommand(cwd=self.basedir, command=cmd)
+            init = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             init.execute()
 
             if init.exit_status:
@@ -169,17 +169,17 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
 
         # Create the .git/info/exclude file, that contains an
         # fnmatch per line with metadirs to be skipped.
-        ignore = open(join(self.basedir, self.repository.METADIR,
+        ignore = open(join(self.repository.basedir, self.repository.METADIR,
                            'info', 'exclude'), 'a')
         ignore.write('\n')
         ignore.write('\n'.join(['%s' % md
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n')
-        if self.logfile.startswith(self.basedir):
-            ignore.write(self.logfile[len(self.basedir)+1:])
+        if self.logfile.startswith(self.repository.basedir):
+            ignore.write(self.logfile[len(self.repository.basedir)+1:])
             ignore.write('\n')
-        if self.state_file.filename.startswith(self.basedir):
-            sfrelname = self.state_file.filename[len(self.basedir)+1:]
+        if self.state_file.filename.startswith(self.repository.basedir):
+            sfrelname = self.state_file.filename[len(self.repository.basedir)+1:]
             ignore.write(sfrelname)
             ignore.write('\n')
             ignore.write(sfrelname+'.old')

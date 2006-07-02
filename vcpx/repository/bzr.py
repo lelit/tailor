@@ -53,7 +53,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.ignored = []
         self._working_tree = None
         try:
-            bzrdir = BzrDir.open(self.basedir)
+            bzrdir = BzrDir.open(self.repository.basedir)
             wt = self._working_tree = bzrdir.open_workingtree()
 
             # read .bzrignore for _addSubtree()
@@ -68,13 +68,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Omit our own log...
         logfile = self.repository.projectref().logfile
         dir, file = split(logfile)
-        if dir == self.basedir:
+        if dir == self.repository.basedir:
             self.ignored.append(file)
 
         # ... and state file
         sfname = self.repository.projectref().state_file.filename
         dir, file = split(sfname)
-        if dir == self.basedir:
+        if dir == self.repository.basedir:
             self.ignored.append(file)
             self.ignored.append(file+'.old')
             self.ignored.append(file+'.journal')
@@ -171,8 +171,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             revid = revision
 
         self.log.info('Extracting %r out of %r in %r...',
-                      revid, parent_bzrdir.root_transport.base, self.basedir)
-        bzrdir = parent_bzrdir.sprout(self.basedir, revid)
+                      revid, parent_bzrdir.root_transport.base, self.repository.basedir)
+        bzrdir = parent_bzrdir.sprout(self.repository.basedir, revid)
         self._working_tree = bzrdir.open_workingtree()
 
         return self._changesetFromRevision(parent_branch, revid)
@@ -182,11 +182,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _addPathnames(self, names):
         if len(names):
-            names = [ pathjoin(self.basedir, n) for n in names ]
+            names = [ pathjoin(self.repository.basedir, n) for n in names ]
             smart_add_tree(self._working_tree, names, recurse=False)
 
     def _addSubtree(self, subdir):
-        subdir = pathjoin(self.basedir, subdir)
+        subdir = pathjoin(self.repository.basedir, subdir)
         added, ignored = smart_add_tree(self._working_tree, [subdir], recurse=True)
 
         from vcpx.dualwd import IGNORED_METADIRS
@@ -259,8 +259,8 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         # bzr does the rename itself as well
         unmoved = False
-        oldpath = join(self.basedir, oldname)
-        newpath = join(self.basedir, newname)
+        oldpath = join(self.repository.basedir, oldname)
+        newpath = join(self.repository.basedir, newname)
         if not exists(oldpath):
             try:
                 rename(newpath, oldpath)
@@ -286,12 +286,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         trees).
         """
         if self._working_tree is None:
-            self.log.info('Initializing new repository in %r...', self.basedir)
+            self.log.info('Initializing new repository in %r...', self.repository.basedir)
             try:
-                bzrdir = BzrDir.open(self.basedir)
+                bzrdir = BzrDir.open(self.repository.basedir)
             except errors.NotBranchError:
                 # really a NotBzrDir error...
-                branch = BzrDir.create_branch_convenience(self.basedir,
+                branch = BzrDir.create_branch_convenience(self.repository.basedir,
                                                           force_new_tree=True)
                 self._working_tree = branch.bzrdir.open_workingtree()
             else:

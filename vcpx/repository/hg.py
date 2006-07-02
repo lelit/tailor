@@ -60,22 +60,22 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # directly to the desired revision.
 
         # If the basedir does not exist, create it
-        if not exists(self.basedir):
-            mkdir(self.basedir)
+        if not exists(self.repository.basedir):
+            mkdir(self.repository.basedir)
 
         # clone it only if .hg does not exist
-        if not exists(join(self.basedir, ".hg")):
+        if not exists(join(self.repository.basedir, ".hg")):
             # Hg won't check out into an existing directory
-            checkoutdir = join(self.basedir,".hgtmp")
+            checkoutdir = join(self.repository.basedir,".hgtmp")
             opts = self._defaultOpts('clone')
             opts['noupdate'] = True
             commands.clone(self._ui, self.repository.repository, checkoutdir,
                            **opts)
-            rename(join(checkoutdir, ".hg"), join(self.basedir,".hg"))
+            rename(join(checkoutdir, ".hg"), join(self.repository.basedir,".hg"))
             rmdir(checkoutdir)
         else:
             # Does hgrc exist? If not, we write one
-            hgrc = join(self.basedir, ".hg", "hgrc")
+            hgrc = join(self.repository.basedir, ".hg", "hgrc")
             if not exists(hgrc):
                 hgrc = file(hgrc, "w")
                 hgrc.write("[paths]\ndefault = %s\ndefault-push = %s\n" %
@@ -87,7 +87,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         node = self._getNode(repo, revision)
 
         self.log.info('Extracting revision %r from %r into %r',
-                      revision, self.repository.repository, self.basedir)
+                      revision, self.repository.repository, self.repository.basedir)
         repo.update(node)
 
         return self._changesetForRevision(repo, revision)
@@ -207,7 +207,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             from os.path import realpath
 
             ui = self._getUI()
-            self._hg = hg.repository(ui=ui, path=realpath(self.basedir),
+            self._hg = hg.repository(ui=ui, path=realpath(self.repository.basedir),
                                      create=False)
             # Pick up repository-specific UI settings.
             self._ui = self._hg.ui
@@ -245,7 +245,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os.path import join, isdir, normpath
 
         notdirs = [n for n in names
-                   if not isdir(join(self.basedir, normpath(n)))]
+                   if not isdir(join(self.repository.basedir, normpath(n)))]
         if notdirs:
             self.log.info('Adding %s...', ', '.join(notdirs))
             self._hg.add(notdirs)
@@ -311,7 +311,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         allopts.update(opts)
         cmd = getattr(commands, cmd)
         cwd = os.getcwd()
-        os.chdir(self.basedir)
+        os.chdir(self.repository.basedir)
         try:
             cmd(self._ui, self._hg, *args, **allopts)
         finally:
@@ -343,7 +343,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repo = self._getRepo()
 
         self.log.info('Renaming %r to %r...', oldname, newname)
-        if isdir(join(self.basedir, normpath(newname))):
+        if isdir(join(self.repository.basedir, normpath(newname))):
             # Given lack of support for directories in current HG,
             # loop over all files under the old directory and
             # do a copy on them.
@@ -365,12 +365,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         self._getUI()
 
-        if exists(join(self.basedir, self.repository.METADIR)):
+        if exists(join(self.repository.basedir, self.repository.METADIR)):
             create = 0
         else:
             create = 1
-            self.log.info('Initializing new repository in %r...', self.basedir)
-        self._hg = hg.repository(ui=self._ui, path=realpath(self.basedir),
+            self.log.info('Initializing new repository in %r...', self.repository.basedir)
+        self._hg = hg.repository(ui=self._ui, path=realpath(self.repository.basedir),
                                  create=create)
 
     def _prepareWorkingDirectory(self, source_repo):
@@ -384,16 +384,16 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         # Create the .hgignore file, that contains a regexp per line
         # with all known VCs metadirs to be skipped.
-        ignore = open(join(self.basedir, '.hgignore'), 'w')
+        ignore = open(join(self.repository.basedir, '.hgignore'), 'w')
         ignore.write('\n'.join(['(^|/)%s($|/)' % escape(md)
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n')
-        if self.logfile.startswith(self.basedir):
+        if self.logfile.startswith(self.repository.basedir):
             ignore.write('^')
-            ignore.write(self.logfile[len(self.basedir)+1:])
+            ignore.write(self.logfile[len(self.repository.basedir)+1:])
             ignore.write('$\n')
-        if self.state_file.filename.startswith(self.basedir):
-            sfrelname = self.state_file.filename[len(self.basedir)+1:]
+        if self.state_file.filename.startswith(self.repository.basedir):
+            sfrelname = self.state_file.filename[len(self.repository.basedir)+1:]
             ignore.write('^')
             ignore.write(sfrelname)
             ignore.write('$\n')

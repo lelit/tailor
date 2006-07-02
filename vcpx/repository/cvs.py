@@ -562,7 +562,7 @@ class CvsWorkingDir(CvspsWorkingDir):
                                       self.repository.name))
 
         branch = None
-        fname = join(self.basedir, 'CVS', 'Tag')
+        fname = join(self.repository.basedir, 'CVS', 'Tag')
         if exists(fname):
             tag = open(fname).read()
             if tag[0] == 'T':

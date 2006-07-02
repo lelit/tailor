@@ -325,7 +325,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
         while added:
             subdir = added.pop(0).name
-            if isdir(join(self.basedir, subdir)):
+            if isdir(join(self.repository.basedir, subdir)):
                 self._addSubtree(subdir)
                 added = [e for e in added if not e.name.startswith(subdir)]
 
@@ -362,19 +362,19 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
         exclude = []
 
-        if self.state_file.filename.startswith(self.basedir):
-            sfrelname = self.state_file.filename[len(self.basedir)+1:]
+        if self.state_file.filename.startswith(self.repository.basedir):
+            sfrelname = self.state_file.filename[len(self.repository.basedir)+1:]
             exclude.append(sfrelname)
             exclude.append(sfrelname+'.old')
             exclude.append(sfrelname+'.journal')
 
-        if self.logfile.startswith(self.basedir):
-            exclude.append(self.logfile[len(self.basedir)+1:])
+        if self.logfile.startswith(self.repository.basedir):
+            exclude.append(self.logfile[len(self.repository.basedir)+1:])
 
         if subdir and subdir<>'.':
             self._addPathnames([subdir])
 
-        for dir, subdirs, files in walk(join(self.basedir, subdir)):
+        for dir, subdirs, files in walk(join(self.repository.basedir, subdir)):
             for excd in IGNORED_METADIRS:
                 if excd in subdirs:
                     subdirs.remove(excd)
@@ -384,7 +384,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                     files.remove(excf)
 
             if subdirs or files:
-                self._addPathnames([join(dir, df)[len(self.basedir)+1:]
+                self._addPathnames([join(dir, df)[len(self.repository.basedir)+1:]
                                     for df in subdirs + files])
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
@@ -452,7 +452,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 # (that will assume the move was already done manually) and
                 # finally restore its name.
 
-                absold = join(self.basedir, e.old_name)
+                absold = join(self.repository.basedir, e.old_name)
                 renamed = exists(absold)
                 if renamed:
                     rename(absold, absold + '-TAILOR-HACKED-TEMP-NAME')
@@ -464,7 +464,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 # and replace back the real content (it may be a
                 # renamed+edited event).
                 renamed = False
-                absnew = join(self.basedir, e.name)
+                absnew = join(self.repository.basedir, e.name)
                 renamed = exists(absnew)
                 if renamed:
                     rename(absnew, absnew + '-TAILOR-HACKED-TEMP-NAME')
@@ -506,18 +506,18 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         from os import makedirs
         from os.path import join, exists
 
-        if not exists(self.basedir):
-            makedirs(self.basedir)
+        if not exists(self.repository.basedir):
+            makedirs(self.repository.basedir)
 
         self._prepareTargetRepository()
 
         prefix = self.__getPrefixToSource()
         if prefix:
-            if not exists(join(self.basedir, prefix)):
+            if not exists(join(self.repository.basedir, prefix)):
                 # At bootstrap time, we assume that if the user
                 # extracted the source manually, she added
                 # the subdir, before doing that.
-                makedirs(join(self.basedir, prefix))
+                makedirs(join(self.repository.basedir, prefix))
                 self._addPathnames([prefix])
 
     def _prepareTargetRepository(self):

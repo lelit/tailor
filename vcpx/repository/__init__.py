@@ -56,6 +56,7 @@ class Repository(object):
 
         from logging import getLogger
         from weakref import ref
+        from os.path import join, normpath
 
         self.name = name
         self.which = which
@@ -64,6 +65,11 @@ class Repository(object):
                                                     which))
         self._load(project)
         self._validateConfiguration()
+
+        if self.subdir:
+            self.basedir = normpath(join(self.rootdir, self.subdir))
+        else:
+            self.basedir = self.rootdir
 
     def __str__(self):
 

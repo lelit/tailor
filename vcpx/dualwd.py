@@ -43,8 +43,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.source = source_repo.workingDir()
         self.target = target_repo.workingDir()
 
-        sbdir = self.source.basedir.rstrip(sep)+sep
-        tbdir = self.target.basedir.rstrip(sep)+sep
+        sbdir = self.source.repository.basedir.rstrip(sep)+sep
+        tbdir = self.target.repository.basedir.rstrip(sep)+sep
         if sbdir == tbdir:
             shared = True
         elif tbdir.startswith(sbdir):
@@ -118,4 +118,4 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd.extend(['--exclude', M])
 
         rsync = ExternalCommand(command=cmd)
-        rsync.execute(self.source.basedir+'/', self.target.basedir)
+        rsync.execute(self.source.repository.basedir+'/', self.target.repository.basedir)

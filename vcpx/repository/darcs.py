@@ -234,7 +234,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         from vcpx.changes import Changeset
 
         cmd = self.repository.command("pull", "--dry-run")
-        pull = ExternalCommand(cwd=self.basedir, command=cmd)
+        pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
                               stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
 
@@ -337,7 +337,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         if needspatchesopt:
             cmd.extend(['--patches', re.escape(changeset.revision)])
 
-        pull = ExternalCommand(cwd=self.basedir, command=cmd)
+        pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = pull.execute(stdout=PIPE, stderr=STDOUT, input='y')[0]
 
         if pull.exit_status:
@@ -357,7 +357,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("changes", selector, revtag,
                                       "--xml-output", "--summ")
-        changes = ExternalCommand(cwd=self.basedir, command=cmd)
+        changes = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0])
         try:
             changeset.entries.extend(last.next().entries)
@@ -378,7 +378,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         self.log.info("Reverting changes to %s, to solve the conflict",
                       ' '.join(conflict))
         cmd = self.repository.command("revert", "--all")
-        revert = ExternalCommand(cwd=self.basedir, command=cmd)
+        revert = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         revert.execute(conflict)
 
     def _checkoutUpstreamRevision(self, revision):
@@ -419,15 +419,15 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         else:
             initial = False
 
-        if self.repository.subdir == '.' or exists(self.basedir):
+        if self.repository.subdir == '.' or exists(self.repository.basedir):
             # This is currently *very* slow, compared to the darcs get
             # below!
-            if not exists(join(self.basedir, '_darcs')):
-                if not exists(self.basedir):
-                    mkdir(self.basedir)
+            if not exists(join(self.repository.basedir, '_darcs')):
+                if not exists(self.repository.basedir):
+                    mkdir(self.repository.basedir)
 
                 cmd = self.repository.command("initialize")
-                init = ExternalCommand(cwd=self.basedir, command=cmd)
+                init = ExternalCommand(cwd=self.repository.basedir, command=cmd)
                 init.execute()
 
                 if init.exit_status:
@@ -438,7 +438,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
                 cmd = self.repository.command("pull", "--all", "--quiet")
                 if revision and revision<>'HEAD':
                     cmd.extend([initial and "--match" or "--tag", revision])
-                dpull = ExternalCommand(cwd=self.basedir, command=cmd)
+                dpull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
                 output = dpull.execute(self.repository.repository,
                                        stdout=PIPE, stderr=STDOUT)[0]
 
@@ -454,7 +454,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
             else:
                 cmd.append("--partial")
             dget = ExternalCommand(command=cmd)
-            output = dget.execute(self.repository.repository, self.basedir,
+            output = dget.execute(self.repository.repository, self.repository.basedir,
                                   stdout=PIPE, stderr=STDOUT)[0]
 
             if dget.exit_status:
@@ -464,7 +464,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("changes", "--last", "1",
                                       "--xml-output")
-        changes = ExternalCommand(cwd=self.basedir, command=cmd)
+        changes = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
 
         if changes.exit_status:
@@ -486,7 +486,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("add", "--case-ok", "--not-recursive",
                                       "--quiet")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _addSubtree(self, subdir):
         """
@@ -495,7 +495,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("add", "--case-ok", "--recursive",
                                       "--quiet")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(subdir)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(subdir)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -517,7 +517,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         if not entries:
             entries = ['.']
 
-        record = ExternalCommand(cwd=self.basedir, command=cmd)
+        record = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         record.execute(input=self.repository.encode('\n'.join(logmessage)))
 
         if record.exit_status:
@@ -536,9 +536,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         # because it's not empty, darcs fails. So, do an explicit
         # remove on items that are still there.
 
-        c = ExternalCommand(cwd=self.basedir,
+        c = ExternalCommand(cwd=self.repository.basedir,
                             command=self.repository.command("remove"))
-        existing = [n for n in names if exists(join(self.basedir, n))]
+        existing = [n for n in names if exists(join(self.repository.basedir, n))]
         if existing:
             c.execute(existing)
 
@@ -548,7 +548,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("mv")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
         """
@@ -559,7 +559,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         from os.path import join, exists
         from vcpx.dualwd import IGNORED_METADIRS
 
-        metadir = join(self.basedir, '_darcs')
+        metadir = join(self.repository.basedir, '_darcs')
         prefsdir = join(metadir, 'prefs')
         prefsname = join(prefsdir, 'prefs')
         boringname = join(prefsdir, 'boring')
@@ -568,11 +568,11 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
                 if pref:
                     pname, pvalue = pref.split(' ', 1)
                     if pname == 'boringfile':
-                        boringname = join(self.basedir, pvalue[:-1])
+                        boringname = join(self.repository.basedir, pvalue[:-1])
 
         if not exists(metadir):
             cmd = self.repository.command("initialize")
-            init = ExternalCommand(cwd=self.basedir, command=cmd)
+            init = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             init.execute()
 
             if init.exit_status:
@@ -590,14 +590,14 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
             # Eventually omit our own log...
             logfile = self.repository.projectref().logfile
-            if logfile.startswith(self.basedir):
+            if logfile.startswith(self.repository.basedir):
                 ignored.append('^%s$' %
-                               re.escape(logfile[len(self.basedir)+1:]))
+                               re.escape(logfile[len(self.repository.basedir)+1:]))
 
             # ... and state file
             sfname = self.repository.projectref().state_file.filename
-            if sfname.startswith(self.basedir):
-                sfrelname = sfname[len(self.basedir)+1:]
+            if sfname.startswith(self.repository.basedir):
+                sfrelname = sfname[len(self.repository.basedir)+1:]
                 ignored.append('^%s$' % re.escape(sfrelname))
                 ignored.append('^%s$' % re.escape(sfrelname+'.old'))
                 ignored.append('^%s$' % re.escape(sfrelname+'.journal'))
@@ -623,7 +623,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         from os.path import join
 
-        motd = open(join(self.basedir, '_darcs/prefs/motd'), 'w')
+        motd = open(join(self.repository.basedir, '_darcs/prefs/motd'), 'w')
         motd.write(MOTD % str(source_repo))
         motd.close()
 
@@ -675,7 +675,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         """
         if tag not in self._currentTags():
             cmd = self.repository.command("tag", "--author", "Unknown tagger")
-            ExternalCommand(cwd=self.basedir, command=cmd).execute(tag)
+            ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(tag)
 
     def _currentTags(self):
         """
@@ -697,7 +697,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         cmd = self.repository.command("changes",
                                       "--from-match", "not name ^TAG",
                                       "--xml-output", "--reverse")
-        changes =  ExternalCommand(cwd=self.basedir, command=cmd)
+        changes =  ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
         if changes.exit_status:
             raise ChangesetApplicationFailure(

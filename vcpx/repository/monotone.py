@@ -609,13 +609,13 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
     def _applyChangeset(self, changeset):
         cmd = self.repository.command("update", "--revision", changeset.revision)
-        mtl = ExternalCommand(cwd=self.basedir, command=cmd)
+        mtl = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         mtl.execute()
         if mtl.exit_status:
             raise ChangesetApplicationFailure("'mtn update' returned "
                                               "status %s" % mtl.exit_status)
         mtr = MonotoneRevToCset(repository=self.repository,
-                                working_dir=self.basedir,
+                                working_dir=self.repository.basedir,
                                 branch=self.repository.module)
         mtr.updateCset( changeset )
 
@@ -628,7 +628,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         effrev = self._convert_head_initial(self.repository.repository,
                                            self.repository.module, revision,
                                            self.repository.rootdir)
-        if not exists(join(self.basedir, '_MTN')):
+        if not exists(join(self.repository.basedir, '_MTN')):
 
             # actually check out the revision
             self.log.info("Checking out a working copy")
@@ -636,7 +636,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                           "--db", self.repository.repository,
                                           "--revision", effrev,
                                           "--branch", self.repository.module,
-                                          self.basedir)
+                                          self.repository.basedir)
             mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
             mtl.execute()
             if mtl.exit_status:
@@ -644,7 +644,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                     "'mtn co' returned status %s" % mtl.exit_status)
         else:
             self.log.debug("%r already exists, assuming it's a monotone "
-                           "working dir already populated", self.basedir)
+                           "working dir already populated", self.repository.basedir)
 
 
         # Ok, now the workdir contains the checked out revision. We
@@ -656,7 +656,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         # now we update the new chset with basic data - without the
         # linearized ancestor, changeset entries will NOT be filled
         mtr = MonotoneRevToCset(repository=self.repository,
-                                working_dir=self.basedir,
+                                working_dir=self.repository.basedir,
                                 branch=self.repository.module)
         mtr.updateCset(chset)
         return chset
@@ -670,14 +670,14 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
         fnames=[]
         for fn in names:
-            if isdir(join(self.basedir, fn)):
+            if isdir(join(self.repository.basedir, fn)):
                 self.log.debug("ignoring addition of directory %r", fn)
             else:
                 fnames.append(fn)
         if len(fnames):
             # ok, we still have something to add
             cmd = self.repository.command("add")
-            add = ExternalCommand(cwd=self.basedir, command=cmd)
+            add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             add.execute(fnames)
             if add.exit_status:
                 raise ChangesetApplicationFailure("%s returned status %s" %
@@ -689,7 +689,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         Add a whole subtree
         """
         cmd = self.repository.command("add")
-        add = ExternalCommand(cwd=self.basedir, command=cmd)
+        add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         add.execute(subdir)
         if add.exit_status:
             raise ChangesetApplicationFailure("%s returned status %s" %
@@ -717,7 +717,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                       "--author", encode(author),
                                       "--date", date.isoformat(),
                                       "--message-file", rontf.name)
-        commit = ExternalCommand(cwd=self.basedir, command=cmd)
+        commit = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
         entries = None
         if not entries:
@@ -742,7 +742,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
 
         cmd = self.repository.command("drop")
-        drop = ExternalCommand(cwd=self.basedir, command=cmd)
+        drop = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         dum, error = drop.execute(names, stderr=PIPE)
         if drop.exit_status:
             errtext = error.read()
@@ -758,20 +758,20 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         # this function is called *after* the file/dir has changed name,
         # and monotone doesn't like it.
         # we put names back to make it happy ...
-#        if access(join(self.basedir, newname), F_OK):
-#            if access(join(self.basedir, oldname), F_OK):
+#        if access(join(self.repository.basedir, newname), F_OK):
+#            if access(join(self.repository.basedir, oldname), F_OK):
 #                raise ChangesetApplicationFailure("Can't rename %s to %s. "
 #                                                  "Both names already exist" %
 #                                                  (oldname, newname))
-#            renames(join(self.basedir, newname), join(self.basedir, oldname))
+#            renames(join(self.repository.basedir, newname), join(self.repository.basedir, oldname))
 #            self.log.debug('Renamed "%s" back to "%s"', newname, oldname)
 
         cmd = self.repository.command("rename")
-        rename = ExternalCommand(cwd=self.basedir, command=cmd)
+        rename = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         rename.execute(oldname, newname)
 
         # redo the rename ...
-#        renames(join(self.basedir, oldname), join(self.basedir, newname))
+#        renames(join(self.repository.basedir, oldname), join(self.repository.basedir, newname))
 #        if rename.exit_status:
 #            raise ChangesetApplicationFailure("%s returned status %s" %
 #                                              (str(rename),rename.exit_status))
@@ -842,7 +842,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
         from re import escape
 
-        if not self.repository.repository or exists(join(self.basedir, '_MTN')):
+        if not self.repository.repository or exists(join(self.repository.basedir, '_MTN')):
             return
 
         if not self.repository.module:
@@ -859,10 +859,10 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             cmd.extend( ("--key", self.repository.keyid) )
 
         setup = ExternalCommand(command=cmd)
-        setup.execute(self.basedir)
+        setup.execute(self.repository.basedir)
 
         if self.repository.passphrase or self.repository.custom_lua:
-            monotonerc = open(join(self.basedir, '_MTN', 'monotonerc'), 'w')
+            monotonerc = open(join(self.repository.basedir, '_MTN', 'monotonerc'), 'w')
             if self.repository.passphrase:
                 monotonerc.write(MONOTONERC % self.repository.passphrase)
             else:
@@ -876,19 +876,19 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         # ignored files
         ignored = []
         logfile = self.repository.projectref().logfile
-        if logfile.startswith(self.basedir):
+        if logfile.startswith(self.repository.basedir):
             ignored.append('^%s$' %
-                           escape(logfile[len(self.basedir)+1:]))
+                           escape(logfile[len(self.repository.basedir)+1:]))
 
         sfname = self.repository.projectref().state_file.filename
-        if sfname.startswith(self.basedir):
-            sfrelname = sfname[len(self.basedir)+1:]
+        if sfname.startswith(self.repository.basedir):
+            sfrelname = sfname[len(self.repository.basedir)+1:]
             ignored.append('^%s$' % escape(sfrelname))
             ignored.append('^%s$' % escape(sfrelname + '.old'))
             ignored.append('^%s$' % escape(sfrelname + '.journal'))
 
         if len(ignored) > 0:
-            mt_ignored = open(join(self.basedir, '.mtn-ignore'), 'aU')
+            mt_ignored = open(join(self.repository.basedir, '.mtn-ignore'), 'aU')
             mt_ignored.write('\n'.join(ignored))
             mt_ignored.close()
 
@@ -903,9 +903,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         directory.
         """
 
-        if not exists(join(self.basedir, '_MTN')):
+        if not exists(join(self.repository.basedir, '_MTN')):
             raise TargetInitializationFailure("Please setup '%s' as a "
                                               "monotone working directory" %
-                                              self.basedir)
+                                              self.repository.basedir)
 
         SynchronizableTargetWorkingDir._initializeWorkingDir(self)

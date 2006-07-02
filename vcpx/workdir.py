@@ -17,14 +17,9 @@ class WorkingDir(object):
     """
 
     def __init__(self, repository):
-        from os.path import join, normpath
         from logging import getLogger
 
         self.repository = repository
-        if repository.subdir:
-            self.basedir = normpath(join(repository.rootdir, repository.subdir))
-        else:
-            self.basedir = repository.rootdir
         self.log = getLogger('tailor.%s.%s' % (self.__class__.__name__,
                                                repository.name))
 

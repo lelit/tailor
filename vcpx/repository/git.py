@@ -86,7 +86,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _tryCommand(self, cmd, exception=Exception, pipe=True):
         c = GitExternalCommand(self.repository,
-                               command = self.repository.command(*cmd), cwd = self.basedir)
+                               command = self.repository.command(*cmd), cwd = self.repository.basedir)
         if pipe:
             output = c.execute(stdout=PIPE)[0]
         else:
@@ -108,13 +108,13 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # easily check out arbitrary revisions anyway, but we could probably
         # handle HEAD (master) as a special case...
         # git clone won't checkout into an existing directory
-        target = join(self.basedir, '.gittmp')
+        target = join(self.repository.basedir, '.gittmp')
         # might want -s if we can determine that the path is local. Then again,
         # that makes it a little unsafe to do git write actions here
         self._tryCommand(['clone', '-n', self.repository.repository, target],
                          ChangesetApplicationFailure, False)
 
-        rename(join(target, '.git'), join(self.basedir, '.git'))
+        rename(join(target, '.git'), join(self.repository.basedir, '.git'))
         rmdir(target)
 
         rev = self._getRev(revision)
@@ -209,7 +209,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import listdir
 
         tags = []
-        tagdir = join(self.basedir, '.git', 'refs', 'tags')
+        tagdir = join(self.repository.basedir, '.git', 'refs', 'tags')
         try:
             for tag in listdir(tagdir):
                 # Consider caching stat info per tailor run
@@ -241,7 +241,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Currently git does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
             self._tryCommand(['update-index', '--add'] + notdirs)
 
@@ -294,7 +294,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             refname = 'HEAD'
 
         # find the previous commit on the branch if any
-        c = GitExternalCommand(self.repository, cwd=self.basedir,
+        c = GitExternalCommand(self.repository, cwd=self.repository.basedir,
                                command=self.repository.command('rev-parse', refname))
         (out, err) = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
@@ -320,7 +320,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd = self.repository.command('commit-tree', treeid, '-p', parent)
         else:
             cmd = self.repository.command('commit-tree', treeid)
-        c = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
+        c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
 
         logmessage = encode('\n'.join(logmessage))
         if not logmessage:
@@ -348,7 +348,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
         cmd = self.repository.command("tag", "-f", tag)
-        c = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
+        c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
         c.execute()
 
         if c.exit_status:
@@ -365,7 +365,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Currently git does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(self.basedir, n))]
+        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
             self._tryCommand(['update-index', '--remove'] + notdirs)
 
@@ -380,12 +380,12 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import walk
         from vcpx.dualwd import IGNORED_METADIRS
 
-        if isdir(join(self.basedir, newname)):
+        if isdir(join(self.repository.basedir, newname)):
             # Given lack of support for directories in current Git,
             # loop over all files under the new directory and
             # do a add/remove on them.
-            skip = len(self.basedir)+len(newname)+2
-            for dir, subdirs, files in walk(join(self.basedir, newname)):
+            skip = len(self.repository.basedir)+len(newname)+2
+            for dir, subdirs, files in walk(join(self.repository.basedir, newname)):
                 prefix = dir[skip:]
 
                 for excd in IGNORED_METADIRS:
@@ -407,11 +407,11 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import renames, mkdir
         from os.path import join, exists
 
-        if not exists(join(self.basedir, self.repository.METADIR)):
+        if not exists(join(self.repository.basedir, self.repository.METADIR)):
             if self.repository.PARENT_REPO:
                 cmd = self.repository.command("clone", "--shared", "-n",
                                               self.repository.PARENT_REPO, 'tmp')
-                clone = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
+                clone = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
                 clone.execute()
                 if clone.exit_status:
                     raise TargetInitializationFailure(
@@ -421,7 +421,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                         '%s/%s/.git' % (self.repository.rootdir, self.repository.subdir))
                 
                 cmd = self.repository.command("reset", "--soft", self.repository.BRANCHPOINT)
-                reset = GitExternalCommand(self.repository, cwd=self.basedir, command=cmd)
+                reset = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
                 reset.execute()
                 if reset.exit_status:
                     raise TargetInitializationFailure(
@@ -431,7 +431,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 # ...and exists(self.repository.storagedir) ?
 
                 # initialization of a new branch in single-repository mode
-                mkdir(join(self.basedir, self.repository.METADIR))
+                mkdir(join(self.repository.basedir, self.repository.METADIR))
 
                 bp = self._tryCommand(['rev-parse', self.repository.BRANCHPOINT],
                                       BranchpointFailure)[0]
@@ -440,7 +440,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 #self._tryCommand(['checkout-index'])
 
             else:
-                if exists(join(self.basedir, self.repository.storagedir)):
+                if exists(join(self.repository.basedir, self.repository.storagedir)):
                     raise TargetInitializationFailure(
                         "Repository %s already exists - "
                         "did you forget to set \"branch\" parameter ?" % self.repository.storagedir)
@@ -449,7 +449,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 if self.repository.repository:
                     # in this mode, the db is not stored in working dir, so we
                     # have to create .git ourselves
-                    mkdir(join(self.basedir, self.repository.METADIR))
+                    mkdir(join(self.repository.basedir, self.repository.METADIR))
 
     def _prepareWorkingDirectory(self, source_repo):
         """
@@ -461,7 +461,7 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from vcpx.dualwd import IGNORED_METADIRS
 
         # create info/excludes in storagedir
-        infodir = join(self.basedir, self.repository.storagedir, 'info')
+        infodir = join(self.repository.basedir, self.repository.storagedir, 'info')
         if not exists(infodir):
             mkdir(infodir)
 
@@ -472,11 +472,11 @@ class GitWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         ignore.write('\n'.join(['%s' % md
                                 for md in IGNORED_METADIRS]))
         ignore.write('\n')
-        if self.logfile.startswith(self.basedir):
-            ignore.write(self.logfile[len(self.basedir)+1:])
+        if self.logfile.startswith(self.repository.basedir):
+            ignore.write(self.logfile[len(self.repository.basedir)+1:])
             ignore.write('\n')
-        if self.state_file.filename.startswith(self.basedir):
-            sfrelname = self.state_file.filename[len(self.basedir)+1:]
+        if self.state_file.filename.startswith(self.repository.basedir):
+            sfrelname = self.state_file.filename[len(self.repository.basedir)+1:]
             ignore.write(sfrelname)
             ignore.write('\n')
             ignore.write(sfrelname+'.old')

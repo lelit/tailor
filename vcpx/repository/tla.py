@@ -77,7 +77,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         changesets = []
         self.fqversion = '/'.join([self.repository.repository,
                                    self.repository.module])
-        c = ExternalCommand(cwd=self.basedir,
+        c = ExternalCommand(cwd=self.repository.basedir,
                             command=self.repository.command("missing", "-f"))
         out, err = c.execute(stdout=PIPE, stderr=PIPE)
         if c.exit_status:
@@ -112,7 +112,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
         fqrev = self.__initial_revision(revision)
         if self.shared_basedirs:
-            tempdir = mkdtemp("", ",,tailor-", self.basedir)
+            tempdir = mkdtemp("", ",,tailor-", self.repository.basedir)
             try:
                 self.__checkout_initial_revision(fqrev, tempdir, "t")
             finally:
@@ -120,11 +120,11 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 if os.path.exists(newtree):
                     for e in os.listdir(newtree):
                         os.rename(os.path.join(newtree, e),
-                                  os.path.join(self.basedir, e))
+                                  os.path.join(self.repository.basedir, e))
                     os.rmdir(newtree)
                 os.rmdir(tempdir)
         else:
-            root, destdir = os.path.split(self.basedir)
+            root, destdir = os.path.split(self.repository.basedir)
             self.__checkout_initial_revision(fqrev, root, destdir)
         return self.__parse_revision_logs([fqrev], False)[0]
 
@@ -142,7 +142,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 (str(c), c.exit_status, err.read()))
 
     def __apply_changeset(self, changeset):
-        c = ExternalCommand(cwd=self.basedir,
+        c = ExternalCommand(cwd=self.repository.basedir,
                             command=self.repository.command("update"))
         out, err = c.execute(changeset.revision, stdout=PIPE, stderr=PIPE)
         if not c.exit_status in [0, 1]:
@@ -186,7 +186,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
     def __parse_revision_logs(self, fqrevlist, update=True):
         changesets = []
         logparser = Parser()
-        c = ExternalCommand(cwd=self.basedir,
+        c = ExternalCommand(cwd=self.repository.basedir,
                             command=self.repository.command("cat-archive-log"))
         for fqrev in fqrevlist:
             out, err = c.execute(fqrev, stdout=PIPE, stderr=PIPE)
@@ -222,10 +222,10 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
         return changesets
 
     def __hide_foreign_entries(self):
-        c = ExternalCommand(cwd=self.basedir,
+        c = ExternalCommand(cwd=self.repository.basedir,
                             command=self.repository.command("tree-lint", "-tu"))
         out = c.execute(stdout=PIPE)[0]
-        tempdir = mkdtemp("", "++tailor-", self.basedir)
+        tempdir = mkdtemp("", "++tailor-", self.repository.basedir)
         try:
             for e in out:
                 e = e.strip()
@@ -233,7 +233,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 # only move inventory violations at the root
                 if ht[0] and ht[1]:
                     continue
-                os.rename(os.path.join(self.basedir, e),
+                os.rename(os.path.join(self.repository.basedir, e),
                           os.path.join(tempdir, e))
         except:
             self.__restore_foreign_entries(tempdir)
@@ -242,7 +242,7 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
 
     def __restore_foreign_entries(self, tempdir):
         for e in os.listdir(tempdir):
-            os.rename(os.path.join(tempdir, e), os.path.join(self.basedir, e))
+            os.rename(os.path.join(tempdir, e), os.path.join(self.repository.basedir, e))
         os.rmdir(tempdir)
 
     def __parse_apply_changeset_output(self, changeset, output):

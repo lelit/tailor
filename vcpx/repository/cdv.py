@@ -38,7 +38,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
         names = [e.name for e in changeset.modifiedEntries()]
         cmd = self.repository.command("edit")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _addPathnames(self, names):
         """
@@ -46,7 +46,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("add")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -68,7 +68,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         if not entries:
             entries = ['...']
 
-        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         c.execute(entries)
 
         if c.exit_status:
@@ -81,7 +81,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("remove")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
         """
@@ -89,7 +89,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("rename")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(oldname, newname)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
         """
@@ -100,8 +100,8 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        if not exists(join(self.basedir, self.repository.METADIR)):
-            init = ExternalCommand(cwd=self.basedir,
+        if not exists(join(self.repository.basedir, self.repository.METADIR)):
+            init = ExternalCommand(cwd=self.repository.basedir,
                                    command=self.repository.command("init"))
             init.execute()
 
@@ -118,4 +118,4 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("set", "user")
         user = getenv('CDV_USER') or getenv('LOGNAME')
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(user)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(user)

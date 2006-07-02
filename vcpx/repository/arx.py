@@ -36,7 +36,7 @@ class ArxWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("add")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -55,7 +55,7 @@ class ArxWorkingDir(SynchronizableTargetWorkingDir):
                                       "-s", encode('\n'.join(logmessage)),
                                       "--author", encode(author),
                                       "--date", date.isoformat())
-        c = ExternalCommand(cwd=self.basedir, command=cmd)
+        c = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         c.execute()
 
         if c.exit_status:
@@ -68,7 +68,7 @@ class ArxWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("rm")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
         """
@@ -76,7 +76,7 @@ class ArxWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("copy")
-        rename = ExternalCommand(cwd=self.basedir, command=cmd)
+        rename = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         rename.execute(oldname, newname)
 
     def _initializeWorkingDir(self):
@@ -91,7 +91,7 @@ class ArxWorkingDir(SynchronizableTargetWorkingDir):
 
         from os.path import exists, join
 
-        if not exists(join(self.basedir, '_arx')):
-            raise TargetInitializationFailure("Please setup '%s' as an ArX working directory" % self.basedir)
+        if not exists(join(self.repository.basedir, '_arx')):
+            raise TargetInitializationFailure("Please setup '%s' as an ArX working directory" % self.repository.basedir)
 
         SynchronizableTargetWorkingDir._initializeWorkingDir(self)

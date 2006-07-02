@@ -270,7 +270,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("log", "--verbose", "--xml",
                                       "--revision", "%d:HEAD" % (sincerev+1))
-        svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
+        svnlog = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         log = svnlog.execute('.', stdout=PIPE, TZ='UTC0')[0]
 
         if svnlog.exit_status:
@@ -304,7 +304,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if self.repository.ignore_externals:
             cmd.append("--ignore-externals")
         cmd.extend(["--revision", changeset.revision])
-        svnup = ExternalCommand(cwd=self.basedir, command=cmd)
+        svnup = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
         retry = 0
         while True:
@@ -412,7 +412,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             initial = False
 
-        if not exists(join(self.basedir, '.svn')):
+        if not exists(join(self.repository.basedir, '.svn')):
             self.log.debug("Checking out a working copy")
 
             cmd = self.repository.command("co", "--quiet")
@@ -423,7 +423,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
             out, err = svnco.execute("%s%s" % (self.repository.repository,
                                                self.repository.module),
-                                     self.basedir, stdout=PIPE, stderr=PIPE)
+                                     self.repository.basedir, stdout=PIPE, stderr=PIPE)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %s saying\n%s" % (str(svnco),
@@ -431,14 +431,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                                          err.read()))
         else:
             self.log.debug("%r already exists, assuming it's "
-                           "a svn working dir", self.basedir)
+                           "a svn working dir", self.repository.basedir)
 
         if not initial:
             if revision=='HEAD':
                 revision = 'COMMITTED'
             cmd = self.repository.command("log", "--verbose", "--xml",
                                           "--revision", revision)
-            svnlog = ExternalCommand(cwd=self.basedir, command=cmd)
+            svnlog = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             out, err = svnlog.execute(stdout=PIPE, stderr=PIPE)
 
             if svnlog.exit_status:
@@ -462,7 +462,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("add", "--quiet", "--no-auto-props",
                                       "--non-recursive")
-        ExternalCommand(cwd=self.basedir, command=cmd).execute(names)
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None):
         """
@@ -493,7 +493,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         log.close()
 
         cmd = self.repository.command("commit", "--file", rontf.name)
-        commit = ExternalCommand(cwd=self.basedir, command=cmd)
+        commit = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
         if not entries:
             entries = ['.']
@@ -526,7 +526,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd = self.repository.command("propset", "%(propname)s",
                                           "--quiet", "--revprop",
                                           "--revision", revision)
-            propset = ExternalCommand(cwd=self.basedir, command=cmd)
+            propset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(encode(author), propname='svn:author')
@@ -536,7 +536,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd.append("--ignore-externals")
         cmd.extend(["--revision", revision])
 
-        ExternalCommand(cwd=self.basedir, command=cmd).execute()
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute()
 
     def _removePathnames(self, names):
         """
@@ -544,7 +544,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("remove", "--quiet", "--force")
-        remove = ExternalCommand(cwd=self.basedir, command=cmd)
+        remove = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         remove.execute(names)
 
     def _renamePathname(self, oldname, newname):
@@ -565,8 +565,8 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # It may be better to let subversion do the move itself. For one thing,
         # svn's cp+rm is different from rm+add (cp preserves history).
         unmoved = False
-        oldpath = join(self.basedir, oldname)
-        newpath = join(self.basedir, newname)
+        oldpath = join(self.repository.basedir, oldname)
+        newpath = join(self.repository.basedir, newname)
         if not exists(oldpath):
             try:
                 rename(newpath, oldpath)
@@ -575,7 +575,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                   newpath, oldpath)
                 raise
             unmoved = True
-        move = ExternalCommand(cwd=self.basedir, command=cmd)
+        move = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
         if move.exit_status:
             if unmoved:
@@ -659,7 +659,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        if not self.repository.repository or exists(join(self.basedir, '.svn')):
+        if not self.repository.repository or exists(join(self.repository.basedir, '.svn')):
             return
 
         cmd = self.repository.command("co", "--quiet")
@@ -668,7 +668,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         svnco = ExternalCommand(command=cmd)
         svnco.execute("%s%s" % (self.repository.repository,
-                                self.repository.module), self.basedir)
+                                self.repository.module), self.repository.basedir)
 
     def _initializeWorkingDir(self):
         """
@@ -677,7 +677,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import exists, join
 
-        if not exists(join(self.basedir, '.svn')):
-            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % self.basedir)
+        if not exists(join(self.repository.basedir, '.svn')):
+            raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % self.repository.basedir)
 
         SynchronizableTargetWorkingDir._initializeWorkingDir(self)
