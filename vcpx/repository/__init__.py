@@ -162,11 +162,18 @@ class Repository(object):
 
         from vcpx import TailorException
 
-        wdname = self.kind.capitalize() + 'WorkingDir'
-        modname = 'vcpx.repository.' + self.kind
         try:
-            wdmod = __import__(modname, globals(), locals(), [wdname])
-            workingdir = getattr(wdmod, wdname)
+            try:
+                wdname = self.kind.capitalize() + self.which.capitalize() + 'WorkingDir'
+                modname = 'vcpx.repository.' + self.kind + '.' + self.which
+                wdmod = __import__(modname, globals(), locals(), [wdname])
+                workingdir = getattr(wdmod, wdname)
+            except (AttributeError, ImportError), e:
+                self.log.info ("%s not found as new-style vcs, trying as monolithic" % self.kind)
+                wdname = self.kind.capitalize() + 'WorkingDir'
+                modname = 'vcpx.repository.' + self.kind
+                wdmod = __import__(modname, globals(), locals(), [wdname])
+                workingdir = getattr(wdmod, wdname)
         except SyntaxError, e:
             self.log.exception("Cannot import %r from %r", wdname, modname)
             raise TailorException("Cannot import %r: %s" % (wdname, e))
