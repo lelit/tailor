@@ -121,16 +121,15 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _changesetForRevision(self, repo, revision):
         from datetime import datetime
         from vcpx.changes import Changeset, ChangesetEntry
+        from vcpx.tzinfo import FixedOffset
 
         entries = []
         node = self._getNode(repo, revision)
         parents = repo.changelog.parents(node)
         (manifest, user, date, files, message) = repo.changelog.read(node)
 
-        # Different targets seem to handle the TZ differently. It looks like
-        # darcs may be the most correct.
         dt, tz = date
-        date = datetime.fromtimestamp(int(dt) + int(tz))
+        date = datetime.fromtimestamp(dt, FixedOffset(-tz/60)) # note the minus sign!
 
         manifest = repo.manifest.read(manifest)
 
@@ -251,7 +250,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self._hg.add(notdirs)
 
     def _commit(self, date, author, patchname, changelog=None, names=[]):
-        from time import mktime
+        from calendar import timegm  # like mktime(), but returns UTC timestamp
 
         encode = self.repository.encode
 
@@ -266,10 +265,14 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             self.log.info('Committing...')
             logmessage = "Empty changelog"
+
+        timestamp = timegm(date.utctimetuple())
+        timezone  = date.utcoffset().seconds + date.utcoffset().days * 24 * 3600
+
         opts = {}
         opts['message'] = logmessage
         opts['user'] = encode(author)
-        opts['date'] =  '%d 0' % mktime(date.timetuple())
+        opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
         self._hgCommand('commit', *[encode(n) for n in names], **opts)
 
     def _tag(self, tag):

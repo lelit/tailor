@@ -8,6 +8,7 @@
 from unittest import TestCase
 from datetime import datetime
 from vcpx.repository.cvsps import changesets_from_cvsps
+from vcpx.tzinfo import UTC
 
 
 class CvspsParser(TestCase):
@@ -29,7 +30,7 @@ class CvspsParser(TestCase):
         cset = csets.next()
         self.assertEqual(cset.revision, '1500')
         self.assertEqual(cset.author, "grubert")
-        self.assertEqual(cset.date, datetime(2004, 5, 9, 17, 54, 22))
+        self.assertEqual(cset.date, datetime(2004, 5, 9, 17, 54, 22, 0, UTC))
         self.assertEqual(cset.log, "Tell the reason for using mbox "
                                    "(not wrapping long lines).")
 

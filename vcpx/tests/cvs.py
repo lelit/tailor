@@ -10,6 +10,7 @@ from datetime import datetime
 from StringIO import StringIO
 from vcpx.repository.cvs import changesets_from_cvslog, compare_cvs_revs, \
                                 cvs_revs_same_branch, normalize_cvs_rev
+from vcpx.tzinfo import UTC
 
 
 class CvsEntry(TestCase):
@@ -25,21 +26,21 @@ class CvsEntry(TestCase):
         e = CvsEntry(tagline)
         self.assertEqual(e.filename, 'version.txt')
         self.assertEqual(e.cvs_version, '1.16.2.1')
-        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 12, 49, 2))
+        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 12, 49, 2, 0, UTC))
         self.assertEqual(e.cvs_tag, 'T1.16.2.1')
 
         tagline = "/Validator.py/1.31.2.5/Result of merge+Tue Jul 13 13:43:06 2004//T1.31.2.5"
         e = CvsEntry(tagline)
         self.assertEqual(e.filename, 'Validator.py')
         self.assertEqual(e.cvs_version, '1.31.2.5')
-        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 13, 43, 6))
+        self.assertEqual(e.timestamp, datetime(2004, 7, 13, 13, 43, 6, 0, UTC))
         self.assertEqual(e.cvs_tag, 'T1.31.2.5')
 
         tagline = "/Makefile.am/1.55/Result of merge//T1.55"
         e = CvsEntry(tagline)
         self.assertEqual(e.filename, 'Makefile.am')
         self.assertEqual(e.cvs_version, '1.55')
-        self.assert_((datetime.today() - e.timestamp) < timedelta(seconds=1))
+        self.assert_((datetime.now(tz=UTC) - e.timestamp) < timedelta(seconds=1))
         self.assertEqual(e.cvs_tag, 'T1.55')
 
 
@@ -63,7 +64,7 @@ class CvsLogParser(TestCase):
 
         cset = csets[0]
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58))
+        self.assertEqual(cset.date, datetime(2004, 6, 3, 13, 50, 58, 0, UTC))
         self.assertEqual(cset.log, "Added to project (exctracted from "
                                    "HISTORY.txt)")
         entry = cset.entries[0]
@@ -73,7 +74,7 @@ class CvsLogParser(TestCase):
 
         cset = csets[1]
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20))
+        self.assertEqual(cset.date, datetime(2004, 6, 10, 2, 17, 20, 0, UTC))
         self.assertEqual(cset.log, "")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'THANKS.txt')
@@ -88,19 +89,19 @@ class CvsLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07))
+        self.assertEqual(cset.date, datetime(2004, 4, 27, 19, 51, 07, 0, UTC))
 
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48))
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 8, 48, 0, UTC))
 
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31))
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 2, 51, 31, 0, UTC))
 
         cset = csets.next()
         self.assertEqual(cset.author, "goodger")
-        self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50))
+        self.assertEqual(cset.date, datetime(2004, 6, 17, 21, 46, 50, 0, UTC))
         self.assertEqual(cset.log,"support for CSV directive implementation")
         self.assertEqual(len(cset.entries), 2)
 
@@ -114,7 +115,7 @@ class CvsLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, "felixwiemann")
-        self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17))
+        self.assertEqual(cset.date, datetime(2004, 6, 20, 16, 3, 17, 0, UTC))
 
     def testDeletedEntry(self):
         """Verify recognition of deleted entries in the cvs log"""
@@ -143,23 +144,23 @@ class CvsLogParser(TestCase):
 
         cset = csets[0]
         self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 12))
+        self.assertEqual(cset.date, datetime(1996, 10, 7, 18, 32, 12, 0, UTC))
 
         cset = csets[1]
         self.assertEqual(len(cset.entries), 1)
-        self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50))
+        self.assertEqual(cset.date, datetime(1996, 10, 14, 13, 56, 50, 0, UTC))
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Doc/libObjCStreams.tex')
 
         cset = csets[2]
         self.assertEqual(len(cset.entries), 1)
-        self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4))
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 12, 36, 4, 0, UTC))
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'Doc/libPyObjC.tex')
 
         cset = csets[3]
         self.assertEqual(len(cset.entries), 2)
-        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 45))
+        self.assertEqual(cset.date, datetime(1996, 10, 18, 13, 48, 45, 0, UTC))
 
     def testBranchesInLog(self):
         """Verify the parser groks with the branches info on revision"""
@@ -192,7 +193,7 @@ class CvsLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 6, 20, 13, 30))
+        self.assertEqual(cset.date, datetime(2004, 8, 6, 20, 13, 30, 0, UTC))
         self.assertEqual(cset.log, "Added ExtendingType")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'docs/ExtendingType.txt')
@@ -201,7 +202,7 @@ class CvsLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9))
+        self.assertEqual(cset.date, datetime(2004, 8, 9, 7, 44, 9, 0, UTC))
         self.assertEqual(cset.log, """\
 Recoded migration walkers to use a generator instead returning a list to make them much more memory efficient.
 
@@ -215,22 +216,22 @@ Added a findStaledObjects external method to ATCT to find staled objects. It is 
 
         cset = csets.next()
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 15, 46))
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 15, 46, 0, UTC))
         self.assertEqual(cset.log, "Fixed typo")
 
         cset = csets.next()
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 24))
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 24, 0, UTC))
         self.assertEqual(cset.log, "Something went wrong ...")
 
         cset = csets.next()
         self.assertEqual(cset.author, "tiran")
-        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 53))
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 21, 53, 0, UTC))
         self.assertEqual(cset.log, "Somehow I mixed up two sentences")
 
         cset = csets.next()
         self.assertEqual(cset.author, "rochael")
-        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 59, 55))
+        self.assertEqual(cset.date, datetime(2004, 8, 13, 13, 59, 55, 0, UTC))
         self.assertEqual(cset.log, "removed duplicated ENABLE_TEMPLATE_MIXIN")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'customconfig.py.example')
@@ -353,10 +354,10 @@ head: 1.2
         csets = list(changesets_from_cvslog(log, 'src'))
 
         cset = csets[0]
-        self.assertEqual(cset.date, datetime(1994, 5, 17, 13, 03, 36))
+        self.assertEqual(cset.date, datetime(1994, 5, 17, 13, 03, 36, 0, UTC))
 
         cset = csets[-1]
-        self.assertEqual(cset.date, datetime(1995, 12, 30, 18, 32, 46))
+        self.assertEqual(cset.date, datetime(1995, 12, 30, 18, 32, 46, 0, UTC))
 
 class CvsRevisions(TestCase):
     """Tests the basic CVS revisions handling"""

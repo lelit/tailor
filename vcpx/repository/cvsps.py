@@ -19,6 +19,7 @@ from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
                         InvocationError
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.tzinfo import UTC
 
 
 class EmptyRepositoriesFoolsMe(TailorException):
@@ -207,7 +208,7 @@ def changesets_from_cvsps(log, sincerev=None):
             cvsdate = pset['date']
             y,m,d = map(int, cvsdate[:10].split('/'))
             hh,mm,ss = map(int, cvsdate[11:19].split(':'))
-            timestamp = datetime(y, m, d, hh, mm, ss)
+            timestamp = datetime(y, m, d, hh, mm, ss, 0, UTC)
             pset['date'] = timestamp
 
             yield Changeset(pset['revision'], timestamp, pset['author'],
@@ -402,7 +403,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 "revision '%s'" % revision)
         if timestamp == 'INITIAL':
             initialcset = csets.next()
-            timestamp = initialcset.date.isoformat(sep=' ')
+            timestamp = initialcset.date.replace(tzinfo=None).isoformat(sep=' ')
         else:
             initialcset = None
 

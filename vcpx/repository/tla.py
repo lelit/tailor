@@ -49,6 +49,7 @@ from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
                         GetUpstreamChangesetsFailure
 from vcpx.target import TargetInitializationFailure
+from vcpx.tzinfo import UTC, FixedOffset
 
 
 class TlaRepository(Repository):
@@ -205,9 +206,8 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
                 err = "in-version continuations not supported"
             if err:
                 raise GetUpstreamChangesetsFailure(str(err))
-            y,m,d,hh,mm,ss,d1,d2,d3 = strptime(msg['Standard-date'],
-                                               "%Y-%m-%d %H:%M:%S %Z")
-            date = datetime(y,m,d,hh,mm,ss)
+
+            date = self.__parse_date(msg['Date'], msg['Standard-date'])
             author = msg['Creator']
             revision = fqrev
             logmsg = [msg['Summary']]
@@ -220,6 +220,18 @@ class TlaWorkingDir(UpdatableSourceWorkingDir):
             logmsg = '\n'.join(logmsg)
             changesets.append(Changeset(revision, date, author, logmsg))
         return changesets
+
+    def __parse_date(self, d1, d2):
+        # d1: Wed Dec 10 15:01:28 EST 2003
+        # d2: 2003-12-10 04:01:28 GMT
+
+        d1 = datetime(*strptime(d1[:19] + d1[-5:], '%a %b %d %H:%M:%S %Y')[:6]).replace(tzinfo=UTC)
+        d2 = datetime(*strptime(d2[:19], '%Y-%m-%d %H:%M:%S')[:6]).replace(tzinfo=UTC)
+
+        offset = d1 - d2
+        offset = offset.seconds + offset.days * 24 * 3600
+
+        return d1.replace(tzinfo=FixedOffset(offset/60))
 
     def __hide_foreign_entries(self):
         c = ExternalCommand(cwd=self.repository.basedir,

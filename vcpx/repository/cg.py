@@ -105,7 +105,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         if email:
             env['GIT_AUTHOR_EMAIL']=email
         if date:
-            env['GIT_AUTHOR_DATE']=str(date)
+            env['GIT_AUTHOR_DATE']=date.strftime('%Y-%m-%d %H:%M:%S %z')
         # '-f' flag means we can get empty commits, which
         # shouldn't be a problem.
         cmd = self.repository.command("commit", "-f")

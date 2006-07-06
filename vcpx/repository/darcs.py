@@ -18,6 +18,7 @@ from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
                         GetUpstreamChangesetsFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.tzinfo import UTC
 
 
 MOTD = """\
@@ -145,6 +146,9 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                 except ValueError:
                     # Old darcs patches use the form Sun Oct 20 20:01:05 EDT 2002
                     timestamp = datetime(*strptime(date[:19] + date[-5:], '%a %b %d %H:%M:%S %Y')[:6])
+
+                timestamp = timestamp.replace(tzinfo=UTC) # not true for the ValueError case, but oh well
+
                 self.current['date'] = timestamp
                 self.current['comment'] = ''
                 self.current['hash'] = attributes['hash']
@@ -307,7 +311,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
                 date = l[:28]
                 author = l[30:-1]
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
-                date = datetime(y,m,d,hh,mm,ss)
+                date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline()
                 assert (l.startswith('  * ') or
                         l.startswith('  UNDO:') or
@@ -549,7 +553,7 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
 
         logmessage = []
 
-        logmessage.append(date.strftime('%Y/%m/%d %H:%M:%S UTC'))
+        logmessage.append(date.astimezone(UTC).strftime('%Y/%m/%d %H:%M:%S UTC'))
         logmessage.append(author)
         if patchname:
             logmessage.append(patchname)

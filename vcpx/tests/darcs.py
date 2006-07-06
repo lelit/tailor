@@ -10,6 +10,7 @@ from datetime import datetime
 from StringIO import StringIO
 from vcpx.repository.darcs import changesets_from_darcschanges
 from vcpx.shwrap import ExternalCommand, PIPE
+from vcpx.tzinfo import UTC
 
 
 class DarcsChangesParser(TestCase):
@@ -54,7 +55,7 @@ class DarcsChangesParser(TestCase):
         self.assertEqual(cset.revision,
                          "Fix the CVS parser to omit already seen changesets")
         self.assertEqual(cset.author, "lele@nautilus.homeip.net")
-        self.assertEqual(cset.date, datetime(2004, 7, 16, 12, 37, 37))
+        self.assertEqual(cset.date, datetime(2004, 7, 16, 12, 37, 37, 0, UTC))
         self.assertEqual(cset.log, "For some unknown reasons....")
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'vcpx/cvs.py')
@@ -63,7 +64,7 @@ class DarcsChangesParser(TestCase):
         cset = csets.next()
         self.assertEqual(cset.revision,
                          "Svn log parser with test")
-        self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59))
+        self.assertEqual(cset.date, datetime(2004, 6, 1, 14, 5, 59, 0, UTC))
         self.assertEqual(len(cset.entries), 4)
         self.assertEqual(cset.darcs_hash,
                          '20040601140559-97f81-b669594864cb35290fbe4848e6645e73057a8caf.gz')
@@ -212,10 +213,10 @@ class DarcsChangesParser(TestCase):
         csets = changesets_from_darcschanges(log)
 
         cset = csets.next()
-        self.assertEqual(cset.date, datetime(2003, 10, 14, 9, 42, 0))
+        self.assertEqual(cset.date, datetime(2003, 10, 14, 9, 42, 0, 0, UTC))
 
         cset = csets.next()
-        self.assertEqual(cset.date, datetime(2003, 10, 14, 14, 2, 31))
+        self.assertEqual(cset.date, datetime(2003, 10, 14, 14, 2, 31, 0, UTC))
 
     RENAME_THEN_REMOVE_TEST = """
 <changelog>

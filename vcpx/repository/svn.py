@@ -16,6 +16,7 @@ from vcpx.shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from vcpx.config import ConfigurationError
+from vcpx.tzinfo import UTC
 
 
 class SvnRepository(Repository):
@@ -258,7 +259,7 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                 y,m,d = map(int, svndate[:10].split('-'))
                 hh,mm,ss = map(int, svndate[11:19].split(':'))
                 ms = int(svndate[20:-1])
-                timestamp = datetime(y, m, d, hh, mm, ss, ms)
+                timestamp = datetime(y, m, d, hh, mm, ss, ms, UTC)
 
                 changeset = Changeset(self.current['revision'],
                                       timestamp,
@@ -579,6 +580,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                           "--revision", revision)
             propset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
+            date = date.astimezone(UTC).replace(microsecond = 0, tzinfo=None)
             propset.execute(date.isoformat()+".000000Z", propname='svn:date')
             propset.execute(encode(author), propname='svn:author')
 

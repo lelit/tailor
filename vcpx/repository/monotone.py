@@ -21,6 +21,7 @@ from vcpx.source import UpdatableSourceWorkingDir, InvocationError, \
                         ChangesetApplicationFailure, GetUpstreamChangesetsFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from vcpx.changes import Changeset
+from vcpx.tzinfo import UTC
 
 
 MONOTONERC = """\
@@ -240,7 +241,7 @@ class MonotoneLogParser:
                     time = dateparts[1]
                     y,m,d = map(int, day.split(day[4]))
                     hh,mm,ss = map(int, time.split(':'))
-                    date = datetime(y,m,d,hh,mm,ss)
+                    date = datetime(y,m,d,hh,mm,ss,0,UTC)
                     self.dates.append(date)
                     state = self.SINGLE
             elif pr("Branch:"):
@@ -763,6 +764,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         log.write(encode('\n'.join(logmessage)))
         log.close()
 
+        date = date.astimezone(UTC).replace(tzinfo=None) # monotone wants UTC
         cmd = self.repository.command("commit",
                                       "--author", encode(author),
                                       "--date", date.isoformat(),

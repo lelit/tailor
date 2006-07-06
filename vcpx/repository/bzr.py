@@ -112,6 +112,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         from datetime import datetime
         from vcpx.changes import ChangesetEntry, Changeset
+        from vcpx.tzinfo import FixedOffset, UTC
 
         revision = branch.repository.get_revision(revision_id)
         deltatree = branch.get_revision_delta(branch.revision_id_to_revno(revision_id))
@@ -138,8 +139,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             e.action_kind = ChangesetEntry.UPDATED
             entries.append(e)
 
+        if revision.timezone is not None:
+            timezone = FixedOffset(revision.timezone / 60)
+        else:
+            timezone = UTC
+
         return Changeset(revision.revision_id,
-                         datetime.fromtimestamp(revision.timestamp),
+                         datetime.fromtimestamp(revision.timestamp, timezone),
                          revision.committer,
                          revision.message,
                          entries)
@@ -225,7 +231,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         Commit the changeset.
         """
-        from time import mktime
+        from calendar import timegm  # like mktime(), but returns UTC timestamp
         from binascii import hexlify
         from re import search
         from bzrlib.osutils import compact_date, rand_bytes
@@ -241,7 +247,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             self.log.info('Committing...')
             logmessage = "Empty changelog"
-        timestamp = int(mktime(date.timetuple()))
+
+        timestamp = timegm(date.utctimetuple())
+        timezone  = date.utcoffset().seconds + date.utcoffset().days * 24 * 3600
 
         # Guess sane email address
         email = search("<(.*@.*)>", author)
@@ -261,7 +269,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self._working_tree.commit(logmessage, committer=author,
                                   specific_files=entries, rev_id=revision_id,
                                   verbose=self.repository.projectref().verbose,
-                                  timestamp=timestamp)
+                                  timestamp=timestamp, timezone=timezone)
 
     def _removePathnames(self, names):
         """

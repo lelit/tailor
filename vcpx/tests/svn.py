@@ -8,6 +8,7 @@
 from unittest import TestCase
 from datetime import datetime
 from vcpx.repository.svn import changesets_from_svnlog
+from vcpx.tzinfo import UTC
 
 
 class FakeLogger:
@@ -40,7 +41,7 @@ class SvnLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, 'lele')
-        self.assertEqual(cset.date, datetime(2004,11,12,15,05,37,134366))
+        self.assertEqual(cset.date, datetime(2004,11,12,15,05,37,134366,UTC))
         self.assertEqual(cset.log, 'create tree')
         self.assertEqual(len(cset.entries), 2)
 
@@ -54,7 +55,7 @@ class SvnLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, 'lele')
-        self.assertEqual(cset.date, datetime(2004,11,12,15,06,04,193650))
+        self.assertEqual(cset.date, datetime(2004,11,12,15,06,04,193650,UTC))
         self.assertEqual(cset.log, 'rename dir')
         self.assertEqual(len(cset.entries), 1)
 
@@ -74,7 +75,7 @@ class SvnLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, 'anthony')
-        self.assertEqual(cset.date, datetime(2004,11,9,6,54,20,709243))
+        self.assertEqual(cset.date, datetime(2004,11,9,6,54,20,709243,UTC))
         self.assertEqual(cset.log, 'Moving to a /sandbox')
         self.assertEqual(len(cset.entries), 1)
 
@@ -94,7 +95,7 @@ class SvnLogParser(TestCase):
 
         cset = csets[1]
         self.assertEqual(cset.author, 'lele')
-        self.assertEqual(cset.date, datetime(2005,1,8, 17,36,55,174757))
+        self.assertEqual(cset.date, datetime(2005,1,8, 17,36,55,174757,UTC))
         self.assertEqual(cset.log, 'Copy')
         self.assertEqual(len(cset.entries), 1)
 
@@ -104,7 +105,7 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.old_name, 'file1.txt')
 
         cset = csets[2]
-        self.assertEqual(cset.date, datetime(2005,1,8, 17,42,41,347315))
+        self.assertEqual(cset.date, datetime(2005,1,8, 17,42,41,347315,UTC))
         self.assertEqual(cset.log, 'Remove')
         self.assertEqual(len(cset.entries), 1)
 
@@ -113,7 +114,7 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.action_kind, entry.DELETED)
 
         cset = csets[3]
-        self.assertEqual(cset.date, datetime(2005,1,8, 17,43,9,909127))
+        self.assertEqual(cset.date, datetime(2005,1,8, 17,43,9,909127,UTC))
         self.assertEqual(cset.log, 'Move')
         self.assertEqual(len(cset.entries), 1)
 
@@ -132,7 +133,7 @@ class SvnLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(cset.author, 'cmlenz')
-        self.assertEqual(cset.date, datetime(2005,3,21, 8,34, 2,522947))
+        self.assertEqual(cset.date, datetime(2005,3,21, 8,34, 2,522947,UTC))
         self.assertEqual(len(cset.entries), 7)
 
         entry = cset.entries[0]

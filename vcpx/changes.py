@@ -100,6 +100,18 @@ class Changeset(object):
     REFILL_MESSAGE = False
     """Refill changelogs"""
 
+    def _get_date(self):
+        return self.__date
+
+    def _set_date(self, date):
+        if date and date.tzinfo is None:
+            raise "Tailor bug (please report): Changeset dates must have a timezone."
+        self.__date = date
+
+    # date has to be a property because some backends (eg. monotone)
+    # update it after the constructor
+    date = property(_get_date, _set_date)
+
     def __init__(self, revision, date, author, log, entries=None, **other):
         """
         Initialize a new Changeset.

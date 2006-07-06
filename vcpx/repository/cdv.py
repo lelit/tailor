@@ -15,6 +15,7 @@ from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from vcpx.source import ChangesetApplicationFailure
+from vcpx.tzinfo import UTC
 
 
 class CdvRepository(Repository):
@@ -81,7 +82,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("-u", encode(author), "commit",
                                       "-m", encode('\n'.join(logmessage)),
-                                      "-D", date.strftime('%Y/%m/%d %H:%M:%S UTC'))
+                                      "-D", date.astimezone(UTC).strftime('%Y/%m/%d %H:%M:%S UTC'))
 
         if not entries:
             entries = ['...']
