@@ -279,7 +279,7 @@ class OperationalTest(TestCase):
                                                  'testdir': self.TESTDIR})
         if not exists(self.TESTDIR):
             mkdir(self.TESTDIR)
-            #register(rmtree, self.TESTDIR)
+            register(rmtree, self.TESTDIR)
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
