@@ -13,7 +13,6 @@ This module implements the source backend for Git using git-core.
 
 __docformat__ = 'reStructuredText'
 
-from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.config import ConfigurationError
 from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
