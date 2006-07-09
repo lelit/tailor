@@ -17,6 +17,7 @@ from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.config import ConfigurationError
 from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from vcpx.source import ChangesetApplicationFailure
+from vcpx.tzinfo import FixedOffset
 
 class GitSourceWorkingDir(UpdatableSourceWorkingDir):
 
@@ -99,7 +100,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
                 tzsecs = (tzsecs / 100 * 60 + tzsecs % 100) * 60
                 if tz < 0:
                     tzsecs = -tzsecs
-                date = datetime.utcfromtimestamp(dt + tzsecs)
+                date = datetime.fromtimestamp(dt, FixedOffset(tzsecs/60))
             if line.startswith('    '):
                 loglines.append(line.lstrip('    '))
 
