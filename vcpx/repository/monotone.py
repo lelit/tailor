@@ -42,6 +42,56 @@ class MonotoneRepository(Repository):
         self.keygenid = cget(self.name, 'keygenid')
         self.custom_lua = cget(self.name, 'custom_lua')
 
+    def create(self):
+        """
+        Create a new monotone DB, storing the commit keys, if available
+        """
+
+        if not self.repository or exists(self.repository):
+            return
+
+        cmd = self.command("db", "init", "--db", self.repository)
+        init = ExternalCommand(command=cmd)
+        init.execute()
+
+        if init.exit_status:
+            raise TargetInitializationFailure("Was not able to initialize "
+                                              "the monotone db at %r" %
+                                              self.repository)
+
+        if self.keyid:
+            self.log.info("Using key %s for commits" % (self.keyid,))
+        else:
+            # keystore key id unspecified, look at other options
+            if self.keyfile:
+                # a key file is available, read into the database
+                keyfile = file(self.keyfile)
+                cmd = self.repository.command("read", "--db",
+                                              self.repository)
+                regkey = ExternalCommand(command=cmd)
+                regkey.execute(input=keyfile)
+            elif self.keygenid:
+                # requested a new key
+                cmd = self.repository.command("genkey", "--db",
+                                              self.repository)
+                regkey = ExternalCommand(command=cmd)
+                if self.passphrase:
+                    passp="%s\n%s\n" % (self.passphrase,
+                                        self.passphrase)
+                regkey.execute(self.keygenid, input=passp)
+            else:
+                raise TargetInitializationFailure("Can't setup the monotone "
+                                                  "repository %r. "
+                                                  "A keyid, keyfile or keygenid "
+                                                  "must be provided." %
+                                                  self.repository)
+
+            if regkey.exit_status:
+                raise TargetInitializationFailure("Was not able to setup "
+                                                  "the monotone initial key at %r" %
+                                                  self.repository)
+
+
 class ExternalCommandChain:
     """
     This class implements command piping, i.e. a chain of
@@ -776,63 +826,12 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 #            raise ChangesetApplicationFailure("%s returned status %s" %
 #                                              (str(rename),rename.exit_status))
 
-    def __createRepository(self, target_repository):
-        """
-        Create a new monotone DB, storing the commit keys, if available
-        """
-
-        cmd = self.repository.command("db", "init", "--db",
-                                      target_repository.repository)
-        init = ExternalCommand(command=cmd)
-        init.execute()
-
-        if init.exit_status:
-            raise TargetInitializationFailure("Was not able to initialize "
-                                              "the monotone db at %r" %
-                                              target_repository)
-
-        if target_repository.keyid:
-            self.log.info("Using key %s for commits" % (target_repository.keyid,))
-        else:
-            # keystore key id unspecified, look at other options
-            if target_repository.keyfile:
-                # a key file is available, read into the database
-                keyfile = file(target_repository.keyfile)
-                cmd = self.repository.command("read", "--db",
-                                              target_repository.repository)
-                regkey = ExternalCommand(command=cmd)
-                regkey.execute(input=keyfile)
-            elif target_repository.keygenid:
-                # requested a new key
-                cmd = self.repository.command("genkey", "--db",
-                                              target_repository.repository)
-                regkey = ExternalCommand(command=cmd)
-                if target_repository.passphrase:
-                    passp="%s\n%s\n" % (target_repository.passphrase,
-                                        target_repository.passphrase)
-                regkey.execute(target_repository.keygenid, input=passp)
-            else:
-                raise TargetInitializationFailure("Can't setup the monotone "
-                                                  "repository %r. "
-                                                  "A keyid, keyfile or keygenid "
-                                                  "must be provided." %
-                                                  target_repository)
-
-            if regkey.exit_status:
-                raise TargetInitializationFailure("Was not able to setup "
-                                                  "the monotone initial key at %r" %
-                                                  target_repository)
-
     def _prepareTargetRepository(self):
         """
         Check for target repository existence, eventually create it.
         """
 
-        if not self.repository.repository:
-            return
-
-        if not exists(self.repository.repository):
-            self.__createRepository(self.repository)
+        self.repository.create()
 
     def _prepareWorkingDirectory(self, source_repo):
         """

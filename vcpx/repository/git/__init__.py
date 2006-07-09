@@ -18,6 +18,7 @@ from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.config import ConfigurationError
 
+
 class GitRepository(Repository):
     METADIR = '.git'
 
@@ -58,6 +59,58 @@ class GitRepository(Repository):
             raise exception(str(c) + ' failed')
         if pipe:
             return output.read().split('\n')
+
+    def create(self):
+        """
+        Initialize .git through ``git init-db`` or ``git-clone``.
+        """
+
+        from os import renames, mkdir
+        from os.path import join, exists
+
+        if exists(join(self.basedir, self.METADIR)):
+            return
+
+        if self.PARENT_REPO:
+            cmd = self.command("clone", "--shared", "-n", self.PARENT_REPO, 'tmp')
+            clone = GitExternalCommand(self, cwd=self.basedir, command=cmd)
+            clone.execute()
+            if clone.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(clone), clone.exit_status))
+
+            renames(join(self.basedir, 'tmp', '.git'), join(self.basedir, '.git')
+
+            cmd = self.command("reset", "--soft", self.BRANCHPOINT)
+            reset = GitExternalCommand(self, cwd=self.basedir, command=cmd)
+            reset.execute()
+            if reset.exit_status:
+                raise TargetInitializationFailure(
+                    "%s returned status %s" % (str(reset), reset.exit_status))
+
+        elif self.repository and self.BRANCHNAME:
+            # ...and exists(self.storagedir) ?
+
+            # initialization of a new branch in single-repository mode
+            mkdir(join(self.basedir, self.METADIR))
+
+            bp = self._tryCommand(['rev-parse', self.BRANCHPOINT])[0]
+            self._tryCommand(['read-tree', bp])
+            self._tryCommand(['update-ref', self.BRANCHNAME, bp])
+            #self._tryCommand(['checkout-index'])
+
+        else:
+            if exists(join(self.basedir, self.storagedir)):
+                raise TargetInitializationFailure(
+                    "Repository %s already exists - "
+                    "did you forget to set \"branch\" parameter ?" % self.storagedir)
+
+            self._tryCommand(['init-db'])
+            if self.repository:
+                # in this mode, the db is not stored in working dir, so we
+                # have to create .git ourselves
+                mkdir(join(self.basedir, self.METADIR))
+
 
 class GitExternalCommand(ExternalCommand):
     def __init__(self, repo, command=None, cwd=None):

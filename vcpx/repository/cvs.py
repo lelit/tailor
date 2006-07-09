@@ -162,6 +162,7 @@ def _splitGlobalCVSRevision(revision):
            "Simple revision found, expected 'timestamp by author'"
     return revision.split(' by ')
 
+
 class ChangeSetCollector(object):
     """Collector of the applied change sets."""
 

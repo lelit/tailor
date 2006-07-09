@@ -24,6 +24,24 @@ class CgRepository(Repository):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'cg-command', 'cg')
 
+    def create(self):
+        """
+        Execute ``cg init``.
+        """
+
+        from os.path import join, exists
+
+        if exists(join(self.basedir, self.METADIR)):
+            return
+
+        cmd = self.command("init", "-I")
+        init = ExternalCommand(cwd=self.basedir, command=cmd)
+        init.execute()
+
+        if init.exit_status:
+            raise TargetInitializationFailure(
+                "%s returned status %s" % (str(init), init.exit_status))
+
 
 class CgWorkingDir(SynchronizableTargetWorkingDir):
 
@@ -144,20 +162,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
             self._addPathnames([newname])
 
     def _prepareTargetRepository(self):
-        """
-        Execute ``cg init``.
-        """
-
-        from os.path import join, exists
-
-        if not exists(join(self.repository.basedir, self.repository.METADIR)):
-            cmd = self.repository.command("init", "-I")
-            init = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            init.execute()
-
-            if init.exit_status:
-                raise TargetInitializationFailure(
-                    "%s returned status %s" % (str(init), init.exit_status))
+        self.repository.create()
 
     def _prepareWorkingDirectory(self, source_repo):
         """

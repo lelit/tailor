@@ -24,6 +24,24 @@ class CdvRepository(Repository):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'cdv-command', 'cdv')
 
+    def create(self):
+        """
+        Create the base directory if it doesn't exist, and the
+        repository as well in the new working directory, executing
+        a ``cdv init`` there.
+        """
+
+        from os.path import join, normpath, exists
+
+        if exists(join(self.basedir, self.METADIR)):
+            return
+
+        init = ExternalCommand(cwd=self.basedir, command=self.command("init"))
+        init.execute()
+
+        if init.exit_status:
+            raise TargetInitializationFailure(
+                "%s returned status %s" % (str(init), init.exit_status))
 
 class CdvWorkingDir(SynchronizableTargetWorkingDir):
 
@@ -92,22 +110,7 @@ class CdvWorkingDir(SynchronizableTargetWorkingDir):
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(oldname, newname)
 
     def _prepareTargetRepository(self):
-        """
-        Create the base directory if it doesn't exist, and the
-        repository as well in the new working directory, executing
-        a ``cdv init`` there.
-        """
-
-        from os.path import join, exists
-
-        if not exists(join(self.repository.basedir, self.repository.METADIR)):
-            init = ExternalCommand(cwd=self.repository.basedir,
-                                   command=self.repository.command("init"))
-            init.execute()
-
-            if init.exit_status:
-                raise TargetInitializationFailure(
-                    "%s returned status %s" % (str(init), init.exit_status))
+        self.repository.create()
 
     def _prepareWorkingDirectory(self, source_repo):
         """

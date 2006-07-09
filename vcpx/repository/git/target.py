@@ -22,6 +22,7 @@ from vcpx import TailorException
 
 from vcpx.repository.git import GitExternalCommand
 
+
 class BranchpointFailure(TailorException):
     "Specified branchpoint not found in parent branch"
 
@@ -201,56 +202,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             self._addPathnames([newname])
 
     def _prepareTargetRepository(self):
-        """
-        Initialize .git through ``git init-db`` or ``git-clone``.
-        """
-
-        from os import renames, mkdir
-        from os.path import join, exists
-
-        if not exists(join(self.repository.basedir, self.repository.METADIR)):
-            if self.repository.PARENT_REPO:
-                cmd = self.repository.command("clone", "--shared", "-n",
-                                              self.repository.PARENT_REPO, 'tmp')
-                clone = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
-                clone.execute()
-                if clone.exit_status:
-                    raise TargetInitializationFailure(
-                        "%s returned status %s" % (str(clone), clone.exit_status))
-
-                renames('%s/%s/tmp/.git' % (self.repository.rootdir, self.repository.subdir),
-                        '%s/%s/.git' % (self.repository.rootdir, self.repository.subdir))
-                
-                cmd = self.repository.command("reset", "--soft", self.repository.BRANCHPOINT)
-                reset = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
-                reset.execute()
-                if reset.exit_status:
-                    raise TargetInitializationFailure(
-                        "%s returned status %s" % (str(reset), reset.exit_status))
-
-            elif self.repository.repository and self.repository.BRANCHNAME:
-                # ...and exists(self.repository.storagedir) ?
-
-                # initialization of a new branch in single-repository mode
-                mkdir(join(self.repository.basedir, self.repository.METADIR))
-
-                bp = self.repository._tryCommand(['rev-parse', self.repository.BRANCHPOINT],
-                                                 BranchpointFailure)[0]
-                self.repository._tryCommand(['read-tree', bp])
-                self.repository._tryCommand(['update-ref', self.repository.BRANCHNAME, bp])
-                #self.repository._tryCommand(['checkout-index'])
-
-            else:
-                if exists(join(self.repository.basedir, self.repository.storagedir)):
-                    raise TargetInitializationFailure(
-                        "Repository %s already exists - "
-                        "did you forget to set \"branch\" parameter ?" % self.repository.storagedir)
-
-                self.repository._tryCommand(['init-db'])
-                if self.repository.repository:
-                    # in this mode, the db is not stored in working dir, so we
-                    # have to create .git ourselves
-                    mkdir(join(self.repository.basedir, self.repository.METADIR))
+        self.repository.create()
 
     def _prepareWorkingDirectory(self, source_repo):
         """

@@ -67,11 +67,62 @@ class SvnRepository(Repository):
                            self.module, self.name)
             self.module = '/' + self.module
 
-    def workingDir(self):
-        wd = Repository.workingDir(self)
-        wd.USE_PROPSET = self.use_propset
-        return wd
+    def create(self):
+        """
+        Create a local SVN repository, if it does not exist.
+        """
 
+        from os.path import join
+        from sys import platform
+
+        # Verify the existence of repository by listing its root
+        cmd = self.command("ls")
+        svnls = ExternalCommand(command=cmd)
+        svnls.execute(self.repository)
+
+        # If it a valid repository, there's nothing else to do
+        if not svnls.exit_status:
+            return
+
+        if not self.repository.startswith('file:///'):
+            raise TargetInitializationFailure("%r does not exist and "
+                                              "cannot be created since "
+                                              "it's not a local (file:///) "
+                                              "repository" %
+                                              self.repository)
+
+        repodir = self.repository[7:]
+        cmd = self.command("create", "--fs-type", "fsfs", svnadmin=True)
+        svnadmin = ExternalCommand(command=cmd)
+        svnadmin.execute(repodir)
+
+        if svnadmin.exit_status:
+            raise TargetInitializationFailure("Was not able to create a 'fsfs' "
+                                              "svn repository at %r" %
+                                              self.repository)
+        if self.use_propset:
+            hookname = join(repodir, 'hooks', 'pre-revprop-change')
+            if platform == 'win32':
+                hookname += '.bat'
+            prehook = open(hookname, 'wU')
+            if platform <> 'win32':
+                prehook.write('#!/bin/sh\n')
+            prehook.write('exit 0\n')
+            prehook.close()
+            if platform <> 'win32':
+                from os import chmod
+                chmod(hookname, 0755)
+
+        if self.module and self.module <> '/':
+            cmd = self.command("mkdir", "-m",
+                               "This directory will host the upstream sources")
+            svnmkdir = ExternalCommand(command=cmd)
+            svnmkdir.execute(self.repository + self.module)
+            if svnmkdir.exit_status:
+                raise TargetInitializationFailure("Was not able to create the "
+                                                  "module %r, maybe more than "
+                                                  "one level directory?" %
+                                                  self.module)
 
 def changesets_from_svnlog(log, repository, chunksize=2**15):
     from xml.sax import make_parser
@@ -482,7 +533,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # If we cannot use propset, fall back to old behaviour of
         # appending these info to the changelog
 
-        if not self.USE_PROPSET:
+        if not self.repository.use_propset:
             logmessage.append('')
             logmessage.append('Original author: %s' % encode(author))
             logmessage.append('Date: %s' % date)
@@ -522,7 +573,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                               (str(commit), out.read()))
         revision = revno.group(0)
 
-        if self.USE_PROPSET:
+        if self.repository.use_propset:
             cmd = self.repository.command("propset", "%(propname)s",
                                           "--quiet", "--revprop",
                                           "--revision", revision)
@@ -584,50 +635,6 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                               % (str(move), move.exit_status,
                                                  err.read()))
 
-    def __createRepository(self, target_repository, target_module):
-        """
-        Create a local repository.
-        """
-
-        from os.path import join
-        from sys import platform
-
-        assert target_repository.startswith('file:///')
-        repodir = target_repository[7:]
-        cmd = self.repository.command("create", "--fs-type", "fsfs",
-                                      svnadmin=True)
-        svnadmin = ExternalCommand(command=cmd)
-        svnadmin.execute(repodir)
-
-        if svnadmin.exit_status:
-            raise TargetInitializationFailure("Was not able to create a 'fsfs' "
-                                              "svn repository at %r" %
-                                              target_repository)
-        if self.USE_PROPSET:
-            hookname = join(repodir, 'hooks', 'pre-revprop-change')
-            if platform == 'win32':
-                hookname += '.bat'
-            prehook = open(hookname, 'wU')
-            if platform <> 'win32':
-                prehook.write('#!/bin/sh\n')
-            prehook.write('exit 0\n')
-            prehook.close()
-            if platform <> 'win32':
-                from os import chmod
-                chmod(hookname, 0755)
-
-        if target_module and target_module <> '/':
-            cmd = self.repository.command("mkdir", "-m",
-                                          "This directory will host the "
-                                          "upstream sources")
-            svnmkdir = ExternalCommand(command=cmd)
-            svnmkdir.execute(target_repository + target_module)
-            if svnmkdir.exit_status:
-                raise TargetInitializationFailure("Was not able to create the "
-                                                  "module %r, maybe more than "
-                                                  "one level directory?" %
-                                                  target_module)
-
     def _prepareTargetRepository(self):
         """
         Check for target repository existence, eventually create it.
@@ -636,21 +643,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if not self.repository.repository:
             return
 
-        # Verify the existence of repository by listing its root
-        cmd = self.repository.command("ls")
-        svnls = ExternalCommand(command=cmd)
-        svnls.execute(self.repository.repository)
-
-        if svnls.exit_status:
-            if self.repository.repository.startswith('file:///'):
-                self.__createRepository(self.repository.repository,
-                                        self.repository.module)
-            else:
-                raise TargetInitializationFailure("%r does not exist and "
-                                                  "cannot be created since "
-                                                  "it's not a local (file:///) "
-                                                  "repository" %
-                                                  self.repository.repository)
+        self.repository.create()
 
     def _prepareWorkingDirectory(self, source_repo):
         """

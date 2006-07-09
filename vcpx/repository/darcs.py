@@ -39,6 +39,51 @@ class DarcsRepository(Repository):
             args = args + ('--look-for-adds',)
         return Repository.command(self, *args, **kwargs)
 
+    def create(self):
+        from vcpx.dualwd import IGNORED_METADIRS
+        from os.path import join
+
+        cmd = self.command("initialize")
+        init = ExternalCommand(cwd=self.basedir, command=cmd)
+        init.execute()
+
+        if init.exit_status:
+            raise TargetInitializationFailure(
+                "%s returned status %s" % (str(init), init.exit_status))
+
+        metadir = join(self.basedir, '_darcs')
+        prefsdir = join(metadir, 'prefs')
+        prefsname = join(prefsdir, 'prefs')
+        boringname = join(prefsdir, 'boring')
+
+        boring = open(boringname, 'rU')
+        ignored = boring.read().rstrip().split('\n')
+        boring.close()
+
+        # Augment the boring file, that contains a regexp per line
+        # with all known VCs metadirs to be skipped.
+        ignored.extend(['(^|/)%s($|/)' % re.escape(md)
+                        for md in IGNORED_METADIRS])
+
+        # Eventually omit our own log...
+        logfile = self.projectref().logfile
+        if logfile.startswith(self.basedir):
+            ignored.append('^%s$' %
+                           re.escape(logfile[len(self.basedir)+1:]))
+
+        # ... and state file
+        sfname = self.projectref().state_file.filename
+        if sfname.startswith(self.basedir):
+            sfrelname = sfname[len(self.basedir)+1:]
+            ignored.append('^%s$' % re.escape(sfrelname))
+            ignored.append('^%s$' % re.escape(sfrelname+'.old'))
+            ignored.append('^%s$' % re.escape(sfrelname+'.journal'))
+
+        boring = open(boringname, 'wU')
+        boring.write('\n'.join(ignored))
+        boring.write('\n')
+        boring.close()
+
 
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
                                  chunksize=2**15):
@@ -557,9 +602,12 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
-        from vcpx.dualwd import IGNORED_METADIRS
 
         metadir = join(self.repository.basedir, '_darcs')
+
+        if not exists(metadir):
+            self.repository.create()
+
         prefsdir = join(metadir, 'prefs')
         prefsname = join(prefsdir, 'prefs')
         boringname = join(prefsdir, 'boring')
@@ -570,46 +618,9 @@ class DarcsWorkingDir(UpdatableSourceWorkingDir,SynchronizableTargetWorkingDir):
                     if pname == 'boringfile':
                         boringname = join(self.repository.basedir, pvalue[:-1])
 
-        if not exists(metadir):
-            cmd = self.repository.command("initialize")
-            init = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            init.execute()
-
-            if init.exit_status:
-                raise TargetInitializationFailure(
-                    "%s returned status %s" % (str(init), init.exit_status))
-
-            boring = open(boringname, 'rU')
-            ignored = boring.read().rstrip().split('\n')
-            boring.close()
-
-            # Augment the boring file, that contains a regexp per line
-            # with all known VCs metadirs to be skipped.
-            ignored.extend(['(^|/)%s($|/)' % re.escape(md)
-                            for md in IGNORED_METADIRS])
-
-            # Eventually omit our own log...
-            logfile = self.repository.projectref().logfile
-            if logfile.startswith(self.repository.basedir):
-                ignored.append('^%s$' %
-                               re.escape(logfile[len(self.repository.basedir)+1:]))
-
-            # ... and state file
-            sfname = self.repository.projectref().state_file.filename
-            if sfname.startswith(self.repository.basedir):
-                sfrelname = sfname[len(self.repository.basedir)+1:]
-                ignored.append('^%s$' % re.escape(sfrelname))
-                ignored.append('^%s$' % re.escape(sfrelname+'.old'))
-                ignored.append('^%s$' % re.escape(sfrelname+'.journal'))
-
-            boring = open(boringname, 'wU')
-            boring.write('\n'.join(ignored))
-            boring.write('\n')
-            boring.close()
-        else:
-            boring = open(boringname, 'rU')
-            ignored = boring.read().rstrip().split('\n')
-            boring.close()
+        boring = open(boringname, 'rU')
+        ignored = boring.read().rstrip().split('\n')
+        boring.close()
 
         # Build a list of compiled regular expressions, that will be
         # used later to filter the entries.

@@ -44,6 +44,27 @@ class BzrRepository(Repository):
             if ppath not in path:
                 path.insert(0, ppath)
 
+    def create(self):
+        """
+        Create a branch with a working tree at the base directory. If the base
+        directory is inside a Bazaar-NG style "shared repository", it will use
+        that to create a branch and working tree (make sure it allows working
+        trees).
+        """
+
+        self.log.info('Initializing new repository in %r...', self.basedir)
+        try:
+            bzrdir = BzrDir.open(self.basedir)
+        except errors.NotBranchError:
+            # really a NotBzrDir error...
+            branch = BzrDir.create_branch_convenience(self.basedir, force_new_tree=True)
+            wtree = branch.bzrdir.open_workingtree()
+        else:
+            bzrdir.create_branch()
+            wtree = bzrdir.create_workingtree()
+
+        return wtree
+
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
@@ -234,7 +255,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Normalize file names
         if entries:
             entries = [normpath(entry) for entry in entries]
-        
+
         revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
                                     hexlify(rand_bytes(8)))
         self._working_tree.commit(logmessage, committer=author,
@@ -279,21 +300,5 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             raise
 
     def _prepareTargetRepository(self):
-        """
-        Create a branch with a working tree at the base directory. If the base
-        directory is inside a Bazaar-NG style "shared repository", it will use
-        that to create a branch and working tree (make sure it allows working
-        trees).
-        """
         if self._working_tree is None:
-            self.log.info('Initializing new repository in %r...', self.repository.basedir)
-            try:
-                bzrdir = BzrDir.open(self.repository.basedir)
-            except errors.NotBranchError:
-                # really a NotBzrDir error...
-                branch = BzrDir.create_branch_convenience(self.repository.basedir,
-                                                          force_new_tree=True)
-                self._working_tree = branch.bzrdir.open_workingtree()
-            else:
-                bzrdir.create_branch()
-                self._working_tree = bzrdir.create_workingtree()
+            self._working_tree = self.repository.create()

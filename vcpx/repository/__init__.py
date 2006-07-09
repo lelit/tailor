@@ -204,3 +204,16 @@ class Repository(object):
             cmd = [executable]
             cmd.extend(args)
             return cmd
+
+    def create(self):
+        """
+        Possibly open a connection to the repository. If the repository
+        does not exist, create a new one, if at all possible.
+
+        Subclasses implementing the target interface should reimplement
+        this method, to create/initialize a new repository at the location
+        given by either `self.repository` or `self.basedir`.
+        """
+
+        self.log.critical("%s should reimplement the create() method",
+                          self.__class__)
