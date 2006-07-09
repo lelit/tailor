@@ -171,12 +171,12 @@ class DarcsChangesParser(TestCase):
         self.assertEqual(len(cset.entries), 2)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'dir')
-        self.assertEqual(entry.action_kind, entry.RENAMED)
-
-        entry = cset.entries[1]
         self.assertEqual(entry.name, 'bdir')
         self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'dir')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
 
         cset = csets[3]
         self.assertEqual(cset.revision, 'modified')
@@ -258,6 +258,7 @@ class DarcsChangesParser(TestCase):
     <move from="gabble-im-channel.xml" to="generate/xml-modified/gabble-im-channel.xml"/>
     <move from="tools/README-do_gen" to="generate/README"/>
     <move from="tools/do_gen.sh" to="generate/do_src.sh"/>
+    <move from="generate/added.sh" to="generate/added-then-renamed.sh"/>
     <modify_file>
     Makefile.am<removed_lines num='1'/><added_lines num='1'/>
     </modify_file>
@@ -333,6 +334,9 @@ class DarcsChangesParser(TestCase):
     <remove_directory>
     tools
     </remove_directory>
+    <add_file>
+    generate/added.sh
+    </add_file>
     </summary>
 </patch>
 </changelog>
@@ -350,9 +354,9 @@ class DarcsChangesParser(TestCase):
         # by a following hunk
         for i,e in enumerate(cset.entries):
             if e.action_kind == e.RENAMED:
-                postadds = [n for n in cset.entries[i+1:]
-                            if e.name.startswith(n.name+'/') and (n.action_kind==n.ADDED or
-                                                                  n.action_kind==n.RENAMED)]
+                postadds = [n.name for n in cset.entries[i+1:]
+                            if ((e.name.startswith(n.name+'/') or (e.old_name==n.name)) and
+                                (n.action_kind==n.ADDED or n.action_kind==n.RENAMED))]
                 for ee in postadds:
                     print ee
                 self.assertEqual(postadds, [])

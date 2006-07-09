@@ -136,9 +136,8 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                     for i,e in enumerate(entries):
                         if e.action_kind == e.RENAMED:
                             for j,n in enumerate(entries[i+1:]):
-                                if (e.name.startswith(n.name+'/') and
-                                    (n.action_kind == n.ADDED or
-                                     n.action_kind == n.RENAMED)):
+                                if ((e.name.startswith(n.name+'/') or e.old_name==n.name) and
+                                    (n.action_kind == n.ADDED or n.action_kind == n.RENAMED)):
                                     m = entries.pop(i+1+j)
                                     entries.insert(i, m)
                                     sorted = False
