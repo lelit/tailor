@@ -34,7 +34,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
         target = join(self.repository.basedir, '.gittmp')
         # might want -s if we can determine that the path is local. Then again,
         # that makes it a little unsafe to do git write actions here
-        self.repository._tryCommand(['clone', '-n', self.repository.repository, target],
+        self.repository.runCommand(['clone', '-n', self.repository.repository, target],
                                     ChangesetApplicationFailure, False)
 
         rename(join(target, '.git'), join(self.repository.basedir, '.git'))
@@ -45,14 +45,14 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
             self.log.info('Checking out revision %s (%s)' % (rev, revision))
         else:
             self.log.info('Checking out revision ' + rev)
-        self.repository._tryCommand(['reset', '--hard', rev], ChangesetApplicationFailure, False)
+        self.repository.runCommand(['reset', '--hard', rev], ChangesetApplicationFailure, False)
 
         return self._changesetForRevision(rev)
 
     def _getUpstreamChangesets(self, since):
-        self.repository._tryCommand(['fetch'], GetUpstreamChangesetsFailure, False)
+        self.repository.runCommand(['fetch'], GetUpstreamChangesetsFailure, False)
 
-        revs = self.repository._tryCommand(['rev-list', '^' + since, 'origin'],
+        revs = self.repository.runCommand(['rev-list', '^' + since, 'origin'],
                                            GetUpstreamChangesetsFailure)[:-1]
         revs.reverse()
         for rev in revs:
@@ -60,7 +60,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
             yield self._changesetForRevision(rev)
 
     def _applyChangeset(self, changeset):
-        out = self.repository._tryCommand(['merge', '-n', '--no-commit', 'fastforward',
+        out = self.repository.runCommand(['merge', '-n', '--no-commit', 'fastforward',
                                            'HEAD', changeset.revision],
                                           ChangesetApplicationFailure)
 
@@ -82,7 +82,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
                       'M': ChangesetEntry.UPDATED, 'R': ChangesetEntry.RENAMED}
 
         # find parent
-        lines = self.repository._tryCommand(['rev-list', '--pretty=raw', '--max-count=1', revision],
+        lines = self.repository.runCommand(['rev-list', '--pretty=raw', '--max-count=1', revision],
                                             GetUpstreamChangesetsFailure)
         parents = []
         user = Changeset.ANONYMOUS_USER
@@ -111,7 +111,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
         if parents:
             cmd.append(parents[0])
         cmd.append(revision)
-        files = self.repository._tryCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
+        files = self.repository.runCommand(cmd, GetUpstreamChangesetsFailure)[:-1]
         if not parents:
             # git lets us know what it's diffing against if we omit parent
             if len(files) > 0:
@@ -136,7 +136,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
         try:
             for tag in listdir(tagdir):
                 # Consider caching stat info per tailor run
-                tagrev = self.repository._tryCommand(['rev-list', '--max-count=1', tag])[0]
+                tagrev = self.repository.runCommand(['rev-list', '--max-count=1', tag])[0]
                 if (tagrev == revision):
                     tags.append(tag)
         except OSError:
@@ -148,6 +148,6 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
     def _getRev(self, revision):
         """ Return the git object corresponding to the symbolic revision """
         if revision == 'INITIAL':
-            return self.repository._tryCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
+            return self.repository.runCommand(['rev-list', 'HEAD'], GetUpstreamChangesetsFailure)[-2]
 
-        return self.repository._tryCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]
+        return self.repository.runCommand(['rev-parse', '--verify', revision], GetUpstreamChangesetsFailure)[0]

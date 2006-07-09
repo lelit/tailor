@@ -38,7 +38,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
-            self.repository._tryCommand(['update-index', '--add'] + notdirs)
+            self.repository.runCommand(['update-index', '--add'] + notdirs)
 
     def _editPathnames(self, names):
         """
@@ -46,7 +46,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         # can we assume we don't have directories in the list ?
-        self.repository._tryCommand(['update-index'] + names)
+        self.repository.runCommand(['update-index'] + names)
 
     def __parse_author(self, author):
         """
@@ -85,7 +85,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         env = {}
         env.update(environ)
 
-        treeid = self.repository._tryCommand(['write-tree'])[0]
+        treeid = self.repository.runCommand(['write-tree'])[0]
 
         # in single-repository mode, only update the relevant branch
         if self.repository.BRANCHNAME:
@@ -140,9 +140,9 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             commitid=out.read().split('\n')[0]
 
             if parent:
-                self.repository._tryCommand(['update-ref', refname, commitid, parent])
+                self.repository.runCommand(['update-ref', refname, commitid, parent])
             else:
-                self.repository._tryCommand(['update-ref', refname, commitid])
+                self.repository.runCommand(['update-ref', refname, commitid])
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
@@ -166,7 +166,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
-            self.repository._tryCommand(['update-index', '--remove'] + notdirs)
+            self.repository.runCommand(['update-index', '--remove'] + notdirs)
 
     def _renamePathname(self, oldname, newname):
         """

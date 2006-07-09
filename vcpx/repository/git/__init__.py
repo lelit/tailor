@@ -48,7 +48,11 @@ class GitRepository(Repository):
         else:
             self.storagedir = self.METADIR
 
-    def _tryCommand(self, cmd, exception=Exception, pipe=True):
+    def runCommand(self, cmd, exception=Exception, pipe=True):
+        """
+        Facility to run a git command in a controlled context.
+        """
+
         c = GitExternalCommand(self,
                                command = self.command(*cmd), cwd = self.basedir)
         if pipe:
@@ -94,10 +98,10 @@ class GitRepository(Repository):
             # initialization of a new branch in single-repository mode
             mkdir(join(self.basedir, self.METADIR))
 
-            bp = self._tryCommand(['rev-parse', self.BRANCHPOINT])[0]
-            self._tryCommand(['read-tree', bp])
-            self._tryCommand(['update-ref', self.BRANCHNAME, bp])
-            #self._tryCommand(['checkout-index'])
+            bp = self.runCommand(['rev-parse', self.BRANCHPOINT])[0]
+            self.runCommand(['read-tree', bp])
+            self.runCommand(['update-ref', self.BRANCHNAME, bp])
+            #self.runCommand(['checkout-index'])
 
         else:
             if exists(join(self.basedir, self.storagedir)):
@@ -105,7 +109,7 @@ class GitRepository(Repository):
                     "Repository %s already exists - "
                     "did you forget to set \"branch\" parameter ?" % self.storagedir)
 
-            self._tryCommand(['init-db'])
+            self.runCommand(['init-db'])
             if self.repository:
                 # in this mode, the db is not stored in working dir, so we
                 # have to create .git ourselves
