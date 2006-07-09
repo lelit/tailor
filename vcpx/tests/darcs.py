@@ -8,7 +8,7 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.repository.darcs import changesets_from_darcschanges
+from vcpx.repository.darcs.source import changesets_from_darcschanges
 from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.tzinfo import UTC
 
