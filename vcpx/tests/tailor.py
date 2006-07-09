@@ -292,7 +292,8 @@ class OperationalTest(TestCase):
             if tailorizer.target.METADIR:
                 cmd.extend(["-x", tailorizer.target.METADIR])
             d = ExternalCommand(command=cmd)
-            out = d.execute(dwd.source.basedir, dwd.target.basedir,
+            out = d.execute(dwd.source.repository.basedir,
+                            dwd.target.repository.basedir,
                             stdout=PIPE)[0]
             return out.read()
         else:
