@@ -39,7 +39,6 @@ Examples:
 """
 
     def __init__(self):
-        del sys.argv[1]
         TestProgram.__init__(self, module='vcpx.tests', argv=sys.argv)
 
     def parseArgs(self, argv):

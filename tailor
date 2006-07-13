@@ -22,6 +22,8 @@ if __name__ == '__main__':
     locale.setlocale(locale.LC_CTYPE, '')
     if len(sys.argv)>1 and sys.argv[1] == 'test':
         from vcpx.tests import main
+        sys.argv[0] += " test"
+        del sys.argv[1]
         main()
     else:
         from vcpx.tailor import main, TailorException
