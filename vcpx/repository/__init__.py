@@ -175,7 +175,7 @@ class Repository(object):
                 wdmod = __import__(modname, globals(), locals(), [wdname])
                 workingdir = getattr(wdmod, wdname)
             except (AttributeError, ImportError), e:
-                self.log.info ("%s not found as new-style vcs, trying as monolithic" % self.kind)
+                self.log.debug("%s not found as new-style vcs, trying as monolithic" % self.kind)
                 wdname = self.kind.capitalize() + 'WorkingDir'
                 modname = 'vcpx.repository.' + self.kind
                 wdmod = __import__(modname, globals(), locals(), [wdname])
