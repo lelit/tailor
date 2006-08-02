@@ -101,7 +101,13 @@ class Changeset(object):
     """Refill changelogs"""
 
     def _get_date(self):
-        return self.__date
+        try:
+            return self.__date
+        except AttributeError, e:
+            # handle state-file Changesets created with previous versions of tailor
+            from vcpx.tzinfo import UTC
+            self.__date = self.__dict__['date'].replace(tzinfo=UTC)
+            return self.__date
 
     def _set_date(self, date):
         if date and date.tzinfo is None:
