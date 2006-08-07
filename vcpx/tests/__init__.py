@@ -16,6 +16,7 @@ from svn import *
 from config import *
 from statefile import *
 from tailor import *
+from fixed_bugs import *
 
 class TailorTest(TestProgram):
     """A command-line program that runs a set of tests; this is primarily
