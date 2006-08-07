@@ -470,9 +470,19 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             applied = False
             for m in cs.entries:
                 info = entries.getFileInfo(m.name)
+
+                # If the entry's info exists, compare the on-disk
+                # version with what we have: the revision is already
+                # applied if the former is greater or equal than the
+                # latter. The same if the info does not exist and it's
+                # a delete event.
+
                 if info:
                     odversion = info.cvs_version
                     applied = compare_cvs_revs(odversion, m.new_revision) >= 0
+
+                    # If only one "hunk" is not yet applied, the whole
+                    # changeset is new.
                     if not applied:
                         break
                 elif m.action_kind == ChangesetEntry.DELETED:
