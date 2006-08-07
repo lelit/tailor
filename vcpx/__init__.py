@@ -18,3 +18,6 @@ __docformat__ = 'reStructuredText'
 
 class TailorException(Exception):
     "Common base for tailor exceptions"
+
+class TailorBug(TailorException):
+    "Tailor bug (please report)"

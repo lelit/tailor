@@ -12,7 +12,7 @@ directory under some kind of version control system.
 
 __docformat__ = 'reStructuredText'
 
-from vcpx import TailorException
+from vcpx import TailorBug, TailorException
 from vcpx.workdir import WorkingDir
 
 
@@ -228,7 +228,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         This method must be overridden by subclasses.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def _applyChangeset(self, changeset):
         """
@@ -239,7 +239,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         with the conflicts, if any.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def checkoutUpstreamRevision(self, revision):
         """
@@ -259,7 +259,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
         Concretely do the checkout of the upstream revision.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def prepareSourceRepository(self):
         """

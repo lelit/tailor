@@ -14,7 +14,7 @@ __docformat__ = 'reStructuredText'
 
 import socket
 from signal import signal, SIGINT, SIG_IGN
-from vcpx import TailorException
+from vcpx import TailorBug, TailorException
 from vcpx.workdir import WorkingDir
 
 
@@ -341,7 +341,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Add some new filesystem objects.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def _addSubtree(self, subdir):
         """
@@ -392,7 +392,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Commit the changeset.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def _removeEntries(self, entries):
         """
@@ -406,7 +406,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Remove some filesystem object.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def _editEntries(self, entries):
         """
@@ -483,7 +483,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Rename a filesystem object to some other name/location.
         """
 
-        raise "%s should override this method" % self.__class__
+        raise TailorBug("%s should override this method!" % self.__class__)
 
     def prepareWorkingDirectory(self, source_repo):
         """

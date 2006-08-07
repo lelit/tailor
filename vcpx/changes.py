@@ -11,6 +11,8 @@ Changesets are an object representation of a set of changes to some files.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx import TailorBug
+
 class ChangesetEntry(object):
     """
     Represent a changed entry in a Changeset.
@@ -111,7 +113,7 @@ class Changeset(object):
 
     def _set_date(self, date):
         if date and date.tzinfo is None:
-            raise "Tailor bug (please report): Changeset dates must have a timezone."
+            raise TailorBug("Changeset dates must have a timezone!")
         self.__date = date
 
     # date has to be a property because some backends (eg. monotone)
