@@ -380,6 +380,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os.path import join, exists, split
         from time import sleep
         from vcpx.repository.cvs import CvsEntries, compare_cvs_revs
+        from vcpx.changes import ChangesetEntry
 
         if not self.repository.module:
             raise InvocationError("Must specify a module name")
@@ -474,6 +475,8 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     applied = compare_cvs_revs(odversion, m.new_revision) >= 0
                     if not applied:
                         break
+                elif m.action_kind == ChangesetEntry.DELETED:
+                    applied = True
             return applied
 
         for cset in csets:
