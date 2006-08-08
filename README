@@ -538,6 +538,52 @@ indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
           section of the project *currently* using the repository,
           falling back to the ``[DEFAULT]`` section.
 
+Some options may be shared with others repositories, like in the
+following example, where the common settings for the target monotone
+repository are set just once::
+
+  [DEFAULT]
+  target-repository = /bigdisk/my-huge-repository.mtn
+  target-keyid = test@example.com
+  target-passphrase = lala
+  source-repository = http://svn.someserver.com
+  
+  [productA]
+  target = monotone:productA
+  source = svn:sourceA
+
+  [productB]
+  target = monotone:productB
+  source = darcs:sourceB
+
+  [productC]
+  target = monotone:productC
+  source = svn:sourceC
+  
+  ...
+
+  [monotone:productA]
+  module = every.thing.productA
+
+  [monotone:productB]
+  module = every.thing.productB
+
+  [monotone:productC]
+  module = every.thing.productC
+  
+  [svn:sourceA]
+  module = /productA
+
+  [darcs:sourceB]
+  repository = http://some.server.com/darcs/productB
+
+  [svn:sourceC]
+  module = /productC
+
+
+Common options
+%%%%%%%%%%%%%%
+
 repository : string
   When a repository is used as a `source`, it must indicate its origin
   with ``repository``, and for some backends also a ``module``, but
