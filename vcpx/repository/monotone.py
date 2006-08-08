@@ -37,11 +37,16 @@ class MonotoneRepository(Repository):
         Repository._load(self, project)
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'monotone-command', 'mtn')
-        self.keyid = cget(self.name, 'keyid')
-        self.passphrase = cget(self.name, 'passphrase')
-        self.keyfile = cget(self.name, 'keyfile')
-        self.keygenid = cget(self.name, 'keygenid')
-        self.custom_lua = cget(self.name, 'custom_lua')
+        self.keyid = cget(self.name, 'keyid') or \
+                     cget(self.name, '%s-keyid' % self.which)
+        self.passphrase = cget(self.name, 'passphrase') or \
+                          cget(self.name, '%s-passphrase' % self.which)
+        self.keyfile = cget(self.name, 'keyfile') or \
+                       cget(self.name, '%s-keyfile' % self.which)
+        self.keygenid = cget(self.name, 'keygenid') or \
+                        cget(self.name, '%s-keygenid' % self.which)
+        self.custom_lua = cget(self.name, 'custom_lua') or \
+                          cget(self.name, '%s-custom_lua' % self.which)
 
     def create(self):
         """
