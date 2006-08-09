@@ -68,6 +68,7 @@ class BzrRepository(Repository):
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
+        from os.path import split
         from bzrlib import version_info, IGNORE_FILENAME
 
         if version_info > (0,9):
@@ -98,8 +99,6 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 f.close()
         except errors.NotBranchError, errors.NoWorkingTree:
             pass
-
-        from os.path import split
 
         # Omit our own log...
         logfile = self.repository.projectref().logfile
