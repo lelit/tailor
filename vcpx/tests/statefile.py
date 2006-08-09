@@ -75,14 +75,3 @@ class Statefile(TestCase):
         for cs in sf:
             self.assertEqual(cs, i)
             i += 1
-
-    def testReverse(self):
-        """Verify the reverse iteration over changesets"""
-
-        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
-
-        sf = StateFile(rontf.name, None)
-        sf.setPendingChangesets([1,2,3,4,5])
-
-        reversed = list(sf.reversed())
-        self.assertEqual(reversed, [5,4,3,2,1])

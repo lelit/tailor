@@ -108,29 +108,6 @@ class StateFile(object):
             raise StopIteration
         return self.current
 
-    def reversed(self):
-        """
-        Iterate over the changesets, going backward.
-        """
-
-        if self.archive is None:
-            self._load()
-
-        index = []
-        while True:
-            pos = self.archive.tell()
-            try:
-                load(self.archive)
-                index.append(pos)
-            except EOFError:
-                break
-
-        index.reverse()
-
-        for pos in index:
-            self.archive.seek(pos)
-            yield load(self.archive)
-
     def pending(self):
         """
         Verify if there's at least one changeset still pending.
