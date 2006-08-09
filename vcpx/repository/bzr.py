@@ -68,12 +68,12 @@ class BzrRepository(Repository):
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
-        from bzrlib import version_info
+        from bzrlib import version_info, IGNORE_FILENAME
 
         if version_info > (0,9):
-            from bzrlib.ignores import add_runtime_ignores, get_user_ignores
+            from bzrlib.ignores import add_runtime_ignores, parse_ignore_file
         else:
-            from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE
+            from bzrlib import DEFAULT_IGNORE
         
         WorkingDir.__init__(self, repository)
         # TODO: check if there is a "repository" in the configuration,
@@ -89,12 +89,13 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             wt = self._working_tree = bzrdir.open_workingtree()
 
             # read .bzrignore for _addSubtree()
-            if version_info > (0,9):
-                self.ignored.extend(get_user_ignores())
-            else:
-                if wt.has_filename(IGNORE_FILENAME):
-                    f = wt.get_file_byname(IGNORE_FILENAME)
+            if wt.has_filename(IGNORE_FILENAME):
+                f = wt.get_file_byname(IGNORE_FILENAME)
+                if version_info > (0,9):
+                    self.ignored.extend(parse_ignore_file(f))
+                else:
                     self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
+                f.close()
         except errors.NotBranchError, errors.NoWorkingTree:
             pass
 
