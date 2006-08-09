@@ -462,7 +462,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # out the actual cvsps revision
 
         found = False
-        csets = self.state_file.reversed()
 
         def already_applied(cs, entries=entries):
             "Loop over changeset entries to determine if it's already applied."
@@ -489,10 +488,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     applied = True
             return applied
 
-        for cset in csets:
-            found = already_applied(cset)
-            if found:
+        for cset in self.state_file:
+            applied = already_applied(cset)
+            found = found or applied
+            if applied:
                 last = cset
+            else:
                 break
 
         if not found and initialcset:
