@@ -24,6 +24,7 @@ from bzrlib.add import smart_add_tree
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
 from bzrlib.osutils import normpath, pathjoin
+from bzrlib.plugin import load_plugins
 
 from vcpx.repository import Repository
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
@@ -72,6 +73,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # and use it as a bzr repository
         self.ignored = []
         self._working_tree = None
+
+        # The bzr repository may have some plugins that needs to be activated
+        load_plugins()
+
         try:
             bzrdir = BzrDir.open(self.repository.basedir)
             wt = self._working_tree = bzrdir.open_workingtree()
