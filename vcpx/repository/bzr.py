@@ -19,17 +19,16 @@ from sys import version_info
 assert version_info >= (2,4), "Bazaar-NG backend requires Python 2.4"
 del version_info
 
-from bzrlib.osutils import normpath, pathjoin
+from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE, errors
+from bzrlib.add import smart_add_tree
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
-from bzrlib.add import smart_add_tree
-from bzrlib import errors
-from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE
+from bzrlib.osutils import normpath, pathjoin
 
 from vcpx.repository import Repository
-from vcpx.workdir import WorkingDir
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir
+from vcpx.workdir import WorkingDir
 
 
 class BzrRepository(Repository):
