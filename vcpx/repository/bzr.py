@@ -19,7 +19,7 @@ from sys import version_info
 assert version_info >= (2,4), "Bazaar-NG backend requires Python 2.4"
 del version_info
 
-from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE, errors
+from bzrlib import errors
 from bzrlib.add import smart_add_tree
 from bzrlib.bzrdir import BzrDir
 from bzrlib.delta import compare_trees
@@ -68,6 +68,13 @@ class BzrRepository(Repository):
 
 class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def __init__(self, repository):
+        from bzrlib import version_info
+
+        if version_info > (0,9):
+            from bzrlib.ignores import add_runtime_ignores, get_user_ignores
+        else:
+            from bzrlib import IGNORE_FILENAME, DEFAULT_IGNORE
+        
         WorkingDir.__init__(self, repository)
         # TODO: check if there is a "repository" in the configuration,
         # and use it as a bzr repository
@@ -82,9 +89,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             wt = self._working_tree = bzrdir.open_workingtree()
 
             # read .bzrignore for _addSubtree()
-            if wt.has_filename(IGNORE_FILENAME):
-                f = wt.get_file_byname(IGNORE_FILENAME)
-                self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
+            if version_info > (0,9):
+                self.ignored.extend(get_user_ignores())
+            else:
+                if wt.has_filename(IGNORE_FILENAME):
+                    f = wt.get_file_byname(IGNORE_FILENAME)
+                    self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
         except errors.NotBranchError, errors.NoWorkingTree:
             pass
 
@@ -104,7 +114,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self.ignored.append(file+'.old')
             self.ignored.append(file+'.journal')
 
-        DEFAULT_IGNORE.extend(self.ignored)
+        if version_info > (0,9):
+            add_runtime_ignores(self.ignored)
+        else:
+            DEFAULT_IGNORE.extend(self.ignored)
 
 
     #############################
