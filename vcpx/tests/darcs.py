@@ -168,15 +168,11 @@ class DarcsChangesParser(TestCase):
 
         cset = csets[2]
         self.assertEqual(cset.revision, 'moved')
-        self.assertEqual(len(cset.entries), 2)
+        self.assertEqual(len(cset.entries), 1)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'bdir')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-
-        entry = cset.entries[1]
         self.assertEqual(entry.name, 'dir')
-        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.action_kind, entry.ADDED)
 
         cset = csets[3]
         self.assertEqual(cset.revision, 'modified')
@@ -357,8 +353,6 @@ class DarcsChangesParser(TestCase):
                 postadds = [n.name for n in cset.entries[i+1:]
                             if ((e.name.startswith(n.name+'/') or (e.old_name==n.name)) and
                                 (n.action_kind==n.ADDED or n.action_kind==n.RENAMED))]
-                for ee in postadds:
-                    print ee
                 self.assertEqual(postadds, [])
 
     ADD_THEN_RENAME_TEST = """
@@ -397,6 +391,90 @@ vcpx/target                             249    173    69%</comment>
 </changelog>
 """
 
+    MIXED_TEST = """
+<changelog>
+<patch author='esj@harvee.org' date='20050104213401' local_date='Tue Jan  4 22:34:01 CET 2005' inverted='False' hash='20050104213401-fab45-49c3d772521e523fa84be43883b235dbcbf9d61c.gz'>
+        <name>feedback and logging </name>
+        <comment>this patch has three major changes.  First is the addition of the
+false negative feedback so that spam that leaks through
+can be identified and corrected.
+
+second is the logging changes minimizing information
+dumped at the highest levels (1) in order to speed up message processing
+
+third is updating portalocker for modern pythons.
+</comment>
+    <summary>
+    <move from="ancillary/mbox2rpc.py" to="ancillary/fnsource.py"/>
+    <move from="ancillary/rpc2mbox.py" to="web-ui/cgi-exec/fnsink.py"/>
+    <modify_file>
+    ancillary/fnsource.py<added_lines num='335'/>
+    </modify_file>
+    <modify_file>
+    ancillary/global_configuration<added_lines num='8'/>
+    </modify_file>
+    <add_file>
+    ancillary/mbox2rpc.py
+    </add_file>
+    <modify_file>
+    ancillary/mbox2spamtrap.py<removed_lines num='1'/><added_lines num='1'/>
+    </modify_file>
+    <add_file>
+    ancillary/rpc2mbox.py
+    </add_file>
+    <modify_file>
+    modules/camram_email.py<removed_lines num='17'/><added_lines num='33'/>
+    </modify_file>
+    <modify_file>
+    modules/camram_utils.py<removed_lines num='2'/><added_lines num='5'/>
+    </modify_file>
+    <modify_file>
+    modules/configuration.py<removed_lines num='15'/><added_lines num='15'/>
+    </modify_file>
+    <modify_file>
+    modules/dbm_utils.py<removed_lines num='4'/><added_lines num='4'/>
+    </modify_file>
+    <modify_file>
+    modules/log.py<removed_lines num='1'/><added_lines num='1'/>
+    </modify_file>
+    <modify_file>
+    modules/portalocker.py<removed_lines num='2'/><added_lines num='2'/>
+    </modify_file>
+    <modify_file>
+    sgid/build.sh<removed_lines num='1'/><added_lines num='4'/>
+    </modify_file>
+    <modify_file>
+    src/core_filter.py<removed_lines num='50'/><added_lines num='55'/>
+    </modify_file>
+    <modify_file>
+    src/postfix_filter.py<removed_lines num='35'/><added_lines num='49'/>
+    </modify_file>
+    <modify_file>
+    src/postfix_stamper.py<removed_lines num='17'/><added_lines num='18'/>
+    </modify_file>
+    <modify_file>
+    web-ui/cgi-exec/correct.py<removed_lines num='17'/><added_lines num='17'/>
+    </modify_file>
+    <modify_file>
+    web-ui/cgi-exec/edit_config.py<removed_lines num='23'/><added_lines num='26'/>
+    </modify_file>
+    <modify_file>
+    web-ui/cgi-exec/fnsink.py<added_lines num='154'/>
+    </modify_file>
+    <modify_file>
+    web-ui/cgi-exec/recover.py<removed_lines num='5'/><added_lines num='5'/>
+    </modify_file>
+    <modify_file>
+    web-ui/cgi-exec/spamtrap_display.py<removed_lines num='4'/><added_lines num='4'/>
+    </modify_file>
+    <modify_file>
+    web-ui/templates/correct.html<removed_lines num='1'/><added_lines num='1'/>
+    </modify_file>
+    </summary>
+</patch>
+</changelog>
+"""
+
     def testAddAndRename(self):
         "Verify if the parser degrades (add A)+(rename A B) to (add B)"
 
@@ -404,8 +482,14 @@ vcpx/target                             249    173    69%</comment>
         csets = changesets_from_darcschanges(log)
 
         cset = csets.next()
-        for e in cset.entries: print e
 
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'vcpx/repository/git/__init__.py')
-        self.assertEqual(entry.action_kind, entry.ADD)
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        log = StringIO(self.MIXED_TEST)
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+        self.assertEqual([], [e for e in cset.entries if e.name == 'ancillary/mbox2rpc.py'])
+        self.assertEqual([], [e for e in cset.entries if e.action_kind == e.RENAMED])

@@ -13,6 +13,7 @@ __docformat__ = 'reStructuredText'
 
 import re
 
+from vcpx.changes import ChangesetEntry, Changeset
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
                         GetUpstreamChangesetsFailure
@@ -20,6 +21,93 @@ from vcpx.target import TargetInitializationFailure
 from vcpx.tzinfo import UTC
 
 
+class DarcsChangeset(Changeset):
+    """
+    Fixup darcs idiosyncrasies:
+
+    - collapse "add A; rename A B" into "add B"
+    - collapse "rename A B; remove B" into "remove A"
+    """
+
+    def __init__(self, revision, date, author, log, entries=None, **other):
+        """
+        Initialize a new DarcsChangeset.
+        """
+
+        super(DarcsChangeset, self).__init__(revision, date, author, log, entries=None, **other)
+        if entries is not None:
+            for e in entries:
+                self.addEntry(e, revision)
+
+    def addEntry(self, entry, revision):
+        """
+        Fixup darcs idiosyncrasies:
+        
+        - collapse "add A; rename A B" into "add B"
+        - collapse "rename A B; remove B" into "remove A"
+        """
+
+        # This should not happen, since the parser feeds us an already built
+        # list of ChangesetEntries, anyway...
+        if not isinstance(entry, ChangesetEntry):
+            return super(DarcsChangeset, self).addEntry(entry, revision)
+
+        # Ok, before adding this entry, check it against already
+        # known: if this is an add, and there's a rename (such as "add
+        # A; rename A B; ") then...
+        
+        if entry.action_kind == entry.ADDED:
+            # ... we have to check existings, because of a bug in
+            # darcs: `changes --xml` (as of 1.0.7) emits the changes
+            # in the wrong order, that is, it prefers to start with
+            # renames, *always*, even when they obviously follows the
+            # add of the same entry (even, it should apply this "fix"
+            # by its own).
+            #
+            # So, if there's a rename of this entry there, change that
+            # to an addition instead, and don't insert any other entry
+
+            dirname = entry.name+'/' # darcs hopefully use forward slashes also under win
+            
+            for i,e in enumerate(self.entries):
+                if e.action_kind == e.RENAMED and e.old_name == entry.name:
+                    # Luckily enough (since removes are the first entries
+                    # in the list, that is) by anticipating the add we
+                    # cure also the case below, when addition follows
+                    # edit.
+                    e.action_kind = e.ADDED
+                    e.old_name = None
+                    return e
+
+                # Assert also that add_dir events must preceeds any
+                # add_file and ren_file that have that dir as target,
+                # and that add_file preceeds any edit.
+
+                if ((e.name == entry.name or e.name.startswith(dirname))
+                    or (e.action_kind == e.RENAMED and e.old_name.startswith(dirname))):
+                    self.entries.insert(i, entry)
+                    return entry
+
+        # Likewise, if this is a deletion, and there is a rename of this
+        # entry (such as "rename A B; remove B") then ...
+        
+        elif entry.action_kind == entry.DELETED:
+            # turn the existing rename into a deletion instead
+            
+            for i,e in enumerate(self.entries):
+                if e.action_kind == e.RENAMED and e.name == entry.name:
+                    e.action_kind = e.DELETED
+                    e.name = e.old_name
+                    e.old_name = None
+                    return e
+
+        # Ok, it must be either an edit or a rename: the former goes
+        # obviously to the end, and since the latter, as said, come
+        # in very early, appending is just good.
+        self.entries.append(entry)
+        return entry
+
+        
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
                                  chunksize=2**15):
     """
@@ -54,7 +142,6 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
     from xml.sax import make_parser
     from xml.sax.handler import ContentHandler, ErrorHandler
     from datetime import datetime
-    from vcpx.changes import ChangesetEntry, Changeset
 
     class DarcsXMLChangesHandler(ContentHandler):
         def __init__(self):
@@ -96,58 +183,12 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
 
         def endElement(self, name):
             if name == 'patch':
-                entries = []
-                todo = self.current['entries']
-                # Darcs allows "rename A B; remove B": collapse those
-                # into "remove A"
-                while todo:
-                    e = todo.pop(0)
-                    if e.action_kind == e.RENAMED:
-                        lookfor = e.name
-                        forget = []
-                        for i,n in enumerate(todo):
-                            if n.action_kind == n.DELETED and n.name == lookfor:
-                                e.action_kind = e.DELETED
-                                e.name = e.old_name
-                                e.old_name = None
-                                entries.append(e)
-                                forget.append(i)
-                                forget.reverse()
-                                for i in forget:
-                                    del todo[i]
-                                break
-                            elif n.action_kind == n.RENAMED and n.old_name == lookfor:
-                                forget.append(i)
-                                lookfor = n.name
-                        if not forget:
-                            entries.append(e)
-                    else:
-                        entries.append(e)
-
-                # Darcs changes --xml (as of 1.0.7) emits bad ordered hunks: it
-                # begins with file moves, apparently for no good reason. Do as
-                # little reordering as needed to adjust the meaning, ie moving all
-                # add_dirs before add_file and ren_file that have that dir as
-                # target
-
-                sorted = False
-                while not sorted:
-                    sorted = True
-                    for i,e in enumerate(entries):
-                        if e.action_kind == e.RENAMED:
-                            for j,n in enumerate(entries[i+1:]):
-                                if ((e.name.startswith(n.name+'/') or e.old_name==n.name) and
-                                    (n.action_kind == n.ADDED or n.action_kind == n.RENAMED)):
-                                    m = entries.pop(i+1+j)
-                                    entries.insert(i, m)
-                                    sorted = False
-
-                cset = Changeset(self.current['name'],
-                                 self.current['date'],
-                                 self.current['author'],
-                                 self.current['comment'],
-                                 entries,
-                                 tags=self.current.get('tags',[]))
+                cset = DarcsChangeset(self.current['name'],
+                                      self.current['date'],
+                                      self.current['author'],
+                                      self.current['comment'],
+                                      self.current['entries'],
+                                      tags=self.current.get('tags',[]))
                 cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(
