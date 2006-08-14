@@ -41,15 +41,17 @@ class ChangesetEntry(object):
         self.unidiff = None # This is the unidiff of this particular entry
 
     def __str__(self):
+        s = self.name + '(' + self.action_kind
         if self.action_kind == self.ADDED:
-            return '%s (new at %s)' % (self.name, self.new_revision)
-        elif self.action_kind == self.DELETED:
-            return '%s (deleted)' % self.name
+            if self.new_revision:
+                s += ' at ' + self.new_revision
         elif self.action_kind == self.UPDATED:
-            return "%s (update to %s)" % (self.name,
-                                          self.new_revision)
+            if self.new_revision:
+                s += ' to ' + self.new_revision
         else:
-            return '%s (rename from %s)' % (self.name, self.old_name)
+            s += ' from ' + self.old_name
+        s += ')'
+        return s
 
 
 from textwrap import TextWrapper
@@ -166,15 +168,7 @@ class Changeset(object):
         s.append('Revision: %s' % self.revision)
         s.append('Date: %s' % str(self.date))
         s.append('Author: %s' % self.author)
-        for ak in ['Modified', 'Removed', 'Renamed', 'Added']:
-            entries = getattr(self, ak.lower()+'Entries')()
-            if entries:
-                if ak == 'Renamed':
-                    entries = ['%s (from %s)' % (e.name, e.old_name)
-                               for e in entries]
-                else:
-                    entries = [e.name for e in entries]
-                s.append('%s: %s' % (ak, ','.join(entries)))
+        s.append('Entries: %s' % ', '.join([str(x) for x in self.entries]))
         s.append('Log: %s' % self.log)
         s = '\n'.join(s)
         if isinstance(s, unicode):
