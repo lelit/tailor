@@ -52,7 +52,7 @@ class ExternalCommand:
     MAX_CMDLINE_LENGTH = 8000
     """Don't execute commands longer than this number of characters."""
 
-    def __init__(self, command=None, cwd=None):
+    def __init__(self, command=None, cwd=None, nolog=False):
         """
         Initialize a ExternalCommand instance, specifying the command
         to be executed and eventually the working directory.
@@ -74,7 +74,10 @@ class ExternalCommand:
         self._last_command = None
         """Last executed command."""
 
-        self.log = getLogger('tailor.shell')
+        if nolog:
+            self.log = False
+        else:
+            self.log = getLogger('tailor.shell')
 
     def __str__(self):
         """
@@ -190,7 +193,7 @@ class ExternalCommand:
         else:
             self._last_command.extend(args)
 
-        self.log.info(self)
+        if self.log: self.log.info(self)
 
         if self.DRY_RUN:
             return
@@ -199,7 +202,7 @@ class ExternalCommand:
         if not isdir(cwd):
             raise OSError(ENOENT, "Working directory does not exist", cwd)
 
-        self.log.debug("Executing %r (%r)", self, cwd)
+        if self.log: self.log.debug("Executing %r (%r)", self, cwd)
 
         if not kwargs.has_key('env'):
             env = kwargs['env'] = {}
@@ -245,18 +248,19 @@ class ExternalCommand:
 
         if input and isinstance(input, unicode):
             encoding = getpreferredencoding()
-            self.log.warning("Using default %s encoding, ignoring errors; "
-                             "caller should use repository's encoding and "
-                             "pass an already encoded input" % encoding)
+            if self.log:
+                self.log.warning("Using default %s encoding, ignoring errors; "
+                                 "caller should use repository's encoding and "
+                                 "pass an already encoded input" % encoding)
             input = input.encode(encoding, 'ignore')
 
         out, err = process.communicate(input=input)
 
         self.exit_status = process.returncode
         if not self.exit_status:
-            self.log.info("[Ok]")
+            if self.log: self.log.info("[Ok]")
         else:
-            self.log.warning("[Status %s]", self.exit_status)
+            if self.log: self.log.warning("[Status %s]", self.exit_status)
 
         # For debug purposes, copy the output to our stderr when hidden above
         if self.DEBUG:
