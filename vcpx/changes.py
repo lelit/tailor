@@ -153,14 +153,17 @@ class Changeset(object):
         else:
             self.log = log.strip()
 
-    def addEntry(self, entry, revision):
+    def addEntry(self, entry, revision, before=None):
         """
-        Facility to add an entry.
+        Facility to add an entry, eventually before another one.
         """
 
         e = ChangesetEntry(entry)
         e.new_revision = revision
-        self.entries.append(e)
+        if before is None:
+            self.entries.append(e)
+        else:
+            self.entries.insert(self.entries.index(before), e)
         return e
 
     def __str__(self):
