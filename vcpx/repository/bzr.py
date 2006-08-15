@@ -325,5 +325,15 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             raise
 
     def _prepareTargetRepository(self):
+        from bzrlib import version_info
+        from vcpx.dualwd import IGNORED_METADIRS
+
         if self._working_tree is None:
             self._working_tree = self.repository.create()
+
+        if version_info > (0,9):
+            from bzrlib.ignores import add_runtime_ignores
+            add_runtime_ignores(IGNORED_METADIRS)
+        else:
+            from bzrlib import DEFAULT_IGNORE
+            DEFAULT_IGNORE.extend(IGNORED_METADIRS)
