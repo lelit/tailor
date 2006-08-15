@@ -211,6 +211,9 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         in a tag from another darcs repository, then the assumption
         could be violated and mistagging could result.
         """
+
+        from vcpx.repository.darcs.source import changesets_from_darcschanges_unsafe
+
         cmd = self.repository.command("changes",
                                       "--from-match", "not name ^TAG",
                                       "--xml-output", "--reverse")
