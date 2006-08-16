@@ -336,7 +336,7 @@ class OperationalTest(TestCase):
                 cmd.extend(["-x", tailorizer.source.METADIR])
             if tailorizer.target.METADIR:
                 cmd.extend(["-x", tailorizer.target.METADIR])
-            d = ExternalCommand(command=cmd)
+            d = ExternalCommand(command=cmd, nolog=True)
             out = d.execute(dwd.source.repository.basedir,
                             dwd.target.repository.basedir,
                             stdout=PIPE)[0]
@@ -496,26 +496,21 @@ class Svn(OperationalTest):
         drepo = join(self.TESTDIR, 'rename_delete')
         mkdir(drepo)
 
-        dinit = ExternalCommand(command=['darcs', 'init'], cwd=drepo)
-        dinit.execute()
+        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=True)
+
+        darcs.execute('init')
 
         fileA = join(drepo, 'fileA')
         open(fileA, 'w')
-        dadd = ExternalCommand(command=['darcs', 'add'], cwd=drepo)
-        dadd.execute(fileA)
-
-        drecord = ExternalCommand(command=['darcs', 'record',
-                                           '-a', '-m'], cwd=drepo)
-        drecord.execute('Add A')
+        darcs.execute('add', fileA)
+        darcs.execute('record', '-a', '-m', 'Add A')
 
         fileB = join(drepo, 'fileB')
-        drename = ExternalCommand(command=['darcs', 'mv'], cwd=drepo)
-        drename.execute(fileA, fileB)
+        darcs.execute('mv', fileA, fileB)
 
-        dremove = ExternalCommand(command=['darcs', 'remove'], cwd=drepo)
-        dremove.execute(fileB)
+        darcs.execute('remove', fileB)
 
-        drecord.execute('Move A to B and delete B')
+        darcs.execute('record', '-a', '-m', 'Move A to B and delete B')
 
         self.tailorize('darcs_rename_delete')
 
@@ -528,29 +523,25 @@ class Svn(OperationalTest):
         drepo = join(self.TESTDIR, 'rename_delete_dir')
         mkdir(drepo)
 
-        dinit = ExternalCommand(command=['darcs', 'init'], cwd=drepo)
-        dinit.execute()
+        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=True)
+
+        darcs.execute('init')
 
         dir = join(drepo, 'dir')
         mkdir(dir)
-        dadd = ExternalCommand(command=['darcs', 'add'], cwd=drepo)
-        dadd.execute(dir)
+        darcs.execute('add', dir)
         fileA = join(dir, 'fileA')
         open(fileA, 'w')
-        dadd.execute(fileA)
+        darcs.execute('add', fileA)
 
-        drecord = ExternalCommand(command=['darcs', 'record',
-                                           '-a', '-m'], cwd=drepo)
-        drecord.execute('Add dir and dir/A')
+        darcs.execute('record', '-a', '-m', 'Add dir and dir/A')
 
         fileB = join(drepo, 'fileA')
-        drename = ExternalCommand(command=['darcs', 'mv'], cwd=drepo)
-        drename.execute(fileA, fileB)
+        darcs.execute('rename', fileA, fileB)
 
-        dremove = ExternalCommand(command=['darcs', 'remove'], cwd=drepo)
-        dremove.execute(dir)
+        darcs.execute('remove', dir)
 
-        drecord.execute('Move dir/A to A and delete dir')
+        darcs.execute('record', '-a', '-m', 'Move dir/A to A and delete dir')
 
         self.tailorize('darcs_rename_delete_dir')
 
