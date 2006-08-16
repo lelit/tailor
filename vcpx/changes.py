@@ -48,6 +48,9 @@ class ChangesetEntry(object):
         elif self.action_kind == self.UPDATED:
             if self.new_revision:
                 s += ' to ' + self.new_revision
+        elif self.action_kind == self.DELETED:
+            if self.new_revision:
+                s += ' at ' + self.new_revision
         else:
             s += ' from ' + self.old_name
         s += ')'
