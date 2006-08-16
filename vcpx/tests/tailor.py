@@ -244,6 +244,51 @@ repository = file://%(testdir)s/darcs_rename_delete_dir.svnrepo
 module = /
 subdir = svn
 
+
+[cvsdirtest]
+target = bzr:cvsdirtest
+start-revision = INITIAL
+root-directory = %(testdir)s/cvsdirtest/cvs2bzr
+source = cvs:cvsdirtest
+subdir = test-work
+
+[cvspsdirtest]
+target = bzr:cvsdirtest
+start-revision = INITIAL
+root-directory = %(testdir)s/cvsdirtest/cvsps2bzr
+source = cvsps:cvsdirtest
+subdir = test-work
+
+[darcsdirtest]
+target = darcs:cvsdirtest
+start-revision = INITIAL
+root-directory = %(testdir)s/cvsdirtest/cvs2darcs
+source = cvs:cvsdirtest
+subdir = test-work
+
+[svndirtest]
+target = svn:cvsdirtest
+start-revision = INITIAL
+root-directory = %(testdir)s/cvsdirtest/cvs2svn
+source = cvs:cvsdirtest
+subdir = test-work
+
+[bzr:cvsdirtest]
+
+[darcs:cvsdirtest]
+
+[cvs:cvsdirtest]
+module = test
+repository = %(testdir)s/cvsdirtest.cvsrepo
+
+[cvsps:cvsdirtest]
+module = test
+repository = %(testdir)s/cvsdirtest.cvsrepo
+
+[svn:cvsdirtest]
+module = test
+repository = file://%(testdir)s/cvsdirtest.svnrepo
+
 '''
 
 def remap_authors(context, changeset):
@@ -508,3 +553,70 @@ class Svn(OperationalTest):
         drecord.execute('Move dir/A to A and delete dir')
 
         self.tailorize('darcs_rename_delete_dir')
+
+
+class CvsOrderTest(OperationalTest):
+    """Test problems with improper ordering of adds with new directories."""
+
+    def setUp(self):
+        """Create a CVS repository that has the difficult history."""
+
+        from os import mkdir, getcwd
+        from os.path import join, exists
+
+        super(CvsOrderTest, self).setUp()
+
+        repodir = join(self.TESTDIR, 'cvsdirtest.cvsrepo')
+        basedir = join(self.TESTDIR, 'cvsdirtest')
+
+        if not exists(repodir):
+            cvscmd = ['cvs', '-d', repodir]
+            mkdir(basedir)
+            mkdir(repodir)
+            ExternalCommand(cwd=self.TESTDIR, nolog=True, command=cvscmd).execute(
+                'init')
+
+            startdir = join(basedir, 'start')
+            mkdir(startdir)
+            open(join(startdir, 'foo'), "w").close()
+
+            ExternalCommand(cwd=startdir, nolog=True, command=cvscmd).execute(
+                'import', '-m', 'one', 'test', 'test', 'test1')
+
+            workdir = join(basedir, 'work')
+            ExternalCommand(cwd=startdir, nolog=True, command=cvscmd).execute(
+                'checkout', '-d', workdir, 'test')
+
+            bardir = join(workdir, 'bar')
+            mkdir(bardir)
+            baz = join(bardir, 'baz')
+            open(baz, "w").close()
+
+            ExternalCommand(cwd=workdir, nolog=True, command=cvscmd).execute(
+                'add', bardir, baz)
+            ExternalCommand(cwd=workdir, nolog=True, command=cvscmd).execute(
+                'commit', '-m', 'two')
+
+    def testCvsConvertDirectoryAddToBazaarng(self):
+        """Test that we can handle directory adds in the cvs module to bzr."""
+
+        t = Tailorizer("cvsdirtest", self.config)
+        t()
+
+    def testCvspsConvertDirectoryAddToBazaarng(self):
+        """Test that we can handle directory adds in the cvsps module to bzr."""
+
+        t = Tailorizer("cvspsdirtest", self.config)
+        t()
+
+    def testCvsConvertDirectoryAddToDarcs(self):
+        """Test that we can handle directory adds in the cvs module to darcs."""
+
+        t = Tailorizer("darcsdirtest", self.config)
+        t()
+
+    def testCvsConvertDirectoryAddToSubversion(self):
+        """Test that we can handle directory adds in the cvs module to svn."""
+
+        t = Tailorizer("svndirtest", self.config)
+        t()
