@@ -83,7 +83,7 @@ class GitRepository(Repository):
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(clone), clone.exit_status))
 
-            renames(join(self.basedir, 'tmp', '.git'), join(self.basedir, '.git')
+            renames(join(self.basedir, 'tmp', '.git'), join(self.basedir, '.git'))
 
             cmd = self.command("reset", "--soft", self.BRANCHPOINT)
             reset = GitExternalCommand(self, cwd=self.basedir, command=cmd)
