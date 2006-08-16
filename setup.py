@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from os import walk
 from distutils.core import setup
 from vcpx.tailor import __version__ as VERSION
 
@@ -7,7 +8,8 @@ setup(name='tailor',
       version=VERSION,
       author='Lele Gaifax',
       author_email='lele@nautilus.homeip.net',
-      packages=['vcpx', 'vcpx.repository'],
+      packages=[dirpath for dirpath, dirnames, filenames in walk('vcpx')
+                if dirpath <> 'vcpx/tests' and '__init__.py' in filenames],
       scripts=['tailor'],
       description='A tool to migrate changesets between various kinds of '
       'version control system.',
