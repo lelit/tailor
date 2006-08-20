@@ -798,7 +798,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         Remove some filesystem object.
         """
 
-        cmd = self.repository.command("drop")
+        cmd = self.repository.command("drop", "--recursive")
         drop = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         dum, error = drop.execute(names, stderr=PIPE)
         if drop.exit_status:
