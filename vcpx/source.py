@@ -96,7 +96,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 # of the queue, before the application of the patch by the
                 # source backend.
                 if not self._willApplyChangeset(c, applyable):
-                    self.log.debug('Stopping application at revisin %r',
+                    self.log.debug('Stopping application at revision %r',
                                    c.revision)
                     break
 
