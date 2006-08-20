@@ -44,6 +44,7 @@ class DarcsChangeset(Changeset):
         Fixup darcs idiosyncrasies:
         
         - collapse "add A; rename A B" into "add B"
+        - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
         """
 
@@ -88,18 +89,32 @@ class DarcsChangeset(Changeset):
                     self.entries.insert(i, entry)
                     return entry
 
-        # Likewise, if this is a deletion, and there is a rename of this
-        # entry (such as "rename A B; remove B") then ...
-        
+        # Likewise, if this is a deletion, and there is a rename of
+        # this entry (such as "rename A B; remove B") then turn the
+        # existing rename into a deletion instead.
+
+        # If instead the removed entry was added by the same patch,
+        # annihilate the two: a bug in darcs (possibly fixed in recent
+        # versions) created patches with ADD+EDIT+REMOVE of a single
+        # file (see tailor ticket #71, or darcs issue185). Too bad
+        # another bug (still present in 1.0.8) hides that and makes
+        # very hard (read: impossible) any workaround on the tailor
+        # side. Luckily I learnt another tiny bit of Haskell and
+        # proposed a fix for that: hopefully the patch will be
+        # accepted by darcs developers. In the meantime, I attached it
+        # to ticket #71: without that, tailor does not have enough
+        # information to do the right thing.
+
         elif entry.action_kind == entry.DELETED:
-            # turn the existing rename into a deletion instead
-            
             for i,e in enumerate(self.entries):
                 if e.action_kind == e.RENAMED and e.name == entry.name:
                     e.action_kind = e.DELETED
                     e.name = e.old_name
                     e.old_name = None
                     return e
+                elif e.action_kind == e.ADDED and e.name == entry.name:
+                    del self.entries[i]
+                    return None
 
         # Ok, it must be either an edit or a rename: the former goes
         # obviously to the end, and since the latter, as said, come
