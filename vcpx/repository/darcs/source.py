@@ -42,7 +42,7 @@ class DarcsChangeset(Changeset):
     def addEntry(self, entry, revision):
         """
         Fixup darcs idiosyncrasies:
-        
+
         - collapse "add A; rename A B" into "add B"
         - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
@@ -56,7 +56,7 @@ class DarcsChangeset(Changeset):
         # Ok, before adding this entry, check it against already
         # known: if this is an add, and there's a rename (such as "add
         # A; rename A B; ") then...
-        
+
         if entry.action_kind == entry.ADDED:
             # ... we have to check existings, because of a bug in
             # darcs: `changes --xml` (as of 1.0.7) emits the changes
@@ -69,7 +69,7 @@ class DarcsChangeset(Changeset):
             # to an addition instead, and don't insert any other entry
 
             dirname = entry.name+'/' # darcs hopefully use forward slashes also under win
-            
+
             for i,e in enumerate(self.entries):
                 if e.action_kind == e.RENAMED and e.old_name == entry.name:
                     # Luckily enough (since removes are the first entries
@@ -122,7 +122,7 @@ class DarcsChangeset(Changeset):
         self.entries.append(entry)
         return entry
 
-        
+
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
                                  chunksize=2**15):
     """

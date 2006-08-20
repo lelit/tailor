@@ -75,7 +75,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             from bzrlib.ignores import add_runtime_ignores, parse_ignore_file
         else:
             from bzrlib import DEFAULT_IGNORE
-        
+
         WorkingDir.__init__(self, repository)
         # TODO: check if there is a "repository" in the configuration,
         # and use it as a bzr repository
