@@ -564,29 +564,26 @@ class CvsOrderTest(OperationalTest):
             cvscmd = ['cvs', '-d', repodir]
             mkdir(basedir)
             mkdir(repodir)
-            ExternalCommand(cwd=self.TESTDIR, nolog=True, command=cvscmd).execute(
-                'init')
-
             startdir = join(basedir, 'start')
             mkdir(startdir)
+
+            cvs = ExternalCommand(cwd=startdir, nolog=True, command=cvscmd)
+            cvs.execute('init')
+
             open(join(startdir, 'foo'), "w").close()
 
-            ExternalCommand(cwd=startdir, nolog=True, command=cvscmd).execute(
-                'import', '-m', 'one', 'test', 'test', 'test1')
+            cvs.execute('import', '-m', 'one', 'test', 'test', 'test1')
 
             workdir = join(basedir, 'work')
-            ExternalCommand(cwd=startdir, nolog=True, command=cvscmd).execute(
-                'checkout', '-d', workdir, 'test')
+            cvs.execute('checkout', '-d', workdir, 'test')
 
             bardir = join(workdir, 'bar')
             mkdir(bardir)
             baz = join(bardir, 'baz')
             open(baz, "w").close()
 
-            ExternalCommand(cwd=workdir, nolog=True, command=cvscmd).execute(
-                'add', bardir, baz)
-            ExternalCommand(cwd=workdir, nolog=True, command=cvscmd).execute(
-                'commit', '-m', 'two')
+            cvs.execute('add', bardir, baz)
+            cvs.execute('commit', '-m', 'two')
 
     def testCvsConvertDirectoryAddToBazaarng(self):
         """Test that we can handle directory adds in the cvs module to bzr."""
