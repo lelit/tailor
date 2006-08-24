@@ -289,6 +289,21 @@ repository = %(testdir)s/cvsdirtest.cvsrepo
 module = test
 repository = file://%(testdir)s/cvsdirtest.svnrepo
 
+[svnresurdirtest]
+target = svn:cvsresurdirtest
+start-revision = INITIAL
+root-directory = %(testdir)s/cvsresurdirtest/cvs2svn
+source = cvs:cvsresurdirtest
+subdir = test-work
+
+[cvs:cvsresurdirtest]
+module = test
+repository = %(testdir)s/cvsresurdirtest.cvsrepo
+
+[svn:cvsresurdirtest]
+module = test
+repository = file://%(testdir)s/cvsresurdirtest.svnrepo
+
 '''
 
 def remap_authors(context, changeset):
@@ -608,3 +623,69 @@ class CvsOrderTest(OperationalTest):
 
         t = Tailorizer("svndirtest", self.config)
         t()
+
+
+class CvsReappearedDirectory(OperationalTest):
+    """Test problems with resurrected directories."""
+
+    def setUp(self):
+        """Create a CVS repository that has the difficult history."""
+
+        from os import mkdir, getcwd
+        from os.path import join, exists
+        from time import sleep
+        from shutil import rmtree
+
+        super(CvsReappearedDirectory, self).setUp()
+
+        repodir = join(self.TESTDIR, 'cvsresurdirtest.cvsrepo')
+        basedir = join(self.TESTDIR, 'cvsresurdirtest')
+
+        if not exists(repodir):
+            mkdir(basedir)
+            mkdir(repodir)
+            startdir = join(basedir, 'start')
+            mkdir(startdir)
+
+            cvs = ExternalCommand(cwd=startdir, nolog=True, command=['cvs', '-d', repodir])
+            cvs.execute('init')
+
+            open(join(startdir, 'foo'), "w").close()
+
+            cvs.execute('import', '-m', 'one', 'test', 'test', 'test1')
+
+            workdir = join(basedir, 'work')
+            cvs.execute('checkout', '-d', workdir, 'test')
+
+            cvs = ExternalCommand(cwd=workdir, nolog=True, command=['cvs'])
+            bardir = join(workdir, 'bar')
+            mkdir(bardir)
+            baz = join(bardir, 'baz')
+            open(baz, "w").close()
+
+            cvs.execute('add', bardir, baz)
+            cvs.execute('commit', '-m', 'two', baz)
+            sleep(1)
+
+            cvs.execute('rm', '-f', baz)
+            cvs.execute('commit', '-m', 'three', baz)
+            cvs.execute('update', '-dP')
+            sleep(1)
+
+            mkdir(bardir)
+            again = join(bardir, 'again')
+            open(again, "w").close()
+
+            cvs.execute('add', bardir, again)
+            cvs.execute('commit', '-m', 'four', again)
+
+    def testCvsReapperedDirectoryToSubversion(self):
+        """Test that we can handle resurrected cvs directory to svn."""
+
+        t = Tailorizer("svnresurdirtest", self.config)
+        t()
+
+        svnls = ExternalCommand(nolog=False, command=['svn', 'ls'])
+        manifest = svnls.execute('file://%s/cvsresurdirtest.svnrepo/test/bar' % self.TESTDIR,
+                                 stdout=PIPE)[0]
+        self.assertEqual(manifest.read(), "again\n")
