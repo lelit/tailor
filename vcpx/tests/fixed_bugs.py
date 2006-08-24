@@ -57,7 +57,7 @@ repository = file://%(test_dir)s/repo
         self.CHANGESETS = []
         self.SHARED_BASEDIRS = False
 
-    def run_tailor(self):
+    def run_tailor(self, assert_function=None):
         test_name = self.test_name
 
         for vcs in self.TARGET_VCS:
@@ -67,6 +67,9 @@ repository = file://%(test_dir)s/repo
             project  = Tailorizer(test_name, config)
             project.workingDir().source.changesets = self.CHANGESETS
             project()
+
+            if assert_function is not None:
+                assert_function(project, vcs)
 
     def testTicket64(self):
         """#64: support add('foo/bar/baz') even if 'foo' was not previously added"""
