@@ -99,3 +99,30 @@ repository = file://%(test_dir)s/repo
             ]),
         ]
         self.run_tailor()
+
+    def testTicket74(self):
+        """Files must be physically removed on dir removal, so they don't get readded"""
+        self.TARGET_VCS = [ 'svn' ] # FAIL: bzr for sure, probably others
+        self.CHANGESETS = [
+            Changeset("Add dir/a{1,2,3}",
+                [ Entry(Entry.ADDED, 'dir/'),
+                  Entry(Entry.ADDED, 'dir/a1'),
+                  Entry(Entry.ADDED, 'dir/a2'),
+                  Entry(Entry.ADDED, 'dir/a3'),
+                ]),
+            Changeset("rm dir",
+                [ Entry(Entry.DELETED, 'dir/'), ]),
+            Changeset("Add dir/z{1,2,3}",
+                [ Entry(Entry.ADDED, 'dir/'),
+                  Entry(Entry.ADDED, 'dir/z1'),
+                  Entry(Entry.ADDED, 'dir/z2'),
+                  Entry(Entry.ADDED, 'dir/z3'),
+                ]),
+        ]
+        def assert_function(project, vcs):
+            repository = project.workingDir().target.repository
+            tree = join(repository.rootdir, repository.subdir)
+            for file in ('a1', 'a2', 'a3'):
+                self.failIf(exists(join(tree, 'dir', file)))
+
+        self.run_tailor(assert_function)
