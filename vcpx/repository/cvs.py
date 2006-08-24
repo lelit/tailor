@@ -787,3 +787,8 @@ class CvsEntries(object):
                       entries.getFileVersions("%s/" % dirname)]
 
         return pairs
+
+    def isEmpty(self):
+        """Return True is this directory does not contain any subentry."""
+
+        return not self.files and not self.directories

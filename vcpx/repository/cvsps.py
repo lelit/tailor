@@ -259,13 +259,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     def __maybeDeleteDirectory(self, entrydir, changeset):
         from os.path import join, exists
-        from os import listdir
+        from vcpx.repository.cvs import CvsEntries
 
         if not entrydir:
             return
 
         absentrydir = join(self.repository.basedir, entrydir)
-        if not exists(absentrydir) or listdir(absentrydir) == ['CVS']:
+        if not exists(absentrydir) or CvsEntries(absentrydir).isEmpty():
             # Oh, the directory is empty: if there are no other added entries
             # in the directory, insert a REMOVE event against it.
             for added in changeset.addedEntries():
@@ -325,7 +325,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             # just a single "CVS" subdir, btw)
 
             if e.action_kind == e.DELETED and e.new_revision is None:
-                assert listdir(join(self.repository.basedir, e.name)) == ['CVS'], '%s should be empty' % e.name
+                assert CvsEntries(join(self.repository.basedir, e.name)).isEmpty(), '%s should be empty' % e.name
                 rmtree(join(self.repository.basedir, e.name))
             else:
                 cmd = self.repository.command("-d", "%(repository)s",
