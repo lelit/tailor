@@ -679,7 +679,7 @@ class CvsReappearedDirectory(OperationalTest):
             cvs.execute('add', bardir, again)
             cvs.execute('commit', '-m', 'four', again)
 
-    def testCvsReapperedDirectoryToSubversion(self):
+    def testCvsReappearedDirectoryToSubversion(self):
         """Test that we can handle resurrected cvs directory to svn."""
 
         t = Tailorizer("svnresurdirtest", self.config)
