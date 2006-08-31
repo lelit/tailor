@@ -329,6 +329,7 @@ class OperationalTest(TestCase):
         from os.path import exists, split, join
         from atexit import register
         from shutil import rmtree
+        from vcpx.tests import DEBUG
 
         tailor_repo = getcwd()
         while tailor_repo != '/' and not exists(join(tailor_repo, '_darcs')):
@@ -336,13 +337,17 @@ class OperationalTest(TestCase):
         assert exists(join(tailor_repo, '_darcs')), "Tailor Darcs repository not found!"
         self.tailor_repo = tailor_repo
         self.config = Config(StringIO(__doc__), {'tailor_repo': tailor_repo,
-                                                 'testdir': self.TESTDIR})
+                                                 'testdir': self.TESTDIR,
+                                                 'verbose': DEBUG})
+
         if not exists(self.TESTDIR):
             mkdir(self.TESTDIR)
             register(rmtree, self.TESTDIR)
 
     def diffWhenPossible(self, tailorizer):
         "Diff the resulting sides"
+
+        from vcpx.tests import DEBUG
 
         dwd = tailorizer.workingDir()
         if not dwd.shared_basedirs:
@@ -351,7 +356,7 @@ class OperationalTest(TestCase):
                 cmd.extend(["-x", tailorizer.source.METADIR])
             if tailorizer.target.METADIR:
                 cmd.extend(["-x", tailorizer.target.METADIR])
-            d = ExternalCommand(command=cmd, nolog=True)
+            d = ExternalCommand(command=cmd, nolog=not DEBUG)
             out = d.execute(dwd.source.repository.basedir,
                             dwd.target.repository.basedir,
                             stdout=PIPE)[0]
@@ -507,11 +512,12 @@ class Svn(OperationalTest):
 
         from os import mkdir
         from os.path import join
+        from vcpx.tests import DEBUG
 
         drepo = join(self.TESTDIR, 'rename_delete')
         mkdir(drepo)
 
-        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=True)
+        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=not DEBUG)
 
         darcs.execute('init')
 
@@ -534,11 +540,12 @@ class Svn(OperationalTest):
 
         from os import mkdir
         from os.path import join
+        from vcpx.tests import DEBUG
 
         drepo = join(self.TESTDIR, 'rename_delete_dir')
         mkdir(drepo)
 
-        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=True)
+        darcs = ExternalCommand(command=['darcs'], cwd=drepo, nolog=not DEBUG)
 
         darcs.execute('init')
 
@@ -569,6 +576,7 @@ class CvsOrderTest(OperationalTest):
 
         from os import mkdir, getcwd
         from os.path import join, exists
+        from vcpx.tests import DEBUG
 
         super(CvsOrderTest, self).setUp()
 
@@ -582,7 +590,7 @@ class CvsOrderTest(OperationalTest):
             startdir = join(basedir, 'start')
             mkdir(startdir)
 
-            cvs = ExternalCommand(cwd=startdir, nolog=True, command=cvscmd)
+            cvs = ExternalCommand(cwd=startdir, nolog=not DEBUG, command=cvscmd)
             cvs.execute('init')
 
             open(join(startdir, 'foo'), "w").close()
@@ -635,6 +643,7 @@ class CvsReappearedDirectory(OperationalTest):
         from os.path import join, exists
         from time import sleep
         from shutil import rmtree
+        from vcpx.tests import DEBUG
 
         super(CvsReappearedDirectory, self).setUp()
 
@@ -647,7 +656,7 @@ class CvsReappearedDirectory(OperationalTest):
             startdir = join(basedir, 'start')
             mkdir(startdir)
 
-            cvs = ExternalCommand(cwd=startdir, nolog=True, command=['cvs', '-d', repodir])
+            cvs = ExternalCommand(cwd=startdir, nolog=not DEBUG, command=['cvs', '-d', repodir])
             cvs.execute('init')
 
             open(join(startdir, 'foo'), "w").close()
@@ -657,7 +666,7 @@ class CvsReappearedDirectory(OperationalTest):
             workdir = join(basedir, 'work')
             cvs.execute('checkout', '-d', workdir, 'test')
 
-            cvs = ExternalCommand(cwd=workdir, nolog=True, command=['cvs'])
+            cvs = ExternalCommand(cwd=workdir, nolog=not DEBUG, command=['cvs'])
             bardir = join(workdir, 'bar')
             mkdir(bardir)
             baz = join(bardir, 'baz')
@@ -682,10 +691,12 @@ class CvsReappearedDirectory(OperationalTest):
     def testCvsReappearedDirectoryToSubversion(self):
         """Test that we can handle resurrected cvs directory to svn."""
 
+        from vcpx.tests import DEBUG
+
         t = Tailorizer("svnresurdirtest", self.config)
         t()
 
-        svnls = ExternalCommand(nolog=False, command=['svn', 'ls'])
+        svnls = ExternalCommand(nolog=not DEBUG, command=['svn', 'ls'])
         manifest = svnls.execute('file://%s/cvsresurdirtest.svnrepo/test/bar' % self.TESTDIR,
                                  stdout=PIPE)[0]
         self.assertEqual(manifest.read(), "again\n")

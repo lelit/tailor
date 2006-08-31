@@ -8,6 +8,8 @@
 import sys
 from unittest import TestProgram, TestSuite
 
+DEBUG = False
+
 from shwrap import *
 from cvsps import *
 from cvs import *
@@ -28,6 +30,7 @@ Usage: %(progName)s [options] [test] [...]
 Options:
   -h, --help       Show this message
   -v, --verbose    Verbose output
+  -d, --debug      Debug output
   -q, --quiet      Minimal output
   -l, --list       List available tests without running them
 
@@ -45,8 +48,8 @@ Examples:
     def parseArgs(self, argv):
         import getopt
         try:
-            options, args = getopt.getopt(argv[1:], 'hHvql',
-                                          ['help','verbose','quiet','list'])
+            options, args = getopt.getopt(argv[1:], 'hHvdql',
+                                          ['help','verbose','debug','quiet','list'])
             listonly = False
             for opt, value in options:
                 if opt in ('-h','-H','--help'):
@@ -55,6 +58,9 @@ Examples:
                     self.verbosity = 0
                 if opt in ('-v','--verbose'):
                     self.verbosity = 2
+                if opt in ('-d','--debug'):
+                    global DEBUG
+                    DEBUG = True
                 if opt in ('-l','--list'):
                     listonly = True
             if len(args) == 0 and self.defaultTest is None:
