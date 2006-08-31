@@ -368,10 +368,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         for entry,path in addeddirs:
             entry = changeset.addEntry(path, None, before=entry)
             entry.action_kind = entry.ADDED
+            self.log.info("registering new %s directory", entry.name)
 
         for path in deleteddirs:
             deldir = changeset.addEntry(path, None)
             deldir.action_kind = deldir.DELETED
+            self.log.info("registering %s directory deletion", path)
 
     def _checkoutUpstreamRevision(self, revision):
         """
