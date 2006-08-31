@@ -592,13 +592,16 @@ class CvsOrderTest(OperationalTest):
 
             cvs = ExternalCommand(cwd=startdir, nolog=not DEBUG, command=cvscmd)
             cvs.execute('init')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             open(join(startdir, 'foo'), "w").close()
 
             cvs.execute('import', '-m', 'one', 'test', 'test', 'test1')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             workdir = join(basedir, 'work')
             cvs.execute('checkout', '-d', workdir, 'test')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             bardir = join(workdir, 'bar')
             mkdir(bardir)
@@ -606,7 +609,9 @@ class CvsOrderTest(OperationalTest):
             open(baz, "w").close()
 
             cvs.execute('add', bardir, baz)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             cvs.execute('commit', '-m', 'two')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
     def testCvsConvertDirectoryAddToBazaarng(self):
         """Test that we can handle directory adds in the cvs module to bzr."""
@@ -658,13 +663,16 @@ class CvsReappearedDirectory(OperationalTest):
 
             cvs = ExternalCommand(cwd=startdir, nolog=not DEBUG, command=['cvs', '-d', repodir])
             cvs.execute('init')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             open(join(startdir, 'foo'), "w").close()
 
             cvs.execute('import', '-m', 'one', 'test', 'test', 'test1')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             workdir = join(basedir, 'work')
             cvs.execute('checkout', '-d', workdir, 'test')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
             cvs = ExternalCommand(cwd=workdir, nolog=not DEBUG, command=['cvs'])
             bardir = join(workdir, 'bar')
@@ -673,12 +681,17 @@ class CvsReappearedDirectory(OperationalTest):
             open(baz, "w").close()
 
             cvs.execute('add', bardir, baz)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             cvs.execute('commit', '-m', 'two', baz)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             sleep(1)
 
             cvs.execute('rm', '-f', baz)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             cvs.execute('commit', '-m', 'three', baz)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             cvs.execute('update', '-dP')
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             sleep(1)
 
             mkdir(bardir)
@@ -686,7 +699,9 @@ class CvsReappearedDirectory(OperationalTest):
             open(again, "w").close()
 
             cvs.execute('add', bardir, again)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
             cvs.execute('commit', '-m', 'four', again)
+            self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
     def testCvsReappearedDirectoryToSubversion(self):
         """Test that we can handle resurrected cvs directory to svn."""
