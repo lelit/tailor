@@ -58,7 +58,7 @@ class MonotoneRepository(Repository):
 
         cmd = self.command("db", "init", "--db", self.repository)
         init = ExternalCommand(command=cmd)
-        init.execute()
+        init.execute(stdout=PIPE, stderr=PIPE)
 
         if init.exit_status:
             raise TargetInitializationFailure("Was not able to initialize "
@@ -75,7 +75,7 @@ class MonotoneRepository(Repository):
                 cmd = self.repository.command("read", "--db",
                                               self.repository)
                 regkey = ExternalCommand(command=cmd)
-                regkey.execute(input=keyfile)
+                regkey.execute(input=keyfile, stdout=PIPE, stderr=PIPE)
             elif self.keygenid:
                 # requested a new key
                 cmd = self.repository.command("genkey", "--db",
@@ -84,7 +84,7 @@ class MonotoneRepository(Repository):
                 if self.passphrase:
                     passp="%s\n%s\n" % (self.passphrase,
                                         self.passphrase)
-                regkey.execute(self.keygenid, input=passp)
+                regkey.execute(self.keygenid, input=passp, stdout=PIPE, stderr=PIPE)
             else:
                 raise TargetInitializationFailure("Can't setup the monotone "
                                                   "repository %r. "
@@ -216,7 +216,7 @@ class MonotoneLogParser:
         cmd = self.repository.command("log", "--db", self.repository.repository,
                                       "--last", "1", "--revision", revision)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(stdout=PIPE)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure("mtn log returned status %d" % mtl.exit_status)
 
@@ -408,7 +408,7 @@ class MonotoneDiffParser:
                                       "--revision", chset.revision)
 
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(stdout=PIPE)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "mtn diff returned status %d" % mtl.exit_status)
@@ -586,7 +586,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             cmd = self.repository.command("automate","heads",
                                           "--db", dbrepo, module)
             mtl = ExternalCommand(cwd=working_dir, command=cmd)
-            outstr = mtl.execute(stdout=PIPE)
+            outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
             if mtl.exit_status:
                 raise InvocationError("The branch '%s' is empty" % module)
 
@@ -666,7 +666,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
     def _applyChangeset(self, changeset):
         cmd = self.repository.command("update", "--revision", changeset.revision)
         mtl = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        mtl.execute()
+        mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
             raise ChangesetApplicationFailure("'mtn update' returned "
                                               "status %s" % mtl.exit_status)
@@ -694,14 +694,13 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                           "--branch", self.repository.module,
                                           self.repository.basedir)
             mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
-            mtl.execute()
+            mtl.execute(stdout=PIPE, stderr=PIPE)
             if mtl.exit_status:
                 raise TargetInitializationFailure(
                     "'mtn co' returned status %s" % mtl.exit_status)
         else:
             self.log.debug("%r already exists, assuming it's a monotone "
                            "working dir already populated", self.repository.basedir)
-
 
         # Ok, now the workdir contains the checked out revision. We
         # need to return a changeset describing it.  Since this is the
@@ -721,32 +720,36 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
     def _addPathnames(self, names):
         """
-        Add some new filesystem objects, skipping directories (directory
-        addition is implicit in monotone)
+        Add some new filesystem objects, skipping directories. 
+        In monotone *explicit* directory addition is always recursive, 
+        so adding a directory here might interfere with renames.
+        Adding files without directories doesn't cause problems, 
+        because adding a file implicitly adds the parent directory 
+        (non-recursively).
         """
         fnames=[]
         for fn in names:
             if isdir(join(self.repository.basedir, fn)):
-                self.log.debug("ignoring addition of directory %r", fn)
+                self.log.debug("ignoring addition of directory %r "
+                               "(dirs are implicitly added by files)", fn)
             else:
                 fnames.append(fn)
         if len(fnames):
             # ok, we still have something to add
             cmd = self.repository.command("add")
             add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            add.execute(fnames)
+            add.execute(fnames, stdout=PIPE, stderr=PIPE)
             if add.exit_status:
                 raise ChangesetApplicationFailure("%s returned status %s" %
                                                     (str(add),add.exit_status))
 
-
     def _addSubtree(self, subdir):
         """
-        Add a whole subtree
+        Add a whole subtree (recursively)
         """
         cmd = self.repository.command("add")
         add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        add.execute(subdir)
+        add.execute(subdir, stdout=PIPE, stderr=PIPE)
         if add.exit_status:
             raise ChangesetApplicationFailure("%s returned status %s" %
                                               (str(add),add.exit_status))
@@ -800,7 +803,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
         cmd = self.repository.command("drop", "--recursive")
         drop = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        dum, error = drop.execute(names, stderr=PIPE)
+        dum, error = drop.execute(names, stdout=PIPE, stderr=PIPE)
         if drop.exit_status:
             errtext = error.read()
             self.log.error("Monotone drop said: %s", errtext)
@@ -812,26 +815,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
         Rename a filesystem object.
         """
-        # this function is called *after* the file/dir has changed name,
-        # and monotone doesn't like it.
-        # we put names back to make it happy ...
-#        if access(join(self.repository.basedir, newname), F_OK):
-#            if access(join(self.repository.basedir, oldname), F_OK):
-#                raise ChangesetApplicationFailure("Can't rename %s to %s. "
-#                                                  "Both names already exist" %
-#                                                  (oldname, newname))
-#            renames(join(self.repository.basedir, newname), join(self.repository.basedir, oldname))
-#            self.log.debug('Renamed "%s" back to "%s"', newname, oldname)
-
         cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        rename.execute(oldname, newname)
-
-        # redo the rename ...
-#        renames(join(self.repository.basedir, oldname), join(self.repository.basedir, newname))
-#        if rename.exit_status:
-#            raise ChangesetApplicationFailure("%s returned status %s" %
-#                                              (str(rename),rename.exit_status))
+        rename.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
 
     def _prepareTargetRepository(self):
         """
@@ -865,7 +851,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             cmd.extend( ("--key", self.repository.keyid) )
 
         setup = ExternalCommand(command=cmd)
-        setup.execute(self.repository.basedir)
+        setup.execute(self.repository.basedir, stdout=PIPE, stderr=PIPE)
 
         if self.repository.passphrase or self.repository.custom_lua:
             monotonerc = open(join(self.repository.basedir, '_MTN', 'monotonerc'), 'w')
