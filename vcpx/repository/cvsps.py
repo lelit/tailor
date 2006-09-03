@@ -280,13 +280,16 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         from os import listdir
         from shutil import rmtree
         from time import sleep
-        from vcpx.repository.cvs import CvsEntries
+        from vcpx.repository.cvs import CvsEntries, compare_cvs_revs
 
         entries = CvsEntries(self.repository.basedir)
 
         # Collect added and deleted directories
         addeddirs = []
         deleteddirs = []
+
+        # Group entries at the same revision
+        reventries = {}
 
         for e in changeset.entries:
             if e.action_kind == e.UPDATED:
@@ -328,39 +331,47 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                 assert CvsEntries(join(self.repository.basedir, e.name)).isEmpty(), '%s should be empty' % e.name
                 rmtree(join(self.repository.basedir, e.name))
             else:
-                cmd = self.repository.command("-d", "%(repository)s",
-                                              "-q", "update", "-d",
-                                              "-r", e.new_revision)
-                if self.repository.freeze_keywords:
-                    cmd.append('-kk')
-                cvsup = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-                retry = 0
-                while True:
-                    cvsup.execute(e.name, repository=self.repository.repository)
-
-                    if cvsup.exit_status:
-                        retry += 1
-                        if retry>3:
-                            break
-                        delay = 2**retry
-                        self.log.warning("%s returned status %s, "
-                                         "retrying in %d seconds...",
-                                         str(cvsup), cvsup.exit_status, delay)
-                        sleep(retry)
-                    else:
-                        break
-
-                if cvsup.exit_status:
-                    raise ChangesetApplicationFailure(
-                        "%s returned status %s" % (str(cvsup),
-                                                   cvsup.exit_status))
-
-                self.log.debug("%s updated to %s", e.name, e.new_revision)
+                names = reventries.setdefault(e.new_revision, [])
+                names.append(e.name)
 
             if e.action_kind == e.DELETED:
                 entrydir = split(e.name)[0]
                 if self.__maybeDeleteDirectory(entrydir, changeset):
                     deleteddirs.append(entrydir)
+
+        revs = reventries.keys()
+        revs.sort(cmp=compare_cvs_revs)
+
+        cmd = self.repository.command("-d", "%(repository)s",
+                                      "-q", "update", "-d",
+                                      "-r", "%(revision)s")
+        if self.repository.freeze_keywords:
+            cmd.append('-kk')
+        cvsup = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        for rev in revs:
+            names = reventries[rev]
+            retry = 0
+            while True:
+                cvsup.execute(names, repository=self.repository.repository,
+                              revision=rev)
+                if cvsup.exit_status:
+                    retry += 1
+                    if retry>3:
+                        break
+                    delay = 2**retry
+                    self.log.warning("%s returned status %s, "
+                                     "retrying in %d seconds...",
+                                     str(cvsup), cvsup.exit_status, delay)
+                    sleep(retry)
+                else:
+                    break
+
+            if cvsup.exit_status:
+                raise ChangesetApplicationFailure(
+                    "%s returned status %s" % (str(cvsup),
+                                               cvsup.exit_status))
+
+            self.log.debug("%s updated to %s", ','.join(names), e.new_revision)
 
         # Fake up ADD and DEL events for the directories implicitly
         # added/removed, so that the replayer gets their name.
