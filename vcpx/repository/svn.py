@@ -33,6 +33,7 @@ class SvnRepository(Repository):
         self.EXECUTABLE = cget(self.name, 'svn-command', 'svn')
         self.__svnadmin = cget(self.name, 'svnadmin-command', 'svnadmin')
         self.use_propset = cget(self.name, 'use-propset', False)
+        self.propset_date = cget(self.name, 'propset-date', True)
         self.filter_badchars = cget(self.name, 'filter-badchars', False)
         self.use_limit = cget(self.name, 'use-limit', True)
         self.trust_root = cget(self.name, 'trust-root', False)
@@ -538,6 +539,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             logmessage.append('')
             logmessage.append('Original author: %s' % encode(author))
             logmessage.append('Date: %s' % date)
+        elif not self.repository.propset_date:
+            logmessage.append('')
+            logmessage.append('Date: %s' % date)
 
         rontf = ReopenableNamedTemporaryFile('svn', 'tailor')
         log = open(rontf.name, "w")
@@ -578,11 +582,11 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd = self.repository.command("propset", "%(propname)s",
                                           "--quiet", "--revprop",
                                           "--revision", revision)
-            propset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-
-            date = date.astimezone(UTC).replace(microsecond = 0, tzinfo=None)
-            propset.execute(date.isoformat()+".000000Z", propname='svn:date')
-            propset.execute(encode(author), propname='svn:author')
+            pset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            if self.repository.propset_date:
+                date = date.astimezone(UTC).replace(microsecond=0, tzinfo=None)
+                pset.execute(date.isoformat()+".000000Z", propname='svn:date')
+            pset.execute(encode(author), propname='svn:author')
 
         cmd = self.repository.command("update", "--quiet")
         if self.repository.ignore_externals:

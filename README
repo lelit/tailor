@@ -805,6 +805,12 @@ use-propset : bool
 
   *False* by default.
 
+propset-date : bool
+  By default *True*, can be used to avoid setting the ``svn:date``
+  property on the Subversion revision, and thus problem with
+  ``-r{DATE}`` mentioned above.  When this is *False*, the original
+  timestamp gets appended to the revision log.
+
 use-limit : bool
   By default *True*, should be set to *False* when using old
   Subversion clients, since ``log --limit`` was introduced with
