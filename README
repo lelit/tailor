@@ -199,7 +199,7 @@ Examples
              appropriate hook in the repository to enable the
              propset command to operate on unversioned properties,
              as described in the `svn manual`__. Then you can
-             specify '--use-svn-propset' option, and tailor will
+             specify '--use-propset' option, and tailor will
              put the original author and timestamp in the proper
              svn metadata instead of appending them to the changelog.
 

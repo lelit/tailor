@@ -261,7 +261,7 @@ BOOTSTRAP_OPTIONS = [
 ]
 
 VC_SPECIFIC_OPTIONS = [
-    RecogOption("--use-svn-propset", action="store_true", default=False,
+    RecogOption("--use-propset", action="store_true", default=False,
                 dest="use_propset",
                 help="Use 'svn propset' to set the real date and author of "
                      "each commit, instead of appending these information to "
