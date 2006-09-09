@@ -20,6 +20,7 @@ CONFLICTS_PROMPT = """
 The changeset
 
 %s
+
 caused conflicts on the following files:
 
  * %s
