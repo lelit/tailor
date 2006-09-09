@@ -113,9 +113,10 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # Files in to-be-merged changesets not on the trunk will
             # cause a merge error on update. If no files are modified,
             # added, removed, or deleted, do update -C
-            modified = [x for x in repo.changes()[0:4] if x]
-            if modified:
-                return modified
+            modified, added, removed, deleted = repo.changes()[0:4]
+            conflicting = modified + added + removed + deleted
+            if conflicting:
+                return conflicting
             return repo.update(node, force=True)
 
     def _changesetForRevision(self, repo, revision):
