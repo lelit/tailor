@@ -53,19 +53,19 @@ repository = file://%(test_dir)s/repo
         register(rmtree, self.test_dir)
 
         # defaults
-        self.TARGET_VCS = []
-        self.CHANGESETS = []
-        self.SHARED_BASEDIRS = False
+        self.target_vcs = []
+        self.source_changesets = []
+        self.shared_basedirs = False
 
     def run_tailor(self, assert_function=None):
         test_name = self.test_name
 
-        for vcs in self.TARGET_VCS:
-            subdir   = self.SHARED_BASEDIRS and '#' or 'subdir = %s' % vcs
+        for vcs in self.target_vcs:
+            subdir   = self.shared_basedirs and '#' or 'subdir = %s' % vcs
             test_dir = join(self.test_dir, vcs)
             config   = Config(StringIO(self.CONFIG % vars()), {})
             project  = Tailorizer(test_name, config)
-            project.workingDir().source.changesets = self.CHANGESETS
+            project.workingDir().source.changesets = self.source_changesets
             project()
 
             if assert_function is not None:
@@ -73,8 +73,8 @@ repository = file://%(test_dir)s/repo
 
     def testTicket64(self):
         """#64: support add('foo/bar/baz') even if 'foo' was not previously added"""
-        self.TARGET_VCS = [ 'bzr', 'darcs', 'hg' ]
-        self.CHANGESETS = [
+        self.target_vcs = [ 'bzr', 'darcs', 'hg' ]
+        self.source_changesets = [
             Changeset("Dummy first commit",
                 [ Entry(Entry.ADDED, 'dummy.txt'), ]),
             Changeset("Add a/b/c",
@@ -86,8 +86,8 @@ repository = file://%(test_dir)s/repo
 
     def testTicket64_2(self):
         """#64 (2): support update('foo2/bar') even if 'foo2' is added in the same changeset"""
-        self.TARGET_VCS = [ 'bzr', 'darcs', 'hg' ] # XXX bzr 0.8 fails :-?
-        self.CHANGESETS = [
+        self.target_vcs = [ 'bzr', 'darcs', 'hg' ] # XXX bzr 0.8 fails :-?
+        self.source_changesets = [
             Changeset("Dummy first commit",
                 [ Entry(Entry.ADDED, 'dummy.txt'), ]),
             Changeset("Add a/b/c",
@@ -102,8 +102,8 @@ repository = file://%(test_dir)s/repo
 
     def testTicket74(self):
         """Files must be physically removed on dir removal, so they don't get readded"""
-        self.TARGET_VCS = [ 'svn' ] # FAIL: bzr for sure, probably others
-        self.CHANGESETS = [
+        self.target_vcs = [ 'svn' ] # FAIL: bzr for sure, probably others
+        self.source_changesets = [
             Changeset("Add dir/a{1,2,3}",
                 [ Entry(Entry.ADDED, 'dir/'),
                   Entry(Entry.ADDED, 'dir/a1'),

@@ -88,8 +88,8 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         treeid = self.repository.runCommand(['write-tree'])[0]
 
         # in single-repository mode, only update the relevant branch
-        if self.repository.BRANCHNAME:
-            refname = self.repository.BRANCHNAME
+        if self.repository.branch_name:
+            refname = self.repository.branch_name
         else:
             refname = 'HEAD'
 
@@ -239,4 +239,4 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         # If we have a parent repository, always track from INITIAL
         SynchronizableTargetWorkingDir.importFirstRevision(
             self, source_repo, changeset,
-            initial or self.repository.BRANCHPOINT)
+            initial or self.repository.branch_point)

@@ -25,17 +25,17 @@ class GitRepository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
-        self.PARENT_REPO = project.config.get(self.name, 'parent-repo')
-        self.BRANCHPOINT = project.config.get(self.name, 'branchpoint', 'HEAD')
-        self.BRANCHNAME = project.config.get(self.name, 'branch')
-        if self.BRANCHNAME:
-            self.BRANCHNAME = 'refs/heads/' + self.BRANCHNAME
+        self.parent_repo = project.config.get(self.name, 'parent-repo')
+        self.branch_point = project.config.get(self.name, 'branchpoint', 'HEAD')
+        self.branch_name = project.config.get(self.name, 'branch')
+        if self.branch_name:
+            self.branch_name = 'refs/heads/' + self.branch_name
 
-        if self.repository and self.PARENT_REPO:
+        if self.repository and self.parent_repo:
             self.log.critical('Cannot make sense of both "repository" and "parent-repo" parameters')
             raise ConfigurationError ('Must specify only one of "repository" and "parent-repo"')
 
-        if self.BRANCHNAME and not self.repository:
+        if self.branch_name and not self.repository:
             self.log.critical('Cannot make sense of "branch" if "repository" is not set')
             raise ConfigurationError ('Missing "repository" to make use o "branch"')
 
@@ -75,8 +75,8 @@ class GitRepository(Repository):
         if exists(join(self.basedir, self.METADIR)):
             return
 
-        if self.PARENT_REPO:
-            cmd = self.command("clone", "--shared", "-n", self.PARENT_REPO, 'tmp')
+        if self.parent_repo:
+            cmd = self.command("clone", "--shared", "-n", self.parent_repo, 'tmp')
             clone = GitExternalCommand(self, cwd=self.basedir, command=cmd)
             clone.execute()
             if clone.exit_status:
@@ -85,22 +85,22 @@ class GitRepository(Repository):
 
             renames(join(self.basedir, 'tmp', '.git'), join(self.basedir, '.git'))
 
-            cmd = self.command("reset", "--soft", self.BRANCHPOINT)
+            cmd = self.command("reset", "--soft", self.branch_point)
             reset = GitExternalCommand(self, cwd=self.basedir, command=cmd)
             reset.execute()
             if reset.exit_status:
                 raise TargetInitializationFailure(
                     "%s returned status %s" % (str(reset), reset.exit_status))
 
-        elif self.repository and self.BRANCHNAME:
+        elif self.repository and self.branch_name:
             # ...and exists(self.storagedir) ?
 
             # initialization of a new branch in single-repository mode
             mkdir(join(self.basedir, self.METADIR))
 
-            bp = self.runCommand(['rev-parse', self.BRANCHPOINT])[0]
+            bp = self.runCommand(['rev-parse', self.branch_point])[0]
             self.runCommand(['read-tree', bp])
-            self.runCommand(['update-ref', self.BRANCHNAME, bp])
+            self.runCommand(['update-ref', self.branch_name, bp])
             #self.runCommand(['checkout-index'])
 
         else:
