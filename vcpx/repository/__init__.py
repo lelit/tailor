@@ -20,9 +20,22 @@ class Repository(object):
     """
     Collector for the configuration of a single repository.
     """
+
     METADIR = None
+    """
+    The name of the "meta" directory used by this kind of repository.
+    Subclasses should override this, obviously.
+    """
+
     EXTRA_METADIRS = []
+    """
+    Other eventual "meta" directories.
+    """
+
     EXECUTABLE = None
+    """
+    The name of the external command line tool, for some backends.
+    """
 
     def __new__(klass, name, project, which):
         """
