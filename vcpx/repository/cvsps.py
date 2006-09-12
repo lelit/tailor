@@ -744,18 +744,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Rename a filesystem object.
         """
 
-        from os import rename
-        from os.path import join
-
-        if not self.shared_basedirs:
-            oldpath = join(self.repository.basedir, oldname)
-            newpath = join(self.repository.basedir, newname)
-            try:
-                rename(oldpath, newpath)
-            except OSError:
-                raise ChangesetApplicationFailure(
-                    'Cannot rename "%s" to "%s"' % (oldpath, newpath))
-
         self._removePathnames([oldname])
         self._addPathnames([newname])
 

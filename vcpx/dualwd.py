@@ -102,9 +102,9 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.target.importFirstRevision(source_repo, changeset, initial)
 
     def replayChangeset(self, changeset):
-        self.target.replayChangeset(changeset)
         if not self.shared_basedirs:
             self._syncTargetWithSource()
+        self.target.replayChangeset(changeset)
 
     def _syncTargetWithSource(self):
         cmd = ['rsync', '--archive']

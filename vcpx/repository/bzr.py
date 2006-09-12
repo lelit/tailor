@@ -303,24 +303,24 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import rename
         from os.path import join, exists
 
-        if self.shared_basedirs:
-            # bzr does the rename itself as well
-            unmoved = False
-            oldpath = join(self.repository.basedir, oldname)
-            newpath = join(self.repository.basedir, newname)
-            if not exists(oldpath):
-                try:
-                    rename(newpath, oldpath)
-                except OSError:
-                    raise ChangesetApplicationFailure(
-                        'Cannot rename "%s" back to "%s"' % (newpath, oldpath))
-                unmoved = True
+        # bzr does the rename itself as well
+        unmoved = False
+        oldpath = join(self.repository.basedir, oldname)
+        newpath = join(self.repository.basedir, newname)
+        if not exists(oldpath):
+            try:
+                rename(newpath, oldpath)
+            except OSError:
+                self.log.critical('Cannot rename %r back to %r',
+                                  newpath, oldpath)
+                raise
+            unmoved = True
 
         self.log.info('Renaming %r to %r...', oldname, newname)
         try:
             self._working_tree.rename_one(oldname, newname)
         except:
-            if self.shared_basedirs and unmoved:
+            if unmoved:
                 rename(oldpath, newpath)
             raise
 
