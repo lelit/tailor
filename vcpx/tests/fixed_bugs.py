@@ -126,3 +126,38 @@ repository = file://%(test_dir)s/repo
                 self.failIf(exists(join(tree, 'dir', file)))
 
         self.run_tailor(assert_function)
+
+    def testTicket75(self, shared_basedirs=False):
+        """Reorganization of upstream sources with multiple renames (disjunct basedirs)"""
+
+        self.target_vcs = [ 'svn', 'bzr', 'darcs' ]
+        self.source_changesets = [
+            Changeset("Add dir/a{1,2,3}",
+                [ Entry(Entry.ADDED, 'dir/'),
+                  Entry(Entry.ADDED, 'dir/a1'),
+                  Entry(Entry.ADDED, 'dir/a2'),
+                  Entry(Entry.ADDED, 'dir/a3'),
+                ]),
+            Changeset("Spread around",
+                [ Entry(Entry.RENAMED, 'a.root', 'dir/a1'),
+                  Entry(Entry.RENAMED, 'b.root', 'dir/a2'),
+                  Entry(Entry.RENAMED, 'newdir/', 'dir/'),
+                  Entry(Entry.UPDATED, 'newdir/a3', contents="ciao"),
+                ]),
+        ]
+
+        def assert_function(project, vcs):
+            repository = project.workingDir().target.repository
+            tree = join(repository.rootdir, repository.subdir)
+            for file in ('a1', 'a2', 'a3'):
+                self.failIf(exists(join(tree, 'dir', file)))
+            self.failIf(not exists(join(tree, 'newdir/a3')))
+            self.failIf(open(join(tree, 'newdir/a3')).read() <> 'ciao')
+
+        self.shared_basedirs = shared_basedirs
+        self.run_tailor(assert_function)
+
+    def testTicket75_2(self):
+        """Reorganization of upstream sources with multiple renames (shared basedirs)"""
+
+        self.testTicket75(shared_basedirs=True)
