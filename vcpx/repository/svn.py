@@ -614,28 +614,32 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         # --force in case the file has been changed and moved in one revision
         cmd = self.repository.command("mv", "--quiet", "--force")
-        # Subversion does not seem to allow
-        #   $ mv a.txt b.txt
-        #   $ svn mv a.txt b.txt
-        # Here we are in this situation, since upstream VCS already
-        # moved the item.
-        # It may be better to let subversion do the move itself. For one thing,
-        # svn's cp+rm is different from rm+add (cp preserves history).
-        unmoved = False
-        oldpath = join(self.repository.basedir, oldname)
-        newpath = join(self.repository.basedir, newname)
-        if not exists(oldpath):
-            try:
-                rename(newpath, oldpath)
-            except OSError:
-                self.log.critical('Cannot rename %r back to %r',
-                                  newpath, oldpath)
-                raise
-            unmoved = True
+
+        if self.shared_basedirs:
+            # Subversion does not seem to allow
+            #   $ mv a.txt b.txt
+            #   $ svn mv a.txt b.txt
+            # Here we are in this situation, since upstream VCS already
+            # moved the item.
+            # It may be better to let subversion do the move itself. For one
+            # thing, svn's cp+rm is different from rm+add (cp preserves
+            # history).
+            # This does not happen when using disjunct basedirs, since tailor
+            # replayes the changeset on untouched sources
+            unmoved = False
+            oldpath = join(self.repository.basedir, oldname)
+            newpath = join(self.repository.basedir, newname)
+            if not exists(oldpath):
+                try:
+                    rename(newpath, oldpath)
+                except OSError:
+                    raise ChangesetApplicationFailure(
+                        'Cannot rename "%s" back to "%s"' % (newpath, oldpath))
+                unmoved = True
         move = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
         if move.exit_status:
-            if unmoved:
+            if self.shared_basedirs and unmoved:
                 rename(oldpath, newpath)
             raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
                                               % (str(move), move.exit_status,
