@@ -121,7 +121,7 @@ class MockChangesetEntry(ChangesetEntry):
                     os.unlink(name)
         elif self.action_kind == self.RENAMED:
             old_name = os.path.join(where, self.old_name)
-            if os.path.exists(oldname):
+            if os.path.exists(old_name):
                 os.rename(old_name, name)
         elif self.action_kind == self.UPDATED:
             if self.contents is not None:
