@@ -27,7 +27,7 @@ class FixedBugs(TestCase):
 # verbose = Yes
 source = mock:source
 target = %(vcs)s:target
-root-directory = %(test_dir)s
+root-directory = %(test_dir)s/rootdir
 state-file = state
 
 [mock:source]
