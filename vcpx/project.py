@@ -94,7 +94,8 @@ class Project(object):
         try:
             self._load()
         except Error, e:
-            raise ConfigurationError('Invalid configuration: %s' % str(e))
+            raise ConfigurationError('Invalid configuration in section %s: %s'
+                                     % (self.name, str(e)))
 
     def __str__(self):
         return "Project %s at %s:\n\t" % (self.name, self.rootdir) + \
