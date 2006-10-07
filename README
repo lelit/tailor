@@ -338,11 +338,13 @@ projects in the configuration.
 
 The following simpler config just go in one direction, for a single
 project, so no need neither for ``[DEFAULT].projects`` nor command
-line arguments::
+line arguments. Also, notice the usage of the repository short cut:
+the ``source`` and ``target`` will be implicitly loaded from
+`cvs:pxlib` and `hg:pxlib` respectively::
 
     [pxlib]
-    source = cvs:pxlib
-    target = hg:pxlib
+    source = cvs:
+    target = hg:
     root-directory = ~/mypxlib
     start-revision = INITIAL
     subdir = pxlib
@@ -355,7 +357,7 @@ line arguments::
     hg-command = /usr/local/bin/hg
 
 This will use a single directory, ``pxlib`` to contain both the source
-and the target system. If you prefer keeping the separated, you just
+and the target system. If you prefer keeping them separated, you just
 need to specify a different directory for each repository [#]_, as in::
 
     [pxlib]
@@ -447,7 +449,9 @@ state-file : string
 source : string
   The source repository: a repository name is something like
   "darcs:somename", that will be loaded from the homonymous section
-  in the configuration.
+  in the configuration. As a short cut, the "somename" part may be
+  omitted: in that case, the project name will be appended to the
+  specified prefix.
 
 target : string
   The counterpart of `source`, the repository that will receive the
@@ -559,6 +563,10 @@ repository are set just once::
   [productC]
   target = monotone:productC
   source = svn:sourceC
+
+  [productC_darcs]
+  target = darcs:
+  source = svn:sourceC
   
   ...
 
@@ -579,6 +587,12 @@ repository are set just once::
 
   [svn:sourceC]
   module = /productC
+
+For some backends, for example for those that like ``darcs`` do not
+make a distinction between `repository` and `working copy` and thus
+the former may be assumed by ``root-directory`` (and possibly
+``subdir``), the config section may be completely omitted, as done for
+`productC_darcs` above.
 
 
 Common options

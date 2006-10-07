@@ -242,8 +242,7 @@ class Config(SafeConfigParser):
         try:
             d.update(self._sections[section])
         except KeyError:
-            if section != DEFAULTSECT:
-                raise NoSectionError(section)
+            pass
         option = self.optionxform(option)
         try:
             value = d[option]

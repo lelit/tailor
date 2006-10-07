@@ -8,7 +8,7 @@ projects = project2
 [project1]
 root-directory = /tmp/tailor-tests
 source = svn:project1repo
-target = darcs:project1repo
+target = darcs:
 refill-changelogs = Yes
 state-file = project1.state
 before-commit = (maybe_skip, refill, p1_remap_authors)
@@ -19,7 +19,7 @@ repository = svn://some.server/svn
 module = project1
 use-propset = Yes
 
-[darcs:project1repo]
+[darcs:project1]
 repository = ~/darcs/project1
 
 [monotone:project1repo]
@@ -28,7 +28,7 @@ passphrase = simba
 
 [project2]
 root-directory = /tmp/tailor-tests
-source = darcs:project1repo
+source = darcs:project1
 target = svn:project2repo
 refill-changelogs = Yes
 state-file = project2.state
@@ -45,9 +45,6 @@ target = darcs:project3repo
 repository = svn://sample.org/svn
 module = /trunk
 subdir = plain
-
-[darcs:project3repo]
-subdir = .
 
 [project4]
 source = svn:project3repo

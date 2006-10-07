@@ -183,6 +183,8 @@ class Project(object):
         from repository import Repository
 
         repname = self.config.get(self.name, which)
+        if repname.endswith(':'):
+            repname += self.name
         return Repository(repname, self, which)
 
     def exists(self):

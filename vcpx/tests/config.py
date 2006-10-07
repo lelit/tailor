@@ -37,6 +37,7 @@ class Configuration(TestCase):
         """Verify the basic configuration mechanism"""
 
         from os import getcwd
+        from os.path import expanduser
 
         config = Config(self.getTestConfiguration("config-basic_test"),
                         {'tailor_repo': self.tailor_repo})
@@ -46,6 +47,9 @@ class Configuration(TestCase):
 
         project1 = Project('project1', config)
         self.assertEqual(project1.rootdir, '/tmp/tailor-tests')
+        self.assertEqual(project1.source.name, 'svn:project1repo')
+        self.assertEqual(project1.target.name, 'darcs:project1')
+        self.assertEqual(project1.target.repository, expanduser('~/darcs/project1'))
 
         project4 = Project('project4', config)
         self.assertEqual(project4.rootdir, getcwd())
@@ -94,7 +98,7 @@ class Configuration(TestCase):
         project4 = Project('project4', config)
         self.assertEqual(project4.target.command('record', '-a'),
                          ['darcs', 'record', '-a', '--look-for-adds'])
-        
+
 
     def testTagEntries(self):
         """Verify the darcs Repository knows when force CVS tag on entries"""

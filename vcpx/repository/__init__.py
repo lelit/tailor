@@ -108,23 +108,27 @@ class Repository(object):
         from locale import getpreferredencoding
 
         cget = project.config.get
-        self.repository = cget(self.name, 'repository') or \
-                          cget(self.name, '%s-repository' % self.which)
+        if project.config.has_section(self.name):
+            optname = self.name
+        else:
+            optname = project.name
+        self.repository = cget(optname, 'repository') or \
+                          cget(optname, '%s-repository' % self.which)
         if self.repository:
             self.repository = expanduser(self.repository)
-        self.module = cget(self.name, 'module') or \
-                      cget(self.name, '%s-module' % self.which)
-        self.rootdir = cget(self.name, 'root-directory',
+        self.module = cget(optname, 'module') or \
+                      cget(optname, '%s-module' % self.which)
+        self.rootdir = cget(optname, 'root-directory',
                             vars={'root-directory': project.rootdir})
-        self.subdir = cget(self.name, 'subdir',
+        self.subdir = cget(optname, 'subdir',
                            vars={'subdir': project.subdir})
-        self.delay_before_apply = cget(self.name, 'delay-before-apply')
+        self.delay_before_apply = cget(optname, 'delay-before-apply')
         if self.delay_before_apply:
             self.delay_before_apply = float(self.delay_before_apply)
-        self.encoding = cget(self.name, 'encoding')
+        self.encoding = cget(optname, 'encoding')
         if not self.encoding:
             self.encoding = getpreferredencoding()
-        self.encoding_errors_policy = cget(self.name,
+        self.encoding_errors_policy = cget(optname,
                                            'encoding-errors-policy', 'strict')
 
     def _validateConfiguration(self):
