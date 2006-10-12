@@ -480,7 +480,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         # out the actual cvsps revision
 
         found = False
-        last = None
 
         def already_applied(cs, entries=entries):
             "Loop over changeset entries to determine if it's already applied."
@@ -507,19 +506,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     applied = True
             return applied
 
+        # We cannot stop at the first not-applied cset, because it may
+        # old enough to trick already_applied(): an entry may have
+        # been moved in the meantime, and thus the getFileInfo()
+        # method would return None, for example... So we really have
+        # to loop over the whole queue.
+
         for cset in self.state_file:
             applied = already_applied(cset)
             found = found or applied
             if applied:
                 last = cset
-            elif last is not None:
-                # Ok, the current cset appears to be new, but we found at least
-                # one already applied, so we can skip the remaining. We cannot
-                # stop at the first not-applied cset, because it may very well
-                # be that it's old enough to trick already_applied(): an entry
-                # may have been moved in the meantime, and thus the getFileInfo()
-                # method would return None, for example...
-                break
 
         if not found and initialcset:
             found = already_applied(initialcset)
