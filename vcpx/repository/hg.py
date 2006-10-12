@@ -429,7 +429,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if path == subdir:
                 return None
             (hd, tl) = split(path)
-            while hd != subdir:
+            while hd != subdir and hd != '':
                 hd, nt = split(hd)
                 tl = join(nt, tl)
             files.append(tl)
