@@ -72,14 +72,12 @@ class MonotoneRepository(Repository):
             if self.keyfile:
                 # a key file is available, read into the database
                 keyfile = file(self.keyfile)
-                cmd = self.repository.command("read", "--db",
-                                              self.repository)
+                cmd = self.command("read", "--db", self.repository)
                 regkey = ExternalCommand(command=cmd)
                 regkey.execute(input=keyfile, stdout=PIPE, stderr=PIPE)
             elif self.keygenid:
                 # requested a new key
-                cmd = self.repository.command("genkey", "--db",
-                                              self.repository)
+                cmd = self.command("genkey", "--db", self.repository)
                 regkey = ExternalCommand(command=cmd)
                 if self.passphrase:
                     passp="%s\n%s\n" % (self.passphrase,
