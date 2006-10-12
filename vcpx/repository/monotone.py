@@ -123,6 +123,7 @@ class ExternalCommandChain:
             outstr = out.getvalue()
         return out, err
 
+
 class MonotoneChangeset(Changeset):
     """
     Monotone changesets differ from standard Changeset because:
@@ -166,6 +167,7 @@ class MonotoneChangeset(Changeset):
         self.real_dates = real_dates
         self.real_ancestors = real_ancestors
         self.branches = branches
+
 
 class MonotoneLogParser:
     """
@@ -297,6 +299,7 @@ class MonotoneLogParser:
                      branches=self.branches)
 
         return chset
+
 
 class MonotoneDiffParser:
     """
@@ -472,7 +475,6 @@ class MonotoneDiffParser:
         except StopIteration:
             if in_item:
                 raise GetUpstreamChangesetsFailure("Unexpected end of 'diff' parsing changeset info")
-
 
 
 class MonotoneRevToCset:
@@ -718,11 +720,11 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
     def _addPathnames(self, names):
         """
-        Add some new filesystem objects, skipping directories. 
-        In monotone *explicit* directory addition is always recursive, 
+        Add some new filesystem objects, skipping directories.
+        In monotone *explicit* directory addition is always recursive,
         so adding a directory here might interfere with renames.
-        Adding files without directories doesn't cause problems, 
-        because adding a file implicitly adds the parent directory 
+        Adding files without directories doesn't cause problems,
+        because adding a file implicitly adds the parent directory
         (non-recursively).
         """
         fnames=[]
