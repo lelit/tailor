@@ -80,8 +80,9 @@ class MonotoneRepository(Repository):
                 cmd = self.command("genkey", "--db", self.repository)
                 regkey = ExternalCommand(command=cmd)
                 if self.passphrase:
-                    passp="%s\n%s\n" % (self.passphrase,
-                                        self.passphrase)
+                    passp = "%s\n%s\n" % (self.passphrase, self.passphrase)
+                else:
+                    passp = None
                 regkey.execute(self.keygenid, input=passp, stdout=PIPE, stderr=PIPE)
             else:
                 raise TargetInitializationFailure("Can't setup the monotone "
