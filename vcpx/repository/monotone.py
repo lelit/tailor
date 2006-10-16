@@ -41,8 +41,6 @@ class MonotoneRepository(Repository):
                      cget(self.name, '%s-keyid' % self.which)
         self.passphrase = cget(self.name, 'passphrase') or \
                           cget(self.name, '%s-passphrase' % self.which)
-        self.keyfile = cget(self.name, 'keyfile') or \
-                       cget(self.name, '%s-keyfile' % self.which)
         self.keygenid = cget(self.name, 'keygenid') or \
                         cget(self.name, '%s-keygenid' % self.which)
         self.custom_lua = cget(self.name, 'custom_lua') or \
@@ -69,13 +67,7 @@ class MonotoneRepository(Repository):
             self.log.info("Using key %s for commits" % (self.keyid,))
         else:
             # keystore key id unspecified, look at other options
-            if self.keyfile:
-                # a key file is available, read into the database
-                keyfile = file(self.keyfile)
-                cmd = self.command("read", "--db", self.repository)
-                regkey = ExternalCommand(command=cmd)
-                regkey.execute(input=keyfile, stdout=PIPE, stderr=PIPE)
-            elif self.keygenid:
+            if self.keygenid:
                 # requested a new key
                 cmd = self.command("genkey", "--db", self.repository)
                 regkey = ExternalCommand(command=cmd)
@@ -84,17 +76,17 @@ class MonotoneRepository(Repository):
                 else:
                     passp = None
                 regkey.execute(self.keygenid, input=passp, stdout=PIPE, stderr=PIPE)
+                if regkey.exit_status:
+                    raise TargetInitializationFailure("Was not able to setup "
+                                                  "the monotone initial key at %r" %
+                                                  self.repository)
             else:
                 raise TargetInitializationFailure("Can't setup the monotone "
                                                   "repository %r. "
-                                                  "A keyid, keyfile or keygenid "
+                                                  "A keyid or keygenid "
                                                   "must be provided." %
                                                   self.repository)
 
-            if regkey.exit_status:
-                raise TargetInitializationFailure("Was not able to setup "
-                                                  "the monotone initial key at %r" %
-                                                  self.repository)
 
 
 class ExternalCommandChain:
@@ -848,6 +840,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                       "--db", self.repository.repository,
                                       "--branch", self.repository.module)
 
+        if self.repository.keygen:
+           self.repository.keyid = self.repository.keygen
         if self.repository.keyid:
             cmd.extend( ("--key", self.repository.keyid) )
 
