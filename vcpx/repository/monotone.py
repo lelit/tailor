@@ -811,6 +811,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         cmd = self.repository.command("rename")
         rename = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         rename.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
+        if rename.exit_status:
+            raise ChangesetApplicationFailure(
+                     "%s returned status %s" % (str(rename),rename.exit_status))
 
     def _prepareTargetRepository(self):
         """
