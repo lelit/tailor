@@ -843,8 +843,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                       "--db", self.repository.repository,
                                       "--branch", self.repository.module)
 
-        if self.repository.keygen:
-           self.repository.keyid = self.repository.keygen
+        if self.repository.keygenid:
+           self.repository.keyid = self.repository.keygenid
         if self.repository.keyid:
             cmd.extend( ("--key", self.repository.keyid) )
 
