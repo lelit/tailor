@@ -89,7 +89,7 @@ class CvspsRepository(Repository):
             return
 
         makedirs(path)
-        cmd = self.command("-d", path, "init")
+        cmd = self.command("-f", "-d", path, "init")
         c = ExternalCommand(command=cmd)
         c.execute()
         if c.exit_status:
@@ -98,7 +98,7 @@ class CvspsRepository(Repository):
 
         if self.module:
             tempwc = mkdtemp('cvs', 'tailor')
-            cmd = self.command("-d", path, "import",
+            cmd = self.command("-f", "-d", path, "import",
                                "-m", "This directory will host the "
                                "upstream sources",
                                self.module, "tailor", "start")
@@ -248,7 +248,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if sincerev:
             sincerev = int(sincerev)
 
-        cmd = self.repository.command("--cvs-direct", "-u", "-b", branch,
+        cmd = self.repository.command("--norc", "--cvs-direct", "-u", "-b", branch,
                                       "--root", self.repository.repository,
                                       cvsps=True)
         cvsps = ExternalCommand(command=cmd)
@@ -342,7 +342,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         revs = reventries.keys()
         revs.sort(cmp=compare_cvs_revs)
 
-        cmd = self.repository.command("-d", "%(repository)s",
+        cmd = self.repository.command("-f", "-d", "%(repository)s",
                                       "-q", "update", "-d",
                                       "-r", "%(revision)s")
         if self.repository.freeze_keywords:
@@ -430,7 +430,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             # CVS does not handle "checkout -d multi/level/subdir", so
             # split the basedir and use it's parentdir as cwd below.
             parentdir, subdir = split(self.repository.basedir)
-            cmd = self.repository.command("-q",
+            cmd = self.repository.command("-f", "-q",
                                           "-d", self.repository.repository,
                                           "checkout",
                                           "-d", subdir)
@@ -614,7 +614,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not self.repository.repository or exists(join(self.repository.basedir, 'CVS')):
             return
 
-        cmd = self.repository.command("-d", self.repository.repository, "co",
+        cmd = self.repository.command("-f", "-d", self.repository.repository, "co",
                                       "-d", self.repository.basedir)
         cvsco = ExternalCommand(command=cmd)
         cvsco.execute(self.repository.module)
@@ -652,7 +652,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Add some new filesystem objects.
         """
 
-        cmd = self.repository.command('-q', 'add', '-ko')
+        cmd = self.repository.command("-f", '-q', 'add', '-ko')
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def __forceTagOnEachEntry(self):
@@ -724,7 +724,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         log.write(encode('\n'.join(logmessage)))
         log.close()
 
-        cmd = self.repository.command("-q", "ci", "-F", rontf.name)
+        cmd = self.repository.command("-f", "-q", "ci", "-F", rontf.name)
         if not entries:
             entries = ['.']
 
@@ -740,7 +740,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Remove some filesystem objects.
         """
 
-        cmd = self.repository.command("-q", "remove")
+        cmd = self.repository.command("-f", "-q", "remove")
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _renamePathname(self, oldname, newname):
@@ -775,7 +775,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not iscvsalpha(tagname[0]):
             tagname = 'tag-' + tagname
 
-        cmd = self.repository.command("tag")
+        cmd = self.repository.command("-f", "tag")
         c = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         c.execute(tagname)
         if c.exit_status:
