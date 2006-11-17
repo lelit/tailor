@@ -294,10 +294,20 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 # Assume it's a line like
                 #    Sun Jan  2 00:24:04 UTC 2005  lele@nautilus.homeip.net
                 # we used to split on the double space before the email,
-                # but in this case this is wrong. Waiting for xml output,
-                # is it really sane asserting date's length to 28 chars?
-                date = l[:28]
-                author = l[30:-1]
+                # but in this case this is wrong. Then we assumed the date
+                # part to be exactly 28 chars long, but what about timezone
+                # names like 'CEST'? Waiting for xml output...
+                # We still assume there are *two* spaces before the email.
+                # The alternative is using some sort of a regex: Aaron Kaplan
+                # kindly suggested his own perl snippet
+                #    /^(... ... .\d .\d:\d\d:\d\d ...?. \d\d\d\d)  (.*)/ || die;
+                #    my ($date, $author) = ($1, $2);
+                # but that assumes the two spaces as separator, so I find the
+                # following solution easier and by any chance faster too.                
+                pieces = l.split('  ')
+                assert len(pieces)>1, "Cannot parse %r as a patch timestamp" % l
+                author = pieces.pop()
+                date = ' '.join(pieces)
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline()
