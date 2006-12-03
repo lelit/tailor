@@ -423,9 +423,12 @@ class MonotoneDiffParser:
                     break
                 else:
                     in_item = False
-                    # now, next token should be a string or an hash
+                    # now, next token should be a string or an hash,
+                    # or the two tokens are "no changes"
                     fname = tkiter.next()
-                    if fname[0] != '"' and fname[0] != '[':
+                    if token == "no" and fname == "changes":
+                        break
+                    elif fname[0] != '"' and fname[0] != '[':
                         raise GetUpstreamChangesetsFailure(
                             "Unexpected token sequence: '%s' "
                             "followed by '%s'" %(token, fname))
