@@ -13,11 +13,12 @@ This module implements the target backend for Git using git-core.
 
 __docformat__ = 'reStructuredText'
 
-from vcpx.repository.git import GitExternalCommand, PIPE
+from vcpx import TailorException
 from vcpx.config import ConfigurationError
+from vcpx.repository.git import GitExternalCommand, PIPE
+from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from vcpx.tzinfo import FixedOffset
-from vcpx import TailorException
 
 
 class BranchpointFailure(TailorException):

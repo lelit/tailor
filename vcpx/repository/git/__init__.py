@@ -14,9 +14,10 @@ common to source and target modules.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx.config import ConfigurationError
 from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE
-from vcpx.config import ConfigurationError
+from vcpx.target import TargetInitializationFailure
 
 
 class GitRepository(Repository):
