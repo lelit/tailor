@@ -307,7 +307,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # Not sure this is public. commands.parse might be, but this
         # is easier, and while dispatch is easiest, you lose ui.
         if hasattr(commands, 'findcmd'):
-            findcmd = commands.findcmd
+            if commands.findcmd.func_code.co_argcount == 1:
+                findcmd = commands.findcmd
+            else:
+                def findcmd(cmd):
+                    return commands.findcmd(self._getUI(), cmd)
         else:
             findcmd = commands.find
         return dict([(f[1].replace('-', '_'), f[2]) for f in findcmd(cmd)[1][1]])
