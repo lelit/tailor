@@ -340,7 +340,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     deleteddirs.append(entrydir)
 
         revs = reventries.keys()
-        revs.sort(cmp=compare_cvs_revs)
+        revs.sort(compare_cvs_revs)
 
         cmd = self.repository.command("-f", "-d", "%(repository)s",
                                       "-q", "update", "-d",
