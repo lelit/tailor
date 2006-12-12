@@ -743,7 +743,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
         Add a whole subtree (recursively)
         """
-        cmd = self.repository.command("add")
+        cmd = self.repository.command("add", "--recursive")
         add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         add.execute(subdir, stdout=PIPE, stderr=PIPE)
         if add.exit_status:
