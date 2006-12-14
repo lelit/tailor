@@ -54,6 +54,8 @@ class ChangesetEntry(object):
         else:
             s += ' from ' + self.old_name
         s += ')'
+        if isinstance(s, unicode):
+            s = s.encode('ascii', 'replace')
         return s
 
 
