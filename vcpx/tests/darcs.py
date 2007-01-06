@@ -549,8 +549,11 @@ Update darcs binaries and documentation.</comment>
 class DarcsPullParser(TestCase):
     def test_parsePull(self):
         from os.path import split, join
-        filename = join(split(__file__)[0], 'data', 'darcs-pull.log')
-        output = file(filename)
+        logfilename = join(split(__file__)[0], 'data', 'darcs-pull.log')
+        output = file(logfilename)
+
+        hashfilename = join(split(__file__)[0], 'data', 'darcs-pull.hashes')
+        hashes = file(hashfilename)
 
         class FauxRepository(object):
             name = 'foo'
@@ -564,26 +567,31 @@ class DarcsPullParser(TestCase):
             Changeset('Monotone add is no longer recursive by default '
                       '(as of 2006-11-02).',
                       datetime(2006,12,12,05,30,20, tzinfo=UTC),
-                      'elb@elitists.net\n',
+                      'elb@elitists.net',
                       'Use add --recursive when adding subtrees.'),
             Changeset('Fix ticket #87',
                       datetime(2006,12,14,23,45,04, tzinfo=UTC),
-                      'Edgar Alves <edgar.alves@gmail.com>\n',
+                      'Edgar Alves <edgar.alves@gmail.com>',
                       ''),
             Changeset("Don't assume the timestamp in darcs log is exactly "
                       "28 chars long",
                       datetime(2006,11,17,20,26,28, tzinfo=UTC),
-                      'lele@nautilus.homeip.net\n',
+                      'lele@nautilus.homeip.net',
                       ''),
             Changeset('darcs: factor parsing from process invocation in DarcsSourceWorkingDir._getUpstreamChangesets',
                       datetime(2007, 1, 6, 1,52,50, tzinfo=UTC),
-                      'Kevin Turner <kevin@janrain.com>\n',
+                      'Kevin Turner <kevin@janrain.com>',
                       ''),
             ]
+        for changeset, expected_hash in zip(expected_changesets, hashes):
+            changeset.darcs_hash = expected_hash.strip()
 
         self.failUnlessEqual(len(expected_changesets), len(results))
 
         for expected, result in zip(expected_changesets, results):
-            self.failUnlessEqual(expected, result, "%s != %s" % (expected, result))
-
-
+            self.failUnlessEqual(expected, result,
+                                 "%s != %s" % (expected, result))
+            self.failUnlessEqual(expected.darcs_hash, result.darcs_hash,
+                                 'hash failed for %s\n %s !=\n %s' %
+                                 (result, expected.darcs_hash,
+                                  result.darcs_hash))
