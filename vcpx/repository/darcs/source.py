@@ -265,11 +265,6 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         Do the actual work of fetching the upstream changeset.
         """
 
-        from datetime import datetime
-        from time import strptime
-        from sha import new
-        from vcpx.changes import Changeset
-
         cmd = self.repository.command("pull", "--dry-run")
         pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
@@ -279,6 +274,17 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
             raise GetUpstreamChangesetsFailure(
                 "%s returned status %d saying\n%s" %
                 (str(pull), pull.exit_status, output.read()))
+
+        return self._parseDarcsPull(output)
+
+
+    def _parseDarcsPull(self, output):
+        """Process 'darcs pull' output to Changesets.
+        """
+        from datetime import datetime
+        from time import strptime
+        from sha import new
+        from vcpx.changes import Changeset
 
         l = output.readline()
         while l and not (l.startswith('Would pull the following changes:') or
