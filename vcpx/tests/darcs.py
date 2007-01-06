@@ -8,7 +8,8 @@
 from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
-from vcpx.repository.darcs.source import changesets_from_darcschanges
+from vcpx.repository.darcs.source import changesets_from_darcschanges, \
+     DarcsSourceWorkingDir
 from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.tzinfo import UTC
 
@@ -542,3 +543,47 @@ Update darcs binaries and documentation.</comment>
 
         self.assertEqual([], [e for e in cset.entries
                               if e.name == 'Carpet/CarpetWeb/binaries/darcs-1.0.3-static-linux-i386.gz'])
+
+
+
+class DarcsPullParser(TestCase):
+    def test_parsePull(self):
+        from os.path import split, join
+        filename = join(split(__file__)[0], 'data', 'darcs-pull.log')
+        output = file(filename)
+
+        class FauxRepository(object):
+            name = 'foo'
+        dswd = DarcsSourceWorkingDir(FauxRepository())
+        results = list(dswd._parseDarcsPull(output))
+
+        from vcpx.changes import Changeset
+        from datetime import datetime
+        from vcpx.tzinfo import UTC
+        expected_changesets = [
+            Changeset('Monotone add is no longer recursive by default '
+                      '(as of 2006-11-02).',
+                      datetime(2006,12,12,05,30,20, tzinfo=UTC),
+                      'elb@elitists.net\n',
+                      'Use add --recursive when adding subtrees.'),
+            Changeset('Fix ticket #87',
+                      datetime(2006,12,14,23,45,04, tzinfo=UTC),
+                      'Edgar Alves <edgar.alves@gmail.com>\n',
+                      ''),
+            Changeset("Don't assume the timestamp in darcs log is exactly "
+                      "28 chars long",
+                      datetime(2006,11,17,20,26,28, tzinfo=UTC),
+                      'lele@nautilus.homeip.net\n',
+                      ''),
+            Changeset('darcs: factor parsing from process invocation in DarcsSourceWorkingDir._getUpstreamChangesets',
+                      datetime(2007, 1, 6, 1,52,50, tzinfo=UTC),
+                      'Kevin Turner <kevin@janrain.com>\n',
+                      ''),
+            ]
+
+        self.failUnlessEqual(len(expected_changesets), len(results))
+
+        for expected, result in zip(expected_changesets, results):
+            self.failUnlessEqual(expected, result, "%s != %s" % (expected, result))
+
+

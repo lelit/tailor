@@ -1,0 +1,19 @@
+Pulling from "../not-tailor"...
+Would pull the following changes:
+Tue Dec 12 05:30:20 UTC 2006  elb@elitists.net
+  * Monotone add is no longer recursive by default (as of 2006-11-02).
+  Use add --recursive when adding subtrees.
+
+Thu Dec 14 23:45:04 UTC 2006  Edgar Alves <edgar.alves@gmail.com>
+  * Fix ticket #87
+
+Fri Nov 17 20:26:28 UTC 2006  lele@nautilus.homeip.net
+  * Don't assume the timestamp in darcs log is exactly 28 chars long
+
+Mon Dec 11 21:07:48 UTC 2006  lele@nautilus.homeip.net
+  tagged Version 0.9.27
+
+Sat Jan  6 01:52:50 UTC 2007  Kevin Turner <kevin@janrain.com>
+  * darcs: factor parsing from process invocation in DarcsSourceWorkingDir._getUpstreamChangesets
+
+Making no changes:  this is a dry run.
