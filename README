@@ -123,7 +123,7 @@ Operation
 =========
 
 tailor needs now a configuration file that collects the various bits
-of information it needs to do it's job.
+of information it needs to do its job.
 
 The simplest way of starting out a new configuration is by omitting
 the --configfile command line option, and specifying the other as
@@ -513,8 +513,8 @@ patch-name-format : string
 
 remove-first-log-line : bool
   Remove the first line of the upstream changelog. This is intended to
-  go in pair with ``patch-name-format``, when using it's 'firstlogline'
-  variable to build the name of the patch.  By default is ``False``.
+  go in pair with ``patch-name-format``, when using its 'firstlogline'
+  variable to build the name of the patch.  The default is ``False``.
   
   A reasonable usage is::
 
@@ -720,7 +720,7 @@ start-revision : string
   arbitrary patch in the repository, plus the ordinary ``INITIAL`` or
   ``HEAD`` symbols.
 
-  .. note:: If you want to start from a particular patch, giving it's
+  .. note:: If you want to start from a particular patch, giving its
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
@@ -990,8 +990,8 @@ will fetch latest changes from the upstream repository.
 Logging
 -------
 
-Tailor uses the Python's logging module to emit noise. It's basic
-configuration is hardwired and correspond to the following::
+Tailor uses the Python's logging module to emit noise. Its basic
+configuration is hardwired and corresponds to the following::
 
     [formatters]
     keys = console
