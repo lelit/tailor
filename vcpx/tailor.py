@@ -13,6 +13,7 @@ __docformat__ = 'reStructuredText'
 
 __version__ = '0.9.27'
 
+from logging import getLogger
 from optparse import OptionParser, OptionGroup, Option
 from vcpx import TailorException
 from vcpx.config import Config, ConfigurationError
@@ -360,7 +361,12 @@ def main():
         config.set('project', 'start-revision', options.start_revision)
 
         config.add_section(source)
-        config.set(source, 'repository', options.source_repository)
+        if options.source_repository:
+            config.set(source, 'repository', options.source_repository)
+        else:
+            logger = getLogger('tailor')
+            logger.warning("By any chance you forgot either the --source-repository or the --configfile option...")
+
         if options.source_module:
             config.set(source, 'module', options.source_module)
 
