@@ -178,7 +178,7 @@ GENERAL_OPTIONS = [
                 action="store_true", default=False,
                 help="Be verbose, echoing the changelog of each applied "
                      "changeset to stdout."),
-    RecogOption("--configfile", metavar="CONFNAME",
+    RecogOption("-c", "--configfile", metavar="CONFNAME",
                 help="Centralized storage of projects info.  With this "
                      "option and no other arguments tailor will update "
                      "every project found in the config file."),

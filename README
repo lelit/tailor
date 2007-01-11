@@ -126,10 +126,10 @@ tailor needs now a configuration file that collects the various bits
 of information it needs to do its job.
 
 The simplest way of starting out a new configuration is by omitting
-the --configfile command line option, and specifying the other as
-needed plus --verbose: in this situation, tailor will print out an
+the ``--configfile`` command line option, and specifying the other as
+needed plus ``--verbose``: in this situation, tailor will print out an
 equivalent configuration that you can redirect to a file, that you
-later will pass as --configfile.
+later will pass as ``--configfile`` (or simply ``-c``).
 
 
 Examples
@@ -188,7 +188,7 @@ Examples
 
    c. Run tailor on it once, to bootstrap the project::
    
-       $ tailor -D -v --configfile cmfcore.tailor
+       $ tailor -D -v -c cmfcore.tailor
 
       If the target repository is on the local filesystem (ie, it
       starts with ``file:///``) and it does not exist, tailor
@@ -231,7 +231,7 @@ __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
 
    This one instead::
 
-    $ tailor --configfile example.tailor tailor tailor-reverse
+    $ tailor -c example.tailor tailor tailor-reverse
 
    operates on both projects.
 
