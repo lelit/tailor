@@ -53,6 +53,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Parse the author field, returning (name, email)
         """
+
         from email.Utils import parseaddr
         from vcpx.target import AUTHOR, HOST
 
@@ -173,9 +174,11 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Rename a filesystem object.
         """
+
         # In the future, we may want to switch to using
         # git rename, in case renames ever get more support
-        # in git.  It currently just does and add and remove.
+        # in git.  It currently just does an add and remove.
+
         from os.path import join, isdir
         from os import walk
         from vcpx.dualwd import IGNORED_METADIRS
