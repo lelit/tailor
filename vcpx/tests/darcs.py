@@ -72,12 +72,12 @@ class DarcsChangesParser(DarcsParserTestCase):
         patchname = 'more detailed diags on SAXException'
         changes = ExternalCommand(command=["darcs", "changes", "--xml", "--summary",
                                            "--patches", patchname])
-        csets = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0],
+        csets = changesets_from_darcschanges(changes.execute(stdout=PIPE, TZ='UTC')[0],
                                              unidiff=True,
                                              repodir=getcwd())
         unidiff = csets.next().unidiff
         head = unidiff.split('\n')[0]
-        self.assertEqual(head, 'Thu Jun  9 22:17:11 CEST 2005  zooko@zooko.com')
+        self.assertEqual(head, 'Thu Jun  9 20:17:11 UTC 2005  zooko@zooko.com')
 
     def testAllActions(self):
         """Verify darcs changes parser understand all actions"""

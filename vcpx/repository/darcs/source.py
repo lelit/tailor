@@ -206,7 +206,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                                       tags=self.current.get('tags',[]))
                 cset.darcs_hash = self.current['hash']
                 if self.darcsdiff:
-                    cset.unidiff = self.darcsdiff.execute(
+                    cset.unidiff = self.darcsdiff.execute(TZ='UTC',
                         stdout=PIPE, patchname=cset.revision)[0].read()
 
                 self.changesets.append(cset)
