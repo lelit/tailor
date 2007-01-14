@@ -1,0 +1,8 @@
+<changelog>
+<patch author='David Roundy &lt;droundy@abridgegame.org&gt;' date='Tue Oct 14 09:42:00 EDT 2003' local_date='Tue Oct 14 15:42:00 CEST 2003' inverted='False' hash='20031014094200-53a90-5896ac929692179d06a42af70f273800e4842603.gz'>
+        <name>use new select code in record.</name>
+</patch>
+<patch author='David Roundy &lt;droundy@abridgegame.org&gt;' date='20031014140231' local_date='Tue Oct 14 16:02:31 CEST 2003' inverted='False' hash='20031014140231-53a90-f5b6f441d32bd49d8ceacd6d804f31a462f94b88.gz'>
+        <name>use iso format for dates in record.</name>
+</patch>
+</changelog>

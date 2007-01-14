@@ -1,0 +1,25 @@
+<changelog>
+<patch author='lele@nautilus.homeip.net' date='20040716123737' local_date='Fri Jul 16 14:37:37 CEST 2004' inverted='False' hash='20040716123737-97f81-9db0d923d2ba6f4c3808cb04a4ae4cf99fed185b.gz'>
+        <name>Fix the CVS parser to omit already seen changesets</name>
+        <comment>For some unknown reasons....</comment>
+
+    <summary>
+    <modify_file>vcpx/cvs.py<removed_lines num='4'/><added_lines num='11'/></modify_file>
+    <modify_file>vcpx/tests/cvs.py<removed_lines num='14'/><added_lines num='32'/></modify_file>
+    </summary>
+
+</patch>
+
+<patch author='lele@nautilus.homeip.net' date='20040601140559' local_date='Tue Jun  1 16:05:59 CEST 2004' inverted='False' hash='20040601140559-97f81-b669594864cb35290fbe4848e6645e73057a8caf.gz'>
+        <name>Svn log parser with test</name>
+
+    <summary>
+    <modify_file>cvsync/svn.py<removed_lines num='1'/><added_lines num='93'/></modify_file>
+    <modify_file>cvsync/tests/__init__.py<added_lines num='1'/></modify_file>
+    <add_file>cvsync/tests/svn.py</add_file>
+    <add_file>cvsync/tests/testrepo.dump</add_file>
+    </summary>
+
+</patch>
+
+</changelog>

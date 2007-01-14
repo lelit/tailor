@@ -1,0 +1,33 @@
+<changelog>
+<patch author='ydirson@altern.org' date='20060702232916' local_date='Mon Jul  3 01:29:16 CEST 2006' inverted='False' hash='20060702232916-130f5-728038e54e0a59bb3567d8aa170610c2eaf370ff.gz'>
+        <name>[git] split git.py into source+target modules</name>
+        <comment>
+This allows to get more accurate coverage stats.  Eg. my test tree now
+exercises the git backend like:
+
+Name                                  Stmts   Exec  Cover
+---------------------------------------------------------
+vcpx/repository/git/__init__             44     37    84%
+vcpx/repository/git/source               95      0     0%
+vcpx/repository/git/target              154    115    74%
+vcpx/target                             249    173    69%</comment>
+    <summary>
+    <move from="vcpx/repository/git.py" to="vcpx/repository/git/target.py"/>
+    <move from="vcpx/repository/git/core.py" to="vcpx/repository/git/__init__.py"/>
+    <add_directory>
+    vcpx/repository/git
+    </add_directory>
+    <modify_file>
+    vcpx/repository/git/__init__.py<added_lines num='81'/>
+    </modify_file>
+    <add_file>
+    vcpx/repository/git/core.py
+    </add_file>
+    <add_file>
+    vcpx/repository/git/source.py
+    </add_file>
+    <modify_file conflict='true'>
+    vcpx/repository/git/target.py<removed_lines num='12'/><added_lines num='7'/>    </modify_file>
+    </summary>
+</patch>
+</changelog>

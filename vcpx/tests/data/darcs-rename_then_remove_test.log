@@ -1,0 +1,11 @@
+<changelog>
+<patch author='lele@nautilus.homeip.net' date='20060525213905' local_date='Thu May 25 23:39:05 CEST 2006' inverted='False' hash='20060525213905-97f81-292b84413dfdfca140fe104eb29273b50cb5701a.gz'>
+        <name>Move A to B and delete B</name>
+    <summary>
+    <move from="fileA" to="fileB"/>
+    <remove_file>
+    fileB
+    </remove_file>
+    </summary>
+</patch>
+</changelog>

@@ -1,0 +1,38 @@
+<changelog>
+<patch author='' date='20050811140203' local_date='Thu Aug 11 16:02:03 CEST 2005' inverted='False' hash='20050811140203-da39a-0a36c886b2479b20ab9188781fe2e51f9a50a175.gz'>
+        <name>first</name>
+    <summary>
+    <add_file>
+    a.txt
+    </add_file>
+    <add_directory>
+    dir
+    </add_directory>
+    </summary>
+</patch>
+<patch author='' date='20050811140254' local_date='Thu Aug 11 16:02:54 CEST 2005' inverted='False' hash='20050811140254-da39a-b2ad279f1d7edae8e07b7b1ea8f3e63dbb242bf0.gz'>
+        <name>removed</name>
+    <summary>
+    <remove_directory>
+    dir
+    </remove_directory>
+    </summary>
+</patch>
+<patch author='' date='20050811140314' local_date='Thu Aug 11 16:03:14 CEST 2005' inverted='False' hash='20050811140314-da39a-de701bff466827b91e51658e411c768f43abc1b0.gz'>
+        <name>moved</name>
+    <summary>
+    <move from="bdir" to="dir"/>
+    <add_directory>
+    bdir
+    </add_directory>
+    </summary>
+</patch>
+<patch author='lele@metapensiero.it' date='20050811143245' local_date='Thu Aug 11 16:32:45 CEST 2005' inverted='False' hash='20050811143245-7a6fb-663bb3085e9b7996f554e4bd9d2f0b13208d65e0.gz'>
+        <name>modified</name>
+    <summary>
+    <modify_file>
+    a.txt<added_lines num='3'/>
+    </modify_file>
+    </summary>
+</patch>
+</changelog>

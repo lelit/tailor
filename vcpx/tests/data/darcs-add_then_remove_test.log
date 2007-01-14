@@ -1,0 +1,35 @@
+<changelog>
+<patch author='Erik Schnetter &lt;schnetter@aei.mpg.de&gt;' date='20050606193150' local_date='Mon Jun  6 21:31:50 CEST 2005' inverted='False' hash='20050606193150-891bb-dad36762ac41517fe0a9136ea14fff32b2930f0d.gz'>
+        <name>CarpetWeb: Update web pages</name>
+        <comment>
+Update the web pages.
+Explain stable and development versions better.
+Update darcs binaries and documentation.</comment>
+    <summary>
+    <add_file>
+    Carpet/CarpetWeb/binaries/darcs-1.0.3-static-linux-i386.gz
+    </add_file>
+    <remove_file>
+    Carpet/CarpetWeb/binaries/darcs-1.0.3-static-linux-i386.gz
+    </remove_file>
+    <remove_file>
+    Carpet/CarpetWeb/doc/darcs-1.0.2.ps.gz
+    </remove_file>
+    <add_file>
+    Carpet/CarpetWeb/doc/darcs-1.0.3.ps.gz
+    </add_file>
+    <modify_file>
+    Carpet/CarpetWeb/get-carpet-darcs.html<removed_lines num='68'/><added_lines num='128'/>
+    </modify_file>
+    <modify_file>
+    Carpet/CarpetWeb/index.html<removed_lines num='56'/><added_lines num='17'/>
+    </modify_file>
+    <modify_file>
+    Carpet/CarpetWeb/olds.html<removed_lines num='1'/><added_lines num='22'/>
+    </modify_file>
+    <modify_file>
+    Carpet/CarpetWeb/work-with-darcs.html<removed_lines num='4'/><added_lines num='4'/>
+    </modify_file>
+    </summary>
+</patch>
+</changelog>
