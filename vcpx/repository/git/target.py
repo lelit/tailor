@@ -148,7 +148,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _tag(self, tag):
         # Allow a new tag to overwrite an older one with -f
-        cmd = self.repository.command("tag", "-f", tag)
+        cmd = self.repository.command("tag", "-a", "-f", "-m", tag, tag)
         c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
         c.execute()
 
