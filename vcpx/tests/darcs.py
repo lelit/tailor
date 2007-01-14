@@ -5,9 +5,9 @@
 # :Licenza:  GNU General Public License
 #
 
-from unittest import TestCase
 from datetime import datetime
 from StringIO import StringIO
+from unittest import TestCase
 from vcpx.repository.darcs.source import changesets_from_darcschanges, \
      DarcsSourceWorkingDir
 from vcpx.shwrap import ExternalCommand, PIPE
@@ -545,10 +545,15 @@ Update darcs binaries and documentation.</comment>
                               if e.name == 'Carpet/CarpetWeb/binaries/darcs-1.0.3-static-linux-i386.gz'])
 
 
-
 class DarcsPullParser(TestCase):
-    def test_parsePull(self):
+    """Tests for the parser of darcs pull"""
+
+    def testParsePull(self):
+        """Verify basic darcs pull parser behaviour"""
+
         from os.path import split, join
+        from vcpx.changes import Changeset
+
         logfilename = join(split(__file__)[0], 'data', 'darcs-pull.log')
         output = file(logfilename)
 
@@ -560,9 +565,6 @@ class DarcsPullParser(TestCase):
         dswd = DarcsSourceWorkingDir(FauxRepository())
         results = list(dswd._parseDarcsPull(output))
 
-        from vcpx.changes import Changeset
-        from datetime import datetime
-        from vcpx.tzinfo import UTC
         expected_changesets = [
             Changeset('Monotone add is no longer recursive by default '
                       '(as of 2006-11-02).',
