@@ -474,8 +474,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             cmd.extend(["--revision", revision])
             svnco = ExternalCommand(command=cmd)
 
-            out, err = svnco.execute("%s%s" % (self.repository.repository,
-                                               self.repository.module),
+            out, err = svnco.execute("%s%s@%s" % (self.repository.repository,
+                                                  self.repository.module,
+                                                  revision),
                                      self.repository.basedir, stdout=PIPE, stderr=PIPE)
             if svnco.exit_status:
                 raise TargetInitializationFailure(
