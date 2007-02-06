@@ -222,7 +222,8 @@ class MonotoneLogParser:
             pr = self.PrefixRemover(curline)
             if pr("Revision:"):
                 if pr.value != revision:
-                    raise GetUpstreamChangesetsFailure("Revision doesn't match. Expected %s, found %s" % revision, pr.value)
+                    raise GetUpstreamChangesetsFailure(
+                        "Revision doesn't match. Expected %s, found %s" % (revision, pr.value))
                 state = self.SINGLE
             elif pr("Ancestor:"):
                 if pr.value:
