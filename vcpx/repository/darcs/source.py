@@ -310,27 +310,28 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 #    my ($date, $author) = ($1, $2);
                 # but that assumes the two spaces as separator, so I find the
                 # following solution easier and by any chance faster too.                
-                pieces = l.split('  ')
+                pieces = l.rstrip().split('  ')
                 assert len(pieces)>1, "Cannot parse %r as a patch timestamp" % l
-                author = pieces.pop()[:-1]
+                author = pieces.pop()
                 date = ' '.join(pieces)
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
-                l = output.readline()
+                l = output.readline().rstrip()
                 assert (l.startswith('  * ') or
                         l.startswith('  UNDO:') or
-                        l.startswith('  tagged'))
+                        l.startswith('  tagged')), \
+                        "Got %r but expected the start of the log" % l
 
                 if l.startswith('  *'):
-                    name = l[4:-1]
+                    name = l[4:]
                 else:
-                    name = l[2:-1]
+                    name = l[2:]
 
                 changelog = []
-                l = output.readline()
+                l = output.readline().rstrip()
                 while l.startswith('  '):
-                    changelog.append(l[2:-1])
-                    l = output.readline()
+                    changelog.append(l[2:])
+                    l = output.readline().rstrip()
 
                 cset = Changeset(name, date, author, '\n'.join(changelog))
                 compactdate = date.strftime("%Y%m%d%H%M%S")
@@ -355,8 +356,8 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 else:
                     yield cset
 
-                while not l.strip():
-                    l = output.readline()
+                while not l:
+                    l = output.readline().strip()
 
     def _applyChangeset(self, changeset):
         """
