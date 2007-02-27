@@ -1,0 +1,52 @@
+Pulling from "/home/jgoerzen/tree/darcs-buildpackage"...
+Would pull the following changes:
+Fri Oct 10 16:23:44 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Added some basic utility functions
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-2)
+
+Fri Oct 10 16:55:04 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Ready to test
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-3)
+
+Fri Oct 10 22:51:50 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Confirmed working now
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-4)
+
+Sat Oct 11 11:24:33 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Misc cleanups
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-5)
+
+Sat Oct 11 11:28:23 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Added files from dh_make
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-6)
+
+Sat Oct 11 14:23:34 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Cleaned up files in debian/
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-7)
+
+Tue Oct 14 13:23:11 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Added tbp-initrepos
+  
+  
+  (jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-8)
+
+Tue Oct 14 14:42:54 UTC 2003  John Goerzen <jgoerzen@complete.org>
+  * Added Python infrastructure
+  Keywords:
+  
+  Added some code in Python to get things going.
+  
+
+Making no changes:  this is a dry run.

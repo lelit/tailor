@@ -328,10 +328,10 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                     name = l[2:]
 
                 changelog = []
-                l = output.readline().rstrip()
+                l = output.readline()
                 while l.startswith('  '):
-                    changelog.append(l[2:])
-                    l = output.readline().rstrip()
+                    changelog.append(l[2:].rstrip())
+                    l = output.readline()
 
                 cset = Changeset(name, date, author, '\n'.join(changelog))
                 compactdate = date.strftime("%Y%m%d%H%M%S")
@@ -356,8 +356,8 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 else:
                     yield cset
 
-                while not l:
-                    l = output.readline().strip()
+                while not l.strip():
+                    l = output.readline()
 
     def _applyChangeset(self, changeset):
         """

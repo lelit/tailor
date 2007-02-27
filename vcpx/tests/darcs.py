@@ -22,7 +22,7 @@ class DarcsParserTestCase(TestCase):
         logfilename = join(split(__file__)[0], 'data', testname+ext)
         return file(logfilename)
 
-        
+
 class DarcsChangesParser(DarcsParserTestCase):
     """Tests for the parser of darcs changes"""
 
@@ -253,3 +253,13 @@ class DarcsPullParser(DarcsParserTestCase):
                                  'hash failed for %s\n %s !=\n %s' %
                                  (result, expected.darcs_hash,
                                   result.darcs_hash))
+
+        output = self.getDarcsOutput('darcs-pull_parser_test2')
+        results = list(dswd._parseDarcsPull(output))
+        first = results[0]
+        self.failUnlessEqual(first.revision, 'Added some basic utility functions')
+        self.failUnlessEqual(first.date, datetime(2003,10,10,16,23,44, tzinfo=UTC))
+        self.failUnlessEqual(first.author, 'John Goerzen <jgoerzen@complete.org>')
+        self.failUnlessEqual(first.log, '\n\n(jgoerzen@complete.org--projects/tla-buildpackage--head--1.0--patch-2)')
+        last = results[-1]
+        self.failUnlessEqual(last.log, 'Keywords:\n\nAdded some code in Python to get things going.\n')
