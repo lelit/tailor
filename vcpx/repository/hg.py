@@ -258,6 +258,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def _commit(self, date, author, patchname, changelog=None, names=[]):
         from calendar import timegm  # like mktime(), but returns UTC timestamp
+        from os.path import exists, join, normpath
 
         encode = self.repository.encode
 
@@ -281,7 +282,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         opts['user'] = encode(author)
         opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
         notdirs = self._removeDirs(names)
-        self._hgCommand('commit', *[encode(n) for n in notdirs], **opts)
+        fileset = [n for n in notdirs
+                   if exists(join(self.repository.basedir, normpath(n)))]
+        self._hgCommand('commit', *[encode(n) for n in fileset], **opts)
 
     def _tag(self, tag):
         """ Tag the tip with a given identifier """
