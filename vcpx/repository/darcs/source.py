@@ -330,7 +330,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 changelog = []
                 l = output.readline()
                 while l.startswith('  '):
-                    changelog.append(l[2:].rstrip())
+                    changelog.append(l[2:-1])
                     l = output.readline()
 
                 cset = Changeset(name, date, author, '\n'.join(changelog))
