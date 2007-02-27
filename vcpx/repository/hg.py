@@ -241,11 +241,17 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if entry.old_name:
             entry.old_name = normpath(self.repository.encode(entry.old_name))
 
-    def _addPathnames(self, names):
-        from os.path import join, isdir, normpath
+    def _removeDirs(self, names):
+        from os.path import isdir, join, normpath
+        """Remove the names that reference a directory."""
+        return [n for n in names
+                if not isdir(join(self.repository.basedir, normpath(n)))]
+        return notdirs
 
-        notdirs = [n for n in names
-                   if not isdir(join(self.repository.basedir, normpath(n)))]
+    def _addPathnames(self, names):
+        from os.path import join
+
+        notdirs = self._removeDirs(names)
         if notdirs:
             self.log.info('Adding %s...', ', '.join(notdirs))
             self._hg.add(notdirs)
@@ -274,7 +280,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         opts['message'] = logmessage
         opts['user'] = encode(author)
         opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
-        self._hgCommand('commit', *[encode(n) for n in names], **opts)
+        notdirs = self._removeDirs(names)
+        self._hgCommand('commit', *[encode(n) for n in notdirs], **opts)
 
     def _tag(self, tag):
         """ Tag the tip with a given identifier """
