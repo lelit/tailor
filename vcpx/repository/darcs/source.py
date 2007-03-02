@@ -137,7 +137,6 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
     csets = changesets_from_darcschanges_unsafe(changes, unidiff,
                                                 repodir, chunksize)
     for cs in csets:
-        cs.tags = None
         yield cs
 
 def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
@@ -340,6 +339,14 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                     inverted = 't'
                 else:
                     inverted = 'f'
+
+                if name.startswith('tagged '):
+                    name = name[7:]
+                    if cset.tags is None:
+                        cset.tags = [name]
+                    else:
+                        cset.tags.append(name)
+
                 phash = new()
                 phash.update(name)
                 phash.update(author)
@@ -350,11 +357,8 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                                                    new(author).hexdigest()[:5],
                                                    phash.hexdigest())
 
-                if name.startswith('tagged'):
-                    self.log.warning("Skipping tag %s because I don't "
-                                     "propagate tags from darcs.", name)
-                else:
-                    yield cset
+
+                yield cset
 
                 while not l.strip():
                     l = output.readline()
