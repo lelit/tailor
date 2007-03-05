@@ -48,7 +48,8 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                       "--quiet")
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(subdir)
 
-    def _commit(self, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None,
+                tags = []):
         """
         Commit the changeset.
         """

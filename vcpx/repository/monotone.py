@@ -751,7 +751,8 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             raise ChangesetApplicationFailure("%s returned status %s" %
                                               (str(add),add.exit_status))
 
-    def _commit(self, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None,
+                tags = []):
         """
         Commit the changeset.
         """

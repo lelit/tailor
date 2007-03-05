@@ -123,7 +123,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         previous = signal(SIGINT, SIG_IGN)
         try:
             self._commit(changeset.date, changeset.author, patchname, log,
-                         entries)
+                         entries, tags = changeset.tags)
             if changeset.tags:
                 for tag in changeset.tags:
                     self._tag(tag)
@@ -387,7 +387,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 self._addPathnames([join(dir, df)[len(self.repository.basedir)+1:]
                                     for df in subdirs + files])
 
-    def _commit(self, date, author, patchname, changelog=None, entries=None):
+    def _commit(self, date, author, patchname, changelog=None, entries=None,
+                tags = []):
         """
         Commit the changeset.
         """

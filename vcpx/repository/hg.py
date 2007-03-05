@@ -256,7 +256,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self.log.info('Adding %s...', ', '.join(notdirs))
             self._hg.add(notdirs)
 
-    def _commit(self, date, author, patchname, changelog=None, names=[]):
+    def _commit(self, date, author, patchname, changelog=None, names=[],
+                tags = []):
         from calendar import timegm  # like mktime(), but returns UTC timestamp
         from os.path import exists, join, normpath
 
