@@ -282,6 +282,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         opts['user'] = encode(author)
         opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
         notdirs = self._removeDirs(names)
+        if len(notdirs) == 0:  # Empty changeset; make sure we still see it
+            empty = open(join(self.repository.basedir, '.hgempty'), 'a')
+            empty.write("\nEmpty original changeset by %s:\n" % author)
+            empty.write(logmessage + "\n")
+            empty.close()
+            self._hg.add(['.hgempty'])
         self._hgCommand('commit', **opts)
 
     def _tag(self, tag):
@@ -424,7 +430,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('$\n')
         ignore.close()
-        self._hg.add('.hgignore')
+        self._hg.add(['.hgignore'])
         self._hgCommit('commit', '-m',
                        'Tailor preparing to convert repo by adding .hgignore',
                        '.hgignore')
