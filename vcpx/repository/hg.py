@@ -431,9 +431,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             ignore.write('$\n')
         ignore.close()
         self._hg.add(['.hgignore'])
-        self._hgCommit('commit', '-m',
-                       'Tailor preparing to convert repo by adding .hgignore',
-                       '.hgignore')
+        self._hgCommand('commit', '.hgignore',
+                        message = 'Tailor preparing to convert repo by adding .hgignore')
 
     def _initializeWorkingDir(self):
         self._hgCommand('add')
