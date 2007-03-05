@@ -283,7 +283,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         opts['user'] = encode(author)
         opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
         notdirs = self._removeDirs(names)
-        if len(notdirs) == 0:  # Empty changeset; make sure we still see it
+        if len(notdirs) == 0 and (tags is None or len(tags) == 0):
+            # Empty changeset; make sure we still see it
             empty = open(join(self.repository.basedir, '.hgempty'), 'a')
             empty.write("\nEmpty original changeset by %s:\n" % author)
             empty.write(logmessage + "\n")
