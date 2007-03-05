@@ -424,6 +424,10 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('$\n')
         ignore.close()
+        self._hg.add('.hgignore')
+        self._hgCommit('commit', '-m',
+                       'Tailor preparing to convert repo by adding .hgignore',
+                       '.hgignore')
 
     def _initializeWorkingDir(self):
         self._hgCommand('add')
