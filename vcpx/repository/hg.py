@@ -289,7 +289,6 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             empty.write("\nEmpty original changeset by %s:\n" % author)
             empty.write(logmessage + "\n")
             empty.close()
-            self._hg.add(['.hgempty'])
         self._hgCommand('commit', **opts)
 
     def _tag(self, tag):
@@ -432,9 +431,13 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             ignore.write(sfrelname+'.journal')
             ignore.write('$\n')
         ignore.close()
-        self._hg.add(['.hgignore'])
-        self._hgCommand('commit', '.hgignore',
-                        message = 'Tailor preparing to convert repo by adding .hgignore')
+
+        empty = open(join(self.repository.basedir, '.hgempty'), 'w')
+        empty.write("This file lists empty changesets converted by Tailor.\n")
+        empty.close()
+        self._hg.add(['.hgignore', '.hgempty'])
+        self._hgCommand('commit', '.hgignore', '.hgempty',
+                        message = 'Tailor preparing to convert repo by adding .hgignore and .hgempty')
 
     def _initializeWorkingDir(self):
         self._hgCommand('add')
