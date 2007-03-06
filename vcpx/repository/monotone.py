@@ -752,7 +752,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                               (str(add),add.exit_status))
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
-                tags = []):
+                tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """

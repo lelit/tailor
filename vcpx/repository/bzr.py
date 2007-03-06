@@ -245,7 +245,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self._addPathnames(f)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
-                tags = []):
+                tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """

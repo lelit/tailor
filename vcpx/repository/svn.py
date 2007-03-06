@@ -519,7 +519,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
-                tags = []):
+                tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """

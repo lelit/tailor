@@ -82,7 +82,7 @@ class CgWorkingDir(SynchronizableTargetWorkingDir):
         return (name, email)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
-                tags = []):
+                tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """

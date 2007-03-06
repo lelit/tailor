@@ -388,7 +388,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                                     for df in subdirs + files])
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
-                tags = []):
+                tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """
@@ -545,7 +545,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
             author = "%s@%s" % (AUTHOR, HOST)
             patchname = BOOTSTRAP_PATCHNAME
             log = BOOTSTRAP_CHANGELOG % locals()
-        self._commit(changeset.date, author, patchname, log)
+        self._commit(changeset.date, author, patchname, log,
+                     isinitialcommit = True)
 
         if changeset.tags:
             for tag in changeset.tags:

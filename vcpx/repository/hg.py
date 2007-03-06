@@ -257,7 +257,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self._hg.add(notdirs)
 
     def _commit(self, date, author, patchname, changelog=None, names=[],
-                tags = []):
+                tags = [], isinitialcommit = False):
         from calendar import timegm  # like mktime(), but returns UTC timestamp
         from os.path import exists, join, normpath
 
@@ -283,7 +283,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         opts['user'] = encode(author)
         opts['date'] =  '%d %d' % (timestamp, -timezone) # note the minus sign!
         notdirs = self._removeDirs(names)
-        if len(notdirs) == 0 and (tags is None or len(tags) == 0):
+        if (not isinitialcommit) and len(notdirs) == 0 and \
+               (tags is None or len(tags) == 0):
             # Empty changeset; make sure we still see it
             empty = open(join(self.repository.basedir, '.hgempty'), 'a')
             empty.write("\nEmpty original changeset by %s:\n" % author)
