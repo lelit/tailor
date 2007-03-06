@@ -333,7 +333,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                     changelog.append(l[2:-1])
                     l = output.readline()
 
-                cset = Changeset(name, date, author, '\n'.join([name] + changelog))
+                cset = Changeset(name, date, author, '\n'.join(changelog))
                 compactdate = date.strftime("%Y%m%d%H%M%S")
                 if name.startswith('UNDO: '):
                     name = name[6:]
