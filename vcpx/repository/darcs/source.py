@@ -346,6 +346,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                         cset.tags = [name]
                     else:
                         cset.tags.append(name)
+                    name = "TAG " + name
 
                 phash = new()
                 phash.update(name)
