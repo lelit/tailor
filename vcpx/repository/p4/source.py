@@ -36,8 +36,17 @@ class NotForMe(exceptions.Exception):
     __str__=__repr__
 
 class P4SourceWorkingDir(UpdatableSourceWorkingDir):
+    def __getP4(self):
+        p4=self.repository.EXECUTABLE
+        args={}
+        if self.repository.p4client is not None:
+            args['client']=self.repository.p4client
+        if self.repository.p4port is not None:
+            args['port']=self.repository.p4port
+        return p4lib.P4(p4=p4, **args)
+
     def __getNativeChanges(self, sincerev):
-        changes=p4lib.P4().changes(self.repository.repo_path + "...")
+        changes=self.__getP4().changes(self.repository.depo_path + "...")
         changes.reverse()
         # Get rid of changes that are too low
         changes=filter(lambda c: int(c['change']) > sincerev, changes)
@@ -48,7 +57,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
             time.strptime(d, P4_DATE_FMT)), UTC)
 
     def __adaptChanges(self, changes):
-        p4=p4lib.P4()
+        p4=self.__getP4()
         descrs=[p4.describe(c['change'], shortForm=True) for c in changes]
         return [Changeset(d['change'], self.__parseDate(d['date']), \
             d['user'], d['description']) for d in descrs]
@@ -56,7 +65,9 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
     def _getUpstreamChangesets(self, sincerev):
         return self.__adaptChanges(self.__getNativeChanges(sincerev))
 
-    def __getLocalFilename(self, f, dp):
+    def __getLocalFilename(self, f, dp=None):
+        if dp is None:
+            dp=self.repository.depo_path
         trans=string.maketrans(" ", "_")
         fn=f['depotFile']
         rv=fn
@@ -68,53 +79,35 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
             raise NotForMe(f)
         return rv
 
-    def __ensureDirFor(self, lf):
-        rv=False
-        d=os.path.dirname(lf)
-        if d != '' and not os.path.exists(d):
-            rv=True
-            os.makedirs(d)
-        return rv
-
-    def __getFiles(self, desc):
-        p4=p4lib.P4()
-        stuff={'add':[], 'delete':[], 'edit':[], 'integrate':[]}
-        for f in desc['files']:
-            lf=self.__getLocalFilename(f, self.repository.repo_path)
-            fqlf=os.path.join(self.repository.basedir, lf)
-            self.__ensureDirFor(fqlf)
-            if f['action'] == 'delete':
-                os.unlink(fqlf)
-            else:
-                p4.print_([f['depotFile'] + "#" + `f['rev']`], localFile=fqlf)
-                assert os.path.exists(fqlf)
-            stuff[f['action']].append(lf)
-            self.log.debug("%s -> %s", str(f), str(lf))
-        return stuff
-
     def _applyChangeset(self, changeset):
-        stuff=self.__getFiles(p4lib.P4().describe(
-            changeset.revision, shortForm=True))
-        for k,v in stuff.iteritems():
-            for f in v:
-                e=changeset.addEntry(f, changeset.revision)
+        p4=self.__getP4()
+        desc=p4.describe(changeset.revision, shortForm=True)
+        p4.sync('@' + str(changeset.revision))
+        for f in desc['files']:
+            try:
+                e=changeset.addEntry(self.__getLocalFilename(f),
+                    changeset.revision)
+                k=f['action']
+                self.log.debug("action on file: %s", str(f))
                 if k == 'add':
                     e.action_kind = e.ADDED
                 elif k == 'delete':
                     e.action_kind = e.DELETED
-                elif k in ['edit', 'integrate']:
+                elif k in ['edit', 'integrate', 'branch']:
                     e.action_kind = e.UPDATED
                 else:
                     assert False
+            except NotForMe:
+                pass
         return []
 
     def _checkoutUpstreamRevision(self, revision):
         if revision == 'INITIAL':
             revision = self.__getNativeChanges(-1)[0]['change']
-        p4=p4lib.P4()
+        p4=self.__getP4()
         desc=p4.describe(revision, shortForm=True)
 
-        self.__getFiles(desc)
+        p4.sync('@' + str(revision))
 
         ts=self.__parseDate(desc['date'])
 

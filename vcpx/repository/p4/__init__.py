@@ -24,7 +24,9 @@ class P4Repository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'p4-command', 'p4')
-        self.repo_path = project.config.get(self.name, 'repo-path')
+        self.depo_path = project.config.get(self.name, 'depo-path')
+        self.p4client = project.config.get(self.name, 'p4-client', None)
+        self.p4port = project.config.get(self.name, 'p4-port', None)
 
         self.env = {}
 
