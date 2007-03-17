@@ -102,12 +102,14 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         return []
 
     def _checkoutUpstreamRevision(self, revision):
+        force=False
         if revision == 'INITIAL':
             revision = self.__getNativeChanges(-1)[0]['change']
+            force=True
         p4=self.__getP4()
         desc=p4.describe(revision, shortForm=True)
 
-        p4.sync('@' + str(revision))
+        p4.sync('@' + str(revision), force=force)
 
         ts=self.__parseDate(desc['date'])
 
