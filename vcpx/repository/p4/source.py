@@ -89,11 +89,11 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
                     changeset.revision)
                 k=f['action']
                 self.log.debug("action on file: %s", str(f))
-                if k == 'add':
+                if k in ['add', 'branch']:
                     e.action_kind = e.ADDED
                 elif k == 'delete':
                     e.action_kind = e.DELETED
-                elif k in ['edit', 'integrate', 'branch']:
+                elif k in ['edit', 'integrate']:
                     e.action_kind = e.UPDATED
                 else:
                     assert False
