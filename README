@@ -10,9 +10,9 @@ Tailor 1.0
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, Bazaar_, `Bazaar-NG`_,
-CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_, Subversion_ and Tla_
-[#]_ repositories.
+Tailor is a tool to migrate changesets between ArX_, Bazaar_,
+`Bazaar-NG`_, CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_,
+Perforce_, Subversion_ and Tla_ [#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
 a branch of a product, storing needed information such as the upstream
@@ -52,8 +52,8 @@ A more convoluted setup shows how brave people are using it to get a
        since I do not use them enough to figure out the best way to
        get pending changes and build tailor ChangeSets out of them.
 
-       To the opposite, Bazaar (1.0, not Bazaar-NG) and Tla are
-       supported only as source systems.
+       To the opposite, Bazaar (1.0, not Bazaar-NG), Perforce and Tla
+       are supported only as source systems.
 
 .. _arx: http://www.nongnu.org/arx/
 .. _bazaar: http://bazaar.canonical.com/
@@ -64,6 +64,7 @@ A more convoluted setup shows how brave people are using it to get a
 .. _git: http://git.or.cz/
 .. _mercurial: http://www.selenic.com/mercurial/
 .. _monotone: http://www.venge.net/monotone/
+.. _perforce: http://www.perforce.com/
 .. _subversion: http://subversion.tigris.org/
 .. _tla: http://www.gnuarch.org/arch/index.html
 .. _two way sync: http://progetti.arstecnica.it/tailor/wiki/TwoWaySync
@@ -534,7 +535,7 @@ All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
 indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
-``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``monotone``, 
+``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``monotone``, ``p4``,
 ``svn`` and ``tla``.
 
 .. note:: If a particular option is missing from the repository section,
@@ -782,6 +783,18 @@ passphrase : string
 
 custom_lua : string
   Optional custom lua script. If present, is written into _MTN/monotonerc.
+
+p4
+%%
+
+depo-path : string
+  To be described
+
+p4-client : string
+  To be described
+
+p4-port : string
+  To be described
 
 svn
 %%%
@@ -1097,6 +1110,12 @@ Monotone_ support was kindly contributed by `Markus Schiltknecht
 <markus@bluegap.ch>`_ and further developed by `rghetta
 <birrachiara@tin.it>`_, that was able to linearize the multi-headed
 monotone history into something tailor groks. Kudos!
+
+Perforce support
+----------------
+
+Perforce_ support was kindly contributed by `Dustin Sallings
+<dustin@spy.net>`_.
 
 Tla support
 -----------
