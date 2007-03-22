@@ -46,7 +46,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         return p4lib.P4(p4=p4, **args)
 
     def __getNativeChanges(self, sincerev):
-        changes=self.__getP4().changes(self.repository.depo_path + "...")
+        changes=self.__getP4().changes(self.repository.depot_path + "...")
         changes.reverse()
         # Get rid of changes that are too low
         changes=filter(lambda c: int(c['change']) > sincerev, changes)
@@ -67,7 +67,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
 
     def __getLocalFilename(self, f, dp=None):
         if dp is None:
-            dp=self.repository.depo_path
+            dp=self.repository.depot_path
         trans=string.maketrans(" ", "_")
         fn=f['depotFile']
         rv=fn

@@ -787,7 +787,7 @@ custom_lua : string
 p4
 %%
 
-depo-path : string
+depot-path : string
   The path within the depot indicating the root of all files that will be
   replicated.
   
