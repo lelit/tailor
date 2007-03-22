@@ -788,13 +788,23 @@ p4
 %%
 
 depo-path : string
-  To be described
+  The path within the depot indicating the root of all files that will be
+  replicated.
+  
+  This is used both for determining changes as well as mapping
+  file locations from changesets to the filesystem.
+
+  Example:  ``//depot/project/main/``
 
 p4-client : string
-  To be described
+  The perforce client spec to use.
+
+  Example:  ``myhostname-tailor``
 
 p4-port : string
-  To be described
+  The address of the perforce server.
+
+  Example: ``perforce.mycompany.com:1666``
 
 svn
 %%%
