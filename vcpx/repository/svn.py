@@ -140,12 +140,11 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
         #   "/CMFPlone/branches/Plone-2_0-branch/tests/PloneTestCase.py"
         # that is to say "tests/PloneTestCase.py"
 
+        if not module.endswith('/'):
+            module = module + '/'
         if path.startswith(module):
             relative = path[len(module):]
-            if relative.startswith('/'):
-                return relative[1:]
-            else:
-                return relative
+            return relative
 
         # The path is outside our tracked tree...
         repository.log.warning('Ignoring %r since it is not under %r',

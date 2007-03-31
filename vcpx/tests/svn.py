@@ -303,3 +303,15 @@ class SvnLogParser(TestCase):
 
         cset = csets.next()
         self.assertEqual(len(cset.entries), 4)
+
+    def testCollidingNames(self):
+        """Verify svn log parser behaves correctly with colliding names"""
+
+        # Sorry, couldn't find a better name
+
+        log = self.getSvnLog('svn-colliding_names_test')
+        csets = changesets_from_svnlog(log,
+                                       FR('svn://ixion.tartarus.org/main', '/putty'))
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 1)

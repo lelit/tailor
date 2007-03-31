@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<log>
+<logentry
+   revision="5068">
+<author>jacob</author>
+<date>2005-01-06T13:23:47.561800Z</date>
+<paths>
+<path
+   action="A">/putty-wishlist/data/kbdint-failure</path>
+<path
+   action="M">/putty/ssh.c</path>
+</paths>
+<msg>`kbdint-failure': we now offer keyboard-interactive auth to the user for as
+long as the server offers it, rather than only once, unless the server responds
+to our initial USERAUTH_REQUEST("keyboard-interactive") with FAILURE, in which
+case we give up on it entirely.
+</msg>
+</logentry>
+</log>
