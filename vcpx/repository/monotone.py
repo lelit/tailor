@@ -733,7 +733,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                 fnames.append(fn)
         if len(fnames):
             # ok, we still have something to add
-            cmd = self.repository.command("add")
+            cmd = self.repository.command("add", "--")
             add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             add.execute(fnames, stdout=PIPE, stderr=PIPE)
             if add.exit_status:
@@ -744,7 +744,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
         Add a whole subtree (recursively)
         """
-        cmd = self.repository.command("add", "--recursive")
+        cmd = self.repository.command("add", "--recursive", "--")
         add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         add.execute(subdir, stdout=PIPE, stderr=PIPE)
         if add.exit_status:
@@ -799,7 +799,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         Remove some filesystem object.
         """
 
-        cmd = self.repository.command("drop", "--recursive")
+        cmd = self.repository.command("drop", "--recursive", "--")
         drop = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         dum, error = drop.execute(names, stdout=PIPE, stderr=PIPE)
         if drop.exit_status:
@@ -813,7 +813,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         """
         Rename a filesystem object.
         """
-        cmd = self.repository.command("rename")
+        cmd = self.repository.command("rename", "--")
         rename = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         rename.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
         if rename.exit_status:
