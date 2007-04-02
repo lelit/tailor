@@ -386,7 +386,7 @@ On final example to show the syntax of Bazaar sources::
     target = hg:target
     start-revision = base-0
     root-directory = /tmp/calife
-    state-file = tailor.state
+    state-file = hidden
     source = baz:source
 
     [baz:source]
@@ -397,6 +397,13 @@ On final example to show the syntax of Bazaar sources::
     [hg:target]
     repository = /tmp/HG/calife-pam
     subdir = hg
+
+Note the usage of ``hidden`` for the state file name: given the
+importance of this file, that at the same time is of no interest by
+the user, this will store that information `inside` the same directory
+used by the target repository for its metadata, with the name
+``tailor.state``.  In this particular example, it will end up as
+``/tmp/calife/hg/.hg/tailor.state``.
 
 .. [#] NB: when the source and the target repositories specify
        different directories with the ``subdir`` option, tailor
@@ -445,7 +452,9 @@ subdir : string
   if they don't explicitly override it.
 
 state-file : string
-  Name of the state file needed to store tailor last activity.
+  Name of the state file needed to store tailor last activity. When
+  this is set to ``hidden``, the state file will be named
+  ``tailor.state``, possibly under the target's ``METADIR``.
 
 source : string
   The source repository: a repository name is something like

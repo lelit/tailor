@@ -40,6 +40,7 @@ before-commit = refill
 root-directory = /tmp/tailor-tests
 source = svn:project3repo
 target = darcs:project3repo
+state-file = hidden
 
 [svn:project3repo]
 repository = svn://sample.org/svn

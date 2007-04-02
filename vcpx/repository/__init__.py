@@ -234,3 +234,22 @@ class Repository(object):
 
         self.log.critical("%s should reimplement the create() method",
                           self.__class__)
+
+    def stateFilePath(self, sfname):
+        """
+        Build and return the path to the state file.
+
+        If `sfname` is ``hidden`` and this repository has a `METADIR`,
+        then the file will be something like ``_darcs/tailor.state``.
+
+        Otherwise, for historical reasons, this returns ``expanduser(sfname)``.
+        """
+
+        from os.path import expanduser, join
+
+        if sfname == 'hidden':
+            if self.METADIR:
+                return join(self.basedir, self.METADIR, 'tailor.state')
+            return join(self.basedir, 'tailor.state')
+        else:
+            return expanduser(sfname)

@@ -109,3 +109,15 @@ class Configuration(TestCase):
         project5 = Project('project5', config)
         self.assertEqual(project5.source.tag_entries, True)
         self.assertEqual(project5.target.tag_entries, False)
+
+    def testStateFileName(self):
+        """Verify that the state file is computed the way it should"""
+
+        config = Config(self.getTestConfiguration("config-basic_test"),
+                        {'tailor_repo': self.tailor_repo})
+
+        project1 = Project('project1', config)
+        self.assertEqual(project1.state_file.filename, '/tmp/tailor-tests/project1.state')
+
+        project3 = Project('project3', config)
+        self.assertEqual(project3.state_file.filename, '/tmp/tailor-tests/_darcs/tailor.state')
