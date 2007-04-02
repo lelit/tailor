@@ -92,7 +92,10 @@ class UpdatableSourceWorkingDir(WorkingDir):
         conflicts = []
 
         try:
+            i = 0
             for c in self.state_file:
+                i += 1
+                self.log.info('Changeset #%d', i)
                 # Give the opportunity to subclasses to stop the application
                 # of the queue, before the application of the patch by the
                 # source backend.
