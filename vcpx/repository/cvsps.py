@@ -485,6 +485,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             "Loop over changeset entries to determine if it's already applied."
 
             applied = False
+
+            # applied become True when an entry is DELETED *and* there is
+            # no metainfo for it: thus, a changeset that removes a few entries
+            # very late in history would be assumed as applied. Prevent that
+            # by checking for at least one explicit match on an existing entry.
+            onepositive = False
+
             for m in cs.entries:
                 info = entries.getFileInfo(m.name)
 
@@ -502,9 +509,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
                     # changeset is new.
                     if not applied:
                         break
+                    else:
+                        onepositive = True
                 elif m.action_kind == ChangesetEntry.DELETED:
                     applied = True
-            return applied
+            return applied and onepositive
 
         # We cannot stop at the first not-applied cset, because it may
         # old enough to trick already_applied(): an entry may have
