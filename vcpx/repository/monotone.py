@@ -30,6 +30,12 @@ function get_passphrase(KEYPAIR_ID)
 end
 """
 
+class Unknown(object):
+    '''
+    Assign this class to variables whose value is unknown.
+    Similar to the "None" object.
+    '''
+
 class MonotoneRepository(Repository):
     METADIR = '_MTN'
 
@@ -45,6 +51,35 @@ class MonotoneRepository(Repository):
                         cget(self.name, '%s-keygenid' % self.which)
         self.custom_lua = cget(self.name, 'custom_lua') or \
                           cget(self.name, '%s-custom_lua' % self.which)
+        self._supportsLogRevision = Unknown
+
+    def supportsLogRevision(self, working_dir, revision):
+        """
+        In Monotone 0.32, ``mtn log --revision`` was changed to ``mtn
+        log --from``.  This function returns True if ``--revision``
+        is supported or False otherwise.
+
+        FIXME: To call this method, you have to actually pass working_dir
+        and a revision to it.  Ideally, this is unnecessary and it is
+        really just a hack.  Perhaps a better way to do this is to have a
+        ``log`` method on the MonotoneRepository class.
+        """
+
+        # Lazily (upon first request) attempt to determine the value
+        # of this variable:
+        if self._supportsLogRevision is Unknown:
+            cmd = self.command("log",
+                               "--db", self.repository,
+                               "--last", "1",
+                               "--revision", revision)
+            mtl = ExternalCommand(cwd=working_dir, command=cmd)
+            outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
+            if mtl.exit_status:
+                self._supportsLogRevision = False
+            else:
+                self._supportsLogRevision = True
+
+        return self._supportsLogRevision
 
     def create(self):
         """
@@ -206,8 +241,19 @@ class MonotoneLogParser:
         self.changelog=""
         self.branches=[]
 
-        cmd = self.repository.command("log", "--db", self.repository.repository,
-                                      "--last", "1", "--revision", revision)
+        cmd = None
+        if self.repository.supportsLogRevision(self.working_dir, revision):
+            # --revision is supported
+            cmd = self.repository.command("log",
+                                          "--db", self.repository.repository,
+                                          "--last", "1",
+                                          "--revision", revision)
+        else:
+            # assume --from is supported (instead of --revision)
+            cmd = self.repository.command("log",
+                                          "--db", self.repository.repository,
+                                          "--last", "1",
+                                          "--from", revision)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
