@@ -48,6 +48,7 @@ module = /trunk
 subdir = plain
 
 [project4]
+state-file = ~/tailorize/project4.state
 source = svn:project3repo
 target = darcs:project4repo
 
@@ -65,6 +66,18 @@ repository = /tmp/tailor-tests
 [cvs:project5trepo]
 repository = /tmp/tailor-tests
 tag-entries = False
+
+[project6]
+root-directory = ~/tailorizedp
+state-file = hidden
+source = darcs:
+target = hg:
+
+[hg:project6]
+subdir = project6
+
+[darcs:project6]
+repository = ~/WiP/tailor
 
 '''
 

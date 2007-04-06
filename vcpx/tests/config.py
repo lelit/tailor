@@ -99,7 +99,6 @@ class Configuration(TestCase):
         self.assertEqual(project4.target.command('record', '-a'),
                          ['darcs', 'record', '-a', '--look-for-adds'])
 
-
     def testTagEntries(self):
         """Verify the darcs Repository knows when force CVS tag on entries"""
 
@@ -113,11 +112,16 @@ class Configuration(TestCase):
     def testStateFileName(self):
         """Verify that the state file is computed the way it should"""
 
+        from os.path import expanduser
+        
         config = Config(self.getTestConfiguration("config-basic_test"),
                         {'tailor_repo': self.tailor_repo})
 
         project1 = Project('project1', config)
         self.assertEqual(project1.state_file.filename, '/tmp/tailor-tests/project1.state')
-
         project3 = Project('project3', config)
         self.assertEqual(project3.state_file.filename, '/tmp/tailor-tests/_darcs/tailor.state')
+        project4 = Project('project4', config)
+        self.assertEqual(project4.state_file.filename, expanduser('~/tailorize/project4.state'))
+        project6 = Project('project6', config)
+        self.assertEqual(project6.state_file.filename, expanduser('~/tailorizedp/project6/.hg/tailor.state'))
