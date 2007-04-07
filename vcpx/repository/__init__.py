@@ -104,7 +104,7 @@ class Repository(object):
         take the one from the project.
         """
 
-        from os.path import expanduser
+        from os.path import expanduser, abspath
         from locale import getpreferredencoding
 
         cget = project.config.get
@@ -118,8 +118,9 @@ class Repository(object):
             self.repository = expanduser(self.repository)
         self.module = cget(optname, 'module') or \
                       cget(optname, '%s-module' % self.which)
-        self.rootdir = cget(optname, 'root-directory',
-                            vars={'root-directory': project.rootdir})
+        rootdir = cget(optname, 'root-directory',
+                       vars={'root-directory': project.rootdir})
+        self.rootdir = abspath(expanduser(rootdir))
         self.subdir = cget(optname, 'subdir',
                            vars={'subdir': project.subdir})
         self.delay_before_apply = cget(optname, 'delay-before-apply')

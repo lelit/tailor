@@ -113,9 +113,8 @@ class Project(object):
              StreamHandler, Formatter
 
         self.verbose = self.config.get(self.name, 'verbose', False)
-        self.rootdir = abspath(expanduser(self.config.get(self.name,
-                                                          'root-directory',
-                                                          '.')))
+        rootdir = self.config.get(self.name, 'root-directory', '.')
+        self.rootdir = abspath(expanduser(rootdir))
         if not exists(self.rootdir):
             makedirs(self.rootdir)
         self.subdir = self.config.get(self.name, 'subdir')

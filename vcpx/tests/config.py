@@ -125,3 +125,7 @@ class Configuration(TestCase):
         self.assertEqual(project4.state_file.filename, expanduser('~/tailorize/project4.state'))
         project6 = Project('project6', config)
         self.assertEqual(project6.state_file.filename, expanduser('~/tailorizedp/project6/.hg/tailor.state'))
+
+        config = Config(self.getTestConfiguration("config-sf_test"), {})
+        sbcl = Project('sbcl', config)
+        self.assertEqual(sbcl.state_file.filename, expanduser('~/tmp/test-tailor/sbcl/.hg/tailor.state'))
