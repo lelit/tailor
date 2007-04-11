@@ -52,6 +52,7 @@ class MonotoneRepository(Repository):
         self.custom_lua = cget(self.name, 'custom_lua') or \
                           cget(self.name, '%s-custom_lua' % self.which)
         self._supportsLogRevision = Unknown
+        self._supportsLogNoGraph = Unknown
 
     def supportsLogRevision(self, working_dir, revision):
         """
@@ -80,6 +81,36 @@ class MonotoneRepository(Repository):
                 self._supportsLogRevision = True
 
         return self._supportsLogRevision
+
+    def supportsLogNoGraph(self, working_dir, revision):
+        """
+        In Monotone 0.33, the log message format was changed and the
+        ``mtn log --no-graph`` option was added to revert to the prior log
+        format.  Since this new format is intended for pretty-printing,
+        it is not very helpful when screen-scraping.
+
+        FIXME: (see the FIXME in supportsLogRevision)
+        """
+
+        # Lazily (upon first request) attempt to determine the value
+        # of this variable:
+        if self._supportsLogNoGraph is Unknown:
+            if not self.supportsLogRevision(working_dir, revision):
+                cmd = self.command("log",
+                                   "--db", self.repository,
+                                   "--last", "1",
+                                   "--from", revision,
+                                   "--no-graph") # <- we're testing for this!
+                mtl = ExternalCommand(cwd=working_dir, command=cmd)
+                outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
+                if mtl.exit_status:
+                    self._supportsLogNoGraph = False
+                else:
+                    self._supportsLogNoGraph = True
+            else:
+                self._supportsLogNoGraph = False
+
+        return self._supportsLogNoGraph
 
     def create(self):
         """
@@ -242,18 +273,27 @@ class MonotoneLogParser:
         self.branches=[]
 
         cmd = None
-        if self.repository.supportsLogRevision(self.working_dir, revision):
-            # --revision is supported
+
+        logRevision = self.repository.supportsLogRevision(self.working_dir,
+                                                          revision)
+        logNoGraph = self.repository.supportsLogNoGraph(self.working_dir,
+                                                        revision)
+        if logRevision: # <= Montone-0.31
             cmd = self.repository.command("log",
                                           "--db", self.repository.repository,
                                           "--last", "1",
                                           "--revision", revision)
-        else:
-            # assume --from is supported (instead of --revision)
+        elif not logRevision and not logNoGraph: # Monotone-0.32
             cmd = self.repository.command("log",
                                           "--db", self.repository.repository,
                                           "--last", "1",
                                           "--from", revision)
+        elif not logRevision and logNoGraph: # Monotone-0.33
+            cmd = self.repository.command("log",
+                                          "--db", self.repository.repository,
+                                          "--last", "1",
+                                          "--from", revision,
+                                          "--no-graph")
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
