@@ -360,9 +360,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # removed the entry, so we do a dirstate lookup.
             if files:
                 for f in self._walk(name):
-                    repo.remove([join(name, f)])
+                    repo.remove([join(name, f)], unlink=True)
             else:
-                repo.remove([name])
+                repo.remove([name], unlink=True)
 
     def _renamePathname(self, oldname, newname):
         """Rename an entry"""
@@ -379,10 +379,10 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             for f in self._walk(oldname):
                 oldpath = join(oldname, f)
                 repo.copy(oldpath, join(newname, f))
-                repo.remove([oldpath])
+                repo.remove([oldpath], unlink=True)
         else:
             repo.copy(oldname, newname)
-            repo.remove([oldname])
+            repo.remove([oldname], unlink=True)
 
     def _prepareTargetRepository(self):
         """
