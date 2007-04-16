@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 from os import walk
-from distutils.core import setup
+try:
+	from setuptools import setup
+except ImportError:
+	from distutils.core import setup
 from vcpx.tailor import __version__ as VERSION
 
 setup(name='tailor',
