@@ -26,6 +26,7 @@ class GitRepository(Repository):
     def _load(self, project):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'git-command', 'git')
+	self.overwrite_tags = project.config.get(self.name, 'overwrite-tags', False)
         self.parent_repo = project.config.get(self.name, 'parent-repo')
         self.branch_point = project.config.get(self.name, 'branchpoint', 'HEAD')
         self.branch_name = project.config.get(self.name, 'branch')

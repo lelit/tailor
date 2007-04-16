@@ -148,8 +148,24 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
                 self.repository.runCommand(['update-ref', refname, commitid])
 
     def _tag(self, tag):
+
+        # in single-repository mode, only update the relevant branch
+        if self.repository.branch_name:
+            refname = self.repository.branch_name
+        else:
+            refname = 'HEAD'
+
         # Allow a new tag to overwrite an older one with -f
-        cmd = self.repository.command("tag", "-a", "-f", "-m", tag, tag)
+	args = ["tag", "-a",]
+	if self.repository.overwrite_tags:
+		args.append("-f")
+
+	# Escape the tag name for git
+	import re
+	tag_git = re.sub('_*$', '', re.sub('__', '_', re.sub('[^A-Za-z0-9_-]', '_', tag)))
+
+	args += ["-m", tag, tag_git, refname]
+        cmd = self.repository.command(*args)
         c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
         c.execute()
 
