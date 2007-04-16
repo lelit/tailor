@@ -184,7 +184,9 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         from os import walk
         from vcpx.dualwd import IGNORED_METADIRS
 
-        if isdir(join(self.repository.basedir, newname)):
+        from vcpx.shwrap import ExternalCommand
+        cp = ExternalCommand(command=['cp'])
+        if isdir(join(self.repository.basedir, newname)) or isdir(join(self.repository.basedir, oldname)):
             # Given lack of support for directories in current Git,
             # loop over all files under the new directory and
             # do a add/remove on them.
@@ -200,6 +202,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
                     self._removePathnames([join(oldname, prefix, f)])
                     self._addPathnames([join(newname, prefix, f)])
         else:
+            cp.execute(join(self.repository.basedir, oldname), join(self.repository.basedir, newname))
             self._removePathnames([oldname])
             self._addPathnames([newname])
 
