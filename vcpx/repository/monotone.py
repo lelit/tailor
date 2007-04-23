@@ -969,7 +969,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             ignored.append('^%s$' % escape(sfrelname + '.journal'))
 
         if len(ignored) > 0:
-            mt_ignored = open(join(self.repository.basedir, '.mtn-ignore'), 'aU')
+            mt_ignored = open(join(self.repository.basedir, '.mtn-ignore'), 'a')
             mt_ignored.write('\n'.join(ignored))
             mt_ignored.close()
 

@@ -106,7 +106,7 @@ class SvnRepository(Repository):
             hookname = join(repodir, 'hooks', 'pre-revprop-change')
             if platform == 'win32':
                 hookname += '.bat'
-            prehook = open(hookname, 'wU')
+            prehook = open(hookname, 'w')
             if platform <> 'win32':
                 prehook.write('#!/bin/sh\n')
             prehook.write('exit 0\n')

@@ -72,7 +72,7 @@ class DarcsRepository(Repository):
             ignored.append('^%s$' % re.escape(sfrelname+'.old'))
             ignored.append('^%s$' % re.escape(sfrelname+'.journal'))
 
-        boring = open(boringname, 'wU')
+        boring = open(boringname, 'w')
         boring.write('\n'.join(ignored))
         boring.write('\n')
         boring.close()
