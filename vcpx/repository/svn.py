@@ -71,10 +71,10 @@ class SvnRepository(Repository):
 
     def create(self):
         """
-        Create a local SVN repository, if it does not exist.
+        Create a local SVN repository, if it does not exist, and configure it.
         """
 
-        from os.path import join
+        from os.path import join, exists
         from sys import platform
 
         # Verify the existence of repository by listing its root
@@ -82,49 +82,52 @@ class SvnRepository(Repository):
         svnls = ExternalCommand(command=cmd)
         svnls.execute(self.repository)
 
-        # If it a valid repository, there's nothing else to do
-        if not svnls.exit_status:
-            return
+        # Create it if it isn't a valid repository
+        if svnls.exit_status:
+            if not self.repository.startswith('file:///'):
+                raise TargetInitializationFailure("%r does not exist and "
+                                                  "cannot be created since "
+                                                  "it's not a local (file:///) "
+                                                  "repository" %
+                                                  self.repository)
 
-        if not self.repository.startswith('file:///'):
-            raise TargetInitializationFailure("%r does not exist and "
-                                              "cannot be created since "
-                                              "it's not a local (file:///) "
-                                              "repository" %
-                                              self.repository)
+            repodir = self.repository[7:]
+            cmd = self.command("create", "--fs-type", "fsfs", svnadmin=True)
+            svnadmin = ExternalCommand(command=cmd)
+            svnadmin.execute(repodir)
 
-        repodir = self.repository[7:]
-        cmd = self.command("create", "--fs-type", "fsfs", svnadmin=True)
-        svnadmin = ExternalCommand(command=cmd)
-        svnadmin.execute(repodir)
-
-        if svnadmin.exit_status:
-            raise TargetInitializationFailure("Was not able to create a 'fsfs' "
-                                              "svn repository at %r" %
-                                              self.repository)
+            if svnadmin.exit_status:
+                raise TargetInitializationFailure("Was not able to create a 'fsfs' "
+                                                  "svn repository at %r" %
+                                                  self.repository)
         if self.use_propset:
             hookname = join(repodir, 'hooks', 'pre-revprop-change')
             if platform == 'win32':
                 hookname += '.bat'
-            prehook = open(hookname, 'w')
-            if platform <> 'win32':
-                prehook.write('#!/bin/sh\n')
-            prehook.write('exit 0\n')
-            prehook.close()
-            if platform <> 'win32':
-                from os import chmod
-                chmod(hookname, 0755)
+            if not exists(hookname):
+                prehook = open(hookname, 'w')
+                if platform <> 'win32':
+                    prehook.write('#!/bin/sh\n')
+                prehook.write('exit 0\n')
+                prehook.close()
+                if platform <> 'win32':
+                    from os import chmod
+                    chmod(hookname, 0755)
 
         if self.module and self.module <> '/':
-            cmd = self.command("mkdir", "-m",
-                               "This directory will host the upstream sources")
-            svnmkdir = ExternalCommand(command=cmd)
-            svnmkdir.execute(self.repository + self.module)
-            if svnmkdir.exit_status:
-                raise TargetInitializationFailure("Was not able to create the "
-                                                  "module %r, maybe more than "
-                                                  "one level directory?" %
-                                                  self.module)
+            cmd = self.command("ls")
+            svnls = ExternalCommand(command=cmd)
+            svnls.execute(self.repository + self.module)
+            if svnls.exit_status:
+                cmd = self.command("mkdir", "-m",
+                                   "This directory will host the upstream sources")
+                svnmkdir = ExternalCommand(command=cmd)
+                svnmkdir.execute(self.repository + self.module)
+                if svnmkdir.exit_status:
+                    raise TargetInitializationFailure("Was not able to create the "
+                                                      "module %r, maybe more than "
+                                                      "one level directory?" %
+                                                      self.module)
 
 def changesets_from_svnlog(log, repository, chunksize=2**15):
     from xml.sax import make_parser
