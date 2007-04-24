@@ -135,7 +135,7 @@ class Tailorizer(Project):
 
         pname_format = pconfig('patch-name-format', raw=True)
         if pname_format is not None:
-            SynchronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format
+            SynchronizableTargetWorkingDir.PATCH_NAME_FORMAT = pname_format.strip() or '%(revision)s'
         SynchronizableTargetWorkingDir.REMOVE_FIRST_LOG_LINE = pconfig('remove-first-log-line')
         Changeset.REFILL_MESSAGE = pconfig('refill-changelogs')
 
