@@ -408,10 +408,10 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         line = output.readline()
         while line:
             if line.startswith('We have conflicts in the following files:'):
-                files = output.readline()[:-1].split('./')[1:]
+                files = output.readline()[:-1].split(' ')
                 self.log.warning("Conflict after 'darcs pull': %s",
                                  ' '.join(files))
-                conflicts.extend(['./' + f for f in files])
+                conflicts.extend(files)
             line = output.readline()
 
         cmd = self.repository.command("changes", selector, revtag,
