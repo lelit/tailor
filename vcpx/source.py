@@ -124,11 +124,9 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     raise
 
                 if res:
-                    # Uh, we have a conflict: this should not ever
-                    # happen, but the user may have manually tweaked
-                    # the working directory. Give her a chance of
-                    # fixing the situation, or abort with Ctrl-C, or
-                    # whatever the subclasses decide.
+                    # We have a conflict.  Give the user a chance of fixing 
+                    # the situation, or abort with Ctrl-C, or whatever the 
+                    # subclasses decide.
                     try:
                         self._handleConflict(c, conflicts, res)
                     except KeyboardInterrupt:
