@@ -101,18 +101,24 @@ class SvnRepository(Repository):
                                                   "svn repository at %r" %
                                                   self.repository)
         if self.use_propset:
-            hookname = join(repodir, 'hooks', 'pre-revprop-change')
-            if platform == 'win32':
-                hookname += '.bat'
-            if not exists(hookname):
-                prehook = open(hookname, 'w')
-                if platform <> 'win32':
-                    prehook.write('#!/bin/sh\n')
-                prehook.write('exit 0\n')
-                prehook.close()
-                if platform <> 'win32':
-                    from os import chmod
-                    chmod(hookname, 0755)
+            if not self.repository.startswith('file:///'):
+                self.log.warning("Repository is remote, cannot verify if it "
+                                 "has the 'pre-revprop-change' hook active, needed "
+                                 "by 'use-propset=True'. Assuming it does...")
+            else:
+                repodir = self.repository[7:]
+                hookname = join(repodir, 'hooks', 'pre-revprop-change')
+                if platform == 'win32':
+                    hookname += '.bat'
+                if not exists(hookname):
+                    prehook = open(hookname, 'w')
+                    if platform <> 'win32':
+                        prehook.write('#!/bin/sh\n')
+                    prehook.write('exit 0\n')
+                    prehook.close()
+                    if platform <> 'win32':
+                        from os import chmod
+                        chmod(hookname, 0755)
 
         if self.module and self.module <> '/':
             cmd = self.command("ls")
