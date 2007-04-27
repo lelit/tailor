@@ -210,7 +210,7 @@ Examples
 
    d. Run tailor again and again, to sync up with latest changes::
 
-       $ tailor -D -v --configfile myproject.tailor
+       $ tailor -v --configfile cmfcore.tailor
    
 __ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
 __ http://svn.haxx.se/users/archive-2005-07/0605.shtml
