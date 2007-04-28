@@ -201,10 +201,10 @@ module = /Plone/PloneBook2/it
 ignore-externals = False
 
 
-[bazaarng2darcs]
+[bazaar2darcs]
 source = bzr:oodoctest
 target = darcs:oodoctest
-root-directory = %(testdir)s/bazaarng2darcs
+root-directory = %(testdir)s/bazaar2darcs
 start-revision = INITIAL
 
 [bzr:oodoctest]
@@ -392,8 +392,8 @@ class Darcs(OperationalTest):
         self.assertEqual(tailorizer.subdir, 'pxlib')
         self.assertEqual(tailorizer.source.subdir, 'pxlib')
 
-    def testDarcsAndBazaarng(self):
-        "Test darcs to bazaar-ng and the other way around"
+    def testDarcsAndBazaar(self):
+        "Test darcs to Bazaar and the other way around"
 
         self.tailorize('darcs2bzr')
         self.tailorize('bzr2darcs')
@@ -421,28 +421,28 @@ class Darcs(OperationalTest):
         self.tailorize('monotone2darcs')
 
 
-class Bazaarng(OperationalTest):
-    "Test the BazaarNG source backend"
+class Bazaar(OperationalTest):
+    "Test the Bazaar source backend"
 
-    def testBazaarngAndPython23(self):
+    def testBazaarAndPython23(self):
         "Test we detect early when running under Python < 2.4"
 
         from sys import version_info
 
         if version_info < (2,4):
             try:
-                self.tailorize('bazaarng2darcs')
+                self.tailorize('bazaar2darcs')
             except TailorException, e:
-                self.assert_("Bazaar-NG backend requires Python 2.4"
+                self.assert_("Bazaar backend requires Python 2.4"
                              in str(e))
             else:
                 self.fail("Expected a specific TailorException")
 
-    def testBazaarngToDarcs(self):
-        "Test bazaar-ng to darcs"
+    def testBazaarToDarcs(self):
+        "Test bazaar to darcs"
 
         try:
-            self.tailorize('bazaarng2darcs')
+            self.tailorize('bazaar2darcs')
         except TailorException, e:
             from sys import version_info
 
@@ -481,8 +481,8 @@ class Cvs(OperationalTest):
 
         self.tailorize('cvs2hg')
 
-    def testCvsToBazaarng(self):
-        "Test CVS to bazaar-ng"
+    def testCvsToBazaar(self):
+        "Test CVS to Bazaar"
 
         self.tailorize('cvs2bzr')
 
@@ -613,13 +613,13 @@ class CvsOrderTest(OperationalTest):
             cvs.execute('commit', '-m', 'two')
             self.failIf(cvs.exit_status, "%r failed" % cvs._last_command)
 
-    def testCvsConvertDirectoryAddToBazaarng(self):
+    def testCvsConvertDirectoryAddToBazaar(self):
         """Test that we can handle directory adds in the cvs module to bzr."""
 
         t = Tailorizer("cvsdirtest", self.config)
         t()
 
-    def testCvspsConvertDirectoryAddToBazaarng(self):
+    def testCvspsConvertDirectoryAddToBazaar(self):
         """Test that we can handle directory adds in the cvsps module to bzr."""
 
         t = Tailorizer("cvspsdirtest", self.config)

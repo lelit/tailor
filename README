@@ -10,8 +10,8 @@ Tailor 1.0
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, Bazaar_,
-`Bazaar-NG`_, CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_,
+Tailor is a tool to migrate changesets between ArX_, Baz_,
+`Bazaar`_, CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_,
 Perforce_, Subversion_ and Tla_ [#]_ repositories.
 
 This script makes it easier to keep the upstream changes merged in
@@ -52,12 +52,12 @@ A more convoluted setup shows how brave people are using it to get a
        since I do not use them enough to figure out the best way to
        get pending changes and build tailor ChangeSets out of them.
 
-       To the opposite, Bazaar (1.0, not Bazaar-NG), Perforce and Tla
+       To the opposite, Baz (1.0, not Bazaar), Perforce and Tla
        are supported only as source systems.
 
 .. _arx: http://www.nongnu.org/arx/
-.. _bazaar: http://bazaar.canonical.com/
-.. _bazaar-ng: http://www.bazaar-ng.org/
+.. _baz: http://bazaar-vcs.org/Baz1x
+.. _bazaar: http://bazaar-vcs.org/
 .. _codeville: http://www.codeville.org/
 .. _cvs: http://www.nongnu.org/cvs/
 .. _darcs: http://www.darcs.net/
@@ -273,7 +273,7 @@ b) It's completely unsupported under Windows, evenif it now uses
    2.4's subprocess_ that seems able to hide Windows crazyness...
 
 c) ArX and Codeville are (currently) only supported as *target*;
-   Bazaar and Tla only as *source*.
+   Baz and Tla only as *source*.
 
 d) Specifying ``--subdir .`` may not work, in particular when dealing
    with remote CVS repositories (it does when the CVS repository is
@@ -380,7 +380,7 @@ need to specify a different directory for each repository [#]_, as in::
 This will extract upstream CVS sources into ``~/mypxlib/original``,
 and create a new Mercurial repository in ``~/mypxlib/migrated``.
 
-On final example to show the syntax of Bazaar sources::
+On final example to show the syntax of Baz sources::
 
     [project]
     target = hg:target
@@ -951,7 +951,7 @@ With the above in a `script` called say ``tester``, just doing::
     $ chmod 755 tester
     $ ./tester
 
-will migrate the history from a darcs repository to a bazaar-ng one,
+will migrate the history from a darcs repository to a Bazaar one,
 forcing the author to a well-known name :-)
 
 Example 2
@@ -1109,10 +1109,10 @@ ArX support
 
 ArX_ support was contributed by `Walter Landry <wlandry@ucsd.edu>`_.
 
-Bazaar-NG support
+Bazaar support
 -----------------
 
-`Bazaar-NG`_ support was contributed by `Johan Rydberg
+`Bazaar`_ support was contributed by `Johan Rydberg
 <jrydberg@gnu.org>`_.  Nowadays it's being maintained by `Lalo Martins
 <lalo.martins@gmail.com>`_.
 

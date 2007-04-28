@@ -1,5 +1,5 @@
 # -*- mode: python; coding: utf-8 -*-
-# :Progetto: vcpx -- bazaar-ng support using the bzrlib instead of the frontend
+# :Progetto: vcpx -- Bazaar support using the bzrlib instead of the frontend
 # :Creato:   Fri Aug 19 01:06:08 CEST 2005
 # :Autore:   Johan Rydberg <jrydberg@gnu.org>
 #            Jelmer Vernooij <jelmer@samba.org>
@@ -9,14 +9,14 @@
 #
 
 """
-This module implements the backends for Bazaar-NG.
+This module implements the backends for Bazaar.
 """
 
 __docformat__ = 'reStructuredText'
 
 
 from sys import version_info
-assert version_info >= (2,4), "Bazaar-NG backend requires Python 2.4"
+assert version_info >= (2,4), "Bazaar backend requires Python 2.4"
 del version_info
 
 from bzrlib import errors
@@ -47,7 +47,7 @@ class BzrRepository(Repository):
     def create(self):
         """
         Create a branch with a working tree at the base directory. If the base
-        directory is inside a Bazaar-NG style "shared repository", it will use
+        directory is inside a Bazaar style "shared repository", it will use
         that to create a branch and working tree (make sure it allows working
         trees).
         """
