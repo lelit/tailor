@@ -195,7 +195,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.log.debug("%s updated to %s",
                        ', '.join([e.name for e in changeset.entries]),
                        changeset.revision)
-        if (count != 1) or conflicts:
+        try:
+            pulled_revnos = count.new_revno - count.old_revno
+        except AttributeError:
+            # Prior to 0.15 pull returned a simple integer instead of a result object
+            pulled_revnos = count
+        if (pulled_revnos != 1) or conflicts:
             raise ChangesetApplicationFailure('unknown reason')
         return [] # No conflict handling yet
 
