@@ -91,7 +91,11 @@ Examples:
                                 print
                                 print title
                                 print '='*len(title)
-                            print t._TestCase__testMethodName, '--',
+                            if sys.version_info >= (2, 5):
+                                methodname = t._testMethodName
+                            else:
+                                methodname = t._TestCase__testMethodName
+                            print methodname, '--',
                             print t.shortDescription()
                     return tcount, scount
                 tcount, scount = listsuite(self.test)
