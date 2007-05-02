@@ -316,7 +316,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline().rstrip()
-                assert (l.startswith('  * ') or
+                assert (l.startswith('  *') or
                         l.startswith('  UNDO:') or
                         l.startswith('  tagged')), \
                         "Got %r but expected the start of the log" % l
