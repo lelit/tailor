@@ -82,6 +82,12 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         from os import environ
 
+        try:
+            self.repository.runCommand(['status'])
+        except Exception, e:
+            self.log.info("git-status returned an error---assuming nothing to do")
+            return
+
         encode = self.repository.encode
 
         logmessage = []
