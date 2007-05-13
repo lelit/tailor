@@ -71,7 +71,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         if not name:
             name = AUTHOR
         if not email:
-            email = "%s@%s" % (AUTHOR, HOST)
+            email = "%s@%s" % (name, HOST)
         return (name, email)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
