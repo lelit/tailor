@@ -866,27 +866,10 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         log.write(encode('\n'.join(logmessage)))
         log.close()
 
-        date = date.astimezone(UTC).replace(tzinfo=None) # monotone wants UTC
-
-        # Apparently mtn 0.34 does not like microseconds in the ISO8601 format
-        # 23:02:08 [I] $ mtn commit --author pete --date
-        #                2007-03-31T09:55:27.379018
-        #                --message-file /tmp/tailoriP5oVpmtn .
-        # 23:02:08 [W] [Status 1]
-        # 23:02:08 [E] Monotone commit said: mtn: misuse: option error: bad
-        #              argument '2007-03-31T09:55:27.379018' to option 'date':
-        #              misuse: unrecognized date (monotone only understands ISO
-        #              8601 format)
-        #
-        # AFAICT Python ISO8601 format is fixed length, so we can simply slice it;
-        # less lazily and more precisely:
-        #   timestamp = (date - timedelta(microseconds=date.microsecond)).isoformat()
-
-        timestamp = date.isoformat()[:19]
-
+        date = date.astimezone(UTC).replace(microsecond=0, tzinfo=None) # monotone wants UTC
         cmd = self.repository.command("commit",
                                       "--author", encode(author),
-                                      "--date", timestamp,
+                                      "--date", date.isoformat(),
                                       "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
