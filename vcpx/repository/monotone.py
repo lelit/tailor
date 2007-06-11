@@ -429,7 +429,7 @@ class MonotoneDiffParser:
                                       "--revision", chset.revision)
 
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE, LANG='POSIX')
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure(
                 "mtn diff returned status %d" % mtl.exit_status)
@@ -864,7 +864,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         if not entries:
             entries = ['.']
 
-        output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE)
+        output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE, LANG='POSIX')
 
         # monotone complaints if there are no changes from the last commit.
         # we ignore those errors ...
