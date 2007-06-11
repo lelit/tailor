@@ -565,6 +565,22 @@ class MonotoneDiffParser:
                                 "followed by '%s','%s','%s'" % (fromw, oldr,
                                                                 tow, newr))
 
+                        # The 'chentry' is not nessesary if no other entries exist.
+                        # But needs, if one entry with rename or delete exist before,
+                        # because the list of modifired file will be upstream only
+                        # files from this list (Monotone to Subversion).
+                        # So, the best: Always list the changed files here.
+                        #
+                        # Add file to the list, if no rename or other entry exist.
+                        flag = True
+                        for i,e in enumerate(chset.entries):
+                            if e.name == fname[1:-1]:
+                                flag = False
+                                break
+                        if flag:
+                            chentry = chset.addEntry(fname[1:-1], chset.revision)
+                            chentry.action_kind = chentry.UPDATED
+
         except StopIteration:
             if in_item:
                 raise GetUpstreamChangesetsFailure("Unexpected end of 'diff' parsing changeset info")
