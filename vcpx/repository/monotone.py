@@ -13,6 +13,7 @@ This module contains supporting classes for Monotone.
 __docformat__ = 'reStructuredText'
 
 from os.path import exists, join, isdir
+from os import getenv
 from string import whitespace
 
 from vcpx.repository import Repository
@@ -134,18 +135,22 @@ class MonotoneRepository(Repository):
         else:
             # keystore key id unspecified, look at other options
             if self.keygenid:
-                # requested a new key
-                cmd = self.command("genkey", "--db", self.repository)
-                regkey = ExternalCommand(command=cmd)
-                if self.passphrase:
-                    passp = "%s\n%s\n" % (self.passphrase, self.passphrase)
+                keyfile = join(getenv("HOME"), '.monotone', 'keys', self.keygenid)
+                if exists(keyfile):
+                    self.log.info("Key %s exist, don't genkey again" % self.keygenid)
                 else:
-                    passp = None
-                regkey.execute(self.keygenid, input=passp, stdout=PIPE, stderr=PIPE)
-                if regkey.exit_status:
-                    raise TargetInitializationFailure("Was not able to setup "
-                                                  "the monotone initial key at %r" %
-                                                  self.repository)
+                    # requested a new key
+                    cmd = self.command("genkey", "--db", self.repository)
+                    regkey = ExternalCommand(command=cmd)
+                    if self.passphrase:
+                        passp = "%s\n%s\n" % (self.passphrase, self.passphrase)
+                    else:
+                        passp = None
+                    regkey.execute(self.keygenid, input=passp, stdout=PIPE, stderr=PIPE)
+                    if regkey.exit_status:
+                        raise TargetInitializationFailure("Was not able to setup "
+                                                      "the monotone initial key at %r" %
+                                                      self.repository)
             else:
                 raise TargetInitializationFailure("Can't setup the monotone "
                                                   "repository %r. "
