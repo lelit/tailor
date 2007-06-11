@@ -157,7 +157,7 @@ class MonotoneChangeset(Changeset):
                   or 'None'))
         return '\n'.join(s)
 
-    def update(self, real_dates, authors, log, real_ancestors, branches):
+    def update(self, real_dates, authors, log, real_ancestors, branches, tags):
         """
         Updates the monotone changeset secondary data
         """
@@ -167,6 +167,7 @@ class MonotoneChangeset(Changeset):
         self.real_dates = real_dates
         self.real_ancestors = real_ancestors
         self.branches = branches
+        self.tags = tags
 
 
 class MonotoneCertsParser:
@@ -216,6 +217,7 @@ class MonotoneCertsParser:
         self.dates=[]
         self.changelog=""
         self.branches=[]
+        self.tags=[]
 
         # Get ancestors from automate parents
         cmd = self.repository.command("automate", "parents", revision,
@@ -237,7 +239,7 @@ class MonotoneCertsParser:
             raise GetUpstreamChangesetsFailure("mtn list certs returned "
                                                "status %d" % mtl.exit_status)
 
-        tags = ""
+        testresults = ""
         logs = ""
         comments = ""
         state = self.DUMMY
@@ -290,11 +292,10 @@ class MonotoneCertsParser:
                     # log line, accumulate string
                     logs = logs + pr.value + "\n"
                 elif state == self.TAG:
-                    # Tag print into ChangeLog
-                    tags = tags + "Tag: " + pr.value + "\n"
+                    self.tags.append(pr.value)
                 elif state == self.TESTRESULT:
                     # Testresult print into ChangeLog
-                    tags = tags + "Testresult: " + pr.value + "\n"
+                    testresults = testresults + "Testresult: " + pr.value + "\n"
                 else:
                     pass # we ignore cset info
             elif pr("Key") or pr("Sig"):
@@ -305,7 +306,7 @@ class MonotoneCertsParser:
         # parsing terminated, verify the data
         if len(self.authors)<1 or len(self.dates)<1 or revision=="":
             raise GetUpstreamChangesetsFailure("Error parsing certs of revision %s. Missing data" % revision)
-        self.changelog = tags + logs + comments
+        self.changelog = testresults + logs + comments
 
     def convertLog(self, chset):
         self.parse(chset.revision)
@@ -314,7 +315,8 @@ class MonotoneCertsParser:
                      authors=self.authors,
                      log=self.changelog,
                      real_ancestors=self.ancestors,
-                     branches=self.branches)
+                     branches=self.branches,
+                     tags=self.tags)
 
         return chset
 
@@ -557,13 +559,14 @@ class MonotoneRevToCset:
       "Note:" line
 
     tag
-      all tags are appended to the changelog string, prefixed by a "Tag:"
+      all entries separated by comma as source, stripped into single tags
+      on targets
 
     branch
       used to restrict source revs (tailor follows only a single branch)
 
     testresult
-      appedned to changelog string, ptrfixed by a "Testresult:"
+      appended to changelog string, prefixed by a "Testresult:"
 
     other certs
       ignored
@@ -805,6 +808,31 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         if add.exit_status:
             raise ChangesetApplicationFailure("%s returned status %s" %
                                               (str(add),add.exit_status))
+
+    def _tag(self, tag):
+        """
+        TAG current revision.
+        """
+
+        # Get current revision from working copy
+        # FIXME: Should cache the last revision somethere
+        cmd = self.repository.command("automate", "get_base_revision_id")
+        mtl = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
+        if mtl.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %s" %
+                                              (str(mtl),mtl.exit_status))
+
+        revision = outstr[0].getvalue().split()
+        effective_rev=revision[0]
+
+        # Add the tag
+        cmd = self.repository.command("tag", effective_rev, tag)
+        mtl = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
+        if mtl.exit_status:
+            raise ChangesetApplicationFailure("%s returned status %s" %
+                                              (str(mtl),mtl.exit_status))
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
                 tags = [], isinitialcommit = False):
