@@ -740,6 +740,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                         raise InvocationError("Can't find an INITIAL revision on branch '%s'."
                                               % module)
                     effective_rev=first_cset[0].revision
+                elif len(revlist)==0:
+                    # Special case: only one revision in branch - is the head self
+                    effective_rev=revision[0]
                 else:
                     effective_rev=revlist[0]
         return effective_rev
