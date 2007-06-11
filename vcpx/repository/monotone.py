@@ -488,9 +488,14 @@ class MonotoneDiffParser:
                             raise GetUpstreamChangesetsFailure(
                                 "Unexpected rename token sequence: '%s' "
                                 "followed by '%s'" %(tow, newname))
-                        chentry = chset.addEntry(newname[1:-1], chset.revision)
-                        chentry.action_kind = chentry.RENAMED
-                        chentry.old_name= fname[1:-1]
+                        # Hack a bug from Monotone: rename with same name
+                        if fname == newname:
+                            self.repository.log.warning("Can not rename '%s' to "
+                                                        "'%s' self" % (fname, newname))
+                        else:
+                            chentry = chset.addEntry(newname[1:-1], chset.revision)
+                            chentry.action_kind = chentry.RENAMED
+                            chentry.old_name= fname[1:-1]
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
