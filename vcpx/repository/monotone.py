@@ -31,12 +31,6 @@ function get_passphrase(KEYPAIR_ID)
 end
 """
 
-class Unknown(object):
-    '''
-    Assign this class to variables whose value is unknown.
-    Similar to the "None" object.
-    '''
-
 class MonotoneRepository(Repository):
     METADIR = '_MTN'
 
@@ -52,66 +46,6 @@ class MonotoneRepository(Repository):
                         cget(self.name, '%s-keygenid' % self.which)
         self.custom_lua = cget(self.name, 'custom_lua') or \
                           cget(self.name, '%s-custom_lua' % self.which)
-        self._supportsLogRevision = Unknown
-        self._supportsLogNoGraph = Unknown
-
-    def supportsLogRevision(self, working_dir, revision):
-        """
-        In Monotone 0.32, ``mtn log --revision`` was changed to ``mtn
-        log --from``.  This function returns True if ``--revision``
-        is supported or False otherwise.
-
-        FIXME: To call this method, you have to actually pass working_dir
-        and a revision to it.  Ideally, this is unnecessary and it is
-        really just a hack.  Perhaps a better way to do this is to have a
-        ``log`` method on the MonotoneRepository class.
-        """
-
-        # Lazily (upon first request) attempt to determine the value
-        # of this variable:
-        if self._supportsLogRevision is Unknown:
-            cmd = self.command("log",
-                               "--db", self.repository,
-                               "--last", "1",
-                               "--revision", revision)
-            mtl = ExternalCommand(cwd=working_dir, command=cmd)
-            outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
-            if mtl.exit_status:
-                self._supportsLogRevision = False
-            else:
-                self._supportsLogRevision = True
-
-        return self._supportsLogRevision
-
-    def supportsLogNoGraph(self, working_dir, revision):
-        """
-        In Monotone 0.33, the log message format was changed and the
-        ``mtn log --no-graph`` option was added to revert to the prior log
-        format.  Since this new format is intended for pretty-printing,
-        it is not very helpful when screen-scraping.
-
-        FIXME: (see the FIXME in supportsLogRevision)
-        """
-
-        # Lazily (upon first request) attempt to determine the value
-        # of this variable:
-        if self._supportsLogNoGraph is Unknown:
-            if not self.supportsLogRevision(working_dir, revision):
-                cmd = self.command("log",
-                                   "--db", self.repository,
-                                   "--last", "1",
-                                   "--from", revision,
-                                   "--no-graph") # <- we're testing for this!
-                mtl = ExternalCommand(cwd=working_dir, command=cmd)
-                outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
-                if mtl.exit_status:
-                    self._supportsLogNoGraph = False
-                else:
-                    self._supportsLogNoGraph = True
-            else:
-                self._supportsLogNoGraph = False
-
-        return self._supportsLogNoGraph
 
     def create(self):
         """
@@ -235,9 +169,9 @@ class MonotoneChangeset(Changeset):
         self.branches = branches
 
 
-class MonotoneLogParser:
+class MonotoneCertsParser:
     """
-    Obtain and parse a *single* "mtn log" output, reconstructing
+    Obtain and parse a "mtn list certs" output, reconstructing
     the revision information
     """
 
@@ -247,23 +181,27 @@ class MonotoneLogParser:
         """
         def __init__(self, str):
             self.str = str
-            self.value=""
+            pos = str.find(': ')
+            if pos > 5:
+                self.value = self.str[pos+2:]
+            else:
+                self.value = ""
 
         def __call__(self, prefix):
             if self.str.startswith(prefix):
-                self.value = self.str[len(prefix):].strip()
                 return True
             else:
                 return False
 
-    # logfile states
-    SINGLE = 0  # single line state
-    ADD = 1 # in add file/dir listing
-    MOD = 2 # in mod file/dir listing
-    DEL = 3 # in delete file/dir listing
-    REN = 4 # in renamed file/dir listing
+    # certs states
+    DUMMY = 0  # Nothing or unknown
+    AUTHOR = 1 # Author, multiple
+    BRANCH = 2 # Branch
+    DATE = 3 # Date, multiple
+    TAG = 4 # in tags listing
     LOG = 5 # in changelog listing
     CMT = 6 # in comment listing
+    TESTRESULT = 7 # in tags listing
 
     def __init__(self, repository, working_dir):
         self.working_dir = working_dir
@@ -279,53 +217,63 @@ class MonotoneLogParser:
         self.changelog=""
         self.branches=[]
 
-        cmd = None
-
-        logRevision = self.repository.supportsLogRevision(self.working_dir,
-                                                          revision)
-        logNoGraph = self.repository.supportsLogNoGraph(self.working_dir,
-                                                        revision)
-        if logRevision: # <= Montone-0.31
-            cmd = self.repository.command("log",
-                                          "--db", self.repository.repository,
-                                          "--last", "1",
-                                          "--revision", revision)
-        elif not logRevision and not logNoGraph: # Monotone-0.32
-            cmd = self.repository.command("log",
-                                          "--db", self.repository.repository,
-                                          "--last", "1",
-                                          "--from", revision)
-        elif not logRevision and logNoGraph: # Monotone-0.33
-            cmd = self.repository.command("log",
-                                          "--db", self.repository.repository,
-                                          "--last", "1",
-                                          "--from", revision,
-                                          "--no-graph")
+        # Get ancestors from automate parents
+        cmd = self.repository.command("automate", "parents", revision,
+                                      "--db", self.repository.repository)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
-            raise GetUpstreamChangesetsFailure("mtn log returned status %d" % mtl.exit_status)
+            raise GetUpstreamChangesetsFailure("mtn automate parents returned "
+                                               "status %d" % mtl.exit_status)
+        self.ancestors = outstr[0].getvalue().splitlines()
 
+        # Get informations about revision from list certs
+        # Remember: list certs are localized, force english tokens for parser
+        cmd = self.repository.command("list", "certs", revision,
+                                      "--db", self.repository.repository)
+        mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE, LANG='POSIX')
+        if mtl.exit_status:
+            raise GetUpstreamChangesetsFailure("mtn list certs returned "
+                                               "status %d" % mtl.exit_status)
+
+        tags = ""
         logs = ""
         comments = ""
-        state = self.SINGLE
+        state = self.DUMMY
         loglines = outstr[0].getvalue().splitlines()
         for curline in loglines:
 
+            if curline.startswith("---") or len(curline) < 6:
+                state = self.DUMMY
+                continue
+
             pr = self.PrefixRemover(curline)
-            if pr("Revision:"):
-                if pr.value != revision:
-                    raise GetUpstreamChangesetsFailure(
-                        "Revision doesn't match. Expected %s, found %s" % (revision, pr.value))
-                state = self.SINGLE
-            elif pr("Ancestor:"):
-                if pr.value:
-                    self.ancestors.append(pr.value) # cset could be a merge and have multiple ancestors
-                state = self.SINGLE
-            elif pr("Author:"):
-                self.authors.append(pr.value)
-                state = self.SINGLE
-            elif pr("Date:"):
+            if pr("Name"):
+                if pr.value == "author":
+                    state = self.AUTHOR
+                elif pr.value == "branch":
+                    state = self.BRANCH
+                elif pr.value == "date":
+                    state = self.DATE
+                elif pr.value == "changelog":
+                    state = self.LOG
+                elif pr.value == "comment":
+                    comments = comments + "\nNote:\n"
+                    state = self.CMT
+                elif pr.value == "tag":
+                    state = self.TAG
+                elif pr.value == "testresult":
+                    state = self.TESTRESULT
+                else:
+                    state = self.DUMMY
+            elif pr("Value") or pr(" "):
+                if state == self.AUTHOR:
+                    self.authors.append(pr.value)
+                elif state == self.BRANCH:
+                    # branch data
+                    self.branches.append(pr.value)
+                elif state == self.DATE:
                     # monotone dates are expressed in ISO8601, always UTC
                     dateparts = pr.value.split('T')
                     assert len(dateparts) >= 2, `dateparts`
@@ -335,46 +283,29 @@ class MonotoneLogParser:
                     hh,mm,ss = map(int, time.split(':'))
                     date = datetime(y,m,d,hh,mm,ss,0,UTC)
                     self.dates.append(date)
-                    state = self.SINGLE
-            elif pr("Branch:"):
-                # branch data
-                self.branches.append(pr.value)
-                state = self.SINGLE
-            elif pr("Tag"):
-                # unused data, just resetting state
-                state = self.SINGLE
-            elif pr("Deleted files:") or pr("Deleted directories:") or pr("Deleted entries"):
-                state=self.DEL
-            elif pr("Renamed files:") or pr("Renamed directories:") or pr("Renamed entries"):
-                state=self.REN
-            elif pr("Added files:") or pr("Added directories:"):
-                state=self.ADD
-            elif pr("Modified files:"):
-                state=self.ADD
-            elif pr("ChangeLog:"):
-                state=self.LOG
-            elif pr("Comments:"):
-                comments=comments + "Note:\n"
-                state=self.CMT
-            else:
-                # otherwise, it must be a log/comment/changeset entry, or an unknown cert line
-                if state == self.SINGLE:
-                    # line coming from an unknown cert
-                    pass
-                elif state == self.LOG:
-                    # log line, accumulate string
-                    logs = logs + curline + "\n"
                 elif state == self.CMT:
                     # comment line, accumulate string
-                    comments = comments + curline + "\n"
+                    comments = comments + pr.value + "\n"
+                elif state == self.LOG:
+                    # log line, accumulate string
+                    logs = logs + pr.value + "\n"
+                elif state == self.TAG:
+                    # Tag print into ChangeLog
+                    tags = tags + "Tag: " + pr.value + "\n"
+                elif state == self.TESTRESULT:
+                    # Testresult print into ChangeLog
+                    tags = tags + "Testresult: " + pr.value + "\n"
                 else:
-                    # parse_cset_entry(mode, chset, curline.strip()) # cset entry, handle
                     pass # we ignore cset info
+            elif pr("Key") or pr("Sig"):
+                pass # we ignore cset info
+            else:
+                raise GetUpstreamChangesetsFailure("Unexpected certs token: '%s' " % curline)
 
         # parsing terminated, verify the data
         if len(self.authors)<1 or len(self.dates)<1 or revision=="":
-            raise GetUpstreamChangesetsFailure("Error parsing log of revision %s. Missing data" % revision)
-        self.changelog = logs + comments
+            raise GetUpstreamChangesetsFailure("Error parsing certs of revision %s. Missing data" % revision)
+        self.changelog = tags + logs + comments
 
     def convertLog(self, chset):
         self.parse(chset.revision)
@@ -602,8 +533,8 @@ class MonotoneRevToCset:
     The revision itself is real, only its ancestors (and all changes
     between) are faked.
 
-    To properly do this, changeset are created by a mixture of 'log'
-    and 'diff' output. Log gives the revision data, diff the
+    To properly do this, changeset are created by a mixture of 'list
+    certs' and 'diff' output. Certs gives the revision data, diff the
     differences beetween revisions.
 
     Monotone also supports multiple authors/tags/comments for each
@@ -626,13 +557,13 @@ class MonotoneRevToCset:
       "Note:" line
 
     tag
-      not used by tailor. Ignored
+      all tags are appended to the changelog string, prefixed by a "Tag:"
 
     branch
       used to restrict source revs (tailor follows only a single branch)
 
     testresult
-      ignored
+      appedned to changelog string, ptrfixed by a "Testresult:"
 
     other certs
       ignored
@@ -654,7 +585,7 @@ class MonotoneRevToCset:
         self.working_dir = working_dir
         self.repository = repository
         self.branch = branch
-        self.logparser = MonotoneLogParser(repository=repository,
+        self.logparser = MonotoneCertsParser(repository=repository,
                                            working_dir=working_dir)
         self.diffparser = MonotoneDiffParser(repository=repository,
                                              working_dir=working_dir)
