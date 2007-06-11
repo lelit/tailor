@@ -655,7 +655,11 @@ class MonotoneRevToCset:
         """
         cslist=[]
         anc=revlist[0]
-        for r in revlist[1:]:
+        if onlyFirst:
+            start_index = 0
+        else:
+            start_index = 1
+        for r in revlist[start_index:]:
             chtmp = MonotoneChangeset(anc, r)
             self.logparser.convertLog(chtmp)
             if self.branch in chtmp.branches:
