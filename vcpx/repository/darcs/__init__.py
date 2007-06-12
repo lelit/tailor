@@ -26,6 +26,30 @@ class DarcsRepository(Repository):
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+        self.replace_badchars = eval(cget(self.name, 'replace-badchars',
+                                          "{"
+                                          "'\xc1': '&#193;',"
+                                          "'\xc9': '&#201;',"
+                                          "'\xcd': '&#205;',"
+                                          "'\xd3': '&#211;',"
+                                          "'\xd6': '&#214;',"
+                                          "'\xd5': '&#336;',"
+                                          "'\xda': '&#218;',"
+                                          "'\xdc': '&#220;',"
+                                          "'\xdb': '&#368;',"
+                                          "'\xe1': '&#225;',"
+                                          "'\xe9': '&#233;',"
+                                          "'\xed': '&#237;',"
+                                          "'\xf3': '&#243;',"
+                                          "'\xf6': '&#246;',"
+                                          "'\xf5': '&#337;',"
+                                          "'\xfa': '&#250;',"
+                                          "'\xfc': '&#252;',"
+                                          "'\xfb': '&#369;',"
+                                          "'\xf1': '&#241;',"
+                                          "'\xdf': '&#223;',"
+                                          "'\xe5': '&#229;'"
+                                          "}"))
 
     def command(self, *args, **kwargs):
         if args[0] == 'record' and self.use_look_for_adds:

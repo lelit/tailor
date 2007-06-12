@@ -78,7 +78,7 @@ subdir = project6
 
 [darcs:project6]
 repository = ~/WiP/tailor
-
+replace-badchars = { 'a': 'b' }
 '''
 
 def maybe_skip(context, changeset):

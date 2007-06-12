@@ -124,7 +124,7 @@ class DarcsChangeset(Changeset):
 
 
 def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
-                                 chunksize=2**15):
+                                 chunksize=2**15, replace_badchars=None):
     """
     Parse XML output of ``darcs changes``.
 
@@ -135,12 +135,13 @@ def changesets_from_darcschanges(changes, unidiff=False, repodir=None,
     """
 
     csets = changesets_from_darcschanges_unsafe(changes, unidiff,
-                                                repodir, chunksize)
+                                                repodir, chunksize,
+                                                replace_badchars)
     for cs in csets:
         yield cs
 
 def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
-                                        chunksize=2**15):
+                                        chunksize=2**15, replace_badchars=None):
     """
     Do the real work of parsing the change log, including tags.
     Warning: the tag information in the changsets returned by this
@@ -240,13 +241,20 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
     parser.setContentHandler(handler)
     parser.setErrorHandler(ErrorHandler())
 
-    chunk = changes.read(chunksize)
+    def fixup_badchars(s, map):
+        if not map:
+            return s
+
+        ret = [map.get(c, c) for c in s]
+        return "".join(ret)
+
+    chunk = fixup_badchars(changes.read(chunksize), replace_badchars)
     while chunk:
         parser.feed(chunk)
         for cs in handler.changesets:
             yield cs
         handler.changesets = []
-        chunk = changes.read(chunksize)
+        chunk = fixup_badchars(changes.read(chunksize), replace_badchars)
     parser.close()
     for cs in handler.changesets:
         yield cs
@@ -308,7 +316,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 #    /^(... ... .\d .\d:\d\d:\d\d ...?. \d\d\d\d)  (.*)/ || die;
                 #    my ($date, $author) = ($1, $2);
                 # but that assumes the two spaces as separator, so I find the
-                # following solution easier and by any chance faster too.                
+                # following solution easier and by any chance faster too.
                 pieces = l.rstrip().split('  ')
                 assert len(pieces)>1, "Cannot parse %r as a patch timestamp" % l
                 author = pieces.pop()
@@ -417,7 +425,8 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         cmd = self.repository.command("changes", selector, revtag,
                                       "--xml-output", "--summ")
         changes = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0])
+        last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0],
+                                            replace_badchars=self.repository.replace_badchars)
         try:
             changeset.entries.extend(last.next().entries)
         except StopIteration:
@@ -469,7 +478,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                         (str(changes), changes.exit_status,
                          output and output.read() or ''))
 
-                csets = changesets_from_darcschanges(output)
+                csets = changesets_from_darcschanges(output, replace_badchars=self.repository.replace_badchars)
                 changeset = csets.next()
 
                 revision = 'hash %s' % changeset.darcs_hash
@@ -531,6 +540,6 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 "%s returned status %d saying\n%s" %
                 (str(changes), changes.exit_status, output.read()))
 
-        last = changesets_from_darcschanges(output)
+        last = changesets_from_darcschanges(output, replace_badchars=self.repository.replace_badchars)
 
         return last.next()

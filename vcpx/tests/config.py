@@ -113,7 +113,7 @@ class Configuration(TestCase):
         """Verify that the state file is computed the way it should"""
 
         from os.path import expanduser
-        
+
         config = Config(self.getTestConfiguration("config-basic_test"),
                         {'tailor_repo': self.tailor_repo})
 
@@ -129,3 +129,13 @@ class Configuration(TestCase):
         config = Config(self.getTestConfiguration("config-sf_test"), {})
         sbcl = Project('sbcl', config)
         self.assertEqual(sbcl.state_file.filename, expanduser('~/tmp/test-tailor/sbcl/.hg/tailor.state'))
+
+    def testBadChars(self):
+        """Test how the config parser loads the badchar mapping"""
+
+        config = Config(self.getTestConfiguration("config-basic_test"),
+                        {'tailor_repo': self.tailor_repo})
+        project4 = Project('project4', config)
+        self.assert_(project4.target.replace_badchars.has_key('\xc1'))
+        project6 = Project('project6', config)
+        self.assertEqual(project6.source.replace_badchars['a'], 'b')

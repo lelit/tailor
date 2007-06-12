@@ -725,6 +725,38 @@ look-for-adds : bool
   even as a quick workaround to a tailor bug. This option allows a
   more relaxed view of life using ``record --look-for-adds``.
 
+replace-badchars : string
+  Apparently some darcs repo contains some characters that are illegal
+  in an XML stream. This is the case when one uses non-utf8
+  accents. To be safe, you can replace them with their xml-safe
+  equivalent. The given string must be a regular and valid Python
+  dictionary, with each substitution keyed on the character to be
+  replaced. By default it's::
+
+    {
+      '\xc1': '&#193;',
+      '\xc9': '&#201;',
+      '\xcd': '&#205;',
+      '\xd3': '&#211;',
+      '\xd6': '&#214;',
+      '\xd5': '&#336;',
+      '\xda': '&#218;',
+      '\xdc': '&#220;',
+      '\xdb': '&#368;',
+      '\xe1': '&#225;',
+      '\xe9': '&#233;',
+      '\xed': '&#237;',
+      '\xf3': '&#243;',
+      '\xf6': '&#246;',
+      '\xf5': '&#337;',
+      '\xfa': '&#250;',
+      '\xfc': '&#252;',
+      '\xfb': '&#369;',
+      '\xf1': '&#241;',
+      '\xdf': '&#223;',
+      '\xe5': '&#229;'
+    }
+    
 start-revision : string
   Under darcs this may be either the name of a tag or the hash of an
   arbitrary patch in the repository, plus the ordinary ``INITIAL`` or
