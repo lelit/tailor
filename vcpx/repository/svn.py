@@ -529,7 +529,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             initial = False
 
-        if not exists(join(self.repository.basedir, '.svn')):
+        if not exists(join(self.repository.basedir, self.repository.METADIR)):
             self.log.debug("Checking out a working copy")
 
             cmd = self.repository.command("co", "--quiet")
@@ -761,7 +761,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join, exists
 
-        if not self.repository.repository or exists(join(self.repository.basedir, '.svn')):
+        if not self.repository.repository or exists(join(self.repository.basedir, self.repository.METADIR)):
             return
 
         cmd = self.repository.command("co", "--quiet")
@@ -779,7 +779,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import exists, join
 
-        if not exists(join(self.repository.basedir, '.svn')):
+        if not exists(join(self.repository.basedir, self.repository.METADIR)):
             raise TargetInitializationFailure("'%s' needs to be an SVN working copy already under SVN" % self.repository.basedir)
 
         SynchronizableTargetWorkingDir._initializeWorkingDir(self)
