@@ -202,7 +202,7 @@ class MonotoneCertsParser:
     TAG = 4 # in tags listing
     LOG = 5 # in changelog listing
     CMT = 6 # in comment listing
-    TESTRESULT = 7 # in tags listing
+    TESTRESULT = 7 # in testresults listing
 
     def __init__(self, repository, working_dir):
         self.working_dir = working_dir
