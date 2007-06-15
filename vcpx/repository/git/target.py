@@ -147,7 +147,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             else:
                 self.repository.runCommand(['update-ref', refname, commitid])
 
-    def _tag(self, tag):
+    def _tag(self, tag, date, author):
 
         # in single-repository mode, only update the relevant branch
         if self.repository.branch_name:

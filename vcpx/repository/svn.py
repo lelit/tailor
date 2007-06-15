@@ -563,7 +563,45 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                       "--non-recursive")
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
 
-    def _tag(self, tag):
+    def _propsetRevision(self, out, command, date, author):
+
+        from re import search
+
+        encode = self.repository.encode
+
+        line = out.readline()
+        if not line:
+            # svn did not find anything to commit
+            self.log.warning('svn did not find anything to commit')
+            return
+
+        # Assume svn output the revision number in the last output line
+        while line:
+            lastline = line
+            line = out.readline()
+        revno = search('\d+', lastline)
+        if revno is None:
+            out.seek(0)
+            raise ChangesetApplicationFailure("%s wrote unrecognizable "
+                                              "revision number:\n%s" %
+                                              (str(command), out.read()))
+
+        revision = revno.group(0)
+
+        if self.repository.use_propset:
+
+            cmd = self.repository.command("propset", "%(propname)s",
+                                          "--quiet", "--revprop",
+                                          "--revision", revision)
+            pset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            if self.repository.propset_date:
+                date = date.astimezone(UTC).replace(microsecond=0, tzinfo=None)
+                pset.execute(date.isoformat()+".000000Z", propname='svn:date')
+            pset.execute(encode(author), propname='svn:author')
+
+        return revision
+
+    def _tag(self, tag, date, author):
         """
         TAG current revision.
         """
@@ -572,18 +610,24 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             dest = self.repository.repository + self.repository.tags_path \
                                               + '/' + tag.replace('/', '_')
 
-            # FIXME: Set origin author
             cmd = self.repository.command("copy", src, dest, "-m", tag)
             svntag = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            svntag.execute(stdout=PIPE, stderr=PIPE)
+            out, err = svntag.execute(stdout=PIPE, stderr=PIPE)
+
+            if svntag.exit_status:
+        	raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
+                                              % (str(svntag),
+                                                 svntag.exit_status,
+                                                 err.read()))
+
+            self._propsetRevision(out, svntag, date, author)
+
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
                 tags = [], isinitialcommit = False):
         """
         Commit the changeset.
         """
-
-        from re import search
 
         encode = self.repository.encode
 
@@ -622,32 +666,11 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                               % (str(commit),
                                                  commit.exit_status,
                                                  err.read()))
-        line = out.readline()
-        if not line:
+
+        revision = self._propsetRevision(out, commit, date, author)
+        if not revision:
             # svn did not find anything to commit
             return
-
-        # Assume svn output the revision number in the last output line
-        while line:
-            lastline = line
-            line = out.readline()
-        revno = search('\d+', lastline)
-        if revno is None:
-            out.seek(0)
-            raise ChangesetApplicationFailure("%s wrote unrecognizable "
-                                              "revision number:\n%s" %
-                                              (str(commit), out.read()))
-        revision = revno.group(0)
-
-        if self.repository.use_propset:
-            cmd = self.repository.command("propset", "%(propname)s",
-                                          "--quiet", "--revprop",
-                                          "--revision", revision)
-            pset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            if self.repository.propset_date:
-                date = date.astimezone(UTC).replace(microsecond=0, tzinfo=None)
-                pset.execute(date.isoformat()+".000000Z", propname='svn:date')
-            pset.execute(encode(author), propname='svn:author')
 
         cmd = self.repository.command("update", "--quiet")
         if self.repository.ignore_externals:

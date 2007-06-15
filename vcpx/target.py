@@ -126,7 +126,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                          entries, tags = changeset.tags)
             if changeset.tags:
                 for tag in changeset.tags:
-                    self._tag(tag)
+                    self._tag(tag, changeset.date, changeset.author)
         finally:
             signal(SIGINT, previous)
 
@@ -550,7 +550,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
         if changeset.tags:
             for tag in changeset.tags:
-                self._tag(tag)
+                self._tag(tag, changeset.date, author)
 
         self._dismissChangeset(changeset)
 
@@ -567,7 +567,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
         self._addSubtree('.')
 
-    def _tag(self, tagname):
+    def _tag(self, tagname, date, author):
         """
         Tag the current version, if the VC type supports it, otherwise
         do nothing.

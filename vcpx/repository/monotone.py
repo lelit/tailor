@@ -877,7 +877,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
             raise ChangesetApplicationFailure("%s returned status %s" %
                                               (str(add),add.exit_status))
 
-    def _tag(self, tag):
+    def _tag(self, tag, date, author):
         """
         TAG current revision.
         """

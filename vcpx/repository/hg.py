@@ -293,7 +293,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             self._hg.add(['.hgempty'])
         self._hgCommand('commit', **opts)
 
-    def _tag(self, tag):
+    def _tag(self, tag, date, author):
         """ Tag the tip with a given identifier """
         # TODO: keep a handle on the changeset holding this tag? Then
         # we can extract author, log, date from it.

@@ -184,7 +184,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         return adapted
 
-    def _tag(self, tag):
+    def _tag(self, tag, date, author):
         """
         Apply the given tag to the repository, unless it has already
         been applied to the current state. (If it has been applied to

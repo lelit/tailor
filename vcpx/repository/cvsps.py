@@ -761,7 +761,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         self._removePathnames([oldname])
         self._addPathnames([newname])
 
-    def _tag(self, tagname):
+    def _tag(self, tagname, date, author):
         """
         Apply a tag.
         """
