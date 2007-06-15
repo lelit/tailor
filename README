@@ -891,6 +891,15 @@ use-limit : bool
   version 1.2. By using this option tailor can fetch just the
   revision it needs, instead of transfering whole history log.
 
+commit-all-files : bool
+  By default *True*, commits all files from current changeset. Lets
+  Subversion check the changes self.
+  Set it to *False*, then whish to commits only changed files, that
+  tailor detects, perhaps a network speedup.  But a  *False* can be
+  insert an extra revision on long dep paths with lot of files. You
+  would see two revisions on target, where the source have only one.
+  For a true convert should leave it *True*.
+
 trust-root : bool
   Tailor by default verifies that the specified ``repository``
   effectively points to the root of a Subversion repository,

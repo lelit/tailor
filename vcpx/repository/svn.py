@@ -38,6 +38,7 @@ class SvnRepository(Repository):
         self.use_limit = cget(self.name, 'use-limit', True)
         self.trust_root = cget(self.name, 'trust-root', False)
         self.ignore_externals = cget(self.name, 'ignore-externals', True)
+        self.commit_all_files = cget(self.name, 'commit-all-files', True)
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError
@@ -561,7 +562,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         cmd = self.repository.command("commit", "--file", rontf.name)
         commit = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
-        if not entries:
+        if not entries or self.repository.commit_all_files:
             entries = ['.']
 
         out, err = commit.execute(entries, stdout=PIPE, stderr=PIPE)
