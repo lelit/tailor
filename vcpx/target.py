@@ -429,8 +429,9 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         of each entry.
         """
 
-        from os import rename
-        from os.path import split, join, exists
+        from os import rename, walk
+        from shutil import rmtree
+        from os.path import split, join, exists, isdir
 
         added = []
         for e in entries:
@@ -464,7 +465,6 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 # rename the new one, perform the target system rename
                 # and replace back the real content (it may be a
                 # renamed+edited event).
-                renamed = False
                 absnew = join(self.repository.basedir, e.name)
                 renamed = exists(absnew)
                 if renamed:
@@ -477,6 +477,47 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                     if self.shared_basedirs:
                         rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
                     else:
+
+                        # before rsync      after rsync      the HACK            after "svn mv"           result
+                        # /basedir          /basedir         /basedir            /basedir                 /basedir
+                        # |                 |                |                   |                        |
+                        # +- /dirold        +- /dirold       +- /dirold          +- /dirnew        move   |
+                        #    |              |  |             |  |                |  |~~~~~~        hack   |
+                        #    +- /.svn       |  +- /.svn      |  +- /.svn         |  +- /.svn  >-------+   |
+                        #    |              |  |             |  |                |  |                 |   |
+                        #    +- /subdir     |  +- /subdir    |  +- /subdir       |  +- /subdir        v   |
+                        #       |           |     |          |     |             |     |              |   |
+                        #       +- /.svn    |     +- /.svn   |     +- /.svn      |     +- /.svn  >--+ |   |
+                        #                   |                |                   |                  | |   |
+                        #                   +- /dirnew       +- /dirnew-HACKED   +- /dirnew-HACKED  v |   +- /dirnew
+                        #                      |~~~~~~          |      ~~~~~~~      |               | |      |
+                        #                      |                |                   |               +-|--->  +- /.svn
+                        #                      |                |                   |                 |      |   ~~~~
+                        #                      +- /subdir       +- /subdir          +- /subdir        |      +- /subdir
+                        #                          ~~~~~~                                             |        |
+                        #                                                                             +----->  +- /.svn
+                        #                                                                                          ~~~~
+
+                        # Ticket #65, #125
+                        # If the target reposity has files in subdirectory,
+                        # then remove the complete dir.
+                        # But keep the dir '.svn', '_CVS', or what ever
+                        if isdir(absnew):
+                            if self.repository.METADIR <> None:
+                                if exists(absnew + '/' + self.repository.METADIR):
+                                    rename(absnew + '/' + self.repository.METADIR, absnew + '-TAILOR-HACKED-TEMP-NAME/' + self.repository.METADIR)
+
+                                for root, dirs, files in walk(absnew):
+                                    if self.repository.METADIR in dirs:
+                                        dirs.remove(self.repository.METADIR)  # don't visit SVN directories
+
+                                    svnnew = join(root, self.repository.METADIR)
+                                    if exists(svnnew):
+                                        hacked = join(absnew + '-TAILOR-HACKED-TEMP-NAME' + root[len(absnew):], self.repository.METADIR)
+                                        rename(svnnew, hacked)
+
+                            rmtree(absnew)
+
                         rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
 
     def _renamePathname(self, oldname, newname):
