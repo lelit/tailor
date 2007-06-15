@@ -240,7 +240,7 @@ class MonotoneCertsParser:
         cmd = self.repository.command("automate", "certs", revision,
                                       "--db", self.repository.repository)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
-        outstr = mtl.execute(stdout=PIPE, stderr=PIPE, LANG='POSIX')
+        outstr = mtl.execute(stdout=PIPE, stderr=PIPE)
         if mtl.exit_status:
             raise GetUpstreamChangesetsFailure("mtn automate certs returned "
                                                "status %d" % mtl.exit_status)
@@ -932,7 +932,7 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
         if not entries:
             entries = ['.']
 
-        output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE, LANG='POSIX')
+        output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE)
 
         # monotone complaints if there are no changes from the last commit.
         # we ignore those errors ...
