@@ -40,6 +40,7 @@ class SvnRepository(Repository):
         self.ignore_externals = cget(self.name, 'ignore-externals', True)
         self.commit_all_files = cget(self.name, 'commit-all-files', True)
         self.tags_path = cget(self.name, 'svn-tags', '/tags')
+        self.branches_path = cget(self.name, 'svn-branches', '/branches')
         self._setupTagsDirectory = None
 
     def setupTagsDirectory(self):
@@ -106,6 +107,11 @@ class SvnRepository(Repository):
                            self.tags_path, self.name)
             self.tags_path = '/' + self.tags_path
 
+        if not self.branches_path.startswith('/'):
+            self.log.debug("Prepending '/' to svn-branches %r in %r",
+                           self.branches_path, self.name)
+            self.branches_path = '/' + self.branches_path
+
     def create(self):
         """
         Create a local SVN repository, if it does not exist, and configure it.
@@ -162,10 +168,23 @@ class SvnRepository(Repository):
             svnls = ExternalCommand(command=cmd)
             svnls.execute(self.repository + self.module)
             if svnls.exit_status:
+
+                paths = []
+
+                # Auto detect missing "branches/"
+                if self.module.startswith(self.branches_path + '/'):
+                    path = self.repository + self.branches_path
+                    cmd = self.command("ls")
+                    svnls = ExternalCommand(command=cmd)
+                    svnls.execute(path)
+                    if svnls.exit_status:
+                        paths.append(path)
+
+                paths.append(self.repository + self.module)
                 cmd = self.command("mkdir", "-m",
                                    "This directory will host the upstream sources")
                 svnmkdir = ExternalCommand(command=cmd)
-                svnmkdir.execute(self.repository + self.module)
+                svnmkdir.execute(paths)
                 if svnmkdir.exit_status:
                     raise TargetInitializationFailure("Was not able to create the "
                                                       "module %r, maybe more than "

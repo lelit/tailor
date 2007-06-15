@@ -918,6 +918,16 @@ svn-tags : string
 
   *tags* by default.
 
+svn-branches : string
+  Branches will copy under that directory.
+
+  *branches* by default.
+
+  .. note:: Target module for branches **must** start with ``branches/``.
+            Every branch must configure in a single-repository mode.
+
+  Example: ``module = branches/branch.name``
+
 tla
 %%%
 
