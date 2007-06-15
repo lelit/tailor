@@ -39,6 +39,37 @@ class SvnRepository(Repository):
         self.trust_root = cget(self.name, 'trust-root', False)
         self.ignore_externals = cget(self.name, 'ignore-externals', True)
         self.commit_all_files = cget(self.name, 'commit-all-files', True)
+        self.tags_path = cget(self.name, 'svn-tags', '/tags')
+        self._setupTagsDirectory = None
+
+    def setupTagsDirectory(self):
+        if self._setupTagsDirectory == None:
+            self._setupTagsDirectory = False
+            if self.module and self.module <> '/':
+
+                # Check the existing tags directory
+                cmd = self.command("ls")
+                svnls = ExternalCommand(command=cmd)
+                svnls.execute(self.repository + self.tags_path)
+                if svnls.exit_status:
+                    # create it, if not exist
+                    cmd = self.command("mkdir", "-m",
+                                       "This directory will host the tags")
+                    svnmkdir = ExternalCommand(command=cmd)
+                    svnmkdir.execute(self.repository + self.tags_path)
+                    if svnmkdir.exit_status:
+                        raise TargetInitializationFailure(
+                                    "Was not able to create tags directory '%s'"
+                                    % self.tags_path)
+                else:
+                    self.log.debug("Directory '%s' already exists"
+                                   % self.tags_path)
+                self._setupTagsDirectory = True
+            else:
+                self.log.debug("Tags needs module setup other than '/'")
+
+        return self._setupTagsDirectory
+
 
     def _validateConfiguration(self):
         from vcpx.config import ConfigurationError
@@ -69,6 +100,11 @@ class SvnRepository(Repository):
             self.log.debug("Prepending '/' to module %r in %r",
                            self.module, self.name)
             self.module = '/' + self.module
+
+        if not self.tags_path.startswith('/'):
+            self.log.debug("Prepending '/' to svn-tags %r in %r",
+                           self.tags_path, self.name)
+            self.tags_path = '/' + self.tags_path
 
     def create(self):
         """
@@ -526,6 +562,20 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         cmd = self.repository.command("add", "--quiet", "--no-auto-props",
                                       "--non-recursive")
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
+
+    def _tag(self, tag):
+        """
+        TAG current revision.
+        """
+        if self.repository.setupTagsDirectory():
+            src = self.repository.repository + self.repository.module
+            dest = self.repository.repository + self.repository.tags_path \
+                                              + '/' + tag.replace('/', '_')
+
+            # FIXME: Set origin author
+            cmd = self.repository.command("copy", src, dest, "-m", tag)
+            svntag = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            svntag.execute(stdout=PIPE, stderr=PIPE)
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
                 tags = [], isinitialcommit = False):

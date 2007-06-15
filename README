@@ -913,6 +913,11 @@ ignore-externals : bool
   references defined in the source repository.  This option force
   Tailor to behave as it did up to 0.9.20.
 
+svn-tags : string
+  Tagged revisions will copy under that directory.
+
+  *tags* by default.
+
 tla
 %%%
 
