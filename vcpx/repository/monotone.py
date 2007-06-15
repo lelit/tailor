@@ -182,14 +182,21 @@ class MonotoneCertsParser:
         """
         def __init__(self, str):
             self.str = str
-            pos = str.find(': ')
-            if pos > 5:
-                self.value = self.str[pos+2:]
+            if len(self.str) > 10 and self.str[10] == '"':
+                self.value = self.str[11:-1]
             else:
-                self.value = ""
+                self.value = None
 
         def __call__(self, prefix):
-            if self.str.startswith(prefix):
+
+            #     name "date"
+            #    value "2007-06-11T00:08:33"
+            #|---------|
+            #01234567890 Output from mtn automate certs
+
+            # Mix spaces with prefix for search from left side
+            spaced = "         "[:-len(prefix)] + prefix + ' '
+            if self.str.startswith(spaced):
                 return True
             else:
                 return False
@@ -230,28 +237,77 @@ class MonotoneCertsParser:
         self.ancestors = outstr[0].getvalue().splitlines()
 
         # Get informations about revision from list certs
-        # Remember: list certs are localized, force english tokens for parser
-        cmd = self.repository.command("list", "certs", revision,
+        cmd = self.repository.command("automate", "certs", revision,
                                       "--db", self.repository.repository)
         mtl = ExternalCommand(cwd=self.working_dir, command=cmd)
         outstr = mtl.execute(stdout=PIPE, stderr=PIPE, LANG='POSIX')
         if mtl.exit_status:
-            raise GetUpstreamChangesetsFailure("mtn list certs returned "
+            raise GetUpstreamChangesetsFailure("mtn automate certs returned "
                                                "status %d" % mtl.exit_status)
 
         testresults = ""
         logs = ""
         comments = ""
         state = self.DUMMY
+        line_continues = False
         loglines = outstr[0].getvalue().splitlines()
         for curline in loglines:
 
-            if curline.startswith("---") or len(curline) < 6:
-                state = self.DUMMY
+            if line_continues:
+                if curline == '"':
+                    state = self.DUMMY
+                    line_continues = False
+                else:
+
+                    # Example output for comments
+                    # (it's real from one certs!)
+                    #
+                    #      key "key-dummy"
+                    #signature "ok"
+                    #     name "changelog"
+                    #    value "initial commit
+                    #"
+                    #    trust "trusted"
+                    #
+                    #      key "key-dummy"
+                    #signature "ok"
+                    #     name "comment"
+                    #    value "And a second comment
+                    #with more lines"
+                    #    trust "trusted"
+                    #
+                    #      key "key-dummy"
+                    #signature "ok"
+                    #     name "comment"
+                    #    value "This is a comment"
+                    #    trust "trusted"
+
+                    # Find the single non escaped " as string end
+                    # Replace all escaped \" with single "
+                    # 007 helps not to find the " in sequence of \ "
+                    temp = curline.replace('\\"', '\007')
+                    pos = temp.find('"')
+                    if pos > 0:
+                        temp = temp[:pos]
+                    temp = temp.replace('\007', '"')
+
+                    if state == self.LOG:
+                        logs = logs + temp + "\n"
+                    elif state == self.CMT:
+                        comments = comments + temp + "\n"
+                    else:
+                        assert False
+
+                    if pos > 0:
+                        line_continues = False
                 continue
 
             pr = self.PrefixRemover(curline)
-            if pr("Name"):
+            if pr.value == None:
+                state = self.DUMMY
+                continue
+
+            if pr("name"):
                 if pr.value == "author":
                     state = self.AUTHOR
                 elif pr.value == "branch":
@@ -269,7 +325,7 @@ class MonotoneCertsParser:
                     state = self.TESTRESULT
                 else:
                     state = self.DUMMY
-            elif pr("Value") or pr(" "):
+            elif pr("value"):
                 if state == self.AUTHOR:
                     self.authors.append(pr.value)
                 elif state == self.BRANCH:
@@ -285,12 +341,19 @@ class MonotoneCertsParser:
                     hh,mm,ss = map(int, time.split(':'))
                     date = datetime(y,m,d,hh,mm,ss,0,UTC)
                     self.dates.append(date)
-                elif state == self.CMT:
-                    # comment line, accumulate string
-                    comments = comments + pr.value + "\n"
-                elif state == self.LOG:
-                    # log line, accumulate string
-                    logs = logs + pr.value + "\n"
+                elif state == self.LOG or state == self.CMT:
+                    # comment or log line, accumulate string
+                    temp = curline[11:].replace('\\"', '\007')
+                    pos = temp.find('"')
+                    if pos > 0:
+                        temp = temp[:pos]
+                    else:
+                        line_continues = True
+                    temp = temp.replace('\007', '"')
+                    if state == self.LOG:
+                        logs = logs + temp + "\n"
+                    else:
+                        comments = comments + temp + "\n"
                 elif state == self.TAG:
                     self.tags.append(pr.value)
                 elif state == self.TESTRESULT:
@@ -298,7 +361,7 @@ class MonotoneCertsParser:
                     testresults = testresults + "Testresult: " + pr.value + "\n"
                 else:
                     pass # we ignore cset info
-            elif pr("Key") or pr("Sig"):
+            elif pr("key") or pr("signature") or pr("trust"):
                 pass # we ignore cset info
             else:
                 raise GetUpstreamChangesetsFailure("Unexpected certs token: '%s' " % curline)
