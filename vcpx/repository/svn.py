@@ -634,13 +634,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             out, err = svntag.execute(stdout=PIPE, stderr=PIPE)
 
             if svntag.exit_status:
-        	raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
-                                              % (str(svntag),
-                                                 svntag.exit_status,
-                                                 err.read()))
+                raise ChangesetApplicationFailure("%s returned status %d saying\n%s"
+                                                  % (str(svntag),
+                                                     svntag.exit_status,
+                                                     err.read()))
 
             self._propsetRevision(out, svntag, date, author)
-
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
                 tags = [], isinitialcommit = False):

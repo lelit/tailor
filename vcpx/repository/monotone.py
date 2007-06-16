@@ -123,8 +123,8 @@ class ExternalCommandChain:
             if self.exit_status:
                 break
             outstr = out.getvalue()
-	    if len(outstr) <= 0:
-		break
+            if len(outstr) <= 0:
+                break
         return out, err
 
 
