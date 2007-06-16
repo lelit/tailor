@@ -822,7 +822,7 @@ passphrase : string
   Passphrase to use for commits. Must be specified unless you have one
   on your .monotonerc file
 
-custom_lua : string
+custom-lua : string
   Optional custom lua script. If present, is written into _MTN/monotonerc.
 
 p4

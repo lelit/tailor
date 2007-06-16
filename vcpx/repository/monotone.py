@@ -45,8 +45,11 @@ class MonotoneRepository(Repository):
                           cget(self.name, '%s-passphrase' % self.which)
         self.keygenid = cget(self.name, 'keygenid') or \
                         cget(self.name, '%s-keygenid' % self.which)
-        self.custom_lua = cget(self.name, 'custom_lua') or \
-                          cget(self.name, '%s-custom_lua' % self.which)
+        self.custom_lua = (cget(self.name, 'custom-lua') or
+                           cget(self.name, '%s-custom-lua' % self.which) or
+                           # for backward compatibility
+                           cget(self.name, 'custom_lua') or
+                           cget(self.name, '%s-custom_lua' % self.which))
 
     def create(self):
         """
