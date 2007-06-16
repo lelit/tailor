@@ -914,19 +914,21 @@ ignore-externals : bool
   Tailor to behave as it did up to 0.9.20.
 
 svn-tags : string
-  Tagged revisions will copy under that directory.
+  Name of the directory used for tags: tailor will copy tagged
+  revisions under this directory.
 
-  *tags* by default.
+  ``/tags`` by default.
 
 svn-branches : string
-  Branches will copy under that directory.
+  Name of the directory used for branches: tailor will copy branches
+  under that directory.
 
-  *branches* by default.
+  ``/branches`` by default.
 
   .. note:: Target module for branches **must** start with ``branches/``.
             Every branch must configure in a single-repository mode.
 
-  Example: ``module = branches/branch.name``
+            Example: ``module = branches/branch.name``
 
 tla
 %%%
