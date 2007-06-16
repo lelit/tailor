@@ -1185,6 +1185,9 @@ Monotone_ support was kindly contributed by `Markus Schiltknecht
 <markus@bluegap.ch>`_ and further developed by `rghetta
 <birrachiara@tin.it>`_, that was able to linearize the multi-headed
 monotone history into something tailor groks. Kudos!
+More recently, `Henry Nestler <Henry.Ne@Arcor.de>`_ contributed
+various enhancements, like using ``automate`` instead ``list`` and tag
+support.
 
 Perforce support
 ----------------
