@@ -531,14 +531,13 @@ class MonotoneDiffParser:
                         pass  # ignore it
                     # ok, is a file/dir, control changesets data
                     elif token == "add_file" or token=="add_directory":
-                        flag = True
+                        chentry = None
                         for i,e in enumerate(chset.entries):
                             if e.action_kind == e.DELETED and e.name == fname[1:-1]:
                                e.action_kind = e.UPDATED
                                chentry = e
-                               flag = False
                                break
-                        if flag:
+                        if chentry == None:
                             chentry = chset.addEntry(fname[1:-1], chset.revision)
                             chentry.action_kind = chentry.ADDED
                     elif token=="add_dir":
