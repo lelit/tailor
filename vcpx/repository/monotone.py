@@ -560,7 +560,23 @@ class MonotoneDiffParser:
                             self.repository.log.warning("Can not rename '%s' to "
                                                         "'%s' self" % (fname, newname))
                         else:
-                            chentry = chset.addEntry(newname[1:-1], chset.revision)
+
+                            # From this commands:
+                            #   mtn rename dir/file file
+                            #   mtn drop dir
+                            # Has output:
+                            #   delete "dir"
+                            #   rename "dir/file"
+                            #       to "file"
+                            #
+                            # Fix this by insert the RENAME before the DELETE.
+                            before = None
+                            for i,e in enumerate(chset.entries):
+                                if e.action_kind == e.DELETED and fname[1:-1].startswith(e.name):
+                                    before = e
+                                    break
+
+                            chentry = chset.addEntry(newname[1:-1], chset.revision, before)
                             chentry.action_kind = chentry.RENAMED
                             chentry.old_name= fname[1:-1]
                     elif token == "patch":
