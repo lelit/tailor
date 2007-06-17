@@ -504,15 +504,10 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                         # But keep the dir '.svn', '_CVS', or what ever
                         if isdir(absnew):
                             if self.repository.METADIR <> None:
-                                if exists(absnew + '/' + self.repository.METADIR):
-                                    rename(absnew + '/' + self.repository.METADIR, absnew + '-TAILOR-HACKED-TEMP-NAME/' + self.repository.METADIR)
-
                                 for root, dirs, files in walk(absnew):
                                     if self.repository.METADIR in dirs:
                                         dirs.remove(self.repository.METADIR)  # don't visit SVN directories
-
-                                    svnnew = join(root, self.repository.METADIR)
-                                    if exists(svnnew):
+                                        svnnew = join(root, self.repository.METADIR)
                                         hacked = join(absnew + '-TAILOR-HACKED-TEMP-NAME' + root[len(absnew):], self.repository.METADIR)
                                         rename(svnnew, hacked)
 
