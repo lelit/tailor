@@ -119,6 +119,17 @@ To obtain a list of the test, use ``--list`` option.  As usual with::
 
 you will get some more details.
 
+More recently, a suite of functional tests was added, in the directory
+``./test-scripts``: these are simple shell scripts that basically
+build a source repository, create a configuration file and run tailor,
+checking the result. You can execute them with::
+
+ $ sh test-svn2svn-simple.sh
+
+or::
+
+ $ sh run-all-test.sh
+
 
 Operation
 =========

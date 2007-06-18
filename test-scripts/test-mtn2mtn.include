@@ -1,0 +1,120 @@
+#!/bin/sh
+
+# File: test-mtn2mtn.include
+#
+# This is an include for all other tests
+# tested with monotone 0.35
+
+STARTDIR=$PWD
+
+# LANG is nessessary for localisired Monotone, because Tailor used 'mtn log'
+# Need only, if LANG is not set for "mtn log" or "mtn list certs" (see patch)
+# export LANG=POSIX
+
+# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
+rm -f $HOME/.monotone/keys/key-dummy
+
+# Exit immediately if a command exits with a non-zero
+set -e
+
+# Create a new empty tempdirectory and work there.
+rm -rf testdir
+mkdir testdir
+cd testdir
+
+# execute monotone with more params
+mtn_exec()
+{
+        mtn --norc --keydir=$KEYDIR --rcfile=$LUA "$@"
+}
+
+monotone_setup()
+{
+        # Don't use global users keys here
+        KEYDIR=$PWD/test-monotone_keys
+        LUA=$PWD/test-monotone.lua
+
+        # Create keypair for testing
+        cat <<EOF >$LUA
+function get_passphrase(keypair_id)
+  if (keypair_id == "key-dummy") then return "secret" end
+end
+EOF
+
+        echo "secret" | mtn --norc --keydir=$KEYDIR genkey "key-dummy"
+
+        # Create a new data base with a branch
+        mtn_exec --db=test1.mtn db init
+        mtn_exec --db=test1.mtn --key="key-dummy" --branch=A setup monotone-work
+
+        cd monotone-work
+}
+
+tailor_mtn2mtn()
+{
+
+        # create first for tailor
+        cat <<EOF >test-mtn2mtn.conf
+[DEFAULT]
+use-propset = True
+verbose = True
+#debug = True
+
+[project]
+# Keep log untouched
+patch-name-format = REMOVE-STUBS
+# (Bug: empty "patch-name-format =" dosn't work, it sets a REV number)
+# patch-name-format = 
+# patch-name-format = ""
+# patch-name-format = None
+# patch-name-format = [%(project)s @ %(revision)s]
+root-directory = $PWD/rootdir
+source = monotone:source
+target = monotone:target
+
+[monotone:source]
+repository = $PWD/test1.mtn
+module = A
+subdir = mtn1side
+
+[monotone:target]
+repository = $PWD/test2.mtn
+module = A
+subdir = mtn2side
+keygenid = key-dummy
+passphrase = secret
+EOF
+
+        # Convert from Monotone to other Monotone
+        tailor -c test-mtn2mtn.conf
+}
+
+monotone_logs()
+{
+        # Create a log to see into:
+        mtn --db=test1.mtn log --from `mtn --db=test1.mtn automate heads A` --no-graph > test1.log
+        mtn --db=test2.mtn log --from `mtn --db=test2.mtn automate heads A` --no-graph > test2.log
+
+        # Strip out the non converted things
+	grep -v -E "Comments:" < test1.log > test1-v.log
+	grep -v -E "REMOVE-STUBS|Note:" < test2.log > test2-v.log
+
+	# Compair logs
+	if diff -B test1-v.log test2-v.log >/dev/null
+	then
+		echo "Log-diff: PASS"
+	else
+		echo "Log-diff: Logs are different!"
+                exit 1
+	fi
+}
+
+testing_runs()
+{
+        cd ..
+
+        tailor_mtn2mtn
+        monotone_logs
+
+        cd $STARTDIR
+}
