@@ -3,7 +3,7 @@
 # :Creato:   Tue Apr 12 01:28:10 CEST 2005
 # :Autore:   Markus Schiltknecht <markus@bluegap.ch>
 # :Autore:   Riccardo Ghetta <birrachiara@tin.it>
-# :Autore:   Henry Nestler <Henry.Ne@Arcor.de>
+# :Autore:   Henry Nestler <henry@bigfoot.de>
 # :Licenza:  GNU General Public License
 #
 
