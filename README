@@ -380,7 +380,7 @@ need to specify a different directory for each repository [#]_, as in::
 This will extract upstream CVS sources into ``~/mypxlib/original``,
 and create a new Mercurial repository in ``~/mypxlib/migrated``.
 
-On final example to show the syntax of Baz sources::
+The following example shows the syntax of Baz sources::
 
     [project]
     target = hg:target
@@ -404,6 +404,83 @@ the user, this will store that information `inside` the same directory
 used by the target repository for its metadata, with the name
 ``tailor.state``.  In this particular example, it will end up as
 ``/tmp/calife/hg/.hg/tailor.state``.
+
+Last, a complete example used to migrate the whole Monotone_ source
+repository under Subversion_::
+
+    [DEFAULT]
+    #debug = True
+    #verbose = True
+    start-revision = INITIAL
+    root-directory = /tmp/rootdir-Monotone
+    source-repository = /home/user/Monotone/monotone-database.mtn
+    target-repository = file:///tmp/svn-repository
+    use-propset = True
+
+    # Projects
+    [net.venge.monotone.cvssync]
+    source = monotone:net.venge.monotone.cvssync
+    target = svn:net.venge.monotone.cvssync
+
+    [net.venge.monotone.cvssync.attrs]
+    source = monotone:net.venge.monotone.cvssync.attrs
+    target = svn:net.venge.monotone.cvssync.attrs
+
+    [net.venge.monotone.de]
+    source = monotone:net.venge.monotone.de
+    target = svn:net.venge.monotone.de
+
+    [net.venge.monotone.svn_import]
+    source = monotone:net.venge.monotone.svn_import
+    target = svn:net.venge.monotone.svn_import
+
+    [net.venge.monotone]
+    source = monotone:net.venge.monotone
+    target = svn:net.venge.monotone
+
+
+    # Sources
+    [monotone:net.venge.monotone.cvssync]
+    module = net.venge.monotone.cvssync
+    subdir = mtnside-net.venge.monotone.cvssync
+
+    [monotone:net.venge.monotone.cvssync.attrs]
+    module = net.venge.monotone.cvssync.attrs
+    subdir = mtnside-net.venge.monotone.cvssync.attrs
+
+    [monotone:net.venge.monotone.de]
+    module = net.venge.monotone.de
+    subdir = mtnside-net.venge.monotone.de
+
+    [monotone:net.venge.monotone.svn_import]
+    module = net.venge.monotone.svn_import
+    subdir = mtnside-net.venge.monotone.svn_import
+
+    [monotone:net.venge.monotone]
+    module = net.venge.monotone
+    subdir = mtnside-net.venge.monotone
+
+
+    # Targets
+    [svn:net.venge.monotone.cvssync]
+    module = branches/net.venge.monotone.cvssync
+    subdir = svnside-net.venge.monotone.cvssync
+
+    [svn:net.venge.monotone.cvssync.attrs]
+    module = branches/net.venge.monotone.cvssync.attrs
+    subdir = svnside-net.venge.monotone.cvssync.attrs
+
+    [svn:net.venge.monotone.de]
+    module = branches/net.venge.monotone.de
+    subdir = svnside-net.venge.monotone.de
+
+    [svn:net.venge.monotone.svn_import]
+    module = branches/net.venge.monotone.svn_import
+    subdir = svnside-net.venge.monotone.svn_import
+
+    [svn:net.venge.monotone]
+    module = trunk
+    subdir = svnside-net.venge.monotone
 
 .. [#] NB: when the source and the target repositories specify
        different directories with the ``subdir`` option, tailor
