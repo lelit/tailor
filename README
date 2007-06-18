@@ -517,7 +517,7 @@ patch-name-format : string
   ::
 
     [project]
-    patch-name-format =
+    patch-name-format = ""
 
   tailor will keep the original changelog as is.
 
