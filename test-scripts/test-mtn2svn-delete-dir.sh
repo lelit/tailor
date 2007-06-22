@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-delete-dir.sh
 # needs: test-mtn2svn.include
@@ -11,8 +11,6 @@
 
 . ./test-mtn2svn.include
 monotone_setup
-
-# Create files, rename directories
 
 mkdir deleteme
 touch deleteme/foo

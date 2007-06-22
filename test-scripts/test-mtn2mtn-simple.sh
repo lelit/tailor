@@ -1,14 +1,11 @@
-#!/bin/bash -v
+#!/bin/sh
 
-# File: test-mtn2mtn-2revisions.sh
+# File: test-mtn2mtn-simple.sh
 # needs: test-mtn2mtn.include
 # 
 # Test for converting 2 revisions from Monotone to Monotone self.
-# It's a selfchecking for Monotone.  Diff between test1.log and test2.log
-# should no have difference.
 #
 # No errors found.
-# Log-diff: PASS
 
 . ./test-mtn2mtn.include
 monotone_setup

@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-umlaut-POSIX.sh  UNICODE file !
 # needs: test-mtn2mtn.include

@@ -1,10 +1,10 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-svn2svn-rename-dir6.sh
 # needs: test-svn2svn.include
-# 
+#
 # Test for converting revisions from Subversion and to Subversion.
-# 
+#
 # ERROR 1:
 # --------
 # Failure applying upstream changes: testdir/rootdir/svn2side $ svn commit --file /tmp/tailorBozvbYsvn . returned status 1 saying
@@ -25,12 +25,6 @@
 . ./test-svn2svn.include
 subversion_setup
 
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
-
-# Create one file and 2 revisions, rename directorys where subdirs exist
-
 mkdir dir
 mkdir dir/middledir
 mkdir dir/middledir/otherdir
@@ -40,7 +34,7 @@ svn commit --message "initial commit"
 
 svn rename --force dir/middledir/otherdir dir/otherdir
 svn delete --force dir/middledir
-svn commit --message "dir renamed: dir/middledir/otherdir --> dir/otherdir (remove 'middledir')"
+svn commit --message "dir renamed: dir/middledir/otherdir --> dir/otherdir, remove 'middledir'"
 
 mkdir dir/innerdir
 svn add dir/innerdir

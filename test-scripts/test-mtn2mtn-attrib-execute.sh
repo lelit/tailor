@@ -1,19 +1,16 @@
-#!/bin/bash -v
+#!/bin/sh
 
-# File: test-mtn2mtn-1revision.sh
+# File: test-mtn2mtn-attrib-execute.sh
 # needs: test-mtn2mtn.include
 # 
 # Test for converting a file with executable attribute from Monotone to Monotone self.
 # It's a selfchecking for Monotone.  Diff between test1.log and test2.log
 # should no have difference.
 #
-# No errors after patch monotone-complete-20070604.patch
-# Log-diff: PASS
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup
-
-# Create one executable file and 1 revision
 
 echo "echo \"a simple executable script\"" > script.sh
 chmod +x script.sh

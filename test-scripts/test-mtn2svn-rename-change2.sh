@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: --messtest-mtn2svn-rename-change2.sh
 # needs: test-mtn2svn.include
@@ -68,7 +68,6 @@ mtn_exec drop 'tests/cvs_import,_file_dead_on_head_and_branch/cvs-repository/tes
 mtn_exec drop 'tests/cvs_import,_file_dead_on_head_and_branch/cvs-repository'
 mtn_exec drop 'tests/test_problematic_cvs_import/cvs-repository/test'
 mtn_exec drop 'tests/test_problematic_cvs_import/cvs-repository'
-
 # file changes
 echo "2" > "contrib/monotone-notify.pl"
 echo "2" > "tests/a_tricky_cvs_repository_with_tags/__driver__.lua"

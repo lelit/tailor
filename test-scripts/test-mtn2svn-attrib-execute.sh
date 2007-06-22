@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-attrib-execute.sh
 # needs: test-mtn2svn.include
@@ -7,12 +7,10 @@
 # It's a selfchecking for Monotone.  Diff between test1.log and test2.log
 # should no have difference.
 #
-# No errors after patch monotone-complete-20070604.patch
+# No errors found.
 
 . ./test-mtn2svn.include
 monotone_setup
-
-# Create one executable file and 1 revision
 
 echo "echo \"a simple executable script\"" > script.sh
 chmod +x script.sh

@@ -7,15 +7,14 @@
 
 STARTDIR=$PWD
 
-# LANG is nessessary for localisired Monotone, because Tailor used 'mtn log'
-# Need only, if LANG is not set for "mtn log" or "mtn list certs" (see patch)
-# export LANG=POSIX
-
-# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
-rm -f $HOME/.monotone/keys/key-dummy
+# Fast exit, if no backend installed
+which mtn >/dev/null 2>&1 || exit 201
 
 # Exit immediately if a command exits with a non-zero
 set -e
+
+# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
+rm -f $HOME/.monotone/keys/key-dummy
 
 # Create a new empty tempdirectory and work there.
 rm -rf testdir
@@ -53,21 +52,15 @@ EOF
 tailor_mtn2mtn()
 {
 
-        # create first for tailor
+        # create config for tailor
         cat <<EOF >test-mtn2mtn.conf
 [DEFAULT]
 use-propset = True
-verbose = True
+#verbose = True
 #debug = True
 
 [project]
-# Keep log untouched
-patch-name-format = REMOVE-STUBS
-# (Bug: empty "patch-name-format =" dosn't work, it sets a REV number)
-# patch-name-format = 
-# patch-name-format = ""
-# patch-name-format = None
-# patch-name-format = [%(project)s @ %(revision)s]
+patch-name-format = ""
 root-directory = $PWD/rootdir
 source = monotone:source
 target = monotone:target
@@ -89,6 +82,17 @@ EOF
         tailor -c test-mtn2mtn.conf
 }
 
+target_diff()
+{
+        if diff -Naur -x ".mt*" -x "_MTN" rootdir/mtn1side rootdir/mtn2side >test0.log
+        then
+                echo "WD-diff: PASS"
+        else
+                echo "WD-diff: Diffs in Working Dir! (see test0.log)" >&2
+                exit 100
+        fi
+}
+
 monotone_logs()
 {
         # Create a log to see into:
@@ -96,25 +100,24 @@ monotone_logs()
         mtn --db=test2.mtn log --from `mtn --db=test2.mtn automate heads A` --no-graph > test2.log
 
         # Strip out the non converted things
-	grep -v -E "Comments:" < test1.log > test1-v.log
-	grep -v -E "REMOVE-STUBS|Note:" < test2.log > test2-v.log
+        grep -v -E "Comments:" < test1.log > test1-v.log
+        grep -v -E "REMOVE-STUBS|Note:" < test2.log > test2-v.log
 
-	# Compair logs
-	if diff -B test1-v.log test2-v.log >/dev/null
-	then
-		echo "Log-diff: PASS"
-	else
-		echo "Log-diff: Logs are different!"
-                exit 1
-	fi
+        # Compair logs
+        if diff -B test1-v.log test2-v.log >/dev/null
+        then
+                echo "Log-diff: PASS"
+        else
+                echo "Log-diff: Logs are different!" >&2
+                exit 200
+        fi
 }
 
 testing_runs()
 {
         cd ..
-
         tailor_mtn2mtn
+        target_diff
         monotone_logs
-
         cd $STARTDIR
 }

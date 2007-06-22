@@ -1,0 +1,16 @@
+All scripts typicaly creates a small repository and converts it.
+In the end the script will compair working copy from source and target.
+The tests from one repository A to other reopsitory B and then back to
+same repository A' will additionaly compair the changelogs.
+
+The script 'run-all-test.sh' does run all tests, grouped by types and
+writes logs about the PASS or FAIL. Tailors logfiles and screens (stdout,
+stderr) will be move into a Good and Bad directory.
+
+Sripts have typicaly errorlevels:
+0:   OK
+1:   Tailor exeption
+100: Files in target working copy are different from start
+101: Files in target working copy are different from start to first step
+102: Files in target working copy are different from start to back step
+200: Changelogs are different

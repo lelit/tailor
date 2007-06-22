@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-multiple-heads.sh
 # needs: test-mtn2mtn.include
@@ -12,13 +12,10 @@
 #
 # ToDo: Testresult should be sort back into Monotone.
 # Log-diff: differ (no support for multiple heads).
-#
-# Henry (at) Bigfoot.de
 
 . ./test-mtn2mtn.include
 monotone_setup
 
-# Create 2 files, create multiple heads and merge it
 echo "foo1" > file1.txt
 echo "foo2" > file2.txt
 mtn_exec add file*.txt

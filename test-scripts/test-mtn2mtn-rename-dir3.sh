@@ -1,18 +1,17 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-dir3.sh
 # needs: test-mtn2mtn.include
-# 
+#
 # Test from Monotone to Subversion and back to Monotone again,
 # to rename directories and changing files.
 #
-# No errors after patch tailor-20070610.patch
-# Log-diff: PASS
+# Create files, rename directory, files and change files on renamed directory.
+#
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup
-
-# Create files, rename directory, files and change files on renamed directory.
 
 mkdir dira
 mkdir dirb

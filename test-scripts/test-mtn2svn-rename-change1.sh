@@ -1,14 +1,15 @@
-#!/bin/bash -v
+#!/bin/sh
 
-# File: test-mtn2svn-rename-change.sh
+# File: test-mtn2svn-rename-change1.sh
 # needs: test-mtn2svn.include
 # 
 # Test converting revisions from Monotone to Subversion and back to Monotone again.
 # It dropped informations on changed files, if an other file was 'removed' or 'deleted'.
-# Error: The file1.txt revision "bar1 (this will be missing later)" will be lose.
+# Was an old error: The file1.txt revision "bar1" was losed.
 #
 # A more complexe testing script is 'test-mtn-svn-del-ren-add-change.sh'
-# The patch 'monotone-rename-drops-changes.patch' fixed it.
+#
+# No errors found.
 
 . ./test-mtn2svn.include
 monotone_setup

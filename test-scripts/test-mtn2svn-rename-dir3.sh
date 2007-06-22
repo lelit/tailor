@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-rename-dir3.sh
 # needs: test-mtn2svn.include
@@ -6,7 +6,8 @@
 # Test from Monotone to Subversion and back to Monotone again,
 # to rename directories and changing files.
 #
-# FAILS: It's missing some changes on file ("bar").
+# Was an older error: It's missing some changes on file ("bar").
+# Fixed now.
 
 . ./test-mtn2svn.include
 monotone_setup

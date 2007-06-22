@@ -1,16 +1,14 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-comments1.sh
 # needs: test-mtn2mtn.include
 # 
 # Test for changelog parser (special comments).
 #
-# Log-diff: PASS
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup
-
-# Create one file and 1 revision
 
 echo "foo" > file.txt
 mtn_exec add file.txt

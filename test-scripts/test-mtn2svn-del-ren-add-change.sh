@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-del-ren-add-change.sh
 # needs: test-mtn2svn.include
@@ -8,13 +8,10 @@
 # was 'removed', 'deleted' or 'added'.
 #
 # After this script the Monotone changelog "test1.log" and "test2.log" in
-# testdir should be no differ (outless the revision numbers and some
-# Tailor comments).
-#
+# testdir should be no differ.
 # A shorter testing script is 'test-mtn-svn-rename-change.sh'.
-# The patch 'monotone-rename-drops-changes.patch' fixed it.
 #
-# Henry (at) Bigboot.de
+# No errors found.
 
 . ./test-mtn2svn.include
 monotone_setup

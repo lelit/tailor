@@ -1,11 +1,11 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-svn2svn-rename-dir5.sh
 # needs: test-svn2svn.include
-# 
+#
 # Test for converting revisions from Subversion to Subversion self.
 # Renameing singe directory name, without moving trees.
-# 
+#
 # ERROR:
 #  File "tailor-0.9.28/vcpx/target.py", line 528, in _renameEntries
 #    rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
@@ -15,17 +15,11 @@
 # Deleting       dir/subdir
 # svn: Commit failed (details follow):
 # svn: Out of date: '/project-a/dir/subdir' in transaction '3-1'
-# 
+#
 # Fixed by patch: svn-rename-directory-hacking2.patch
 
 . ./test-svn2svn.include
 subversion_setup
-
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
-
-# Create one file and 2 revisions, rename directorys where subdirs exist
 
 mkdir -p topdir/subdir/otherdir/moredir
 echo "foo" > topdir/file1.txt

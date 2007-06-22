@@ -7,20 +7,30 @@
 
 STARTDIR=$PWD
 
-# LANG is nessessary for localisired Monotone, because Tailor used 'mtn log'
-# Need only, if LANG is not set for "mtn log" or "mtn list certs" (see patch)
-export LANG=POSIX
-
-# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
-rm -f $HOME/.monotone/keys/key-dummy
+# Fast exit, if no backend installed
+which mtn >/dev/null 2>&1 || exit 201
+which svn >/dev/null 2>&1 || exit 201
 
 # Exit immediately if a command exits with a non-zero
 set -e
+
+# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
+rm -f $HOME/.monotone/keys/key-dummy
 
 # Create a new empty tempdirectory and work there.
 rm -rf testdir
 mkdir testdir
 cd testdir
+
+# Runs with Shared basedir?
+if [ -n "$SHAREDDIR" ]
+then
+        SOURCEDIR="shared-dir"
+        TARGETDIR="shared-dir"
+else
+        SOURCEDIR="source-side"
+        TARGETDIR="target-side"
+fi
 
 # execute monotone with more params
 mtn_exec()
@@ -56,9 +66,9 @@ tailor_mtn2svn()
         # create first config for tailor
         cat <<EOF >test-mtn-svn-forward.conf
 [DEFAULT]
-patch-name-format = REMOVE-STUBS
+patch-name-format = ""
 use-propset = True
-verbose = True
+#verbose = True
 #Debug = True
 
 [project]
@@ -69,12 +79,12 @@ target = svn:target
 [monotone:source]
 repository = $PWD/test1.mtn
 module = A
-subdir = mtnside
+subdir = $SOURCEDIR
 
 [svn:target]
 repository = file://$PWD/svnrepository
 module = A
-subdir = svnside
+subdir = $TARGETDIR
 #tags-path = my-taged-vers
 #commit-all-files = False
 EOF
@@ -90,9 +100,9 @@ tailor_svn2mtn()
         # create a second config for tailor
         cat <<EOF >test-mtn-svn-backward.conf
 [DEFAULT]
-patch-name-format = REMOVE-STUBS
+patch-name-format = ""
 use-propset = True
-verbose = True
+#verbose = True
 #Debug = True
 
 [project]
@@ -103,18 +113,46 @@ source = svn:source
 [monotone:target]
 repository = $PWD/test2.mtn
 module = A
-subdir = mtnside
+subdir = $SOURCEDIR
 keygenid = key-dummy
 passphrase = secret
 
 [svn:source]
 repository = file://$PWD/svnrepository
 module = A
-subdir = svnside
+subdir = $TARGETDIR
 EOF
 
         # Convert back from Subversion to Monotone
         tailor -c test-mtn-svn-backward.conf
+}
+
+cat <<EOF >diffexclude
+.mt*
+_MTN
+.svn
+EOF
+
+target_diff1()
+{
+        if diff -Naur -X diffexclude monotone-work rootdir/$TARGETDIR >test0a.log
+	then
+		echo "WD-diff: PASS"
+	else
+		echo "WD-diff: Diffs in Working Dir! (step mtn-->svn, see test0a.log)" >&2
+                exit 101
+	fi
+}
+
+target_diff2()
+{
+        if diff -Naur -X diffexclude monotone-work rootdir-back/$TARGETDIR >test0b.log
+	then
+		echo "WD-diff: PASS"
+	else
+		echo "WD-diff: Diffs in Working Dir! (step svn-->mtn, see test0b.log)" >&2
+                exit 102
+	fi
 }
 
 monotone_logs()
@@ -123,10 +161,8 @@ monotone_logs()
         LANG=C mtn --db=test1.mtn log --from `mtn --db=test1.mtn automate heads A` --no-graph > test1.log
         LANG=C mtn --db=test2.mtn log --from `mtn --db=test2.mtn automate heads A` --no-graph > test2.log
 
-        #Revision: ec0c3572c809cb3c3847ef4587b6bcf532541ddc
-        #Ancestor: 5cc739fdc5f07cac7d013eaf78baf7a509a0dbd5
-
-        # Bug from Monotone: Starts with "Added directories:", but no dirs listend
+        # Bug from Monotone: Starts with "Added directories:", but no dirs listend.
+        # Replace or remove stubs.
 
 	sed -r -e 's/^((Revision|Ancestor): )([0-9a-f]{40})?$/\1STUB-NUMBER/' < test1.log \
         | sed -r -e \ '/^Added directories:$/,+1s/^.+$/REMOVE-STUBS/' \
@@ -143,18 +179,18 @@ monotone_logs()
 	then
 		echo "Log-diff: PASS"
 	else
-		echo "Log-diff: Logs are different!"
-                exit 1
+		echo "Log-diff: Logs are different!" >&2
+                exit 200
 	fi
 }
 
 testing_runs()
 {
         cd ..
-
         tailor_mtn2svn
+        target_diff1
         tailor_svn2mtn
+        target_diff2
         monotone_logs
-
         cd $STARTDIR
 }

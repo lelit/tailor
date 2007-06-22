@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-rename-dir4.sh
 # needs: test-mtn2svn.include

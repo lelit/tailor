@@ -1,31 +1,34 @@
 
+# Set it to use shared basedir in tests:
+# SHAREDDIR=yes
+
 # create dirs for logging
 rm -rf log-FAIL log-OK summary-OK summary-FAIL
 mkdir log-FAIL
 mkdir log-OK
 
-ls \
-    test-mtn2mtn-*.sh \
-    test-svn2svn-*.sh \
-    test-mtn2svn-*.sh \
-| while read name
+for name in \
+    test-mtn2mtn*.sh \
+    test-svn2svn*.sh \
+    test-mtn2svn*.sh
 do
     echo -n "Testing $name ..."
     result="FAIL"
+    info=""
     if ./$name >testing.log 2>testing.err
     then
         if grep -q "Upstream change application failed" < testing.log
         then
-            echo -n " (log detection)"
+            info=" (log detection)"
         else
             result="OK"
         fi
     else
-        echo -n " (errorlevel $?)"
+        info=" (errorlevel $?)"
     fi
 
-    echo -e "\t$result"
-    echo "$name" >> summary-$result
+    echo -e "$info\t$result"
+    echo "$name$info" >> summary-$result
 
     mv testing.log log-$result/$name.log
     mv testing.err log-$result/$name.err

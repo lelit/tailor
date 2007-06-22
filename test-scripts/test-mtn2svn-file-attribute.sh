@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-file-attribute.sh
 # needs: test-mtn2svn.include
@@ -6,7 +6,7 @@
 # Test for converting from Monotone to Subversion and back to Monotone again.
 #
 # Test to change file executable attribute.
-# Don't work.  Is no problem, if the file is exeutabe on ADD.
+# Don't work.  Is no problem, if the file is executabe on ADD.
 
 . ./test-mtn2svn.include
 monotone_setup

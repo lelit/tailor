@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-rename-dir1.sh
 # needs: test-mtn2svn.include
@@ -7,7 +7,8 @@
 # to rename directory with files into.
 #
 # Ticket #97: fails on "rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)"
-# Patch 'svn-rename-dir.patch' fixed this by an ugly hacking.
+#
+# No errors found.
 
 . ./test-mtn2svn.include
 monotone_setup

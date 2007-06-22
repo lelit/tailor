@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn2-propagate1.sh
 # needs: test-mtn2svn2.include

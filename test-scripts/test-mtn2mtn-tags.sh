@@ -1,14 +1,11 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-tags.sh
 # needs: test-mtn2mtn.include
 # 
 # Test for converting 5 revisions with 1+2 tags from Monotone to Monotone self.
-# It's a selfchecking for Monotone.  Diff between test1.log and test2.log
-# should no have difference.
 #
 # No errors found.
-# Log-diff: PASS
 
 . ./test-mtn2mtn.include
 monotone_setup

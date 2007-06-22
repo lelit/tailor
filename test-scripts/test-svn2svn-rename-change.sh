@@ -1,6 +1,6 @@
-#!/bin/bash -v
+#!/bin/sh
 
-# File: test-svn2svn-simple.sh
+# File: test-svn2svn-rename-change.sh
 # needs: test-svn2svn.include
 # 
 # Test for converting from Subversion to Subversion self,
@@ -11,18 +11,14 @@
 . ./test-svn2svn.include
 subversion_setup
 
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
-
 # Create one file and 2 revisions, simple linear revisions
 
-echo "foo" > file.txt
-svn add file.txt
+echo "foo" > a.txt
+svn add a.txt
 svn commit --message "initial commit"
 
-echo "bar" > file.txt
-svn mv --force file.txt file.new
+echo "bar" > a.txt
+svn mv --force a.txt b.txt
 svn commit --message "rename file, change file"
 
 testing_runs

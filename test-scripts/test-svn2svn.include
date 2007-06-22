@@ -2,14 +2,13 @@
 
 # File: test-svn2svn.include
 #
-# This is an include for all other tests
-# tested with monotone 0.35
+# This is an include for all Subvesion to Subversion tests.
+# Tested with Subversion 1.3.0
 
 STARTDIR=$PWD
 
-# LANG is nessessary for localisired Monotone, because Tailor used 'mtn log'
-# Need only, if LANG is not set for "mtn log" or "mtn list certs" (see patch)
-#export LANG=POSIX
+# Fast exit, if no backend installed
+which svn >/dev/null 2>&1 || exit 201
 
 # Exit immediately if a command exits with a non-zero
 set -e
@@ -23,22 +22,26 @@ POSITORY=/tmp/test-repos
 
 subversion_setup()
 {
-	rm -rf $POSITORY
-	svnadmin create $POSITORY
+        rm -rf $POSITORY
+        svnadmin create $POSITORY
 
-	rm -rf tempdir
-	mkdir tempdir
-	cd tempdir
+        rm -rf tempdir
+        mkdir tempdir
+        cd tempdir
 
-	mkdir project-a
-	#mkdir project-a/trunk
-	#mkdir project-a/branches
-	#mkdir project-a/tags
+        mkdir project
+        #mkdir project/trunk
+        #mkdir project/branches
+        #mkdir project/tags
 
-	svn import . file://$POSITORY --message 'Initial import'
+        svn import . file://$POSITORY --message 'Initial import'
 
-	cd ..	
-	rm -rf tempdir
+        cd ..
+        rm -rf tempdir
+
+        # checkout initial version
+        svn checkout file://$POSITORY/project subversion-work
+        cd subversion-work
 }
 
 
@@ -49,30 +52,40 @@ tailor_svn2svn()
         cat <<EOF >test-svn2svn.conf
 [DEFAULT]
 use-propset = True
-verbose = True
+#commit-all-files = False
+#verbose = True
+#Debug = True
 
 [project]
-# Keep log untouched
-patch-name-format = REMOVE-STUBS
-# (Bug: empty "patch-name-format =" dosn't work, it sets a REV number)
-# patch-name-format =
+patch-name-format = ""
 root-directory = $PWD/rootdir
 source = svn:source
 target = svn:target
 
 [svn:source]
 repository = file://$POSITORY
-module = project-a
+module = project
 subdir = svn1side
 
 [svn:target]
 repository = file://$PWD/svnrepository
-module = project-a
+module = project
 subdir = svn2side
 EOF
 
-        # Convert from Monotone to other Monotone
+        # Convert from Subversion to other Subversion
         tailor -c test-svn2svn.conf
+}
+
+target_diff()
+{
+        if diff -Naur -x ".svn" subversion-work rootdir/svn2side >test0.log
+        then
+                echo "WD-diff: PASS"
+        else
+                echo "WD-diff: Diffs in Working Dir! (see test0.log)" >&2
+                exit 100
+        fi
 }
 
 subversion_logs()
@@ -86,34 +99,31 @@ subversion_logs()
 
         # Makeup for count of lines in title line,
         # strip out the non converted things,
-        # remove initial commit.
+        # remove initial import.
         # "r3 | hn | 2007-06-17 12:49:45 +0200 (Sun, 17 Jun 2007) | 1 line"
         # "r3 | hn | 2007-06-17 12:49:45 +0200 (Sun, 17 Jun 2007) | 2 lines"
 
-	sed -r -e 's/^([^\|]*\| ){3}(.*)$/\1n lines/' < test1.log \
+        sed -r -e 's/^([^\|]*\| ){3}(.*)$/\1n lines/' < test1.log \
         | head -n -6 > test1-v.log
         sed -r -e 's/^([^\|]*\| ){3}(.*)$/\1n lines/' < test2.log \
         | grep -v -E "REMOVE-STUBS" \
         | head -n -6 > test2-v.log
 
-	# Compair logs
-	if diff -B test1-v.log test2-v.log >/dev/null
-	then
-		echo "Log-diff: PASS"
-	else
-		echo "Log-diff: Logs are different!"
-                exit 1
-	fi
+        # Compair logs
+        if diff -B test1-v.log test2-v.log >/dev/null
+        then
+                echo "Log-diff: PASS"
+        else
+                echo "Log-diff: Logs are different!" >&2
+                exit 200
+        fi
 }
 
 testing_runs()
 {
-        LANG=C svn --verbose log >../svn0.log
-
         cd ..
-
         tailor_svn2svn
+        target_diff
         subversion_logs
-
         cd $STARTDIR
 }

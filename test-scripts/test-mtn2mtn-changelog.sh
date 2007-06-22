@@ -1,16 +1,14 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-changelog.sh
 # needs: test-mtn2mtn.include
 # 
 # Test the new changelog parser (multiple lines, and " and \ " in there)
 #
-# Log-diff: PASS
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup
-
-# Create one file and 1 revision
 
 echo "foo" > file.txt
 mtn_exec add file.txt

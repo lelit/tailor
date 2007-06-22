@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-umlaut-DE.sh
 # needs: test-mtn2mtn.include
@@ -6,8 +6,7 @@
 # Test for converting from Monotone to Monotone self, with
 # umlauts in file and changelog. Uses fixed locale DE and utf-8.
 #
-# Works after fixup LANG and using "automate certs" inside Tailor.
-# Log-diff: PASS
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup

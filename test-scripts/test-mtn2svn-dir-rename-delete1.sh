@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-dir-rename-delete1.sh
 # needs: test-mtn2svn.include

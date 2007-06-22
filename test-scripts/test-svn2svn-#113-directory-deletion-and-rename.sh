@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-svn2svn-#113-directory-deletion-and-rename.sh
 # needs: test-svn2svn.include
@@ -11,15 +11,15 @@
 #
 # First log:
 #   Changed paths:
-#      D /project-a/dir1
-#      A /project-a/dir2/a (from /project-a/dir1/a:2)
-#      A /project-a/dir2/b (from /project-a/dir1/b:2)
+#      D /project/dir1
+#      A /project/dir2/a (from /project/dir1/a:2)
+#      A /project/dir2/b (from /project/dir1/b:2)
 #
 # second log:
 #   Changed paths:
-#      D /project-a/dir1
-#      A /project-a/dir2/a
-#      A /project-a/dir2/b
+#      D /project/dir1
+#      A /project/dir2/a
+#      A /project/dir2/b
 #   
 # ####
 #
@@ -28,12 +28,6 @@
 
 . ./test-svn2svn.include
 subversion_setup
-
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
-
-# Create 2 revisions with directory remove and rename
 
 # Ticket #113:
 # * rename dir1/a dir2/a

@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-comments2.sh
 # needs: test-mtn2mtn.include
@@ -7,14 +7,12 @@
 # It's a selfchecking for Monotone.  Diff between test1.log and test2.log
 # should no have difference.
 #
-# No specials. Changelogs, comments and changes in diffrent ways
+# Changelogs, comments and changes in diffrent ways
 #
-# Log-diff: PASS
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup
-
-# Create one file and 1 revision
 
 echo "foo" > file.txt
 mtn_exec add file.txt

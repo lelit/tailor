@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-#113-directory-deletion-and-rename.sh
 # needs: test-mtn2svn.include
@@ -36,6 +36,7 @@
 # ERROR 2:
 # --------
 # After convert back from Subversion to Monotone, the dirs are added instead renamed
+# Data ok, changelog incomplete.
 
 . ./test-mtn2svn.include
 monotone_setup

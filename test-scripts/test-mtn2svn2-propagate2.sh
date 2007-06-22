@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn2-propagate2.sh
 # needs: test-mtn2svn2.include
@@ -79,5 +79,4 @@ mtn_exec update --revision $head5
 echo "foo6" > file1.txt
 mtn_exec commit --key="key-dummy" --message "File1 changed, 6th, first key"
 
-read junk
 testing_runs

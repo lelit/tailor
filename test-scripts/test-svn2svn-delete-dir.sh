@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-svn2svn-delete-dir.sh
 # needs: test-svn2svn.include
@@ -10,10 +10,6 @@
 
 . ./test-svn2svn.include
 subversion_setup
-
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
 
 # Create one file and 2 revisions, simple linear revisions
 

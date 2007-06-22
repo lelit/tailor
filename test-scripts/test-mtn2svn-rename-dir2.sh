@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn-rename-dir2.sh
 # needs: test-mtn2svn.include
@@ -32,6 +32,8 @@
 #                 3        3 key-dummy    .
 #                 3        3 hn           dirb
 # M               3        3 hn           dirb/file.txt
+
+# Fixed by svn-dir-move-file-change-delay.patch
 
 
 . ./test-mtn2svn.include

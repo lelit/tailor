@@ -1,22 +1,18 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-del-ren-add-change.sh
 # needs: test-mtn2mtn.include
 # 
 # Test for converting revisions from Monotone to Subversion and back to
-# Monotone again.
-# Check for errors: It dropps informations on changed files, if other file
-# was 'removed', 'deleted' or 'added'.
-#
-# It's a selfchecking for Monotone.
+# Monotone again. It's a selfchecking for Monotone.
 # After this script the Monotone changelog "test1.log" and "test2.log" in
 # testdir should be no differ (outless the revision numbers and some
 # Tailor comments).
 #
-# No errors after patch monotone-complete-20070604.patch
-# Log-diff: PASS
+# Check for errors: It dropps informations on changed files, if other file
+# was 'removed', 'deleted' or 'added'.
 #
-# Henry (at) Bigboot.de
+# No errors found.
 
 . ./test-mtn2mtn.include
 monotone_setup

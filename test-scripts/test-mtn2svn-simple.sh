@@ -1,6 +1,6 @@
-#!/bin/bash -v
+#!/bin/sh
 
-# File: test-mtn2svn-2revisions.sh
+# File: test-mtn2svn-simple.sh
 # needs: test-mtn2svn.include
 # 
 # Test for converting 2 revisions from Monotone to Subversion and back to Monotone again.

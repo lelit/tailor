@@ -1,30 +1,24 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-svn2svn-rename-dir4.sh
 # needs: test-svn2svn.include
-# 
+#
 # Test for converting revisions from Subversion to Subversion self.
 # Renameing simple dir name, and renemaing dir names where subdirs exists.
-# 
+#
 # ERROR 1:
 #  File "tailor-0.9.28/vcpx/target.py", line 528, in _renameEntries
 #    rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
-# 
+#
 # ERROR 2:
 # Failure applying upstream changes: testdir/rootdir/svn2side $ svn commit --file /tmp/tailorBozvbYsvn . returned status 1 saying
 # svn: Commit failed (details follow):
 # svn: Working copy 'svn2side/dira2/subdir' is missing or not locked
-# 
+#
 # Fixed by patch: svn-rename-directory-hacking2.patch
 
 . ./test-svn2svn.include
 subversion_setup
-
-# checkout initial version
-svn checkout file://$POSITORY/project-a my-project
-cd my-project
-
-# Create one file and 2 revisions, rename directorys where subdirs exist
 
 mkdir dira
 mkdir dira/subdira

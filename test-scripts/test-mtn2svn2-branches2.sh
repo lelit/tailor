@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2svn2-branches2.sh
 # needs: test-mtn2svn2.include

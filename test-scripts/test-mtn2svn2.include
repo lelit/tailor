@@ -7,20 +7,30 @@
 
 STARTDIR=$PWD
 
-# LANG is nessessary for localisired Monotone, because Tailor used 'mtn log'
-# Need only, if LANG is not set for "mtn log" or "mtn list certs" (see patch)
-# export LANG=POSIX
-
-# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
-rm -f $HOME/.monotone/keys/key-dummy $HOME/.monotone/keys/other-dummy
+# Fast exit, if no backend installed
+which mtn >/dev/null 2>&1 || exit 201
+which svn >/dev/null 2>&1 || exit 201
 
 # Exit immediately if a command exits with a non-zero
 set -e
+
+# Remove monotone keypair, because Tailor is bootstrapping it again (see patch)
+rm -f $HOME/.monotone/keys/key-dummy $HOME/.monotone/keys/other-dummy
 
 # Create a new empty tempdirectory and work there.
 rm -rf testdir
 mkdir testdir
 cd testdir
+
+# Runs with Shared basedir?
+if [ -n "$SHAREDDIR" ]
+then
+        SOURCEDIR="shared-dir"
+        TARGETDIR="shared-dir"
+else
+        SOURCEDIR="source-side"
+        TARGETDIR="target-side"
+fi
 
 # execute monotone with more params
 mtn_exec()
@@ -58,11 +68,12 @@ tailor_mtn2svn()
         # create first config for tailor
         cat <<EOF >test-mtn-svn-forward.conf
 [DEFAULT]
+patch-name-format = ""
 use-propset = True
-verbose = True
 root-directory = $PWD/rootdir
 source-repository = $PWD/test1.mtn
 target-repository = file://$PWD/svnrepository
+#verbose = True
 
 [project-a]
 source = monotone:source.a
@@ -74,19 +85,19 @@ target = svn:target.b
 
 [monotone:source.a]
 module = A
-subdir = mtnside-a
+subdir = $SOURCEDIR-a
 
 [monotone:source.b]
 module = B
-subdir = mtnside-b
+subdir = $SOURCEDIR-b
 
 [svn:target.a]
 module = A
-subdir = svnside-a
+subdir = $TARGETDIR-a
 
 [svn:target.b]
 module = B
-subdir = svnside-b
+subdir = $TARGETDIR-b
 EOF
 
         # Convert from Monotone to Subversion
@@ -100,25 +111,38 @@ tailor_svn2mtn()
         # create a second config for tailor
         cat <<EOF >test-mtn-svn-backward.conf
 [DEFAULT]
+patch-name-format = ""
 use-propset = True
-verbose = True
-
-[project]
 root-directory = $PWD/rootdir-back
-target = monotone:target
-source = svn:source
+source-repository = file://$PWD/svnrepository
+target-repository = $PWD/test2.mtn
+target-keygenid = key-dummy
+target-passphrase = secret
+#verbose = True
 
-[monotone:target]
-repository = $PWD/test2.mtn
-module = A
-subdir = mtnside
-keygenid = key-dummy
-passphrase = secret
+[project-a]
+source = svn:source.a
+target = monotone:target.a
 
-[svn:source]
-repository = file://$PWD/svnrepository
+[project-b]
+source = svn:source.b
+target = monotone:target.b
+
+[svn:source.a]
 module = A
-subdir = svnside
+subdir = $TARGETDIR-a
+
+[svn:source.b]
+module = B
+subdir = $TARGETDIR-b
+
+[monotone:target.a]
+module = A
+subdir = $SOURCEDIR-a
+
+[monotone:target.b]
+module = B
+subdir = $SOURCEDIR-b
 EOF
 
         # Convert back from Subversion to Monotone
@@ -126,20 +150,79 @@ EOF
 }
 
 
+cat <<EOF >diffexclude
+.mt*
+_MTN
+.svn
+EOF
+
+target_diff1()
+{
+    if [ ! -n "$SHAREDDIR" ]
+    then
+        for branch in a b
+        do
+            if diff -Naur -X diffexclude rootdir/$SOURCEDIR-$branch  rootdir/$TARGETDIR-$branch >test0a.log
+            then
+                echo "$branch WD-diff: PASS"
+            else
+                echo "$branch WD-diff: Diffs in Working Dir! (step mtn-->svn, see test0a.log)" >&2
+                exit 101
+            fi
+        done
+    fi
+}
+
+target_diff2()
+{
+        for branch in a b
+        do
+            if diff -Naur -X diffexclude rootdir/$SOURCEDIR-$branch  rootdir-back/$TARGETDIR-$branch >test0a.log
+            then
+                echo "$branch WD-diff: PASS"
+            else
+                echo "$branch WD-diff: Diffs in Working Dir! (step mtn-->svn, see test0a.log)" >&2
+                exit 102
+            fi
+        done
+}
+
 monotone_logs()
 {
         # Create a log to see into:
         mtn --db=test1.mtn log --from `mtn --db=test1.mtn automate heads A` --no-graph > test1.log
         mtn --db=test2.mtn log --from `mtn --db=test2.mtn automate heads A` --no-graph > test2.log
+
+        # Bug from Monotone: Starts with "Added directories:", but no dirs listend.
+        # Replace or remove stubs.
+
+        sed -r -e 's/^((Revision|Ancestor): )([0-9a-f]{40})?$/\1STUB-NUMBER/' < test1.log \
+        | sed -r -e \ '/^Added directories:$/,+1s/^.+$/REMOVE-STUBS/' \
+        | grep -v -E "REMOVE-STUBS" \
+        > test1-v.log
+        sed -r -e 's/^((Revision|Ancestor): )([0-9a-f]{40})?$/\1STUB-NUMBER/' < test2.log \
+        | sed -r -e \ '/^Added directories:$/,+1s/^.+$/REMOVE-STUBS/' \
+        | grep -v -E "REMOVE-STUBS" \
+        | head -n -11 \
+        > test2-v.log
+
+        # Compair logs
+        if diff -B test1-v.log test2-v.log >/dev/null
+        then
+                echo "Log-diff: PASS"
+        else
+                echo "Log-diff: Logs are different!" >&2
+                exit 200
+        fi
 }
 
 testing_runs()
 {
         cd ..
-
         tailor_mtn2svn
-#        tailor_svn2mtn
-#        monotone_logs
-
+        target_diff1
+        tailor_svn2mtn
+        target_diff2
+        monotone_logs
         cd $STARTDIR
 }

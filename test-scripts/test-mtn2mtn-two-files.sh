@@ -1,10 +1,9 @@
-#!/bin/bash -v
+#!/bin/sh
 
 # File: test-mtn2mtn-two-files.sh
 # needs: test-mtn2mtn.include
 #
 # No errors found.
-# Log-diff: PASS
 
 . ./test-mtn2mtn.include
 monotone_setup
