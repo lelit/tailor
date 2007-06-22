@@ -96,7 +96,7 @@ target = darcs:mtntailor
 start-revision = INITIAL
 
 [monotone:tailor]
-keyid = tailor
+keygenid = tailor
 passphrase = fin che la barca va
 repository = %(testdir)s/tailor-mtn.db
 module = tailor.test
