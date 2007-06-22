@@ -830,12 +830,18 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
 
             # actually check out the revision
             self.log.info("Checking out a working copy")
+            if self.shared_basedirs:
+                basedir = '.'
+                cwd = self.repository.basedir
+            else:
+                basedir = self.repository.basedir
+                cwd = self.repository.rootdir
             cmd = self.repository.command("co",
                                           "--db", self.repository.repository,
                                           "--revision", effrev,
                                           "--branch", self.repository.module,
-                                          self.repository.basedir)
-            mtl = ExternalCommand(cwd=self.repository.rootdir, command=cmd)
+                                          basedir)
+            mtl = ExternalCommand(cwd=cwd, command=cmd)
             mtl.execute(stdout=PIPE, stderr=PIPE)
             if mtl.exit_status:
                 raise TargetInitializationFailure(
