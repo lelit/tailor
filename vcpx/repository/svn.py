@@ -714,6 +714,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os import rename
         from os.path import join, exists, isdir
         from time import sleep
+        from datetime import datetime
 
         # --force in case the file has been changed and moved in one revision
         cmd = self.repository.command("mv", "--quiet", "--force")
@@ -738,7 +739,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         # Ticket #135: Need a timediff between rsync and directory move
         if isdir(oldpath):
-            sleep(1)
+            now = datetime.now()
+            if hasattr(self, '_last_svn_move'):
+                last = self._last_svn_move
+            else:
+                last = now
+            if not (now-last).seconds:
+                sleep(1)
+            self._last_svn_move = now
 
         move = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         out, err = move.execute(oldname, newname, stdout=PIPE, stderr=PIPE)
