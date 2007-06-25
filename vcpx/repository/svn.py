@@ -299,6 +299,7 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                     return False
 
                 entries = []
+                replaces = []
                 for e in self.current['entries']:
                     if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
                         mv_or_cp[e.name].action_kind = e.RENAMED
@@ -311,13 +312,17 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                         if mv_or_cp.has_key(e.name):
                             mv_or_cp[e.name].action_kind = e.RENAMED
                         e.action_kind = e.ADDED
-                        entries.append(e)
+                        replaces.append(e)
                     elif parent_was_copied(e.name):
                         if e.action_kind != e.DELETED:
                             e.action_kind = e.ADDED
                             entries.append(e)
                     else:
                         entries.append(e)
+
+                # Append outstanding Replaces to entries
+                for e in replaces:
+                    entries.append(e)
 
                 svndate = self.current['date']
                 # 2004-04-16T17:12:48.000000Z
