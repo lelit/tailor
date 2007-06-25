@@ -446,6 +446,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 parents.reverse()
                 self._addPathnames(parents)
 
+            other = False
             if self.shared_basedirs:
                 # Check to see if the oldentry is still there. If it is,
                 # that probably means one thing: it's been moved and then
@@ -465,14 +466,33 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                 # rename the new one, perform the target system rename
                 # and replace back the real content (it may be a
                 # renamed+edited event).
+
+                # Hide the real new file from rename
                 absnew = join(self.repository.basedir, e.name)
                 renamed = exists(absnew)
                 if renamed:
                     rename(absnew, absnew + '-TAILOR-HACKED-TEMP-NAME')
 
+                # If 'absold' exist, then the file was moved and replaced
+                # with an other file. Hide the other file from rename.
+                absold = join(self.repository.basedir, e.old_name)
+                other = exists(absold)
+                if other:
+                    rename(absold, absold + '-TAILOR-HACKED-OTHER-NAME')
+
+                # Restore the old file from backup.
+                oldfile = exists(absold + '-TAILOR-HACKED-OLD-NAME')
+                if oldfile:
+                    rename(absold + '-TAILOR-HACKED-OLD-NAME', absold)
+
             try:
                 self._renamePathname(e.old_name, e.name)
             finally:
+
+                # Restore other NEW target
+                if other:
+                    rename(absold + '-TAILOR-HACKED-OTHER-NAME', absold)
+
                 if renamed:
                     if self.shared_basedirs:
                         rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)

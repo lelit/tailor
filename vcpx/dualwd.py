@@ -103,6 +103,7 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
     def replayChangeset(self, changeset):
         if not self.shared_basedirs:
+            self._saveRenamedTargets(changeset)
             self._syncTargetWithSource()
         self.target.replayChangeset(changeset)
 
@@ -119,3 +120,17 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         rsync = ExternalCommand(command=cmd)
         rsync.execute(self.source.repository.basedir+'/', self.target.repository.basedir)
+
+    def _saveRenamedTargets(self, changeset):
+        """
+        Save old names from `rename`, before rsync replace it with new file.
+        """
+
+        from os.path import join, exists
+        from os import rename
+
+        for e in changeset.entries:
+            if e.action_kind == e.RENAMED:
+                absold = join(self.target.repository.basedir, e.old_name)
+                if exists(absold):
+                    rename(absold, absold + '-TAILOR-HACKED-OLD-NAME')
