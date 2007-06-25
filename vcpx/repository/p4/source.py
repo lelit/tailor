@@ -23,19 +23,15 @@ import exceptions
 import string
 import time
 import os
+import re
 
 import p4lib
 
 P4_DATE_FMT="%Y/%m/%d %H:%M:%S"
 
-class NotForMe(exceptions.Exception):
-    def __init__(self, s):
-        self.s=s
-    def __repr__(self):
-        "<NotForMe:  " + self.s + ">"
-    __str__=__repr__
-
 class P4SourceWorkingDir(UpdatableSourceWorkingDir):
+    branchRE = re.compile(r'^branch from (?P<path>//.*?)#')
+
     def __getP4(self):
         p4=self.repository.EXECUTABLE
         args={}
@@ -49,7 +45,8 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         changes=self.__getP4().changes(self.repository.depot_path + "...")
         changes.reverse()
         # Get rid of changes that are too low
-        changes=filter(lambda c: int(c['change']) > sincerev, changes)
+        sincerev = int(sincerev)
+        changes = [c for c in changes if int(c['change']) > sincerev]
         return changes
 
     def __parseDate(self, d):
@@ -57,49 +54,139 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
             time.strptime(d, P4_DATE_FMT)), UTC)
 
     def __adaptChanges(self, changes):
-        p4=self.__getP4()
-        descrs=[p4.describe(c['change'], shortForm=True) for c in changes]
-        return [Changeset(d['change'], self.__parseDate(d['date']), \
-            d['user'], d['description']) for d in descrs]
+        # most of the info about a changeset is filled in later
+        return [Changeset(str(c['change']), None, c['user'], None)
+                for c in changes]
 
     def _getUpstreamChangesets(self, sincerev):
         return self.__adaptChanges(self.__getNativeChanges(sincerev))
 
-    def __getLocalFilename(self, f, dp=None):
+    def _localFilename(self, f, dp=None):
         if dp is None:
             dp=self.repository.depot_path
         trans=string.maketrans(" ", "_")
         fn=f['depotFile']
         rv=fn
-        if fn.startswith(dp):
-            rv=fn[len(dp):]
-            if rv[0]=='/':
-                rv=rv[1:]
-        else:
-            raise NotForMe(f)
+        if not fn.startswith(dp): return None
+
+        rv=fn[len(dp):]
+        if rv[0]=='/':
+            rv=rv[1:]
         return rv
 
     def _applyChangeset(self, changeset):
-        p4=self.__getP4()
-        desc=p4.describe(changeset.revision, shortForm=True)
-        p4.sync('@' + str(changeset.revision))
+        p4 = self.__getP4()
+        desc = p4.describe(changeset.revision, shortForm=True)
+
+        changeset.author = desc['user']
+        changeset.date = self.__parseDate(desc['date'])
+        changeset.log = desc['description']
+
+        desc['files'] = [f for f in desc['files']
+                         if self._localFilename(f) is not None]
+
+        # check for added dirs
         for f in desc['files']:
-            try:
-                e=changeset.addEntry(self.__getLocalFilename(f),
-                    changeset.revision)
-                k=f['action']
-                self.log.debug("action on file: %s", str(f))
-                if k in ['add', 'branch']:
-                    e.action_kind = e.ADDED
-                elif k == 'delete':
-                    e.action_kind = e.DELETED
-                elif k in ['edit', 'integrate']:
-                    e.action_kind = e.UPDATED
-                else:
-                    assert False
-            except NotForMe:
-                pass
+            if f['action'] in ['add', 'branch']:
+                name = self._localFilename(f)
+                self._addParents(name, changeset)
+
+        p4.sync('@' + str(changeset.revision))
+
+        # dict of {path:str -> e:ChangesetEntry}
+        branched = dict()
+        for f in desc['files']:
+            name = self._localFilename(f)
+            path = f['depotFile']
+            act = f['action']
+
+            if act == 'branch':
+                e = changeset.addEntry(name, changeset.revision)
+                e.action_kind = e.ADDED
+
+                log = p4.filelog(path+'#'+str(f['rev']), maxRevs=1)
+                note = log[0]['revs'][0]['notes'][0]
+                m = self.branchRE.match(note)
+                if m:
+                    old = m.group('path')
+                    branched[old] = e
+                    self.log.info('Branch %r to %r' % (old, name))
+
+        for f in desc['files']:
+            name = self._localFilename(f)
+            path = f['depotFile']
+            act = f['action']
+
+            # branches were already handled
+            if act == 'branch':
+                continue
+
+            # deletes might be renames
+            if act == 'delete' and path in branched:
+                e = branched[path]
+                e.action_kind = e.RENAMED
+                e.old_name = name
+                self.log.info('Rename %r to %r' % (name, e.name))
+                continue
+
+            e = changeset.addEntry(name, changeset.revision)
+            if act == 'add':
+                e.action_kind = e.ADDED
+            elif act == 'delete':
+                e.action_kind = e.DELETED
+            elif act in ['edit', 'integrate']:
+                e.action_kind = e.UPDATED
+            else:
+                assert False
+
+        # check for removed dirs
+        for f in desc['files']:
+            if f['action'] == 'delete':
+                name = self._localFilename(f)
+                self._delParents(name, changeset)
+
+        changes = ','.join([repr(e.name) for e in changeset.entries])
+        self.log.info('Updated %s', changes)
+
         return []
+
+    # Perforce doesn't track directories, so we have to notice
+    # when a file add implies a directory add.  Otherwise targets
+    # like svn will barf.
+    # xxx This is a little fragile, because it depends on having
+    # a clean p4 workdir with sequential updates.  It might make
+    # more sense for the svn target to notice missing dir adds.
+    def _addParents(self, name, changeset):
+        parent = os.path.dirname(name)
+        if parent == '': return
+
+        path = os.path.join(self.repository.basedir, parent)
+        if os.path.exists(path): return
+
+        self._addParents(parent, changeset)
+
+        self.log.info('Adding dir %r' % parent)
+        e = changeset.addEntry(parent, changeset.revision)
+        e.action_kind = e.ADDED
+        os.mkdir(path)
+
+    # Try to guess when a directory should be removed.
+    # xxx This is also kind of fragile
+    def _delParents(self, name, changeset):
+        parent = os.path.dirname(name)
+        if parent == '': return
+
+        path = os.path.join(self.repository.basedir, parent)
+        if not os.path.exists(path): return
+        if len(os.listdir(path)) > 0: return
+
+        self.log.info('Removing dir %r' % parent)
+        e = changeset.addEntry(parent, changeset.revision)
+        e.action_kind = e.DELETED
+        os.rmdir(path)
+
+        self._delParents(parent, changeset)
+
 
     def _checkoutUpstreamRevision(self, revision):
         force=False
