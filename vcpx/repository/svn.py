@@ -298,11 +298,24 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                             return True
                     return False
 
+                # Find renames from deleted directories:
+                # $ svn mv dir/a.txt a.txt
+                # $ svn del dir
+                def check_renames_from_dir(name):
+                    for ee in mv_or_cp:
+                        e = mv_or_cp[ee]
+                        if e.old_name.startswith(name+'/'):
+                            e.action_kind = e.RENAMED
+
                 entries = []
-                replaces = []
+                entries2 = []
                 for e in self.current['entries']:
-                    if e.action_kind==e.DELETED and mv_or_cp.has_key(e.name):
-                        mv_or_cp[e.name].action_kind = e.RENAMED
+                    if e.action_kind==e.DELETED:
+                        if mv_or_cp.has_key(e.name):
+                            mv_or_cp[e.name].action_kind = e.RENAMED
+                        else:
+                            check_renames_from_dir(e.name)
+                            entries2.append(e)
                     elif e.action_kind=='R':
                         # In svn parlance, 'R' means Replaced: a typical
                         # scenario is
@@ -311,8 +324,10 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                         #   $ svn add a.txt
                         if mv_or_cp.has_key(e.name):
                             mv_or_cp[e.name].action_kind = e.RENAMED
+                        else:
+                            check_renames_from_dir(e.name)
                         e.action_kind = e.ADDED
-                        replaces.append(e)
+                        entries2.append(e)
                     elif parent_was_copied(e.name):
                         if e.action_kind != e.DELETED:
                             e.action_kind = e.ADDED
@@ -320,8 +335,8 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                     else:
                         entries.append(e)
 
-                # Append outstanding Replaces to entries
-                for e in replaces:
+                # Changes sort: first MODIFY|ADD|RENAME, than REPLACE|DELETE
+                for e in entries2:
                     entries.append(e)
 
                 svndate = self.current['date']
