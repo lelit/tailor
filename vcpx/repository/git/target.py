@@ -46,8 +46,13 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         Records a sequence of filesystem objects as updated.
         """
 
-        # can we assume we don't have directories in the list ?
-        self.repository.runCommand(['update-index'] + names)
+        from os.path import join, isdir
+
+        # can we assume we don't have directories in the list ?  Nope.
+
+        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
+        if notdirs:
+            self.repository.runCommand(['update-index'] + notdirs)
 
     def __parse_author(self, author):
         """
