@@ -319,8 +319,12 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 # following solution easier and by any chance faster too.
                 pieces = l.rstrip().split('  ')
                 assert len(pieces)>1, "Cannot parse %r as a patch timestamp" % l
-                author = pieces.pop()
-                date = ' '.join(pieces)
+
+                # Even the author part may contain double spaces: so
+                # join the date and time with a single space, and the
+                # remaining pieces with a double space.
+                date = ' '.join(pieces[:2])
+                author = '  '.join(pieces[2:])
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline().rstrip()
