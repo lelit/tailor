@@ -302,30 +302,18 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
             ## Sat Jul 17 01:22:08 CEST 2004  lele@nautilus
             ##   * Refix _getUpstreamChangesets for darcs
 
+            fsep = re.compile('[ :]+')
             l = output.readline()
             while not l.startswith('Making no changes:  this is a dry run.'):
                 # Assume it's a line like
                 #    Sun Jan  2 00:24:04 UTC 2005  lele@nautilus.homeip.net
-                # we used to split on the double space before the email,
-                # but in this case this is wrong. Then we assumed the date
-                # part to be exactly 28 chars long, but what about timezone
-                # names like 'CEST'? Waiting for xml output...
-                # We still assume there are *two* spaces before the email.
-                # The alternative is using some sort of a regex: Aaron Kaplan
-                # kindly suggested his own perl snippet
-                #    /^(... ... .\d .\d:\d\d:\d\d ...?. \d\d\d\d)  (.*)/ || die;
-                #    my ($date, $author) = ($1, $2);
-                # but that assumes the two spaces as separator, so I find the
-                # following solution easier and by any chance faster too.
-                pieces = l.rstrip().split('  ')
-                assert len(pieces)>1, "Cannot parse %r as a patch timestamp" % l
-
-                # Even the author part may contain double spaces: so
-                # join the date and time with a single space, and the
-                # remaining pieces with a double space.
-                date = ' '.join(pieces[:2])
-                author = '  '.join(pieces[2:])
-                y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H:%M:%S %Z %Y")
+                # Use a regular expression matching multiple spaces or colons
+                # to split it, and use the first 7 fields to build up a datetime.
+                pieces = fsep.split(l.rstrip(), 8)
+                assert len(pieces)>=7, "Cannot parse %r as a patch timestamp" % l
+                date = ' '.join(pieces[:8])
+                author = pieces[8]
+                y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H %M %S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline().rstrip()
                 assert (l.startswith('  *') or
