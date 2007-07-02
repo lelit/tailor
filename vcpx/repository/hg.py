@@ -13,7 +13,7 @@ instead of thru the command line.
 
 __docformat__ = 'reStructuredText'
 
-from mercurial import ui, hg, commands
+from mercurial import ui, hg, cmdutil, commands
 
 from vcpx.repository import Repository
 from vcpx.source import UpdatableSourceWorkingDir
@@ -323,14 +323,21 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _defaultOpts(self, cmd):
         # Not sure this is public. commands.parse might be, but this
         # is easier, and while dispatch is easiest, you lose ui.
-        if hasattr(commands, 'findcmd'):
+        # findxxx() is not public, and to make that clear, hg folks
+        # keep moving the function around...
+        if hasattr(cmdutil, 'findcmd'):            # >= 0.9.4
+            def findcmd(cmd):
+                return cmdutil.findcmd(self._getUI(), cmd)
+        elif hasattr(commands, 'findcmd'):         # < 0.9.4
             if commands.findcmd.func_code.co_argcount == 1:
                 findcmd = commands.findcmd
             else:
                 def findcmd(cmd):
                     return commands.findcmd(self._getUI(), cmd)
-        else:
+        elif hasattr(commands, 'find'):            # ancient hg
             findcmd = commands.find
+        else:
+            raise RuntimeError("unable to locate mercurial's 'findcmd()'")
         return dict([(f[1].replace('-', '_'), f[2]) for f in findcmd(cmd)[1][1]])
 
     def _hgCommand(self, cmd, *args, **opts):
