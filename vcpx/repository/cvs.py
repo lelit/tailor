@@ -335,12 +335,12 @@ class ChangeSetCollector(object):
         """Parse a complete CVS log."""
 
         from os.path import split, join
-        import sre
+        from re import compile
         from time import strptime
         from datetime import datetime
         from vcpx.changes import Changeset
 
-        revcount_regex = sre.compile('\\bselected revisions:\\s*(\\d+)\\b')
+        revcount_regex = compile('\\bselected revisions:\\s*(\\d+)\\b')
 
         self.__currentdir = None
 
