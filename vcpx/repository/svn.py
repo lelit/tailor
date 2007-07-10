@@ -302,8 +302,7 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                 # $ svn mv dir/a.txt a.txt
                 # $ svn del dir
                 def check_renames_from_dir(name):
-                    for ee in mv_or_cp:
-                        e = mv_or_cp[ee]
+                    for e in mv_or_cp.values():
                         if e.old_name.startswith(name+'/'):
                             e.action_kind = e.RENAMED
 
