@@ -74,6 +74,8 @@ class ExternalCommand:
         self._last_command = None
         """Last executed command."""
 
+        self.capture_stderr = False
+
         if nolog:
             self.log = False
         else:
@@ -87,6 +89,8 @@ class ExternalCommand:
         r = '$'+repr(self)
         if self.cwd:
             r = self.cwd + ' ' + r
+        if self.capture_stderr:
+            r = r + ' 2>&1'
         return r
 
     def __repr__(self):
@@ -136,6 +140,11 @@ class ExternalCommand:
         """Execute the command, avoiding too long command line."""
 
         from cStringIO import StringIO
+
+        if kwargs.get('stderr'):
+            self.capture_stderr = True
+        else:
+            self.capture_stderr = False
 
         if len(args) == 1 and type(args[0]) == type([]):
             allargs = list(args[0])
