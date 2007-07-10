@@ -488,7 +488,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         lastok = self.repository.repository
         if not self.repository.trust_root:
-            cmd = self.repository.command("ls")
+            # Use --non-interactive, so that it fails if credentials
+            # are needed.
+            cmd = self.repository.command("ls", "--non-interactive")
             svnls = ExternalCommand(command=cmd)
 
             # First verify that we have a valid repository
