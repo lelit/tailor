@@ -19,7 +19,11 @@ from vcpx.tzinfo import UTC
 
 
 class CvsRepository(CvspsRepository):
-    pass
+    def _load(self, project):
+        CvspsRepository._load(self, project)
+
+        tmc = project.config.get(self.name, 'trim-module-components', '0')
+        self.trim_module_components = int(tmc)
 
 
 def normalize_cvs_rev(rev):
@@ -89,12 +93,15 @@ def rev2branch(rev):
     return rev[0:-1]
 
 
-def changesets_from_cvslog(log, module, branch=None, entries=None, since=None, threshold=None):
+def changesets_from_cvslog(log, module, branch=None,
+                           entries=None, since=None, threshold=None,
+                           trim_module_components=0):
     """
     Parse CVS log.
     """
 
-    collected = ChangeSetCollector(log, module, branch, entries, since)
+    collected = ChangeSetCollector(log, module, branch, entries, since,
+                                   trim_module_components)
 
     last = None
 
@@ -173,7 +180,8 @@ class ChangeSetCollector(object):
     intra_sep = '-' * 28 + '\n'
     inter_sep = '=' * 77 + '\n'
 
-    def __init__(self, log, module, branch, entries, since):
+    def __init__(self, log, module, branch, entries, since,
+                 trim_module_components=0):
         """
         Initialize a ChangeSetCollector instance.
 
@@ -195,6 +203,8 @@ class ChangeSetCollector(object):
         """The look ahead line stack."""
 
         self.log = getLogger('tailor.vcpx.cvs.collector')
+
+        self.trim_module_components = trim_module_components
 
         self.__parseCvsLog(branch, entries, since)
 
@@ -240,10 +250,20 @@ class ChangeSetCollector(object):
                 l = self.cvslog.readline()
         while l.startswith('cvs rlog: Logging '):
             currentdir = l[18:-1]
-            # If the directory starts with the module name, keep
-            # just the remaining part
             if currentdir.startswith(self.module):
+                # If the directory starts with the module name, keep
+                # just the remaining part
                 self.__currentdir = currentdir[len(self.module)+1:]
+            elif self.trim_module_components:
+                # This is a quick&dirty workaround to the CVS modules
+                # issue: if, by some heuristic, the user tells how
+                # many components to cut off...
+                parts = currentdir.split('/')
+                if len(parts)>self.trim_module_components:
+                    parts = parts[self.trim_module_components:]
+                else:
+                    parts = []
+                self.__currentdir = '/'.join(parts)
             else:
                 # strip away first component, the name of the product
                 slash = currentdir.find('/')
@@ -640,7 +660,8 @@ class CvsWorkingDir(CvspsWorkingDir):
                                       branch,
                                       CvsEntries(self.repository.rootdir),
                                       since,
-                                      self.repository.changeset_threshold)
+                                      self.repository.changeset_threshold,
+                                      self.repository.trim_module_components)
 
     def _checkoutUpstreamRevision(self, revision):
         """

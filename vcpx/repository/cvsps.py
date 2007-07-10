@@ -535,7 +535,11 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         if not found:
             raise TargetInitializationFailure(
                 "Something went wrong: unable to determine the exact upstream "
-                "revision of the checked out tree in '%s'" % self.repository.basedir)
+                "revision of the checked out tree in '%s'. Either you specified "
+                "the wrong initial timestamp, or you are checking out a "
+                "composition of 'CVS modules' and Tailor does not support them; "
+                "see the option 'trim-module-components' for a possible "
+                "workaround." % self.repository.basedir)
         else:
             self.log.info("Working copy up to revision %s", last.revision)
 
