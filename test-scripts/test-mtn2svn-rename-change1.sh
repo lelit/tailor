@@ -20,9 +20,6 @@ echo "foo2" > file2.txt
 mtn_exec add file1.txt file2.txt
 mtn_exec commit --message "initial commit"
 
-# Don't mov the file. Lets Monotone do the move on Workspace
-#mv file2.txt file2b.txt
-
 echo "bar1 (this will be missing later)" > file1.txt
 mtn_exec rename file2.txt file2b.txt
 mtn_exec commit --message "File1 changed, File2 renamed"

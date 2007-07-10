@@ -3,7 +3,7 @@
 # File: test-svn2svn-replace.sh
 # needs: test-svn2svn.include
 # 
-# Test for converting 2 (3) revisions from Subversion and back to Subversion again.
+# Test for converting from Subversion to Subversion self.
 # Special: replace a renamed file with newer file.
 
 # ... found in source. Check, that is working after code modifing ...
@@ -21,6 +21,11 @@
 # Changed paths:                          | Changed paths:
 # R /project/a.txt                        | D /project/a.txt
 # A /project/b.txt (from /proj-a/a.txt:2) | A /project/b.txt (from /prj-a/a.txt:2)
+
+# Problem: a.txt was sorted before b.txt and tailer reoprted it as
+# "add a.txt" and than "mv a.txt b.txt"
+#
+# Fixed now: Append all "replacements" at the end, after renames.
 
 . ./test-svn2svn.include
 subversion_setup

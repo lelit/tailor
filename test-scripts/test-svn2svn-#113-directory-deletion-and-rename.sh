@@ -3,7 +3,7 @@
 # File: test-svn2svn-#113-directory-deletion-and-rename.sh
 # needs: test-svn2svn.include
 # 
-# Test for converting revisions from Subversion and back to Subversion again.
+# Test for converting revisions from Subversion to Subversion self
 # to moving files and than delete directory
 # 
 # small ERROR (found by compair the logs):
@@ -23,7 +23,7 @@
 #   
 # ####
 #
-# File state is OK. Only the log is not complete.
+# Was an old error in log and is OK now.
 
 
 . ./test-svn2svn.include

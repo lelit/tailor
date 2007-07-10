@@ -4,7 +4,7 @@
 # needs: test-mtn2svn.include
 # 
 # Test from Monotone to Subversion and back to Monotone again,
-# to rename directories and changing files.
+# to delete directories and delete file in there.
 #
 # Ticket #131: monotone -> svn can't handle directory deletions
 # No errors found.

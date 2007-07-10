@@ -14,3 +14,4 @@ Sripts have typicaly errorlevels:
 101: Files in target working copy are different from start to first step
 102: Files in target working copy are different from start to back step
 200: Changelogs are different
+201: Backend program (svn, mtn, ...) is not installed or not in PATH.

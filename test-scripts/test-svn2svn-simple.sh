@@ -3,8 +3,8 @@
 # File: test-svn2svn-simple.sh
 # needs: test-svn2svn.include
 # 
-# Test for converting 2 (3) revisions from Subversion and back to Subversion again.
-# Create one file and 2 revisions, simple linear revisions
+# Test for converting from Subversion to Subversion self.
+# Create one file and 2 revisions, simple linear revisions.
 
 . ./test-svn2svn.include
 subversion_setup

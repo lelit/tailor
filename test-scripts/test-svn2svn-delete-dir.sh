@@ -3,7 +3,7 @@
 # File: test-svn2svn-delete-dir.sh
 # needs: test-svn2svn.include
 # 
-# Test for converting revisions from Subversion and back to Subversion again.
+# Test for converting revisions from Subversion to Subversion self.
 # 
 # Ticket #131: monotone -> svn can't handle directory deletions
 # No errors found.
