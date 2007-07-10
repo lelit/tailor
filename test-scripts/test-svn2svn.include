@@ -18,12 +18,12 @@ rm -rf testdir
 mkdir testdir
 cd testdir
 
-POSITORY=/tmp/test-repos
+REPOSITORY=$PWD/work-repos
 
 subversion_setup()
 {
-        rm -rf $POSITORY
-        svnadmin create $POSITORY
+        rm -rf $REPOSITORY
+        svnadmin create $REPOSITORY
 
         rm -rf tempdir
         mkdir tempdir
@@ -34,13 +34,13 @@ subversion_setup()
         #mkdir project/branches
         #mkdir project/tags
 
-        svn import . file://$POSITORY --message 'Initial import'
+        svn import . file://$REPOSITORY --message 'Initial import'
 
         cd ..
         rm -rf tempdir
 
         # checkout initial version
-        svn checkout file://$POSITORY/project subversion-work
+        svn checkout file://$REPOSITORY/project subversion-work
         cd subversion-work
 }
 
@@ -52,7 +52,6 @@ tailor_svn2svn()
         cat <<EOF >test-svn2svn.conf
 [DEFAULT]
 use-propset = True
-#commit-all-files = False
 #verbose = True
 #Debug = True
 
@@ -63,7 +62,7 @@ source = svn:source
 target = svn:target
 
 [svn:source]
-repository = file://$POSITORY
+repository = file://$REPOSITORY
 module = project
 subdir = svn1side
 
