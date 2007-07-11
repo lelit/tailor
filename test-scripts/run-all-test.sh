@@ -8,6 +8,7 @@ mkdir log-FAIL
 mkdir log-OK
 
 for name in \
+    test-darcs2darcs*.sh \
     test-mtn2mtn*.sh \
     test-svn2svn*.sh \
     test-mtn2svn*.sh

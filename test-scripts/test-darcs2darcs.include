@@ -1,0 +1,97 @@
+#!/bin/sh
+
+# File: test-darcs2darcs.include
+#
+# This is an include for all Dracs to Dracs tests.
+
+STARTDIR=$PWD
+
+# Fast exit, if no backend installed
+which darcs >/dev/null 2>&1 || exit 201
+
+# Exit immediately if a command exits with a non-zero
+set -e
+
+# Create a new empty tempdirectory and work there.
+rm -rf testdir
+mkdir testdir
+cd testdir
+
+REPOSITORY=$PWD/darcs-repos
+
+darcs_setup()
+{
+        # Creating repository
+        mkdir $REPOSITORY
+        cd $REPOSITORY
+        darcs initialize
+}
+
+
+tailorize()
+{
+
+        # create first for tailor
+        cat <<EOF >test-darcs2darcs.conf
+[DEFAULT]
+verbose = True
+Debug = True
+
+[project]
+patch-name-format = %(revision)s
+root-directory = $PWD/rootdir
+source = darcs:source
+target = darcs:target
+
+[darcs:source]
+repository = $REPOSITORY
+#module = project
+subdir = darcs1side
+
+[darcs:target]
+#module = project
+subdir = darcs2side
+EOF
+
+        # Convert from Darcs to other Darcs
+        tailor -c test-darcs2darcs.conf
+}
+
+target_diff()
+{
+        if diff -Naur -x "_darcs" $REPOSITORY rootdir/darcs2side >test0.log
+        then
+                echo "WD-diff: PASS"
+        else
+                echo "WD-diff: Diffs in Working Dir! (see test0.log)" >&2
+                exit 100
+        fi
+}
+
+testing_logs()
+{
+        # Create a log to see into:
+        cd rootdir/darcs1side
+        LANG=C darcs changes >../../test1.log
+        cd ../darcs2side
+        LANG=C darcs changes >../../test2.log
+        cd ../..
+
+        # Compair logs
+        if diff -B test1.log test2.log >/dev/null
+        then
+                echo "Log-diff: PASS"
+        else
+                echo "Log-diff: Logs are different!" >&2
+                exit 200
+        fi
+}
+
+testing_runs()
+{
+        cd ..
+        tailorize
+        target_diff
+        testing_logs
+        cd $STARTDIR
+}
