@@ -209,9 +209,16 @@ class ChangeSetCollector(object):
         self.__parseCvsLog(branch, entries, since)
 
     def __iter__(self):
-        keys = self.changesets.keys()
+        # Since there can be duplicate keys, try to produce the right
+        # ordering taking into account the first action (thus ADDs
+        # will preceed UPDs...)
+        keys = []
+        for k,c in self.changesets.items():
+            action1 = len(c.entries)>0 and c.entries[0].action_kind or ' '
+            keys.append( (k[0], k[1], action1, k[2]) )
         keys.sort()
-        return iter([self.changesets[k] for k in keys])
+
+        return iter([self.changesets[(k[0], k[1], k[3])] for k in keys])
 
     def __collect(self, timestamp, author, changelog, entry, revision):
         """Register a change set about an entry."""
