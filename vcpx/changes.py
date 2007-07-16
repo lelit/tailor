@@ -145,12 +145,14 @@ class Changeset(object):
     def __eq__(self, other):
         return (self.revision == other.revision and
                 self.date == other.date and
-                self.author == other.author)
+                self.author == other.author and
+                self.entries == other.entries)
 
     def __ne__(self, other):
         return (self.revision <> other.revision or
                 self.date <> other.date or
-                self.author <> other.author)
+                self.author <> other.author or
+                self.entries <> other.entries)
 
     def setLog(self, log):
         if self.REFILL_MESSAGE:
