@@ -386,6 +386,18 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             deldir.action_kind = deldir.DELETED
             self.log.info("registering %s directory deletion", path)
 
+        # Make sure all files are present on disk: CVS update does not
+        # create them nor reports an error if the files have been
+        # completely removed from the cvs repository. So loop over the
+        # entries and verify the presence of added/changed ones.
+
+        for entry in changeset.entries:
+            if (entry.action_kind in (entry.ADDED, entry.UPDATED)
+                and not exists(join(self.repository.basedir, entry.name))):
+                self.log.warning("Ignoring entry %s, CVS source no "
+                                 "longer knows about it.", entry.name)
+                changeset.entries.remove(entry)
+
     def _checkoutUpstreamRevision(self, revision):
         """
         Concretely do the checkout of the upstream sources. Use
