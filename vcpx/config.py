@@ -123,6 +123,7 @@ class Config(SafeConfigParser):
                 f = logging.Formatter(fs, dfs)
                 formatters[form] = f
         #next, do the handlers...
+        dbglevel = self._defaults.get('debug', False) and 'DEBUG' or None
         try:
             hlist = cp.get("handlers", "keys")
             if hlist:
@@ -141,8 +142,13 @@ class Config(SafeConfigParser):
                         args = cp.get(sectname, "args")
                         args = eval(args, vars(logging))
                         h = apply(klass, args)
-                        if "level" in opts:
+                        if dbglevel:
+                            level = dbglevel
+                        elif "level" in opts:
                             level = cp.get(sectname, "level")
+                        else:
+                            level = None
+                        if level:
                             h.setLevel(logging._levelNames[level])
                         if fmt:
                             h.setFormatter(formatters[fmt])
@@ -173,8 +179,13 @@ class Config(SafeConfigParser):
             sectname = "logger_root"
             root = logging.root
             opts = cp.options(sectname)
-            if "level" in opts:
+            if dbglevel:
+                level = dbglevel
+            elif "level" in opts:
                 level = cp.get(sectname, "level")
+            else:
+                level = None
+            if level:
                 root.setLevel(logging._levelNames[level])
             for h in root.handlers[:]:
                 root.removeHandler(h)
@@ -192,8 +203,13 @@ class Config(SafeConfigParser):
                 else:
                     propagate = 1
                 logger = logging.getLogger(qn)
-                if "level" in opts:
+                if dbglevel:
+                    level = dbglevel
+                elif "level" in opts:
                     level = cp.get(sectname, "level")
+                else:
+                    level = None
+                if level:
                     logger.setLevel(logging._levelNames[level])
                 for h in logger.handlers[:]:
                     logger.removeHandler(h)
