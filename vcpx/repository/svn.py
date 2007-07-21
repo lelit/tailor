@@ -404,7 +404,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             sincerev = 0
 
-        cmd = self.repository.command("log", "--verbose", "--xml",
+        cmd = self.repository.command("log", "--verbose", "--xml", "--non-interactive",
                                       "--revision", "%d:HEAD" % (sincerev+1))
         svnlog = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         log = svnlog.execute('.', stdout=PIPE, TZ='UTC0')[0]
@@ -530,7 +530,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if revision == 'INITIAL':
             initial = True
             cmd = self.repository.command("log", "--verbose", "--xml",
-                                          "--stop-on-copy",
+                                          "--non-interactive", "--stop-on-copy",
                                           "--revision", "1:HEAD")
             if self.repository.use_limit:
                 cmd.extend(["--limit", "1"])
@@ -576,6 +576,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if revision=='HEAD':
                 revision = 'COMMITTED'
             cmd = self.repository.command("log", "--verbose", "--xml",
+                                          "--non-interactive",
                                           "--revision", revision)
             svnlog = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             out, err = svnlog.execute(stdout=PIPE, stderr=PIPE)
