@@ -18,7 +18,7 @@ from vcpx.repository.mock import MockChangeset as Changeset, \
 class FixedBugs(TestCase):
     """Ensure already fixed bugs don't get reintroduced"""
 
-    TESTDIR = '/tmp/tailor-tests/fixed-bugs'
+    TESTDIR = None
 
     ALL_TARGET_VCS = [ 'arx', 'bzr', 'cdv', 'cg', 'cvs', 'cvsps', 'darcs', 'git', 'hg', 'monotone', 'svn' ]
 
@@ -41,8 +41,11 @@ repository = file://%(test_dir)s/repo
 
     def setUp(self):
         from os import makedirs
+        from tempfile import gettempdir
         from shutil import rmtree
         from atexit import register
+
+        self.TESTDIR = join(gettempdir(), 'tailor-tests', 'fixed-bugs')
 
         self.test_name = self.id().split('.')[-1]
         self.test_dir  = join(self.TESTDIR, self.test_name)

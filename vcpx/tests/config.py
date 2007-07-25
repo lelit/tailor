@@ -12,20 +12,25 @@ from vcpx.project import Project
 class Configuration(TestCase):
     "Test the configuration system"
 
+    TESTDIR = None
+
     def setUp(self):
         from os import mkdir, getcwd
         from os.path import exists, split, join
+        from tempfile import gettempdir
         from atexit import register
         from shutil import rmtree
 
+        self.TESTDIR = join(gettempdir(), 'tailor-tests')
+
         tailor_repo = getcwd()
-        while tailor_repo != '/' and not exists(join(tailor_repo, '_darcs')):
+        while tailor_repo != split(tailor_repo)[0] and not exists(join(tailor_repo, '_darcs')):
             tailor_repo = split(tailor_repo)[0]
         assert exists(join(tailor_repo, '_darcs')), "Tailor Darcs repository not found!"
         self.tailor_repo = tailor_repo
-        if not exists('/tmp/tailor-tests'):
-            mkdir('/tmp/tailor-tests')
-            register(rmtree, '/tmp/tailor-tests')
+        if not exists(self.TESTDIR):
+            mkdir(self.TESTDIR)
+            register(rmtree, self.TESTDIR)
 
     def getTestConfiguration(self, testname):
         from os.path import join, split
@@ -46,7 +51,7 @@ class Configuration(TestCase):
         self.assertRaises(ConfigurationError, Project, 'project2', config)
 
         project1 = Project('project1', config)
-        self.assertEqual(project1.rootdir, '/tmp/tailor-tests')
+        self.assertEqual(project1.rootdir, self.TESTDIR)
         self.assertEqual(project1.source.name, 'svn:project1repo')
         self.assertEqual(project1.target.name, 'darcs:project1')
         self.assertEqual(project1.target.repository, expanduser('~/darcs/project1'))
@@ -112,15 +117,15 @@ class Configuration(TestCase):
     def testStateFileName(self):
         """Verify that the state file is computed the way it should"""
 
-        from os.path import expanduser
+        from os.path import expanduser, join
 
         config = Config(self.getTestConfiguration("config-basic_test"),
                         {'tailor_repo': self.tailor_repo})
 
         project1 = Project('project1', config)
-        self.assertEqual(project1.state_file.filename, '/tmp/tailor-tests/project1.state')
+        self.assertEqual(project1.state_file.filename, join(self.TESTDIR, 'project1.state'))
         project3 = Project('project3', config)
-        self.assertEqual(project3.state_file.filename, '/tmp/tailor-tests/_darcs/tailor.state')
+        self.assertEqual(project3.state_file.filename, join(self.TESTDIR, '_darcs', 'tailor.state'))
         project4 = Project('project4', config)
         self.assertEqual(project4.state_file.filename, expanduser('~/tailorize/project4.state'))
         project6 = Project('project6', config)

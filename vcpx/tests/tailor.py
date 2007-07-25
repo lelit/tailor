@@ -322,17 +322,20 @@ from vcpx.shwrap import ExternalCommand, PIPE
 
 class OperationalTest(TestCase):
 
-    TESTDIR = '/tmp/tailor-tests'
+    TESTDIR = None
 
     def setUp(self):
         from os import mkdir, getcwd
         from os.path import exists, split, join
+        from tempfile import gettempdir
         from atexit import register
         from shutil import rmtree
         from vcpx.tests import DEBUG
 
+        self.TESTDIR = join(gettempdir(), 'tailor-tests')
+
         tailor_repo = getcwd()
-        while tailor_repo != '/' and not exists(join(tailor_repo, '_darcs')):
+        while tailor_repo != split(tailor_repo)[0] and not exists(join(tailor_repo, '_darcs')):
             tailor_repo = split(tailor_repo)[0]
         assert exists(join(tailor_repo, '_darcs')), "Tailor Darcs repository not found!"
         self.tailor_repo = tailor_repo
@@ -425,7 +428,7 @@ class Bazaar(OperationalTest):
     "Test the Bazaar source backend"
 
     def testBazaarAndPython23(self):
-        "Test we detect early when running under Python < 2.4"
+        "Bazaar test we detect early when running under Python < 2.4"
 
         from sys import version_info
 
