@@ -7,6 +7,8 @@
 
 from unittest import TestCase
 from vcpx.shwrap import ExternalCommand, PIPE
+from sys import platform
+from tempfile import gettempdir
 
 
 class SystemCommand(TestCase):
@@ -16,7 +18,10 @@ class SystemCommand(TestCase):
         """Verify ExternalCommand exit_status of ``true``.
         """
 
-        c = ExternalCommand(['true'])
+        if platform != 'win32':
+            c = ExternalCommand(['true'])
+        else:
+            c = ExternalCommand(['cmd','/c exit 0'])
         c.execute()
         self.assertEqual(c.exit_status, 0)
 
@@ -24,7 +29,10 @@ class SystemCommand(TestCase):
         """Verify ExternalCommand exit_status of ``false``.
         """
 
-        c = ExternalCommand(['false'])
+        if platform != 'win32':
+            c = ExternalCommand(['false'])
+        else:
+            c = ExternalCommand(['cmd','/c exit 1'])
         c.execute()
         self.assertNotEqual(c.exit_status, 0)
 
@@ -38,12 +46,16 @@ class SystemCommand(TestCase):
     def testStandardOutput(self):
         """Verify that ExternalCommand redirects stdout."""
 
-        c = ExternalCommand(['echo'])
+        if platform != 'win32':
+            c = ExternalCommand(['echo'])
+        else:
+            c = ExternalCommand(['cmd','/c','echo'])
         out = c.execute("ciao", stdout=PIPE)[0]
         self.assertEqual(out.read(), "ciao\n")
 
-        out = c.execute('-n', stdout=PIPE)[0]
-        self.assertEqual(out.read(), '')
+        if platform != 'win32':
+            out = c.execute('-n', stdout=PIPE)[0]
+            self.assertEqual(out.read(), '')
 
         out = c.execute("ciao")[0]
         self.assertEqual(out, None)
@@ -60,9 +72,13 @@ class SystemCommand(TestCase):
         working directory.
         """
 
-        c = ExternalCommand(['pwd'], '/tmp')
+        tempdir = gettempdir()
+        if platform != 'win32':
+            c = ExternalCommand(['pwd'], tempdir)
+        else:
+            c = ExternalCommand(['cmd','/c','cd'], tempdir)
         out = c.execute(stdout=PIPE)[0]
-        self.assertEqual(out.read(), "/tmp\n")
+        self.assertEqual(out.read(), tempdir+"\n")
 
     def testStringification(self):
         """Verify the conversion from sequence of args to string"""
@@ -80,7 +96,10 @@ class SystemCommand(TestCase):
         """Verify the mechanism that avoids too long command lines"""
 
         args = [str(i) * 20 for i in range(10)]
-        c = ExternalCommand(['echo'])
+        if platform != 'win32':
+            c = ExternalCommand(['echo'])
+        else:
+            c = ExternalCommand(['cmd','/c','echo'])
         c.MAX_CMDLINE_LENGTH = 30
         out = c.execute(args, stdout=PIPE)[0]
         self.assertEqual(out.read(), '\n'.join([args[i]+' '+args[i+1]
