@@ -20,7 +20,6 @@ assert version_info >= (2,4), "Bazaar backend requires Python 2.4"
 del version_info
 
 from bzrlib import errors
-from bzrlib.add import smart_add_tree
 from bzrlib.bzrdir import BzrDir
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
@@ -231,11 +230,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
     def _addPathnames(self, names):
         if len(names):
             names = [ pathjoin(self.repository.basedir, n) for n in names ]
-            smart_add_tree(self._working_tree, names, recurse=False)
+            self._working_tree.smart_add(names, recurse=False)
 
     def _addSubtree(self, subdir):
         subdir = pathjoin(self.repository.basedir, subdir)
-        added, ignored = smart_add_tree(self._working_tree, [subdir], recurse=True)
+        added, ignored = self._working_tree.smart_add([subdir], recurse=True)
 
         from vcpx.dualwd import IGNORED_METADIRS
 
@@ -256,7 +255,6 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from calendar import timegm  # like mktime(), but returns UTC timestamp
         from binascii import hexlify
         from re import search
-        from bzrlib.osutils import compact_date, rand_bytes
 
         logmessage = []
         if patchname:
@@ -273,23 +271,12 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         timestamp = timegm(date.utctimetuple())
         timezone  = date.utcoffset().seconds + date.utcoffset().days * 24 * 3600
 
-        # Guess sane email address
-        email = search("<(.*@.*)>", author)
-        if email:
-            email = email.group(1)
-        else:
-            email = author
-        # Remove whitespace
-        email = ''.join(email.split())
-
         # Normalize file names
         if entries:
             entries = [normpath(entry) for entry in entries]
 
-        revision_id = "%s-%s-%s" % (email, compact_date(timestamp),
-                                    hexlify(rand_bytes(8)))
         self._working_tree.commit(logmessage, committer=author,
-                                  specific_files=entries, rev_id=revision_id,
+                                  specific_files=entries,
                                   verbose=self.repository.projectref().verbose,
                                   timestamp=timestamp, timezone=timezone)
 
