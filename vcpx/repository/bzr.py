@@ -22,7 +22,6 @@ del version_info
 from bzrlib import errors
 from bzrlib.add import smart_add_tree
 from bzrlib.bzrdir import BzrDir
-from bzrlib.delta import compare_trees
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
 
