@@ -1217,6 +1217,11 @@ configuration is hardwired and corresponds to the following::
     args = (sys.stdout,)
     level = INFO
 
+Another handler is added at runtime that appends any message in a file
+named ``projectname.log`` inside the root directory. This file
+contains much more details than those usually reaching the console,
+and may be of some help to understand what went wrong.
+
 However, you can completely override the default adding a
 *supersection* ``[[logging]]`` to the configuration file, something
 like::
