@@ -255,7 +255,8 @@ class ChangeSetCollector(object):
                 l = self.__lookahead.pop(0)
             else:
                 l = self.cvslog.readline()
-        while l.startswith('cvs rlog: Logging '):
+        # Some version of CVS emits the following with a different char-case
+        while l.lower().startswith('cvs rlog: logging '):
             currentdir = l[18:-1]
             if currentdir.startswith(self.module):
                 # If the directory starts with the module name, keep
