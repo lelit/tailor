@@ -294,7 +294,10 @@ def main():
     import sys
     from os import getcwd
 
-    parser = OptionParser(usage='%prog [options] [project ...]',
+    usage = "usage: \n\
+       1. %prog [options] [project ...]\n\
+       2. %prog test [--help] [...]"
+    parser = OptionParser(usage=usage,
                           version=__version__,
                           option_list=GENERAL_OPTIONS)
 
