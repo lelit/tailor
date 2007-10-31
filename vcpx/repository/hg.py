@@ -326,8 +326,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         # findxxx() is not public, and to make that clear, hg folks
         # keep moving the function around...
         if hasattr(cmdutil, 'findcmd'):            # >= 0.9.4
-            def findcmd(cmd):
-                return cmdutil.findcmd(self._getUI(), cmd)
+            if cmdutil.findcmd.func_code.co_argcount == 2:     # 0.9.4
+                def findcmd(cmd):
+                    return cmdutil.findcmd(self._getUI(), cmd)
+            elif cmdutil.findcmd.func_code.co_argcount == 3:   # 0.9.5
+                def findcmd(cmd):
+                    return cmdutil.findcmd(self._getUI(), cmd, commands.table)
         elif hasattr(commands, 'findcmd'):         # < 0.9.4
             if commands.findcmd.func_code.co_argcount == 1:
                 findcmd = commands.findcmd
