@@ -127,7 +127,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         entries = []
         node = self._getNode(repo, revision)
         parents = repo.changelog.parents(node)
-        (manifest, user, date, files, message) = repo.changelog.read(node)
+        nodecontent = repo.changelog.read(node)
+        # hg 0.9.5+ returns a tuple of six elements, last seems useless for us
+        (manifest, user, date, files, message) = nodecontent[:5]
 
         dt, tz = date
         date = datetime.fromtimestamp(dt, FixedOffset(-tz/60)) # note the minus sign!
