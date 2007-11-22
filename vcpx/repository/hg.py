@@ -211,6 +211,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                      create=False)
             # Pick up repository-specific UI settings.
             self._ui = self._hg.ui
+
+            # 0.9.5 repos does not have update()...
+            if not hasattr(self._hg, 'update'):
+                self._hg.update = lambda n: hg.update(self._hg, n)
+
             return self._hg
 
     def _getNode(self, repo, revision):
