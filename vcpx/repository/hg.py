@@ -109,6 +109,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         self.log.info('Updating to %r', changeset.revision)
         res = repo.update(node)
+
+        # The following code is for backward compatibility: hg 0.9.5
+        # raises an Abort exception instead of just returning a status;
+        # but under 0.9.5 we reimplanted hg.clean() into repo.update():
+        # hg.clean() performs a clobbering clean merge and thus does
+        # not stop on that situation.
         if res:
             # Files in to-be-merged changesets not on the trunk will
             # cause a merge error on update. If no files are modified,
@@ -216,7 +222,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
             # 0.9.5 repos does not have update()...
             if not hasattr(self._hg, 'update'):
-                self._hg.update = lambda n: hg.update(self._hg, n)
+                # Use clean(), to force a clean merge clobbering local changes
+                self._hg.update = lambda n: hg.clean(self._hg, n)
 
             return self._hg
 
