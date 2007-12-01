@@ -634,14 +634,17 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         Checkout a working copy of the target CVS.
         """
 
-        from os.path import join, exists
+        from os.path import join, exists, split
 
         if not self.repository.repository or exists(join(self.repository.basedir, 'CVS')):
             return
 
+        # CVS does not handle "checkout -d multi/level/subdir", so
+        # split the basedir and use it's parentdir as cwd below.
+        parentdir, subdir = split(self.repository.basedir)
         cmd = self.repository.command("-f", "-d", self.repository.repository, "co",
-                                      "-d", self.repository.basedir)
-        cvsco = ExternalCommand(command=cmd)
+                                      "-d", subdir)
+        cvsco = ExternalCommand(cwd=parentdir, command=cmd)
         cvsco.execute(self.repository.module)
 
     def _parents(self, path):
