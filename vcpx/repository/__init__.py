@@ -69,7 +69,6 @@ class Repository(object):
 
         from logging import getLogger
         from weakref import ref
-        from os.path import join, normpath
 
         self.name = name
         self.which = which
@@ -78,11 +77,6 @@ class Repository(object):
                                                     which))
         self._load(project)
         self._validateConfiguration()
-
-        if self.subdir:
-            self.basedir = normpath(join(self.rootdir, self.subdir))
-        else:
-            self.basedir = self.rootdir
 
     def __str__(self):
 
@@ -104,7 +98,7 @@ class Repository(object):
         take the one from the project.
         """
 
-        from os.path import expanduser, abspath
+        from os.path import abspath, expanduser, join, normpath
         from locale import getpreferredencoding
 
         cget = project.config.get
@@ -123,6 +117,11 @@ class Repository(object):
         self.rootdir = abspath(expanduser(rootdir))
         self.subdir = cget(optname, 'subdir',
                            vars={'subdir': project.subdir})
+        if self.subdir:
+            self.basedir = normpath(join(self.rootdir, self.subdir))
+        else:
+            self.basedir = self.rootdir
+
         self.delay_before_apply = cget(optname, 'delay-before-apply')
         if self.delay_before_apply:
             self.delay_before_apply = float(self.delay_before_apply)
