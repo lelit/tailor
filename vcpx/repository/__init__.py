@@ -106,12 +106,15 @@ class Repository(object):
             optname = self.name
         else:
             optname = project.name
+
         self.repository = cget(optname, 'repository') or \
                           cget(optname, '%s-repository' % self.which)
         if self.repository:
             self.repository = expanduser(self.repository)
+
         self.module = cget(optname, 'module') or \
                       cget(optname, '%s-module' % self.which)
+
         rootdir = cget(optname, 'root-directory',
                        vars={'root-directory': project.rootdir})
         self.rootdir = abspath(expanduser(rootdir))
@@ -125,6 +128,7 @@ class Repository(object):
         self.delay_before_apply = cget(optname, 'delay-before-apply')
         if self.delay_before_apply:
             self.delay_before_apply = float(self.delay_before_apply)
+
         self.encoding = cget(optname, 'encoding')
         if not self.encoding:
             self.encoding = getpreferredencoding()
