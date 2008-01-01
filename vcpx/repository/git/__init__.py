@@ -126,8 +126,12 @@ class GitRepository(Repository):
             self.runCommand(['init-db'])
             if self.repository:
                 # in this mode, the db is not stored in working dir, so we
-                # have to create .git ourselves
-                mkdir(join(self.basedir, self.METADIR))
+                # may have to create .git ourselves
+                try:
+                    mkdir(join(self.basedir, self.METADIR))
+                except OSError:
+                    # if it's already there, that's not a no problem
+                    pass
 
 
 class GitExternalCommand(ExternalCommand):
