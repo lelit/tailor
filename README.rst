@@ -34,17 +34,7 @@ The following ascii-art illustrates the usual scenario::
 Ideally you should be able to swap and replace "CVS server" and "darcs
 repository" with any combination of the supported systems.
 
-A more convoluted setup shows how brave people are using it to get a
-`two way sync`_::
-
-  +----------+        +--------+        +--------+       +---------+
-  |          | -----> | hybrid | darcs  |        | ----> |   my    |
-  | upstream | tailor |  CVS   | -----> | master | darcs | working |
-  |   CVS    | <----- | darcs  | <----- | darcs  | <---- |  darcs  |
-  |          |        |  sync  | tailor |        |       |         |
-  +----------+        +--------+        +--------+       +---------+
-               (cron)            (cron)
-
+It's still lacks the ability of doing a `two way sync`_.
 
 .. [#] ArX and Codeville systems may be used only as the `target`
        backend, since the `source` support isn't coded yet.
