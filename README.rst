@@ -64,8 +64,8 @@ Installation
 ============
 
 tailor is written in Python, and thus Python must be installed on
-your system to use it.  It has been successfully used with Python 2.3
-and 2.4.
+your system to use it.  It has been successfully used with Python 2.3,
+2.4 and 2.5.
 
 Since it relies on external tools to do the real work such as `cvs`,
 `darcs` [#]_ and `svn`, they need to be installed as well, although only
