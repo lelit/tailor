@@ -178,7 +178,20 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 	args += ["-m", tag, tag_git, refname]
         cmd = self.repository.command(*args)
         c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
-        c.execute()
+	from os import environ
+        env = {}
+        env.update(environ)
+        (name, email) = self.__parse_author(author)
+        if name:
+            env['GIT_AUTHOR_NAME'] = self.repository.encode(name)
+            env['GIT_COMMITTER_NAME'] = self.repository.encode(name)
+        if email:
+            env['GIT_AUTHOR_EMAIL']=email
+            env['GIT_COMMITTER_EMAIL']=email
+        if date:
+            env['GIT_AUTHOR_DATE']=date.strftime("%Y-%m-%d %H:%M:%S %z")
+            env['GIT_COMMITTER_DATE']=env['GIT_AUTHOR_DATE']
+        c.execute(env=env)
 
         if c.exit_status:
             raise ChangesetApplicationFailure("%s returned status %d" %
