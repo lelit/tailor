@@ -167,18 +167,18 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             refname = 'HEAD'
 
         # Allow a new tag to overwrite an older one with -f
-	args = ["tag", "-a",]
-	if self.repository.overwrite_tags:
-		args.append("-f")
+        args = ["tag", "-a",]
+        if self.repository.overwrite_tags:
+                args.append("-f")
 
-	# Escape the tag name for git
-	import re
-	tag_git = re.sub('_*$', '', re.sub('__', '_', re.sub('[^A-Za-z0-9_-]', '_', tag)))
+        # Escape the tag name for git
+        import re
+        tag_git = re.sub('_*$', '', re.sub('__', '_', re.sub('[^A-Za-z0-9_-]', '_', tag)))
 
-	args += ["-m", tag, tag_git, refname]
+        args += ["-m", tag, tag_git, refname]
         cmd = self.repository.command(*args)
         c = GitExternalCommand(self.repository, cwd=self.repository.basedir, command=cmd)
-	from os import environ
+        from os import environ
         env = {}
         env.update(environ)
         (name, email) = self.__parse_author(author)
