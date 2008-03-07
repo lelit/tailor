@@ -189,6 +189,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                 self.current['comment'] = ''
                 self.current['hash'] = attributes['hash']
                 self.current['entries'] = []
+                self.inverted = bool(attributes['inverted'])
             elif name in ['name', 'comment', 'add_file', 'add_directory',
                           'modify_file', 'remove_file', 'remove_directory']:
                 self.current_field = []
@@ -223,7 +224,14 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                 self.current['entries'].append(entry)
             elif name in ['add_file', 'add_directory', 'modify_file',
                           'remove_file', 'remove_directory']:
-                entry = ChangesetEntry(''.join(self.current_field).strip())
+                current_field = ''.join(self.current_field).strip()
+                if self.inverted:
+                    # the filenames in file modifications are outdated
+                    # if there are renames
+                    for i in self.current['entries']:
+                        if i.action_kind == i.RENAMED:
+                            current_field = current_field.replace(i.old_name, i.name)
+                entry = ChangesetEntry(current_field)
                 entry.action_kind = { 'add_file': entry.ADDED,
                                       'add_directory': entry.ADDED,
                                       'modify_file': entry.UPDATED,
