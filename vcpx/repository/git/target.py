@@ -216,35 +216,20 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         Rename a filesystem object.
         """
 
-        # In the future, we may want to switch to using
-        # git rename, in case renames ever get more support
-        # in git.  It currently just does an add and remove.
+        # Git does not seem to allow
+        #   $ mv a.txt b.txt
+        #   $ svn mv a.txt b.txt
+        # Here we are in this situation, since upstream VCS already
+        # moved the item.
 
-        from os.path import join, isdir
-        from os import walk
-        from vcpx.dualwd import IGNORED_METADIRS
+        from os import rename
+        from os.path import join
 
-        from vcpx.shwrap import ExternalCommand
-        cp = ExternalCommand(command=['cp'])
-        if isdir(join(self.repository.basedir, newname)) or isdir(join(self.repository.basedir, oldname)):
-            # Given lack of support for directories in current Git,
-            # loop over all files under the new directory and
-            # do a add/remove on them.
-            skip = len(self.repository.basedir)+len(newname)+2
-            for dir, subdirs, files in walk(join(self.repository.basedir, newname)):
-                prefix = dir[skip:]
+        oldpath = join(self.repository.basedir, oldname)
+        newpath = join(self.repository.basedir, newname)
 
-                for excd in IGNORED_METADIRS:
-                    if excd in subdirs:
-                        subdirs.remove(excd)
-
-                for f in files:
-                    self._removePathnames([join(oldname, prefix, f)])
-                    self._addPathnames([join(newname, prefix, f)])
-        else:
-            cp.execute(join(self.repository.basedir, oldname), join(self.repository.basedir, newname))
-            self._removePathnames([oldname])
-            self._addPathnames([newname])
+        rename(newpath, oldpath)
+        self.repository.runCommand(['mv', oldname, newname])
 
     def _prepareTargetRepository(self):
         self.repository.create()
