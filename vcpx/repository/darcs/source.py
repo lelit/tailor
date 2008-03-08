@@ -229,7 +229,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                     # the filenames in file modifications are outdated
                     # if there are renames
                     for i in self.current['entries']:
-                        if i.action_kind == i.RENAMED:
+                        if i.action_kind == i.RENAMED and current_field.startswith(i.old_name):
                             current_field = current_field.replace(i.old_name, i.name)
                 entry = ChangesetEntry(current_field)
                 entry.action_kind = { 'add_file': entry.ADDED,
