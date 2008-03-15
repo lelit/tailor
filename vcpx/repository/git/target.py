@@ -218,7 +218,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         # Git does not seem to allow
         #   $ mv a.txt b.txt
-        #   $ svn mv a.txt b.txt
+        #   $ git mv a.txt b.txt
         # Here we are in this situation, since upstream VCS already
         # moved the item.
 
