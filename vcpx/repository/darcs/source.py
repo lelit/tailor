@@ -189,7 +189,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                 self.current['comment'] = ''
                 self.current['hash'] = attributes['hash']
                 self.current['entries'] = []
-                self.inverted = bool(attributes['inverted'])
+                self.inverted = (attributes['inverted'] == "True")
             elif name in ['name', 'comment', 'add_file', 'add_directory',
                           'modify_file', 'remove_file', 'remove_directory']:
                 self.current_field = []
