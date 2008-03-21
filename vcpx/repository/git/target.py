@@ -222,14 +222,27 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Here we are in this situation, since upstream VCS already
         # moved the item.
 
-        from os import rename
-        from os.path import join
+        from os import mkdir, rename, rmdir
+        from os.path import join, exists
 
         oldpath = join(self.repository.basedir, oldname)
         newpath = join(self.repository.basedir, newname)
 
-        rename(newpath, oldpath)
-        self.repository.runCommand(['mv', oldname, newname])
+        # rename() won't work for rename(a/b, a)
+        if newpath.startswith(oldpath):
+            oldpathtmp = oldpath+"-TAILOR-HACKED-TEMP-NAME"
+            oldnametmp = oldname+"-TAILOR-HACKED-TEMP-NAME"
+            if exists(oldpathtmp):
+                rename(oldpathtmp, oldpath)
+            rename(newpath, oldpathtmp)
+            rmdir(oldpath)
+            rename(oldpathtmp, oldpath)
+            mkdir(oldpathtmp)
+            self.repository.runCommand(['mv', oldname, newname.replace(oldname, oldnametmp, 1)])
+            self.repository.runCommand(['mv', oldnametmp, oldname])
+        else:
+            rename(newpath, oldpath)
+            self.repository.runCommand(['mv', oldname, newname])
 
     def _prepareTargetRepository(self):
         self.repository.create()
