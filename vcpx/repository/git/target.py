@@ -222,11 +222,16 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Here we are in this situation, since upstream VCS already
         # moved the item.
 
-        from os import mkdir, rename, rmdir
-        from os.path import join, exists
+        from os import mkdir, rename, rmdir, listdir
+        from os.path import join, exists, isdir
 
         oldpath = join(self.repository.basedir, oldname)
         newpath = join(self.repository.basedir, newname)
+
+        # Git does not track empty directories, so if there is only an
+        # empty dir, we have nothing to do.
+        if isdir(newpath) and not len(listdir(newpath)):
+            return
 
         # rename() won't work for rename(a/b, a)
         if newpath.startswith(oldpath+"/"):
