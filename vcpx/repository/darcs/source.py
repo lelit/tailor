@@ -72,13 +72,22 @@ class DarcsChangeset(Changeset):
 
             for i,e in enumerate(self.entries):
                 if e.action_kind == e.RENAMED and e.old_name == entry.name:
+                    # Unfortunately we have to check if the order if
+                    # messed up, in that case we should not do anything.
+                    # Example: mv a a2; mkdir a; mv a2 a/b
+                    skip = False
+                    for j in self.entries:
+                        if j.action_kind == j.RENAMED and j.name.startswith(dirname):
+                            skip = True
+                            break
                     # Luckily enough (since removes are the first entries
                     # in the list, that is) by anticipating the add we
                     # cure also the case below, when addition follows
                     # edit.
-                    e.action_kind = e.ADDED
-                    e.old_name = None
-                    return e
+                    if not skip:
+                        e.action_kind = e.ADDED
+                        e.old_name = None
+                        return e
 
                 # Assert also that add_dir events must preceeds any
                 # add_file and ren_file that have that dir as target,
