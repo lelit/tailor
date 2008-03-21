@@ -46,6 +46,7 @@ class DarcsChangeset(Changeset):
         - collapse "add A; rename A B" into "add B"
         - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
+	- collapse "rename A B; rename B C" into "rename A C"
         """
 
         # This should not happen, since the parser feeds us an already built
@@ -124,6 +125,13 @@ class DarcsChangeset(Changeset):
                 elif e.action_kind == e.ADDED and e.name == entry.name:
                     del self.entries[i]
                     return None
+
+        # The "rename A B; rename B C" to "rename A C" part
+        elif entry.action_kind == entry.RENAMED:
+            for i in self.entries:
+                if i.action_kind == i.RENAMED and i.name == entry.old_name:
+                    i.name = entry.name
+                    return i
 
         # Ok, it must be either an edit or a rename: the former goes
         # obviously to the end, and since the latter, as said, come
