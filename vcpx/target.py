@@ -495,7 +495,10 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
                 if renamed:
                     if self.shared_basedirs:
-                        rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
+                        # it's possible that the target already handled
+                        # this
+                        if exists(absold + '-TAILOR-HACKED-TEMP-NAME'):
+                            rename(absold + '-TAILOR-HACKED-TEMP-NAME', absold)
                     else:
 
                         # before rsync      after rsync      the HACK            after "svn mv"           result
