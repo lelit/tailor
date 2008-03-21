@@ -99,6 +99,8 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         env = {}
         env.update(environ)
 
+        # update the index
+        self.repository.runCommand(['add', '-u'])
         treeid = self.repository.runCommand(['write-tree'])[0]
 
         # in single-repository mode, only update the relevant branch
@@ -246,8 +248,9 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             self.repository.runCommand(['mv', oldname, newname.replace(oldname, oldnametmp, 1)])
             self.repository.runCommand(['mv', oldnametmp, oldname])
         else:
-            rename(newpath, oldpath)
-            self.repository.runCommand(['mv', oldname, newname])
+            # we can just add the new path, commit will detect the
+            # deleted ones automatically
+            self.repository.runCommand(['add', newname])
 
     def _prepareTargetRepository(self):
         self.repository.create()
