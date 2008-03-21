@@ -229,7 +229,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         newpath = join(self.repository.basedir, newname)
 
         # rename() won't work for rename(a/b, a)
-        if newpath.startswith(oldpath):
+        if newpath.startswith(oldpath+"/"):
             oldpathtmp = oldpath+"-TAILOR-HACKED-TEMP-NAME"
             oldnametmp = oldname+"-TAILOR-HACKED-TEMP-NAME"
             if exists(oldpathtmp):
