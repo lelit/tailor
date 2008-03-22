@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# File: test-darcs2git.include
+#
+# This is an include for all Dracs to Git tests.
+
+STARTDIR=$PWD
+
+# Fast exit, if no backend installed
+which darcs >/dev/null 2>&1 || exit 201
+which git >/dev/null 2>&1 || exit 201
+
+# Exit immediately if a command exits with a non-zero
+set -e
+
+# Create a new empty tempdirectory and work there.
+rm -rf testdir
+mkdir testdir
+cd testdir
+
+DARCSREPOSITORY=$PWD/darcs-repo
+GITREPOSITORY=$PWD/git-repo
+
+darcs_setup()
+{
+        # Creating repository
+        mkdir $DARCSREPOSITORY
+        cd $DARCSREPOSITORY
+        darcs initialize
+	mkdir $GITREPOSITORY
+}
+
+
+tailorize()
+{
+
+        # create first for tailor
+        cat <<EOF >test-darcs2git.conf
+[DEFAULT]
+verbose = True
+Debug = True
+
+[project]
+patch-name-format = %(revision)s
+root-directory = $PWD/rootdir
+source = darcs:source
+target = git:target
+
+[darcs:source]
+repository = $DARCSREPOSITORY
+
+[darcs:target]
+repository = $GITREPOSITORY
+EOF
+
+        # Convert from Darcs to Git
+        tailor -c test-darcs2git.conf
+	# checkout the git repo
+	cd rootdir/.git
+	git-archive --format=tar HEAD| tar xf - -C $GITREPOSITORY
+	cd - >/dev/null
+}
+
+target_diff()
+{
+        if diff -Naur -x "_darcs" $GITREPOSITORY $DARCSREPOSITORY >test0.log
+        then
+                echo "WD-diff: PASS"
+        else
+                echo "WD-diff: Diffs in Working Dir! (see test0.log)" >&2
+                exit 100
+        fi
+}
+
+testing_runs()
+{
+        cd ..
+        tailorize
+        target_diff
+        cd $STARTDIR
+}
