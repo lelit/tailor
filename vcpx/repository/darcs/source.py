@@ -337,7 +337,11 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 pieces = fsep.split(l.rstrip(), 8)
                 assert len(pieces)>=7, "Cannot parse %r as a patch timestamp" % l
                 date = ' '.join(pieces[:8])
-                author = pieces[8]
+                try:
+                    author = pieces[8]
+                except IndexError, s:
+                    # darcs allows patches with empty author
+                    author = ""
                 y,m,d,hh,mm,ss,d1,d2,d3 = strptime(date, "%a %b %d %H %M %S %Z %Y")
                 date = datetime(y,m,d,hh,mm,ss,0,UTC)
                 l = output.readline().rstrip()
