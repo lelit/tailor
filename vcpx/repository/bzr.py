@@ -95,7 +95,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 else:
                     self.ignored.extend([ line.rstrip("\n\r") for line in f.readlines() ])
                 f.close()
-        except errors.NotBranchError, errors.NoWorkingTree:
+        except (errors.NotBranchError, errors.NoWorkingTree):
             pass
 
         # Omit our own log...
