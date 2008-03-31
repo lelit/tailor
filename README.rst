@@ -578,9 +578,7 @@ patch-name-format : string
 
   The prototype may contain ``%(keyword)s`` such as 'author', 'date',
   'revision', 'firstlogline', 'remaininglog' or 'project'.  It
-  defaults to ``[%(project)s @ %(revision)s]``; setting it to the
-  empty string means that tailor will simply use the original
-  changelog.
+  defaults to ``[%(project)s @ %(revision)s]`` [#]_.
 
   When you set it empty, as in
 
@@ -605,6 +603,16 @@ remove-first-log-line : bool
 refill-changelogs : bool
   Off by default, when active tailor reformats every changelog before
   committing on the target system.
+
+.. [#] Modifying the changelog may have subtle consequences!
+       Under darcs, for example, you may hit issue772_ by producing
+       hash collisions, that happens when two distinct patches carry
+       the same "unique" identifier (the hash is computed using
+       *date*, *author*, *changelog* and other details, but **not**
+       the actual content): the default setting, that adds a
+       differentiating prefix, is safer from that point of view.
+
+.. _issue772: http://bugs.darcs.net/issue772
 
 
 Repositories
