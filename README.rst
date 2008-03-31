@@ -414,30 +414,22 @@ repository under Subversion_::
     #verbose = True
     start-revision = INITIAL
     root-directory = /tmp/rootdir-Monotone
+    source = monotone:
+    target = svn:
     source-repository = /home/user/Monotone/monotone-database.mtn
     target-repository = file:///tmp/svn-repository
     use-propset = True
 
     # Projects
     [net.venge.monotone.cvssync]
-    source = monotone:net.venge.monotone.cvssync
-    target = svn:net.venge.monotone.cvssync
 
     [net.venge.monotone.cvssync.attrs]
-    source = monotone:net.venge.monotone.cvssync.attrs
-    target = svn:net.venge.monotone.cvssync.attrs
 
     [net.venge.monotone.de]
-    source = monotone:net.venge.monotone.de
-    target = svn:net.venge.monotone.de
 
     [net.venge.monotone.svn_import]
-    source = monotone:net.venge.monotone.svn_import
-    target = svn:net.venge.monotone.svn_import
 
     [net.venge.monotone]
-    source = monotone:net.venge.monotone
-    target = svn:net.venge.monotone
 
 
     # Sources
