@@ -397,7 +397,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         repo = self._getRepo()
 
         self.log.info('Renaming %r to %r...', oldname, newname)
-        if isdir(join(self.repository.basedir, normpath(newname))):
+        # Check both names, because maybe we are operating in
+        # disjunct dirs, and the target may be renamed to a
+        # temporary name
+        if (isdir(join(self.repository.basedir, normpath(oldname)))
+            or isdir(join(self.repository.basedir, normpath(newname)))):
             # Given lack of support for directories in current HG,
             # loop over all files under the old directory and
             # do a copy on them.
