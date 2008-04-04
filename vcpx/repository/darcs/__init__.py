@@ -25,6 +25,11 @@ class DarcsRepository(Repository):
         Repository._load(self, project)
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
+        init_options = cget(self.name, 'init-options', '')
+        if init_options:
+            self.init_options = tuple(init_options.split(' '))
+        else:
+            self.init_options = None
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
         self.replace_badchars = eval(cget(self.name, 'replace-badchars',
                                           "{"
@@ -54,6 +59,8 @@ class DarcsRepository(Repository):
     def command(self, *args, **kwargs):
         if args[0] == 'record' and self.use_look_for_adds:
             args = args + ('--look-for-adds',)
+        elif args[0] == 'initialize' and self.init_options:
+            args = args + self.init_options
         return Repository.command(self, *args, **kwargs)
 
     def create(self):

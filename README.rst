@@ -820,6 +820,10 @@ tag-entries : bool
 darcs
 %%%%%
 
+init-options : string
+  By default empty, may specify options used to initialize the
+  target repository, for example to use the newer ``darcs-2``.
+
 look-for-adds : bool
   By default tailor commits only the entries explicitly mentioned by
   the upstream changeset. Sometimes this is not desiderable, maybe
