@@ -25,7 +25,7 @@ The following ascii-art illustrates the usual scenario::
   | Upstream CVS |-------->| darcs      |----------->| darcs      |
   | repository   | tailor  | repository | darcs pull | repository |
   +--------------+         +------------+            +------------+
-                                                           |^         
+                                                           |^
                                                            ||
                                                            ||
                                                            v|
@@ -140,18 +140,18 @@ Examples
 1. Bootstrap a new tailored project, starting at upstream revision 10
 
    a. First create a config file::
-   
+
        $ tailor --verbose -s svn -R http://svn.server/path/to/svnrepo \
                 --module /Product/trunk -r 10 --subdir Product \
                 ~/darcs/MyProduct > myproject.tailor
 
    b. Modify it as you like (mostly adjusting root-directories and the
       like)::
-      
+
        $ emacs myproject.tailor
 
    c. Run tailor on it::
-   
+
        $ tailor --configfile myproject.tailor
 
 2. Bootstrap a new product, fetching its whole CVS repository and
@@ -189,14 +189,14 @@ Examples
              avoid the problem.
 
    c. Run tailor on it once, to bootstrap the project::
-   
+
        $ tailor -D -v -c cmfcore.tailor
 
       If the target repository is on the local filesystem (ie, it
       starts with ``file:///``) and it does not exist, tailor
       creates a new empty Subversion repository at the specified
       location.
-      
+
    .. note:: Before step d) below, you may want to install an
              appropriate hook in the repository to enable the
              propset command to operate on unversioned properties,
@@ -212,7 +212,7 @@ Examples
    d. Run tailor again and again, to sync up with latest changes::
 
        $ tailor -v --configfile cmfcore.tailor
-   
+
 __ http://svnbook.red-bean.com/en/1.0/ch05s02.html#svn-ch-5-sect-2.1
 __ http://svn.haxx.se/users/archive-2005-07/0605.shtml
 __ http://svn.haxx.se/users/archive-2005-03/0596.shtml
@@ -279,7 +279,7 @@ c) ArX and Codeville are (currently) only supported as *target*;
 d) Specifying ``--subdir .`` may not work, in particular when dealing
    with remote CVS repositories (it does when the CVS repository is
    on local machine).
-   
+
 This list will always be incomplete, but I'll do my best to keep it
 short :-)
 
@@ -312,12 +312,12 @@ For example::
     source = svn:tailor
     target = darcs:tailor
     state-file = reverse.state
-    
+
     [svn:tailor]
     repository = file:///tmp/testtai
     module = /project1
     subdir = svnside
-    
+
     [darcs:tailor]
     repository = ~/WiP/cvsync
     subdir = darcside
@@ -350,7 +350,7 @@ the ``source`` and ``target`` will be implicitly loaded from
     root-directory = ~/mypxlib
     start-revision = INITIAL
     subdir = pxlib
-    
+
     [cvs:pxlib]
     repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
     module = pxlib
@@ -367,7 +367,7 @@ need to specify a different directory for each repository [#]_, as in::
     target = hg:pxlib
     root-directory = ~/mypxlib
     start-revision = INITIAL
-    
+
     [cvs:pxlib]
     repository = :pserver:anonymous@cvs.sf.net:/cvsroot/pxlib
     module = pxlib
@@ -544,7 +544,7 @@ verbose : bool
 
 debug : bool
   Print also their output.
-  
+
 before-commit : tuple
   This is a function name, or a sequence of function names enclosed
   by brackets, that will be executed on each changeset just before
@@ -593,7 +593,7 @@ remove-first-log-line : bool
   Remove the first line of the upstream changelog. This is intended to
   go in pair with ``patch-name-format``, when using its 'firstlogline'
   variable to build the name of the patch.  The default is ``False``.
-  
+
   A reasonable usage is::
 
     [DEFAULT]
@@ -639,7 +639,7 @@ repository are set just once::
   target-keyid = test@example.com
   target-passphrase = lala
   source-repository = http://svn.someserver.com
-  
+
   [productA]
   target = monotone:productA
   source = svn:sourceA
@@ -655,7 +655,7 @@ repository are set just once::
   [productC_darcs]
   target = darcs:
   source = svn:sourceC
-  
+
   ...
 
   [monotone:productA]
@@ -666,7 +666,7 @@ repository are set just once::
 
   [monotone:productC]
   module = every.thing.productC
-  
+
   [svn:sourceA]
   module = /productA
 
@@ -816,7 +816,7 @@ tag-entries : bool
   in the CVS working copy, using ``tag_entries = False``.
 
   *True* by default.
-  
+
 darcs
 %%%%%
 
@@ -857,7 +857,7 @@ replace-badchars : string
       '\xdf': '&#223;',
       '\xe5': '&#229;'
     }
-    
+
 start-revision : string
   Under darcs this may be either the name of a tag or the hash of an
   arbitrary patch in the repository, plus the ordinary ``INITIAL`` or
@@ -909,14 +909,14 @@ monotone
 %%%%%%%%
 
 keyid : string
-  Monotone key id to use for commits. The specified key 
+  Monotone key id to use for commits. The specified key
   must exist on keystore. Takes precedence
   over keygenid.
 
 keygenid : string
-  Id of a new keypair to generate and store in the 
+  Id of a new keypair to generate and store in the
   repository.
-  The keypair is used for commits. Ignored if keyid is 
+  The keypair is used for commits. Ignored if keyid is
   specified.
 
 passphrase : string
@@ -932,7 +932,7 @@ p4
 depot-path : string
   The path within the depot indicating the root of all files that will be
   replicated.
-  
+
   This is used both for determining changes as well as mapping
   file locations from changesets to the filesystem.
 
@@ -967,7 +967,7 @@ filter-badchars : bool (or string)
   in::
 
     filter-badchars=\x00\x01
-  
+
 use-propset : bool
   Indicate that tailor is allowed to properly inject the upstream
   changeset's author and timestamp into the target repository.  As
@@ -976,7 +976,7 @@ use-propset : bool
   values to the changelog.  When active at bootstrap time and the
   repository is local, tailor creates automatically a minimal
   ``hooks/pre-revprop-change`` script inside the repository, so no
-  other intervention is needed. 
+  other intervention is needed.
 
   *False* by default.
 
@@ -1139,7 +1139,7 @@ to reindent it if it's a Python file::
     def reindent_em(wd, changeset):
         import reindent
         import os
-        
+
         for entry in changeset.entries:
             fname = os.path.join(wd.basedir, entry.name)
 
