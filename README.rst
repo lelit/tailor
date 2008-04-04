@@ -1046,6 +1046,34 @@ tla
        not accept the option ``--to-match``.
 
 
+Disjunct working directories
+----------------------------
+
+A particular case happens when the ``subdir`` specified in the
+*source* is different from the one in *target* as in::
+
+  [tailor-d1-to-d2]
+  patch-name-format = ''
+  source = darcs:source
+  target = darcs:target
+  start-revision = INITIAL
+
+  [darcs:source]
+  repository = http://darcs.arstecnica.it/tailor
+  subdir = tailor_d1
+
+  [darcs:target]
+  darcs-command = /usr/local/bin/darcs2
+  init-options = --darcs-2
+  subdir = tailor_d2
+
+In this particular case, the *kind* may be the same, allowing
+particular migrations between the same kind of VC, as showed.
+
+Tailor will use ``rsync`` to move the changes applied in the
+source subdirectory to the target one.
+
+
 Using a Python script as configuration file
 -------------------------------------------
 
