@@ -46,7 +46,7 @@ class DarcsChangeset(Changeset):
         - collapse "add A; rename A B" into "add B"
         - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
-	- collapse "rename A B; rename B C" into "rename A C"
+        - collapse "rename A B; rename B C" into "rename A C"
         """
 
         # This should not happen, since the parser feeds us an already built
