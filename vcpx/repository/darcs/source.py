@@ -468,7 +468,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                       ' '.join(conflict))
         cmd = self.repository.command("revert", "--all")
         revert = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        revert.execute(conflict)
+        revert.execute(conflict, input="\n")
 
     def _checkoutUpstreamRevision(self, revision):
         """
