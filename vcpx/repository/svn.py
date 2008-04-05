@@ -134,7 +134,10 @@ class SvnRepository(Repository):
                                                   "repository" %
                                                   self.repository)
 
-            repodir = self.repository[7:]
+            if platform != 'win32':
+                repodir = self.repository[7:]
+            else:
+                repodir = self.repository[8:]
             cmd = self.command("create", "--fs-type", "fsfs", svnadmin=True)
             svnadmin = ExternalCommand(command=cmd)
             svnadmin.execute(repodir)
