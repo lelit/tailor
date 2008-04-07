@@ -152,7 +152,10 @@ class SvnRepository(Repository):
                                  "has the 'pre-revprop-change' hook active, needed "
                                  "by 'use-propset=True'. Assuming it does...")
             else:
-                repodir = self.repository[7:]
+                if platform != 'win32':
+                    repodir = self.repository[7:]
+                else:
+                    repodir = self.repository[8:]
                 hookname = join(repodir, 'hooks', 'pre-revprop-change')
                 if platform == 'win32':
                     hookname += '.bat'
