@@ -356,7 +356,6 @@ the ``source`` and ``target`` will be implicitly loaded from
     module = pxlib
 
     [hg:pxlib]
-    hg-command = /usr/local/bin/hg
 
 This will use a single directory, ``pxlib`` to contain both the source
 and the target system. If you prefer keeping them separated, you just
@@ -375,7 +374,6 @@ need to specify a different directory for each repository [#]_, as in::
     delay-before-apply = 10
 
     [hg:pxlib]
-    hg-command = /usr/local/bin/hg
     subdir = migrated
 
 This will extract upstream CVS sources into ``~/mypxlib/original``,
@@ -705,7 +703,8 @@ subdir : string
 command : string
   Backends based on external command line tool such as *svn* or
   *darcs* offers this option to impose a particular external binary to
-  be used, as done in the example above for ``hg``.
+  be used, as done below in the example about `disjunct working
+  directories`_.
 
 python-path : string
   For pythonique backends such as *bzr* and *hg* this indicates
