@@ -529,9 +529,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         elif lastok <> self.repository.repository:
             module = self.repository.repository[len(lastok):]
             module += self.repository.module
-            raise ConfigurationError("Non-root svn repository %r. "
-                                     "Please specify that as 'repository=%s' "
-                                     "and 'module=%s'." %
+            raise ConfigurationError('Non-root svn repository %r. '
+                                     'Please specify that as "repository=%s" '
+                                     'and "module=%s".' %
                                      (self.repository.repository,
                                       lastok, module.rstrip('/')))
 
