@@ -522,7 +522,9 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     reporoot = reporoot[:reporoot.rfind('/')]
 
         if lastok is None:
-            raise ConfigurationError("%r is not the root of a svn repository." %
+            raise ConfigurationError('%r is not the root of a svn repository. If '
+                                     'you are sure it is indeed, you may try setting '
+                                     'the option "trust-root" to "True".' %
                                      self.repository.repository)
         elif lastok <> self.repository.repository:
             module = self.repository.repository[len(lastok):]
