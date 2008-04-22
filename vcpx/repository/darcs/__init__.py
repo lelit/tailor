@@ -33,6 +33,7 @@ class DarcsRepository(Repository):
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
         self.replace_badchars = eval(cget(self.name, 'replace-badchars',
                                           "{"
+                                          "'\xb4': '&#180;',"
                                           "'\xc1': '&#193;',"
                                           "'\xc9': '&#201;',"
                                           "'\xcd': '&#205;',"
