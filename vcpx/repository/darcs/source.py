@@ -44,6 +44,7 @@ class DarcsChangeset(Changeset):
         Fixup darcs idiosyncrasies:
 
         - collapse "add A; rename A B" into "add B"
+        - collapse "rename A B; add B" into "add B"
         - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
         - collapse "rename A B; rename B C" into "rename A C"
@@ -90,6 +91,10 @@ class DarcsChangeset(Changeset):
                         e.old_name = None
                         return e
 
+                # The "rename A B; add B" into "add B"
+                if e.action_kind == e.RENAMED and e.name == entry.name:
+                    del self.entries[i]
+
                 # Assert also that add_dir events must preceeds any
                 # add_file and ren_file that have that dir as target,
                 # and that add_file preceeds any edit.
@@ -128,10 +133,15 @@ class DarcsChangeset(Changeset):
 
         # The "rename A B; rename B C" to "rename A C" part
         elif entry.action_kind == entry.RENAMED:
-            for i in self.entries:
-                if i.action_kind == i.RENAMED and i.name == entry.old_name:
-                    i.name = entry.name
-                    return i
+            for e in self.entries:
+                if e.action_kind == e.RENAMED and e.name == entry.old_name:
+                    e.name = entry.name
+                    return e
+
+            # The "rename A B; add B" into "add B", part two
+            for i,e in enumerate(self.entries):
+                if e.action_kind == e.ADDED and e.name == entry.name:
+                    return None
 
         # Ok, it must be either an edit or a rename: the former goes
         # obviously to the end, and since the latter, as said, come

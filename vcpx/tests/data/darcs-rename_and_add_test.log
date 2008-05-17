@@ -1,0 +1,36 @@
+<changelog>
+<patch author='simons@cryp.to' date='Thu May 22 03:37:16 CEST 2003' local_date='Thu May 22 05:37:16 CEST 2003' inverted='False' hash='20030522033716-96760-ccd786794d8c2a58327b90ac5f93a824b456c3b6.gz'>
+        <name>Autoconf Redux Part II</name>
+        <comment>We&apos;re getting somewhere:
+
+ - If the configured prefix does _not_ contain the string &quot;darcs&quot;, it
+   will be appended as directory name to $sysconfdir and $libexecdir.
+   This is usually what the user wants.
+
+ - If no prefix is given, $sysconfdir will be /etc.
+
+ - Added Autoconf.lhs module for system dependent information. So far:
+   darcsconfigdir. Thanks to this module, ghc will also know when to
+   re-build a binary because configure ran again.
+
+ - configure will now dump a nice summary before it terminates.</comment>
+    <summary>
+    <move from="Autoconf.lhs" to="Autoconf.lhs.in"/>
+    <add_file>
+    Autoconf.lhs.in
+    </add_file>
+    <modify_file>
+    Makefile<removed_lines num='2'/><added_lines num='2'/>
+    </modify_file>
+    <modify_file>
+    autoconf.mk.in<removed_lines num='5'/><added_lines num='2'/>
+    </modify_file>
+    <modify_file>
+    configure.in<removed_lines num='7'/><added_lines num='67'/>
+    </modify_file>
+    <modify_file>
+    darcs_cgi.lhs<removed_lines num='1'/><added_lines num='2'/>
+    </modify_file>
+    </summary>
+</patch>
+</changelog>
