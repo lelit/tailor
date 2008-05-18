@@ -145,7 +145,7 @@ class DarcsChangesParser(DarcsParserTestCase):
         self.assertEqual(cset.date, datetime(2003, 10, 14, 14, 2, 31, 0, UTC))
 
     def testRenameAndRemove(self):
-        """Verify that the parser degrades rename A B+remove B  to remove A"""
+        """Verify that the parser degrades rename A B+remove B to remove A"""
 
         log = self.getDarcsOutput('darcs-rename_then_remove_test')
         csets = changesets_from_darcschanges(log)
@@ -158,7 +158,7 @@ class DarcsChangesParser(DarcsParserTestCase):
         self.assertEqual(entry.action_kind, entry.DELETED)
 
     def testRenameAndAdd(self):
-        """Verify that the parser reduce rename A B+add B  to rename A B"""
+        """Verify that the parser reduce rename A B+add B to rename A B"""
 
         log = self.getDarcsOutput('darcs-rename_and_add_test')
         csets = changesets_from_darcschanges(log)
