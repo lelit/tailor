@@ -1,0 +1,31 @@
+<changelog>
+<patch author='David Roundy &lt;droundy@abridgegame.org&gt;' date='20041102123004' local_date='Tue Nov  2 13:30:04 CET 2004' inverted='False' hash='20041102123004-53a90-114c5a006ca8dd7726c79ac6a56ebc30b9587906.gz'>
+	<name>add new logo.</name>
+	<comment>This the design for this logo was donated by Summersault, LLC
+(www.summersault.com).</comment>
+    <summary>
+    <move from="logo.png" to="logos-20041102120340/plain_logo.png"/>
+    <move from="logos-20041102120340" to="logos"/>
+    <move from="logos/large_logo.png-20041102120441" to="logos/large_logo.png"/>
+    <move from="logos/logo.png-20041102120441" to="logos/logo.png"/>
+    <modify_file>
+    index.html.in<removed_lines num='1'/><added_lines num='1'/>
+    </modify_file>
+    <add_directory>
+    logos-20041102120340
+    </add_directory>
+    <modify_file>
+    logos/large_logo.png
+    </modify_file>
+    <add_file>
+    logos/large_logo.png-20041102120441
+    </add_file>
+    <modify_file>
+    logos/logo.png
+    </modify_file>
+    <add_file>
+    logos/logo.png-20041102120441
+    </add_file>
+    </summary>
+</patch>
+</changelog>

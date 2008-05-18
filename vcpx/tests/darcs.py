@@ -186,6 +186,28 @@ class DarcsChangesParser(DarcsParserTestCase):
         self.assertEqual(entry.name, 'darcs_cgi.lhs')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
+    def testRenameAndAddDir(self):
+        """Verify that the parser reduce rename A B+add B to rename A B"""
+
+        log = self.getDarcsOutput('darcs-rename_and_add_dir_test')
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 7)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'logos/plain_logo.png')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.old_name, 'logo.png')
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'logos')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'logos/large_logo.png')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
     def testBadOrderedXML(self):
         "Verify if the parser is able to correct the bad order produced by changes --xml"
 

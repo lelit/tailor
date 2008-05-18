@@ -70,30 +70,32 @@ class DarcsChangeset(Changeset):
             # So, if there's a rename of this entry there, change that
             # to an addition instead, and don't insert any other entry
 
-            dirname = entry.name+'/' # darcs hopefully use forward slashes also under win
+            # darcs hopefully use forward slashes also under win
+            dirname = entry.name+'/'
 
             for i,e in enumerate(self.entries):
-                if e.action_kind == e.RENAMED and e.old_name == entry.name:
-                    # Unfortunately we have to check if the order if
-                    # messed up, in that case we should not do anything.
-                    # Example: mv a a2; mkdir a; mv a2 a/b
-                    skip = False
-                    for j in self.entries:
-                        if j.action_kind == j.RENAMED and j.name.startswith(dirname):
-                            skip = True
-                            break
-                    # Luckily enough (since removes are the first entries
-                    # in the list, that is) by anticipating the add we
-                    # cure also the case below, when addition follows
-                    # edit.
-                    if not skip:
-                        e.action_kind = e.ADDED
-                        e.old_name = None
-                        return e
+                if e.action_kind == e.RENAMED:
+                    if e.old_name == entry.name:
+                        # Unfortunately we have to check if the order if
+                        # messed up, in that case we should not do anything.
+                        # Example: mv a a2; mkdir a; mv a2 a/b
+                        skip = False
+                        for j in self.entries:
+                            if j.action_kind == j.RENAMED and j.name.startswith(dirname):
+                                skip = True
+                                break
+                        # Luckily enough (since removes are the first entries
+                        # in the list, that is) by anticipating the add we
+                        # cure also the case below, when addition follows
+                        # edit.
+                        if not skip:
+                            e.action_kind = e.ADDED
+                            e.old_name = None
+                            return e
 
-                # The "rename A B; add B" into "add B"
-                if e.action_kind == e.RENAMED and e.name == entry.name:
-                    del self.entries[i]
+                    # The "rename A B; add B" into "add B"
+                    if e.name == entry.name:
+                        del self.entries[i]
 
                 # Assert also that add_dir events must preceeds any
                 # add_file and ren_file that have that dir as target,
@@ -133,6 +135,12 @@ class DarcsChangeset(Changeset):
 
         # The "rename A B; rename B C" to "rename A C" part
         elif entry.action_kind == entry.RENAMED:
+            # Adjust previous renames
+            olddirname = entry.old_name+'/'
+            for e in self.entries:
+                if e.action_kind == e.RENAMED and e.name.startswith(olddirname):
+                    e.name = entry.name + '/' + e.name[len(olddirname):]
+
             for e in self.entries:
                 if e.action_kind == e.RENAMED and e.name == entry.old_name:
                     e.name = entry.name
