@@ -329,6 +329,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
             if e.action_kind == e.DELETED and e.new_revision is None:
                 assert CvsEntries(join(self.repository.basedir, e.name)).isEmpty(), '%s should be empty' % e.name
+                self.log.info("removing stale deleted directory %s", path)
                 rmtree(join(self.repository.basedir, e.name))
             else:
                 names = reventries.setdefault(e.new_revision, [])
@@ -379,12 +380,12 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         for entry,path in addeddirs:
             entry = changeset.addEntry(path, None, before=entry)
             entry.action_kind = entry.ADDED
-            self.log.info("registering new %s directory", entry.name)
+            self.log.debug("registering new %s directory", entry.name)
 
         for path in deleteddirs:
             deldir = changeset.addEntry(path, None)
             deldir.action_kind = deldir.DELETED
-            self.log.info("registering %s directory deletion", path)
+            self.log.debug("registering %s directory deletion", path)
 
         # Make sure all files are present on disk: CVS update does not
         # create them nor reports an error if the files have been
