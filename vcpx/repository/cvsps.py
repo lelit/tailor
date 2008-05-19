@@ -387,6 +387,14 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
             deldir.action_kind = deldir.DELETED
             self.log.debug("registering %s directory deletion", path)
 
+            # Since we are not going to issue cvs updates on whole
+            # directories but only on files, most probably the -P
+            # above has no effect: remove the deleted dir if it's still
+            # there.
+            if exists(join(self.repository.basedir, e.name)):
+                self.log.info("removing stale deleted directory %s", path)
+                rmtree(join(self.repository.basedir, e.name))
+
         # Make sure all files are present on disk: CVS update does not
         # create them nor reports an error if the files have been
         # completely removed from the cvs repository. So loop over the
