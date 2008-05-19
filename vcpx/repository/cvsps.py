@@ -343,7 +343,7 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         revs.sort(compare_cvs_revs)
 
         cmd = self.repository.command("-f", "-d", "%(repository)s",
-                                      "-q", "update", "-d",
+                                      "-q", "update", "-d", "-P",
                                       "-r", "%(revision)s")
         if self.repository.freeze_keywords:
             cmd.append('-kk')
