@@ -47,12 +47,12 @@ class CvsEntry(TestCase):
 class CvsLogParser(TestCase):
     """Ensure the cvs log parser does its job"""
 
-    def getCvsLog(self, testname):
+    def getCvsLog(self, testname, encoding='utf-8'):
         from codecs import open
         from os.path import join, split
 
         logname = join(split(__file__)[0], 'data', testname)+'.log'
-        return open(logname, 'r', 'utf-8')
+        return open(logname, 'r', encoding)
 
     def testBasicBehaviour(self):
         """Verify basic cvs log parser behaviour"""
