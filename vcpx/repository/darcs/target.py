@@ -60,9 +60,18 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         logmessage.append(author)
         if patchname:
             logmessage.append(patchname)
+        else:
+            # This is possibile also when REMOVE_FIRST_LOG_LINE is in
+            # effect and the changelog starts with newlines: discard
+            # those, otherwise darcs will complain about invalid patch
+            # name
+            if changelog and changelog.startswith('\n'):
+                while changelog.startswith('\n'):
+                    changelog = changelog[1:]
         if changelog:
             logmessage.append(changelog)
-        if not patchname and not changelog:
+
+        if not logmessage:
             logmessage.append('Unnamed patch')
 
         cmd = self.repository.command("record", "--all", "--pipe")
