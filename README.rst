@@ -870,6 +870,24 @@ start-revision : string
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
+Big repositories
+................
+
+To migrate a big darcs repository it is faster doing a *chunked
+approach*, that is using an intermediary repository where you pull say
+a couple of hundreds patches at a time from the real source
+repository, and then run tailor, in a loop. The following script
+illustrates the method::
+
+    mkdir /tmp/intermediary-repo
+    cd /tmp/intermediary-repo
+    darcs init --darcs-2
+    while python -c "print 'y'*200+'d'" | darcs pull --quiet real-source-repo
+    do
+      tailor -c from-intermediary.tailor
+    done
+
+
 git target
 %%%%%%%%%%
 
