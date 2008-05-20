@@ -171,6 +171,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         parent_branch = BzrDir.open(self.repository.repository).open_branch()
         branch = self._working_tree.branch
+        self.log.info("Collecting missing changesets")
         revisions = branch.missing_revisions(parent_branch)
         branch.fetch(parent_branch)
 
