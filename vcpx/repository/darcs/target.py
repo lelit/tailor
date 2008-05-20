@@ -86,7 +86,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         if self.repository.post_commit_check:
             cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
-            whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd, ok_status=(1,))
             output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
             if not whatsnew.exit_status:
                 raise ChangesetReplayFailure(
