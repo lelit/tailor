@@ -8,6 +8,7 @@
 from unittest import TestCase
 from vcpx.statefile import StateFile
 from vcpx.shwrap import ReopenableNamedTemporaryFile
+from vcpx.repository.mock import MockChangeset as Changeset, MockChangesetEntry as Entry
 
 
 class Statefile(TestCase):
@@ -75,3 +76,50 @@ class Statefile(TestCase):
         for cs in sf:
             self.assertEqual(cs, i)
             i += 1
+
+    def testChangesets(self):
+        """Verify the behaviour with "real" changesets"""
+
+        from os.path import exists
+
+        changesets = [
+            Changeset("Add dir/a{1,2,3}",
+                [ Entry(Entry.ADDED, 'dir/'),
+                  Entry(Entry.ADDED, 'dir/a1'),
+                  Entry(Entry.ADDED, 'dir/a2'),
+                  Entry(Entry.ADDED, 'dir/a3'),
+                ]),
+            Changeset("Spread around",
+                [ Entry(Entry.RENAMED, 'a.root', 'dir/a1'),
+                  Entry(Entry.RENAMED, 'b.root', 'dir/a2'),
+                  Entry(Entry.RENAMED, 'newdir/', 'dir/'),
+                  Entry(Entry.UPDATED, 'newdir/a3', contents="ciao"),
+                ]),
+        ]
+
+        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
+
+        sf = StateFile(rontf.name, None)
+        sf.setPendingChangesets(changesets)
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), None)
+        cs = sf.next()
+        sf.applied()
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+        sf.applied()
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+
+        self.assertRaises(StopIteration, sf.next)

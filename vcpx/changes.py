@@ -58,6 +58,19 @@ class ChangesetEntry(object):
             s = s.encode('ascii', 'replace')
         return s
 
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.old_name == other.old_name and
+                self.old_revision == other.old_revision and
+                self.new_revision == other.new_revision and
+                self.action_kind == other.action_kind)
+
+    def __ne__(self, other):
+        return (self.name != other.name or
+                self.old_name != other.old_name or
+                self.old_revision != other.old_revision or
+                self.new_revision != other.new_revision or
+                self.action_kind != other.action_kind)
 
 from textwrap import TextWrapper
 from re import compile, MULTILINE
