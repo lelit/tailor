@@ -14,8 +14,7 @@ __docformat__ = 'reStructuredText'
 import re
 
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
-from vcpx.source import ChangesetApplicationFailure
-from vcpx.target import SynchronizableTargetWorkingDir
+from vcpx.target import ChangesetReplayFailure, SynchronizableTargetWorkingDir
 from vcpx.tzinfo import UTC
 
 
@@ -82,7 +81,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         record.execute(input=self.repository.encode('\n'.join(logmessage)))
 
         if record.exit_status:
-            raise ChangesetApplicationFailure(
+            raise ChangesetReplayFailure(
                 "%s returned status %d" % (str(record), record.exit_status))
 
         if self.repository.post_commit_check:
@@ -90,8 +89,8 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
             if not whatsnew.exit_status:
-                raise ChangesetApplicationFailure(
-                    "Changes left in working dir after commit:\n%s", output.read())
+                raise ChangesetReplayFailure(
+                    "Changes left in working dir after commit:\n%s" % output.read())
 
     def _removePathnames(self, names):
         """
@@ -238,7 +237,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         changes =  ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
         if changes.exit_status:
-            raise ChangesetApplicationFailure(
+            raise ChangesetReplayFailure(
                 "%s returned status %d saying\n%s" %
                 (str(changes), changes.exit_status, output.read()))
 
