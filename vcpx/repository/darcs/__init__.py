@@ -31,6 +31,7 @@ class DarcsRepository(Repository):
         else:
             self.init_options = None
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+        self.post_commit_check = cget(self.name, 'post-commit-check', 'False')
         self.replace_badchars = eval(cget(self.name, 'replace-badchars',
                                           "{"
                                           "'\xb4': '&#180;',"

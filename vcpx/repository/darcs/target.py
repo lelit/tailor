@@ -85,6 +85,14 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             raise ChangesetApplicationFailure(
                 "%s returned status %d" % (str(record), record.exit_status))
 
+        if self.repository.post_commit_check:
+            cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
+            whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
+            if not whatsnew.exit_status:
+                raise ChangesetApplicationFailure(
+                    "Changes left in working dir after commit:\n%s", output.read())
+
     def _removePathnames(self, names):
         """
         Remove some filesystem object.

@@ -870,6 +870,13 @@ start-revision : string
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
+post-commit-check : bool
+  After each commit tailor will execute a ``darcs whatsnew -ls`` to
+  check there's no changes left. This is particularly useful when
+  trying to debug source backends... at a little cost.
+
+  *False* by default.
+
 Big repositories
 ................
 
