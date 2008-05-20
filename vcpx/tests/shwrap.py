@@ -36,6 +36,28 @@ class SystemCommand(TestCase):
         c.execute()
         self.assertNotEqual(c.exit_status, 0)
 
+    def testOkStatus(self):
+        """Verify the log on exit_status"""
+
+        class Logger:
+            def warning(self, *args):
+                raise Exception('should not happen: %s' % str(args))
+
+            def info(self, *args):
+                pass
+
+            def debug(self, *args):
+                pass
+
+        if platform != 'win32':
+            c = ExternalCommand(['false'], ok_status=(0,1))
+        else:
+            c = ExternalCommand(['cmd','/c exit 1'], ok_status=(0,1))
+        c.execute()
+
+        c.log = Logger()
+        c.execute()
+
     def testExitStatusUnknownCommand(self):
         """Verify ExternalCommand raise OSError for non existing command.
         """

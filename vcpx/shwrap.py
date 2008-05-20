@@ -52,7 +52,7 @@ class ExternalCommand:
     MAX_CMDLINE_LENGTH = 8000
     """Don't execute commands longer than this number of characters."""
 
-    def __init__(self, command=None, cwd=None, nolog=False):
+    def __init__(self, command=None, cwd=None, nolog=False, ok_status=None):
         """
         Initialize a ExternalCommand instance, specifying the command
         to be executed and eventually the working directory.
@@ -70,6 +70,9 @@ class ExternalCommand:
 
         self.exit_status = None
         """Once the command has been executed, this is its exit status."""
+
+        self.ok_status = ok_status is None and (0,) or ok_status
+        """Used to determine which exit_status should not trigger warnings."""
 
         self._last_command = None
         """Last executed command."""
@@ -266,7 +269,7 @@ class ExternalCommand:
         out, err = process.communicate(input=input)
 
         self.exit_status = process.returncode
-        if not self.exit_status:
+        if self.exit_status in self.ok_status:
             if self.log: self.log.info("[Ok]")
         else:
             if self.log: self.log.warning("[Status %s]", self.exit_status)
