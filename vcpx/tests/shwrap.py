@@ -65,7 +65,7 @@ class SystemCommand(TestCase):
 
         c = ExternalCommand(['darcs', 'ciao'])
         out, err = c.execute("ciao", stdout=PIPE, stderr=PIPE)
-        self.assert_("darcs failed:  Invalid command 'ciao'!" in err.read())
+        self.assert_("darcs failed" in err.read())
 
     def testWorkingDir(self):
         """Verify that the given command is executed in the specified
