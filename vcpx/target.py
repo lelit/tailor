@@ -97,6 +97,19 @@ class SynchronizableTargetWorkingDir(WorkingDir):
             changelog = changeset.log
         return patchname, changelog
 
+    def _prepareToReplayChangeset(self, changeset):
+        """
+        This is called **before** fetching and applying the source
+        changeset. This implementation does nothing more than
+        returning True. Subclasses may override it, for example to
+        preexecute some entries such as moves.
+
+        Returning False the changeset won't be applied and the
+        process will stop.
+        """
+
+        return True
+
     def replayChangeset(self, changeset):
         """
         Do whatever is needed to replay the changes under the target

@@ -92,8 +92,13 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.target.logfile = logfile
 
     def applyPendingChangesets(self, applyable=None, replay=None, applied=None):
+        def pre_replay(changeset):
+            if applyable and not applyable(changeset):
+                return
+            return self.target._prepareToReplayChangeset(changeset)
+
         return self.source.applyPendingChangesets(replay=self.replayChangeset,
-                                                  applyable=applyable,
+                                                  applyable=pre_replay,
                                                   applied=applied)
 
     def importFirstRevision(self, source_repo, changeset, initial):
