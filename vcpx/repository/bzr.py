@@ -184,24 +184,23 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         parent_branch = BzrDir.open(self.repository.repository).open_branch()
         self._working_tree.lock_write()
-        self.log.info('Updating to %r', changeset.revision)
         try:
             count = self._working_tree.pull(parent_branch,
                                             stop_revision=changeset.revision)
+            # XXX: this does not seem to return a true value on conflicts!
             conflicts = self._working_tree.update()
         finally:
             self._working_tree.unlock()
-        self.log.debug("%s updated to %s",
-                       ', '.join([e.name for e in changeset.entries]),
-                       changeset.revision)
         try:
             pulled_revnos = count.new_revno - count.old_revno
         except AttributeError:
             # Prior to 0.15 pull returned a simple integer instead of a result object
             pulled_revnos = count
-        if (pulled_revnos != 1) or conflicts:
-            raise ChangesetApplicationFailure('unknown reason')
-        return [] # No conflict handling yet
+        self.log.info('Updated to %r, applied %d changesets', changeset.revision, count)
+        if conflicts:
+            # No conflict handling yet
+            raise ChangesetApplicationFailure('Unsupported: conflicts')
+        return []
 
     def _checkoutUpstreamRevision(self, revision):
         """
