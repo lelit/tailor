@@ -320,20 +320,31 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
                               stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
-        if pull.exit_status and "unrecognized option `--xml-output'" in output.read():
-            # No way, fall back to old behaviour, that will possibly fail,
-            # on patches recorded before 2003-11-01... :-|
-            cmd = self.repository.command("pull", "--dry-run")
-            pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            output = pull.execute(self.repository.repository,
-                                  stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
+        if pull.exit_status:
+            errormsg = output.read()
+            if "unrecognized option `--xml-output'" in errormsg:
+                self.log.warning('Using darcs 1.0 non-XML parser: it may fail '
+                                 'on patches recorded before november 2003! '
+                                 'I would suggest of upgrading to latest darcs 2.0 '
+                                 '(later than 2.0+233).')
+                # No way, fall back to old behaviour, that will possibly fail,
+                # on patches recorded before 2003-11-01... :-|
+                cmd = self.repository.command("pull", "--dry-run")
+                pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+                output = pull.execute(self.repository.repository,
+                                      stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
 
-            if pull.exit_status:
+                if pull.exit_status:
+                    raise GetUpstreamChangesetsFailure(
+                        "%s returned status %d saying\n%s" %
+                        (str(pull), pull.exit_status, output.read()))
+
+                return self._parseDarcsPull(output)
+            else:
                 raise GetUpstreamChangesetsFailure(
                     "%s returned status %d saying\n%s" %
-                    (str(pull), pull.exit_status, output.read()))
+                    (str(pull), pull.exit_status, errormsg))
 
-            return self._parseDarcsPull(output)
         else:
             # Skip initial verbosity, as well as the one at end
             from cStringIO import StringIO
