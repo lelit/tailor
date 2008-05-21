@@ -66,7 +66,7 @@ class Tailorizer(Project):
         try:
             dwd.prepareWorkingDirectory(self.source)
         except:
-            self.log.critical('Cannot prepare working directory!')
+            self.log.critical('Cannot prepare working directory!', exc_info=True)
             raise
 
         revision = self.config.get(self.name, 'start-revision', 'INITIAL')
@@ -80,7 +80,7 @@ class Tailorizer(Project):
             dwd.importFirstRevision(self.source, actual, 'INITIAL'==revision)
         except:
             self.log.critical('Could not import checked out tree in "%s"!',
-                              self.rootdir)
+                              self.rootdir, exc_info=True)
             raise
 
         self.log.info("Bootstrap completed")
@@ -100,7 +100,8 @@ class Tailorizer(Project):
                              self.name)
             raise
         except:
-            self.log.critical('Unable to get changes for "%s"', self.name)
+            self.log.critical('Unable to get changes for "%s"',
+                              self.name, exc_info=True)
             raise
 
         if pendings.pending():
@@ -114,7 +115,8 @@ class Tailorizer(Project):
                                  self.name)
                 raise
             except:
-                self.log.critical('Upstream change application failed')
+                self.log.critical('Upstream change application failed',
+                                  exc_info=True)
                 raise
 
             if last:
