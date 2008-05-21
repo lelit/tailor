@@ -320,7 +320,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         output = pull.execute(self.repository.repository,
                               stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
-        if pull.exit_status and "unrecognized option `--xml-output'" in output:
+        if pull.exit_status and "unrecognized option `--xml-output'" in output.read():
             # No way, fall back to old behaviour, that will possibly fail,
             # on patches recorded before 2003-11-01... :-|
             cmd = self.repository.command("pull", "--dry-run")
