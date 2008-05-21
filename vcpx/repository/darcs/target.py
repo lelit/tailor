@@ -36,7 +36,11 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("add", "--case-ok", "--not-recursive",
                                       "--quiet")
-        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
+        add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        output = add.execute(names, stdout=PIPE, stderr=STDOUT)[0]
+        if add.exit_status:
+            self.log.warning("%s returned status %d, saying %s",
+                             str(add), add.exit_status, output.read())
 
     def _addSubtree(self, subdir):
         """
@@ -45,7 +49,12 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         cmd = self.repository.command("add", "--case-ok", "--recursive",
                                       "--quiet")
-        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(subdir)
+        add = ExternalCommand(cwd=self.repository.basedir, command=cmd,
+                              ok_status=(0,2))
+        output = add.execute(subdir, stdout=PIPE, stderr=STDOUT)[0]
+        if add.exit_status and add.exit_status!=2:
+            self.log.warning("%s returned status %d, saying %s",
+                             str(add), add.exit_status, output.read())
 
     def _commit(self, date, author, patchname, changelog=None, entries=None,
                 tags = [], isinitialcommit = False):
@@ -78,11 +87,14 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             entries = ['.']
 
         record = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        record.execute(input=self.repository.encode('\n'.join(logmessage)))
+        output = record.execute(input=self.repository.encode('\n'.join(logmessage)),
+                                stdout=PIPE, stderr=STDOUT)[0]
 
         if record.exit_status:
             raise ChangesetReplayFailure(
-                "%s returned status %d" % (str(record), record.exit_status))
+                "%s returned status %d, saying: %s" % (str(record),
+                                                       record.exit_status,
+                                                       output.read()))
 
         if self.repository.post_commit_check:
             cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
@@ -108,7 +120,10 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                             command=self.repository.command("remove"))
         existing = [n for n in names if exists(join(self.repository.basedir, n))]
         if existing:
-            c.execute(existing)
+            output = c.execute(existing, stdout=PIPE, stderr=STDOUT)[0]
+            if c.exit_status:
+                self.log.warning("%s returned status %d, saying %s",
+                                 str(c), c.exit_status, output.read())
 
     def _renamePathname(self, oldname, newname):
         """
@@ -116,7 +131,11 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
 
         cmd = self.repository.command("mv")
-        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(oldname, newname)
+        mv = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        output = mv.execute(oldname, newname, stdout=PIPE, stderr=STDOUT)[0]
+        if mv.exit_status:
+            self.log.warning("%s returned status %d, saying %s",
+                             str(mv), mv.exit_status, output.read())
 
     def _prepareTargetRepository(self):
         """
