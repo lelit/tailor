@@ -510,11 +510,23 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         be none of them in tailor context.
         """
 
+        from os import walk, unlink
+        from os.path import join
+        from re import compile
+
         self.log.info("Reverting changes to %s, to solve the conflict",
                       ' '.join(conflict))
         cmd = self.repository.command("revert", "--all")
         revert = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         revert.execute(conflict, input="\n")
+
+        # Remove also the backups made by darcs
+        bckre = compile('-darcs-backup[0-9]+$')
+        for root, dirs, files in walk(self.repository.basedir):
+            backups = [f for f in files if bckre.search(f)]
+            for bck in backups:
+                self.log.debug("Removing backup file %r in %r", bck, root)
+                unlink(join(root, bck))
 
     def _checkoutUpstreamRevision(self, revision):
         """
