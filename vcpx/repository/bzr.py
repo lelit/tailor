@@ -24,10 +24,53 @@ from bzrlib.bzrdir import BzrDir
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
 
+from vcpx.changes import Changeset, ChangesetEntry
 from vcpx.repository import Repository
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir
 from vcpx.workdir import WorkingDir
+
+
+class BzrChangeset(Changeset):
+    """
+    Manage the particular reordering of the entries.
+
+    Apparently TreeDelta doesn't expose the entries in a sensible order,
+    they are grouped by kind.
+    """
+
+    def __init__(self, revision, date, author, log, entries=None, **other):
+        """
+        Initialize a new BzrChangeset, inserting the entries in a sensible order.
+        """
+
+        super(BzrChangeset, self).__init__(revision, date, author, log, entries=None, **other)
+        if entries is not None:
+            for e in entries:
+                self.addEntry(e, revision)
+
+    def addEntry(self, entry, revision):
+        """
+        Fixup the ordering of the entries, by giving precedence to directories
+
+        """
+
+        if entry.action_kind in (entry.ADDED, entry.RENAMED) and entry.is_directory:
+            dirname = entry.name + '/' # does bzr on windows use this too?
+            for i,e in enumerate(self.entries):
+                if e.name.startswith(dirname):
+                    self.entries.insert(i, entry)
+                    return
+        elif entry.action_kind == entry.DELETED:
+            for i,e in enumerate(self.entries):
+                if e.action_kind == e.RENAMED and e.name == entry.name:
+                    # This is the following case:
+                    #  $ bzr rm A
+                    #  $ bzr mv B A
+                    self.entries.insert(i, entry)
+                    return
+
+        self.entries.append(entry)
 
 
 class BzrRepository(Repository):
@@ -126,12 +169,18 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Generate changeset for the given Bzr revision
         """
         from datetime import datetime
-        from vcpx.changes import ChangesetEntry, Changeset
         from vcpx.tzinfo import FixedOffset, UTC
 
         revision = branch.repository.get_revision(revision_id)
         deltatree = branch.get_revision_delta(branch.revision_id_to_revno(revision_id))
         entries = []
+
+        for delta in deltatree.renamed:
+            e = ChangesetEntry(delta[1])
+            e.action_kind = ChangesetEntry.RENAMED
+            e.old_name = delta[0]
+            e.is_directory = delta[3] == 'directory'
+            entries.append(e)
 
         for delta in deltatree.added:
             e = ChangesetEntry(delta[0])
@@ -145,13 +194,6 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             e.is_directory = delta[2] == 'directory'
             entries.append(e)
 
-        for delta in deltatree.renamed:
-            e = ChangesetEntry(delta[1])
-            e.action_kind = ChangesetEntry.RENAMED
-            e.old_name = delta[0]
-            e.is_directory = delta[3] == 'directory'
-            entries.append(e)
-
         for delta in deltatree.modified:
             e = ChangesetEntry(delta[0])
             e.action_kind = ChangesetEntry.UPDATED
@@ -162,11 +204,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             timezone = UTC
 
-        return Changeset(revision.revision_id,
-                         datetime.fromtimestamp(revision.timestamp, timezone),
-                         revision.committer,
-                         revision.message,
-                         entries)
+        return BzrChangeset(revision.revision_id,
+                            datetime.fromtimestamp(revision.timestamp, timezone),
+                            revision.committer,
+                            revision.message,
+                            entries)
 
     def _getUpstreamChangesets(self, sincerev):
         """
