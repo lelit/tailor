@@ -136,17 +136,20 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         for delta in deltatree.added:
             e = ChangesetEntry(delta[0])
             e.action_kind = ChangesetEntry.ADDED
+            e.is_directory = delta[2] == 'directory'
             entries.append(e)
 
         for delta in deltatree.removed:
             e = ChangesetEntry(delta[0])
             e.action_kind = ChangesetEntry.DELETED
+            e.is_directory = delta[2] == 'directory'
             entries.append(e)
 
         for delta in deltatree.renamed:
             e = ChangesetEntry(delta[1])
             e.action_kind = ChangesetEntry.RENAMED
             e.old_name = delta[0]
+            e.is_directory = delta[3] == 'directory'
             entries.append(e)
 
         for delta in deltatree.modified:

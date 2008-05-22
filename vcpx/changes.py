@@ -39,6 +39,7 @@ class ChangesetEntry(object):
         self.action_kind = None
         self.status = None
         self.unidiff = None # This is the unidiff of this particular entry
+        self.is_directory = False # This usually makes sense only on ADDs and DELs
 
     def __str__(self):
         s = self.name + '(' + self.action_kind

@@ -380,11 +380,13 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
         for entry,path in addeddirs:
             entry = changeset.addEntry(path, None, before=entry)
             entry.action_kind = entry.ADDED
+            entry.is_directory = True
             self.log.debug("registering new %s directory", entry.name)
 
         for path in deleteddirs:
             deldir = changeset.addEntry(path, None)
             deldir.action_kind = deldir.DELETED
+            entry.is_directory = True
             self.log.debug("registering %s directory deletion", path)
 
             # Since we are not going to issue cvs updates on whole

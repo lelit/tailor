@@ -440,7 +440,14 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         return changesets_from_svnlog(log, self.repository)
 
     def _applyChangeset(self, changeset):
+        from os.path import join, isdir
         from time import sleep
+
+        # Complete changeset information, determining the is_directory
+        # flag of the removed entries, before updating to the given revision
+        for entry in changeset.entries:
+            if entry.action_kind == entry.DELETED:
+                entry.is_directory = isdir(join(self.repository.basedir, entry.name))
 
         cmd = self.repository.command("update")
         if self.repository.ignore_externals:
@@ -473,6 +480,12 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         self.log.debug("%s updated to %s",
                        ','.join([e.name for e in changeset.entries]),
                        changeset.revision)
+
+        # Complete changeset information, determining the is_directory
+        # flag of the added entries
+        for entry in changeset.entries:
+            if entry.action_kind == entry.ADDED:
+                entry.is_directory = isdir(join(self.repository.basedir, entry.name))
 
         result = []
         for line in out:

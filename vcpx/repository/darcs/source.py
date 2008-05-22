@@ -91,6 +91,7 @@ class DarcsChangeset(Changeset):
                         if not skip:
                             e.action_kind = e.ADDED
                             e.old_name = None
+                            e.is_directory = entry.is_directory
                             return e
 
                     # The "rename A B; add B" into "add B"
@@ -128,6 +129,7 @@ class DarcsChangeset(Changeset):
                     e.action_kind = e.DELETED
                     e.name = e.old_name
                     e.old_name = None
+                    e.is_directory = entry.is_directory
                     return e
                 elif e.action_kind == e.ADDED and e.name == entry.name:
                     del self.entries[i]
@@ -273,7 +275,7 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                                       'remove_file': entry.DELETED,
                                       'remove_directory': entry.DELETED
                                     }[name]
-
+                entry.is_directory = name.endswith('directory')
                 self.current['entries'].append(entry)
 
         def characters(self, data):

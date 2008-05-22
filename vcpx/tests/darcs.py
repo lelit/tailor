@@ -95,9 +95,12 @@ class DarcsChangesParser(DarcsParserTestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'a.txt')
         self.assertEqual(entry.action_kind, entry.ADDED)
+        self.assertEqual(entry.is_directory, False)
+
         entry = cset.entries[1]
         self.assertEqual(entry.name, 'dir')
         self.assertEqual(entry.action_kind, entry.ADDED)
+        self.assertEqual(entry.is_directory, True)
 
         cset = csets[1]
         self.assertEqual(cset.revision, 'removed')
@@ -106,6 +109,7 @@ class DarcsChangesParser(DarcsParserTestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'dir')
         self.assertEqual(entry.action_kind, entry.DELETED)
+        self.assertEqual(entry.is_directory, True)
 
         cset = csets[2]
         self.assertEqual(cset.revision, 'moved')
@@ -114,6 +118,12 @@ class DarcsChangesParser(DarcsParserTestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'dir')
         self.assertEqual(entry.action_kind, entry.ADDED)
+        self.assertEqual(entry.is_directory, True)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'dir')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+        self.assertEqual(entry.is_directory, True)
 
         cset = csets[3]
         self.assertEqual(cset.revision, 'modified')
@@ -122,6 +132,7 @@ class DarcsChangesParser(DarcsParserTestCase):
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'a.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
+        self.assertEqual(entry.is_directory, False)
 
     def testIncrementalParser(self):
         """Verify that the parser is effectively incremental"""
