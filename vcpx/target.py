@@ -302,9 +302,29 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         """
 
         from os.path import join, isdir
+
+        # First of all, replay the entries
+        self._replayChangesetEntries(changeset)
+
+        # Then deal with "copied" directories. The simple way is
+        # executing an _addSubtree on each of them, evenif this may
+        # cause "warnings" on items just moved/added above...
+        added = [e for e in changeset.entries if e.action_kind==e.ADDED]
+        while added:
+            subdir = added.pop(0).name
+            if isdir(join(self.repository.basedir, subdir)):
+                self._addSubtree(subdir)
+                added = [e for e in added if not e.name.startswith(subdir)]
+
+    def _replayChangesetEntries(self, changeset):
+        """
+        Replay each entry of the changeset, that is execute the action associated
+        to each kind of change for each entry, possibly grouping consecutive entries
+        of the same kind.
+        """
+
         from changes import ChangesetEntry
 
-        added = []
         actions = { ChangesetEntry.ADDED: self._addEntries,
                     ChangesetEntry.DELETED: self._removeEntries,
                     ChangesetEntry.RENAMED: self._renameEntries,
@@ -325,22 +345,10 @@ class SynchronizableTargetWorkingDir(WorkingDir):
                     action(group)
                 group = [e]
                 last = e
-            if e.action_kind == e.ADDED:
-                added.append(e)
         if group:
             action = actions.get(group[0].action_kind)
             if action is not None:
                 action(group)
-
-        # Finally, deal with "copied" directories. The simple way is
-        # executing an _addSubtree on each of them, evenif this may
-        # cause "warnings" on items just moved/added above...
-
-        while added:
-            subdir = added.pop(0).name
-            if isdir(join(self.repository.basedir, subdir)):
-                self._addSubtree(subdir)
-                added = [e for e in added if not e.name.startswith(subdir)]
 
     def _addEntries(self, entries):
         """
