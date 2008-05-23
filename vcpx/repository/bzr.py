@@ -20,6 +20,7 @@ assert version_info >= (2,4), "Bazaar backend requires Python 2.4"
 del version_info
 
 from bzrlib import errors
+from bzrlib.branch import Branch
 from bzrlib.bzrdir import BzrDir
 from bzrlib.missing import find_unmerged
 from bzrlib.osutils import normpath, pathjoin
@@ -253,14 +254,30 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         See what other revisions exist upstream and return them
         """
-        parent_branch = BzrDir.open(self.repository.repository).open_branch()
-        branch = self._working_tree.branch
-        self.log.info("Collecting missing changesets")
-        revisions = find_unmerged(branch, parent_branch, 'remote')[1]
-        branch.fetch(parent_branch)
+        parent_branch = Branch.open(self.repository.repository)
 
-        for id, revision in revisions:
-            yield self._changesetFromRevision(parent_branch, revision)
+        branch = self._working_tree.branch
+        branch.lock_read()
+        try:
+            parent_branch.lock_read()
+            try:
+                revisions = find_unmerged(branch, parent_branch, 'remote')[1]
+
+                self.log.info("Collecting %d missing changesets", len(revisions))
+
+                for id, revision in revisions:
+                    yield self._changesetFromRevision(parent_branch, revision)
+            finally:
+                parent_branch.unlock()
+        finally:
+            branch.unlock()
+
+        self.log.info("Fetching concrete changesets")
+        branch.lock_write()
+        try:
+            branch.fetch(parent_branch)
+        finally:
+            branch.unlock()
 
     def _applyChangeset(self, changeset):
         """
