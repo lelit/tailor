@@ -45,15 +45,43 @@ class BzrChangeset(Changeset):
         Initialize a new BzrChangeset, inserting the entries in a sensible order.
         """
 
+        from os.path import split, join
+
         super(BzrChangeset, self).__init__(revision, date, author, log, entries=None, **other)
         if entries is not None:
             for e in entries:
                 self.addEntry(e, revision)
 
+            # Adjust old_name on renamed entries: bzr tell us the *original*
+            # name of the rename...
+            # Consider this:
+            #
+            #     $ bzr mv newnamedir/subdir/a newnamedir/subdir/b
+            #     newnamedir/subdir/a => newnamedir/subdir/b
+            #     $ bzr mv newnamedir/subdir newnamedir/newsubdir
+            #     newnamedir/subdir => newnamedir/newsubdir
+            #     $ bzr mv newnamedir dir
+            #     newnamedir => dir
+            #     $ bzr st
+            #     renamed:
+            #       newnamedir => dir
+            #       newnamedir/subdir => dir/newsubdir
+            #       newnamedir/subdir/a => dir/newsubdir/b
+
+            renames = {}
+            for e in self.entries:
+                if e.action_kind == e.RENAMED:
+                    renames[e.old_name] = e.name
+                    d,f = split(e.old_name)
+                    while d:
+                        if d in renames:
+                            e.old_name = join(renames[d], e.old_name[len(d)+1:])
+                            break
+                        d,f = split(d)
+
     def addEntry(self, entry, revision):
         """
         Fixup the ordering of the entries, by giving precedence to directories
-
         """
 
         if entry.action_kind in (entry.ADDED, entry.RENAMED) and entry.is_directory:
