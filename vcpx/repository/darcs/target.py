@@ -29,19 +29,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
     A target working directory under ``darcs``.
     """
 
-    def _addPathnames(self, names):
-        """
-        Add some new filesystem objects.
-        """
-
-        cmd = self.repository.command("add", "--case-ok", "--not-recursive",
-                                      "--quiet")
-        add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        output = add.execute(names, stdout=PIPE, stderr=STDOUT)[0]
-        if add.exit_status:
-            self.log.warning("%s returned status %d, saying %s",
-                             str(add), add.exit_status, output.read())
-
     def _addSubtree(self, subdir):
         """
         Use the --recursive variant of ``darcs add`` to add a subtree.
@@ -104,38 +91,64 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                 raise ChangesetReplayFailure(
                     "Changes left in working dir after commit:\n%s" % output.read())
 
-    def _removePathnames(self, names):
+    def _replayChangesetEntries(self, changeset):
         """
-        Remove some filesystem object.
-        """
-
-        from os.path import join, exists
-
-        # darcs raises status 512 when it does not find the entry,
-        # removed by source. Since sometime a directory is left there
-        # because it's not empty, darcs fails. So, do an explicit
-        # remove on items that are still there.
-
-        c = ExternalCommand(cwd=self.repository.basedir,
-                            command=self.repository.command("remove"))
-        existing = [n for n in names if exists(join(self.repository.basedir, n))]
-        if existing:
-            output = c.execute(existing, stdout=PIPE, stderr=STDOUT)[0]
-            if c.exit_status:
-                self.log.warning("%s returned status %d, saying %s",
-                                 str(c), c.exit_status, output.read())
-
-    def _renamePathname(self, oldname, newname):
-        """
-        Rename a filesystem object.
+        Instead of using the "darcs mv" command, manually add
+        the rename to the pending file: this is a dirty trick, that
+        allows darcs to handle the case when the source changeset
+        is something like::
+          $ bzr mv A B
+          $ touch A
+          $ bzr add A
+        where A is actually replaced, and old A is now B. Since by the
+        time the changeset gets replayed, the source has already replaced
+        A with its new content, darcs would move the *wrong* A to B...
         """
 
-        cmd = self.repository.command("mv")
-        mv = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        output = mv.execute(oldname, newname, stdout=PIPE, stderr=STDOUT)[0]
-        if mv.exit_status:
-            self.log.warning("%s returned status %d, saying %s",
-                             str(mv), mv.exit_status, output.read())
+        from os.path import join
+
+        # The "_darcs/patches/pending" file is basically a patch containing
+        # only the changes (hunks, adds...) not yet recorded by darcs: it does
+        # contain either a single change (that is, exactly one line), or a
+        # collection of changes, with opening and closing curl braces.
+        # Filenames must begin with "./", and eventual spaces replaced by '\32\'.
+        # Order is significant!
+
+        pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
+        p = open(pending).readlines()
+        if p[0] != '{\n':
+            p.insert(0, '{\n')
+            p.append('}\n')
+
+        changed = False
+        adapted = self._adaptChangeset(changeset)
+        for e in adapted.entries:
+            if e.action_kind == e.RENAMED:
+                self.log.debug('Mimicing "darcs mv %s %s"',
+                               e.old_name, e.name)
+                oname = e.old_name.replace(' ', '\\32\\')
+                nname = e.name.replace(' ', '\\32\\')
+                p.insert(-1, 'move ./%s ./%s\n' % (oname, nname))
+                changed = True
+            elif e.action_kind == e.ADDED:
+                self.log.debug('Mimicing "darcs add %s"', e.name)
+                name = e.name.replace(' ', '\\32\\')
+                if e.is_directory:
+                    p.insert(-1, 'adddir ./%s\n' % name)
+                else:
+                    p.insert(-1, 'addfile ./%s\n' % name)
+                changed = True
+            elif e.action_kind == e.DELETED:
+                self.log.debug('Mimicing "darcs rm %s"', e.name)
+                name = e.name.replace(' ', '\\32\\')
+                if e.is_directory:
+                    p.insert(-1, 'rmdir ./%s\n' % name)
+                else:
+                    p.insert(-1, 'rmfile ./%s\n' % name)
+                changed = True
+        if changed:
+            open(pending, 'w').writelines(p)
+        return True
 
     def _prepareTargetRepository(self):
         """
