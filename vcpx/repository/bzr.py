@@ -21,6 +21,7 @@ del version_info
 
 from bzrlib import errors
 from bzrlib.bzrdir import BzrDir
+from bzrlib.missing import find_unmerged
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
 
@@ -217,11 +218,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         parent_branch = BzrDir.open(self.repository.repository).open_branch()
         branch = self._working_tree.branch
         self.log.info("Collecting missing changesets")
-        revisions = branch.missing_revisions(parent_branch)
+        revisions = find_unmerged(branch, parent_branch, 'remote')[1]
         branch.fetch(parent_branch)
 
-        for revision_id in revisions:
-            yield self._changesetFromRevision(parent_branch, revision_id)
+        for id, revision in revisions:
+            yield self._changesetFromRevision(parent_branch, revision)
 
     def _applyChangeset(self, changeset):
         """
