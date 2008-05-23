@@ -52,8 +52,10 @@ class ChangesetEntry(object):
         elif self.action_kind == self.DELETED:
             if self.new_revision:
                 s += ' at ' + self.new_revision
-        else:
+        elif self.action_kind == self.RENAMED:
             s += ' from ' + self.old_name
+        else:
+            s += '??'
         s += ')'
         if isinstance(s, unicode):
             s = s.encode('ascii', 'replace')
