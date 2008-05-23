@@ -98,6 +98,16 @@ class BzrChangeset(Changeset):
                     #  $ bzr mv B A
                     self.entries.insert(i, entry)
                     return
+                elif (e.action_kind == e.DELETED
+                      and e.is_directory
+                      and entry.name.startswith(e.name)):
+                    # Remove dir contents before dir itself
+                    self.entries.insert(i, entry)
+                    return
+                elif (e.action_kind == e.ADDED and e.name == entry.name):
+                    # put replacement (rm+add) in the right order
+                    self.entries.insert(i, entry)
+                    return
 
         self.entries.append(entry)
 
