@@ -137,29 +137,29 @@ class SvnLogParser(TestCase):
         self.assertEqual(len(cset.entries), 7)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'scripts/trac-admin')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-
-        entry = cset.entries[1]
         self.assertEqual(entry.name, 'setup.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
-        entry = cset.entries[2]
+        entry = cset.entries[1]
         self.assertEqual(entry.name, 'trac/scripts')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        entry = cset.entries[3]
+        entry = cset.entries[2]
         self.assertEqual(entry.name, 'trac/scripts/__init__.py')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        entry = cset.entries[4]
+        entry = cset.entries[3]
         self.assertEqual(entry.name, 'trac/scripts/admin.py')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'scripts/trac-admin')
 
-        entry = cset.entries[5]
+        entry = cset.entries[4]
         self.assertEqual(entry.name, 'trac/tests/environment.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[6]
+        self.assertEqual(entry.name, 'scripts/trac-admin')
+        self.assertEqual(entry.action_kind, entry.ADDED)
 
         self.assertRaises(StopIteration, csets.next)
 
@@ -201,12 +201,12 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.old_name, 'example')
 
         entry = cset.entries[1]
-        self.assertEqual(entry.name, 'py/documentation/example/test')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-
-        entry = cset.entries[2]
         self.assertEqual(entry.name, 'py/documentation/test.txt')
         self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'py/documentation/example/test')
+        self.assertEqual(entry.action_kind, entry.ADDED)
 
         self.assertRaises(StopIteration, csets.next)
 
@@ -236,25 +236,33 @@ class SvnLogParser(TestCase):
         self.assertEqual(len(cset.entries), 7)
 
         entry = cset.entries[0]
-        self.assertEqual(entry.name, 'scripts/trac-admin')
-        self.assertEqual(entry.action_kind, entry.ADDED)
-
-        entry = cset.entries[1]
         self.assertEqual(entry.name, 'setup.py')
         self.assertEqual(entry.action_kind, entry.UPDATED)
 
-        entry = cset.entries[2]
+        entry = cset.entries[1]
         self.assertEqual(entry.name, 'trac/scripts')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        entry = cset.entries[3]
+        entry = cset.entries[2]
         self.assertEqual(entry.name, 'trac/scripts/__init__.py')
         self.assertEqual(entry.action_kind, entry.ADDED)
 
-        entry = cset.entries[4]
+        entry = cset.entries[3]
         self.assertEqual(entry.name, 'trac/scripts/admin.py')
         self.assertEqual(entry.action_kind, entry.RENAMED)
         self.assertEqual(entry.old_name, 'scripts/trac-admin')
+
+        entry = cset.entries[4]
+        self.assertEqual(entry.name, 'trac/tests/environment.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[5]
+        self.assertEqual(entry.name, 'trac/tests/tracadmin.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
+        entry = cset.entries[6]
+        self.assertEqual(entry.name, 'scripts/trac-admin')
+        self.assertEqual(entry.action_kind, entry.ADDED)
 
     def testCopyFromAndRemove(self):
         """Verify the svn parser handle copyfrom+remove"""
@@ -264,7 +272,7 @@ class SvnLogParser(TestCase):
                                                '/branches/SAMBA_4_0'))
 
         cset = csets.next()
-        self.assertEqual(len(cset.entries), 3)
+        self.assertEqual(len(cset.entries), 4)
 
         entry = cset.entries[0]
         self.assertEqual(entry.name, 'source/nsswitch')
@@ -277,6 +285,10 @@ class SvnLogParser(TestCase):
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'source/nsswitch/wb_common.c')
         self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[3]
+        self.assertEqual(entry.name, 'source/nsswitch/wins.c')
+        self.assertEqual(entry.action_kind, entry.DELETED)
 
     def testIncrementalParser(self):
         """Verify that the svn log parser is effectively incremental"""
@@ -302,7 +314,7 @@ class SvnLogParser(TestCase):
         self.assertEqual(entry.name, 'README_LOGIN')
 
         cset = csets.next()
-        self.assertEqual(len(cset.entries), 4)
+        self.assertEqual(len(cset.entries), 5)
 
     def testCollidingNames(self):
         """Verify svn log parser behaves correctly with colliding names"""
