@@ -120,9 +120,39 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             p.insert(0, '{\n')
             p.append('}\n')
 
-        changed = False
+        entries = []
         adapted = self._adaptChangeset(changeset)
-        for e in adapted.entries:
+        while adapted.entries:
+            e = adapted.entries.pop(0)
+            if e.action_kind == e.DELETED:
+                elide = False
+                for j,oe in enumerate(adapted.entries):
+                    if oe.action_kind == oe.ADDED and e.name == oe.name:
+                        self.log.debug('Collapsing a %s and a %s on %s, assuming '
+                                       'an upstream "replacement"',
+                                       e.action_kind, oe.action_kind, oe.name)
+                        del adapted.entries[j]
+                        elide = True
+                        break
+                if not elide:
+                    entries.append(e)
+            elif e.action_kind == e.ADDED:
+                elide = False
+                for j,oe in enumerate(adapted.entries):
+                    if oe.action_kind == oe.DELETED and e.name == oe.name:
+                        self.log.debug('Collapsing a %s and a %s on %s, assuming '
+                                       'an upstream "replacement"',
+                                       e.action_kind, oe.action_kind, oe.name)
+                        del adapted.entries[j]
+                        elide = True
+                        break
+                if not elide:
+                    entries.append(e)
+            else:
+                entries.append(e)
+
+        changed = False
+        for e in entries:
             if e.action_kind == e.RENAMED:
                 self.log.debug('Mimicing "darcs mv %s %s"',
                                e.old_name, e.name)
