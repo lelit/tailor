@@ -1,13 +1,11 @@
+# -*- mode: python; coding: utf-8 -*-
+# :Progetto: vcpx -- Aegis details
+# :Creato:   sab 24 mag 2008 15:44:00 CEST
+# :Autore:   Walter Franzini <walter.franzini@gmail.com>
+# :Licenza:  GNU General Public License
 #
-# Copyright (C) 2008 Walter Franzini
-#
-
-import re
 
 from vcpx.repository import Repository
-from vcpx.shwrap import ExternalCommand
-
-from vcpx.target import TargetInitializationFailure
 
 class AegisRepository(Repository):
 

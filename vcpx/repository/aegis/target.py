@@ -1,5 +1,8 @@
-#
-# Copyright (C) 2008 Walter Franzini
+# -*- mode: python; coding: utf-8 -*-
+# :Progetto: vcpx -- Aegis details
+# :Creato:   sab 24 mag 2008 15:44:00 CEST
+# :Autore:   Walter Franzini <walter.franzini@gmail.com>
+# :Licenza:  GNU General Public License
 #
 
 """
@@ -54,11 +57,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _prepareTargetRepository(self):
         #
-        # Add the very first change to the repository.
-        # This change set add aegis configuration file to the project.
-        #
-
-        #
         # Aegis refuse to use an already existing directory as the
         # development directory of a change.
         #
@@ -69,7 +67,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Runs aegis -New_Change -dir target.basedir
         """
-        self.change_number = self.__new_change(changeset.revision, "bla bla")
+        self.change_number = self.__new_change(changeset.revision)
         self.__develop_begin()
         #
         # This function MUST return
@@ -80,7 +78,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         #
         # Receive the first changeset from the source repository.
         #
-        self.change_number = self.__new_change("bla2", "bla2 bla2")
+        self.change_number = self.__new_change()
         self.__develop_begin()
         return True
 
@@ -102,7 +100,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
     #
     # The following methods wraps change's related aegis commands.
     #
-    def __new_change(self, title, description):
+    def __new_change(self, title = "none", description = "none"):
         change_attr = NamedTemporaryFile()
         change_attr.write("brief_description = \"%s\";\n" % title)
         change_attr.write("description = \"%s\";" % description)
@@ -179,7 +177,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
                 (str(change_attr), change_attr.exit_status, output.read()))
 
     #
-    # File's related change commands.
+    # File's related methods.
     #
     def __new_file(self, file_names, usage = None):
         if usage == "config":
