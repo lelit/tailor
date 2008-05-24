@@ -856,6 +856,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
 
         from os.path import join, exists
+        from vcpx.dualwd import IGNORED_METADIRS
 
         if not self.repository.repository or exists(join(self.repository.basedir, self.repository.METADIR)):
             return
@@ -867,6 +868,20 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         svnco = ExternalCommand(command=cmd)
         svnco.execute("%s%s" % (self.repository.repository,
                                 self.repository.module), self.repository.basedir)
+
+        ignore = [md for md in IGNORED_METADIRS]
+
+        if self.logfile.startswith(self.repository.basedir):
+            ignore.append(self.logfile[len(self.repository.basedir)+1:])
+        if self.state_file.filename.startswith(self.repository.basedir):
+            sfrelname = self.state_file.filename[len(self.repository.basedir)+1:]
+            ignore.append(sfrelname)
+            ignore.append(sfrelname+'.old')
+            ignore.append(sfrelname+'.journal')
+
+        cmd = self.repository.command("propset", "%(propname)s", "--quiet")
+        pset = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        pset.execute('\n'.join(ignore), '.', propname='svn:ignore')
 
     def _initializeWorkingDir(self):
         """
