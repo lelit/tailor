@@ -3,6 +3,7 @@
 # Copyright (C) 2008 Walter Franzini
 #
 
+
 here=`pwd`
 
 #
@@ -13,6 +14,7 @@ export PATH
 
 pass()
 {
+    echo "PASSED:"
     exit 0
 }
 
@@ -60,6 +62,14 @@ wit some more text.
 EOF
 if test $? -ne 0; then no_result; fi
 
+cat > $work/darcs-repo/bar.txt <<EOF
+This is bar.txt
+EOF
+if test $? -ne 0; then no_result; fi
+
+darcs add bar.txt --repodir=$work/darcs-repo > log 2>&1
+if test $? -ne 0; then cat log; no_result; fi
+
 darcs record --repodir=$work/darcs-repo -a -A Nobody --ignore-time \
     -m "second commit" > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
@@ -70,6 +80,9 @@ wit some more text.
 more text again!
 EOF
 if test $? -ne 0; then no_result; fi
+
+darcs mv bar.txt baz.txt --repodir=$work/darcs-repo > log 2>&1
+if test $? -ne 0; then cat log; no_result; fi
 
 darcs record --repodir=$work/darcs-repo -a -A Nobody --ignore-time \
     -m "third commit" > log 2>&1
@@ -189,11 +202,93 @@ EOF
 if test $? -ne 0; then no_result; fi
 
 activity="run tailor"
+python $here/tailor -c $work/tailor.conf > tailor.log 2>&1
+if test $? -ne 0; then cat tailor.log; fail; fi
+
+cat > $work/ok <<EOF
+1 10 initial commit
+2 11 second commit
+3 12 third commit
+EOF
+if test $? -ne 0; then no_result; fi
+
+activity="check aegis project history"
+aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
+if test $? -ne 0; then cat log; no_result; fi
+
+diff ok history
+if test $? -ne 0; then cat tailor.log; fail; fi
+
+#
+# add more darcs changes
+#
+cat > $work/darcs-repo/bar.txt <<EOF
+A simple text file
+wit some more text.
+more text again!
+ancora piu\` test
+EOF
+if test $? -ne 0; then no_result; fi
+
+darcs remove foo.txt --repodir=$work/darcs-repo > log 2>&1
+if test $? -ne 0; then cat log; no_result; fi
+
+cat > $work/logfile <<EOF
+fourth commit
+This text is now
+the description of the aegis change
+splitted on multiple lines.
+EOF
+if test $? -ne 0; then no_result; fi
+
+darcs record --repodir=$work/darcs-repo -a -A Nobody --ignore-time \
+    --logfile $work/logfile > log 2>&1
+if test $? -ne 0; then cat log; no_result; fi
+
+activity="run tailor again"
 python $here/tailor -c $work/tailor.conf > log 2>&1
 if test $? -ne 0; then cat log; fail; fi
 
+cat > $work/ok <<EOF
+1 10 initial commit
+2 11 second commit
+3 12 third commit
+4 13 fourth commit
+EOF
+if test $? -ne 0; then no_result; fi
+
 activity="check aegis project history"
-aegis -list project_history -unformatted
+aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
 if test $? -ne 0; then cat log; no_result; fi
+
+diff ok history
+if test $? -ne 0; then fail; fi
+
+cat > $work/ok <<EOF
+brief_description = "fourth commit";
+description = "This text is now the description of the aegis change splitted on\n\\
+multiple lines.";
+cause = external_improvement;
+test_exempt = true;
+test_baseline_exempt = true;
+regression_test_exempt = true;
+architecture =
+[
+	"unspecified",
+];
+copyright_years =
+[
+	`date +%Y`,
+];
+EOF
+if test $? -ne 0; then no_result; fi
+
+activity="check project content"
+aegis -ca -l 13 > $work/change_attr 2> log
+if test $? -ne 0; then cat log; no_result; fi
+
+diff ok change_attr
+if test $? -ne 0; then fail; fi
+
 
 pass
