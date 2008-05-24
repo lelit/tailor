@@ -105,7 +105,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         A with its new content, darcs would move the *wrong* A to B...
         """
 
-        from os.path import join
+        from os.path import join, exists
 
         # The "_darcs/patches/pending" file is basically a patch containing
         # only the changes (hunks, adds...) not yet recorded by darcs: it does
@@ -115,10 +115,13 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Order is significant!
 
         pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
-        p = open(pending).readlines()
-        if p[0] != '{\n':
-            p.insert(0, '{\n')
-            p.append('}\n')
+        if exists(pending):
+            p = open(pending).readlines()
+            if p[0] != '{\n':
+                p.insert(0, '{\n')
+                p.append('}\n')
+        else:
+            p = [ '{\n', '}\n' ]
 
         entries = []
         adapted = self._adaptChangeset(changeset)
