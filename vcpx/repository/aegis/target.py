@@ -283,9 +283,8 @@ history_content_limitation = binary_capable;
 
 diff_command = "set +e; $diff $orig $i > $out; test $$? -le 1";
 merge_command = "(diff3 -e $i $orig $mr | sed -e '/^w$$/d' -e '/^q$$/d'; \
-	echo '1,$$p' ) | ed - $i > $out";
+        echo '1,$$p' ) | ed - $i > $out";
 patch_diff_command = "set +e; $diff -C0 -L $index -L $index $orig $i > $out; \
 test $$? -le 1";
 """)
         c.close()
-
