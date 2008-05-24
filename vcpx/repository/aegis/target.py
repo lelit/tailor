@@ -19,28 +19,6 @@ from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir
 
 
-MOTD = """\
-Tailorized equivalent of
-%s
-"""
-
-
-__docformat__ = 'reStructuredText'
-
-import re
-
-from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
-from vcpx.source import ChangesetApplicationFailure
-from vcpx.target import SynchronizableTargetWorkingDir
-from vcpx.tzinfo import UTC
-
-
-MOTD = """\
-Tailorized equivalent of
-%s
-"""
-
-
 class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
     """
     A target working directory under ``Aegis``.
