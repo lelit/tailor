@@ -111,21 +111,17 @@ class UpdatableSourceWorkingDir(WorkingDir):
 
                 try:
                     res = self._applyChangeset(c)
-                except ChangesetApplicationFailure, e:
-                    self.log.critical("Couldn't apply changeset")
-                    self.log.debug("Reason: %s", str(e))
+                except TailorException, e:
+                    self.log.critical("Couldn't apply changeset: %s", e)
                     self.log.debug("Changeset: %s", c)
                     raise
                 except KeyboardInterrupt:
                     self.log.warning("INTERRUPTED BY THE USER!")
-                    break
-                except:
-                    self.log.exception("Couldn't apply changeset\n%s", c)
                     raise
 
                 if res:
-                    # We have a conflict.  Give the user a chance of fixing 
-                    # the situation, or abort with Ctrl-C, or whatever the 
+                    # We have a conflict.  Give the user a chance of fixing
+                    # the situation, or abort with Ctrl-C, or whatever the
                     # subclasses decide.
                     try:
                         self._handleConflict(c, conflicts, res)
@@ -139,14 +135,9 @@ class UpdatableSourceWorkingDir(WorkingDir):
                     if replay:
                         try:
                             replay(c)
-                        except ChangesetApplicationFailure, e:
-                            self.log.critical("Couldn't replay changeset")
-                            self.log.debug("Reason: %s", str(e))
+                        except Exception, e:
+                            self.log.critical("Couldn't replay changeset: %s", e)
                             self.log.debug("Changeset: %s", c)
-                            raise
-                        except:
-                            self.log.exception("Couldn't replay changeset\n%s",
-                                               c)
                             raise
 
                 # Remember it for the finally clause and notify the state

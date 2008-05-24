@@ -100,8 +100,7 @@ class Tailorizer(Project):
                              self.name)
             raise
         except:
-            self.log.critical('Unable to get changes for "%s"',
-                              self.name, exc_info=True)
+            self.log.fatal('Unable to get changes for "%s"', self.name)
             raise
 
         if pendings.pending():
@@ -115,8 +114,7 @@ class Tailorizer(Project):
                                  self.name)
                 raise
             except:
-                self.log.critical('Upstream change application failed',
-                                  exc_info=True)
+                self.log.fatal('Upstream change application failed')
                 raise
 
             if last:
@@ -158,7 +156,10 @@ class Tailorizer(Project):
                                      'or even "encoding-errors-policy".'
                                      % (exc, self.source.encoding,
                                         self.target.encoding))
-
+        except TailorException:
+            raise
+        except Exception, e:
+            self.log.fatal("Something unexpected!", exc_info=e)
 
 class RecogOption(Option):
     """
