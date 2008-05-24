@@ -91,7 +91,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                 raise ChangesetReplayFailure(
                     "Changes left in working dir after commit:\n%s" % output.read())
 
-    def _replayChangesetEntries(self, changeset):
+    def _replayChangeset(self, changeset):
         """
         Instead of using the "darcs mv" command, manually add
         the rename to the pending file: this is a dirty trick, that

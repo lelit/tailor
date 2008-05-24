@@ -11,11 +11,12 @@ This module contains supporting classes for Subversion.
 
 __docformat__ = 'reStructuredText'
 
+from vcpx.changes import ChangesetEntry
+from vcpx.config import ConfigurationError
 from vcpx.repository import Repository
 from vcpx.shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
-from vcpx.config import ConfigurationError
 from vcpx.tzinfo import UTC
 
 
@@ -365,7 +366,6 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                 entrypath = get_entry_from_path(path)
                 if entrypath:
                     entry = ChangesetEntry(entrypath)
-
                     if type(self.current_path_action) == type( () ):
                         self.copies.append(entry.name)
                         old = get_entry_from_path(self.current_path_action[1])
@@ -440,6 +440,7 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         return changesets_from_svnlog(log, self.repository)
 
     def _applyChangeset(self, changeset):
+        from os import walk
         from os.path import join, isdir
         from time import sleep
 
@@ -483,9 +484,34 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         # Complete changeset information, determining the is_directory
         # flag of the added entries
+        implicitly_added_entries = []
+        known_added_entries = set()
         for entry in changeset.entries:
             if entry.action_kind == entry.ADDED:
-                entry.is_directory = isdir(join(self.repository.basedir, entry.name))
+                known_added_entries.add(entry.name)
+                fullname = join(self.repository.basedir, entry.name)
+                entry.is_directory = isdir(fullname)
+                # If it is a directory, extend the entries of the
+                # changeset with all its contents, if not already there.
+                if entry.is_directory:
+                    for root, subdirs, files in walk(fullname):
+                        if '.svn' in subdirs:
+                            subdirs.remove('.svn')
+                        for f in files:
+                            name = join(root, f)[len(self.repository.basedir)+1:]
+                            newe = ChangesetEntry(name)
+                            newe.action_kind = newe.ADDED
+                            implicitly_added_entries.append(newe)
+                        for d in subdirs:
+                            name = join(root, d)[len(self.repository.basedir)+1:]
+                            newe = ChangesetEntry(name)
+                            newe.action_kind = newe.ADDED
+                            newe.is_directory = True
+                            implicitly_added_entries.append(newe)
+
+        for e in implicitly_added_entries:
+            if not e.name in known_added_entries:
+                changeset.entries.append(e)
 
         result = []
         for line in out:

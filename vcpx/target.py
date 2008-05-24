@@ -297,27 +297,6 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
     def _replayChangeset(self, changeset):
         """
-        Replicate the actions performed by the changeset on the tree of
-        files.
-        """
-
-        from os.path import join, isdir
-
-        # First of all, replay the entries
-        self._replayChangesetEntries(changeset)
-
-        # Then deal with "copied" directories. The simple way is
-        # executing an _addSubtree on each of them, evenif this may
-        # cause "warnings" on items just moved/added above...
-        added = [e for e in changeset.entries if e.action_kind==e.ADDED]
-        while added:
-            subdir = added.pop(0).name
-            if isdir(join(self.repository.basedir, subdir)):
-                self._addSubtree(subdir)
-                added = [e for e in added if not e.name.startswith(subdir)]
-
-    def _replayChangesetEntries(self, changeset):
-        """
         Replay each entry of the changeset, that is execute the action associated
         to each kind of change for each entry, possibly grouping consecutive entries
         of the same kind.
