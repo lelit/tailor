@@ -14,9 +14,10 @@ __docformat__ = 'reStructuredText'
 from vcpx.changes import ChangesetEntry
 from vcpx.config import ConfigurationError
 from vcpx.repository import Repository
-from vcpx.shwrap import ExternalCommand, PIPE, ReopenableNamedTemporaryFile
+from vcpx.shwrap import ExternalCommand, PIPE, STDOUT, ReopenableNamedTemporaryFile
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure
-from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure, \
+                        PostCommitCheckFailure
 from vcpx.tzinfo import UTC
 
 
@@ -765,6 +766,19 @@ class SvnWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         cmd.extend(["--revision", revision])
 
         ExternalCommand(cwd=self.repository.basedir, command=cmd).execute()
+
+    def _postCommitCheck(self):
+        """
+        Assert that all the entries in the working dir are versioned.
+        """
+
+        cmd = self.repository.command("status")
+        whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+        output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
+        unknown = [l for l in output.readlines() if l.startswith('?')]
+        if unknown:
+            raise PostCommitCheckFailure(
+                "Changes left in working dir after commit:\n%s" % ''.join(unknown))
 
     def _removePathnames(self, names):
         """
