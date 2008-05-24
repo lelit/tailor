@@ -254,6 +254,9 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         See what other revisions exist upstream and return them
         """
+
+        from bzrlib import version_info
+
         parent_branch = Branch.open(self.repository.repository)
 
         branch = self._working_tree.branch
@@ -261,7 +264,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         try:
             parent_branch.lock_read()
             try:
-                revisions = find_unmerged(branch, parent_branch, 'remote')[1]
+                if version_info > (1, 5):
+                    revisions = find_unmerged(branch, parent_branch, 'remote')[1]
+                else:
+                    revisions = find_unmerged(branch, parent_branch)[1]
 
                 self.log.info("Collecting %d missing changesets", len(revisions))
 
