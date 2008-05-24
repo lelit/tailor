@@ -14,7 +14,8 @@ __docformat__ = 'reStructuredText'
 import re
 
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
-from vcpx.target import ChangesetReplayFailure, SynchronizableTargetWorkingDir
+from vcpx.target import ChangesetReplayFailure, SynchronizableTargetWorkingDir, \
+                        PostCommitCheckFailure
 from vcpx.tzinfo import UTC
 
 
@@ -83,13 +84,13 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                                        record.exit_status,
                                                        output.read()))
 
-        if self.repository.post_commit_check:
-            cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
-            whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd, ok_status=(1,))
-            output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
-            if not whatsnew.exit_status:
-                raise ChangesetReplayFailure(
-                    "Changes left in working dir after commit:\n%s" % output.read())
+    def _postCommitCheck(self):
+        cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
+        whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd, ok_status=(1,))
+        output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
+        if not whatsnew.exit_status:
+            raise PostCommitCheckFailure(
+                "Changes left in working dir after commit:\n%s" % output.read())
 
     def _replayChangeset(self, changeset):
         """

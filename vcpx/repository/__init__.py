@@ -134,6 +134,7 @@ class Repository(object):
             self.encoding = getpreferredencoding()
         self.encoding_errors_policy = cget(optname,
                                            'encoding-errors-policy', 'strict')
+        self.post_commit_check = cget(optname, 'post-commit-check', 'False')
 
     def _validateConfiguration(self):
         """

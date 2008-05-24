@@ -36,6 +36,10 @@ class ChangesetReplayFailure(TailorException):
     "Failure replaying the changeset on the target system"
 
 
+class PostCommitCheckFailure(TailorException):
+    "Most probably a tailor bug, not everything has been committed."
+
+
 class SynchronizableTargetWorkingDir(WorkingDir):
     """
     This is an abstract working dir usable as a *shadow* of another
@@ -140,6 +144,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
             if changeset.tags:
                 for tag in changeset.tags:
                     self._tag(tag, changeset.date, changeset.author)
+            if self.repository.post_commit_check:
+                self._postCommitCheck()
         finally:
             signal(SIGINT, previous)
 
@@ -394,6 +400,13 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         """
 
         raise TailorBug("%s should override this method!" % self.__class__)
+
+    def _postCommitCheck(self):
+        """
+        Perform any safety-belt check to assert everything's ok. This
+        implementation does nothing, subclasses should reimplement the
+        method.
+        """
 
     def _removeEntries(self, entries):
         """

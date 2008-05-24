@@ -731,6 +731,14 @@ delay-before-apply : integer
 
   It defaults to *None*, ie no delay at all.
 
+post-commit-check : bool
+  After each commit tailor will perform a check on the target working
+  directory asserting there's no changes left. This is particularly
+  useful when trying to debug source backends... at a little cost.
+
+  *False* by default.
+
+
 arx
 %%%
 
@@ -870,12 +878,6 @@ start-revision : string
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
-post-commit-check : bool
-  After each commit tailor will execute a ``darcs whatsnew -ls`` to
-  check there's no changes left. This is particularly useful when
-  trying to debug source backends... at a little cost.
-
-  *False* by default.
 
 Big repositories
 ................
