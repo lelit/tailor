@@ -10,7 +10,7 @@ Tailor 1.0
 About
 =====
 
-Tailor is a tool to migrate changesets between ArX_, Baz_,
+Tailor is a tool to migrate changesets between Aegis_, ArX_, Baz_,
 `Bazaar`_, CVS_, Codeville_, Darcs_, Git_, Mercurial_, Monotone_,
 Perforce_, Subversion_ and Tla_ [#]_ repositories.
 
@@ -36,7 +36,7 @@ repository" with any combination of the supported systems.
 
 It's still lacks the ability of doing a `two way sync`_.
 
-.. [#] ArX and Codeville systems may be used only as the `target`
+.. [#] Aegis, ArX and Codeville systems may be used only as the `target`
        backend, since the `source` support isn't coded yet.
        Contributions on these backends will be very appreciated,
        since I do not use them enough to figure out the best way to
@@ -45,6 +45,7 @@ It's still lacks the ability of doing a `two way sync`_.
        To the opposite, Baz (1.0, not Bazaar), Perforce and Tla
        are supported only as source systems.
 
+.. _aegis: http://aegis.sourceforge.net/
 .. _arx: http://www.nongnu.org/arx/
 .. _baz: http://bazaar-vcs.org/Baz1x
 .. _bazaar: http://bazaar-vcs.org/
@@ -1336,13 +1337,19 @@ Since I'm not currently using all the supported systems (so little
 time, so many VCSs...) I'm not in position to test them out properly,
 but I'll do my best to keep them in sync, maybe with your support :-)
 
+Aegis support
+-------------
+
+Aegis_ support was contributed by `Walter Franzini
+<walter.franzini@gmail.com>`_.
+
 ArX support
 -----------
 
 ArX_ support was contributed by `Walter Landry <wlandry@caltech.edu>`_.
 
 Bazaar support
------------------
+--------------
 
 `Bazaar`_ support was contributed by `Johan Rydberg
 <jrydberg@gnu.org>`_.  Nowadays it's being maintained by `Lalo Martins
