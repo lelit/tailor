@@ -264,7 +264,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         try:
             parent_branch.lock_read()
             try:
-                if version_info > (1, 5):
+                if version_info > (1, 6):
                     revisions = find_unmerged(branch, parent_branch, 'remote')[1]
                 else:
                     revisions = find_unmerged(branch, parent_branch)[1]
