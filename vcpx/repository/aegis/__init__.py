@@ -18,14 +18,26 @@ class AegisRepository(Repository):
         pass
 
     def command(self, *args, **kwargs):
-        original_command = self.EXECUTABLE
+        #
+        # Run aegis in verbose mode
+        #
+        args = args + ('-verbose',)
+
+        #
+        # Disable the log file functionality
+        #
+        if not kwargs.has_key('env'):
+            kwargs['env'] = {}
+        kwargs['env']['AEGIS_FLAGS'] = "log_file_preference = never;"
+
         #
         # aefinish is a different executable.  Take care of it.
         #
+        original_command = self.EXECUTABLE
         if args[0] == "-finish":
             self.EXECUTABLE = "aefinish"
             args = args[1:]
-        args = args + ('-verbose',)
+
         rc = Repository.command(self, *args, **kwargs)
         self.EXECUTABLE = original_command
         return rc

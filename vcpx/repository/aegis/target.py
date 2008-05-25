@@ -180,14 +180,18 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
     # File's related methods.
     #
     def __new_file(self, file_names, usage = None):
+        #
+        # Tailor try to add also the aegis own log file and it's forbidden.
+        #
+        if file_names == "./aegis.log":
+            return
         if usage == "config":
             cmd = self.repository.command("-new_file", "-keep", "-config",
-                                          "-no-log",
+                                          "-not-logging",
                                           "-project", self.repository.module,
                                           "-change", self.change_number)
         else:
-            cmd = self.repository.command("-new_file", "-keep",
-                                          "-no-log",
+            cmd = self.repository.command("-new_file", "-keep", "-not-logging",
                                           "-project", self.repository.module,
                                           "-change", self.change_number)
         new_file = ExternalCommand(cwd=self.repository.basedir,
@@ -201,7 +205,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def __copy_file(self, file_names):
         cmd = self.repository.command("-copy", "-keep",
-                                      "-no-log",
+                                      "-not-logging",
                                       "-project", self.repository.module,
                                       "-change", self.change_number)
         copy_file = ExternalCommand(cwd=self.repository.basedir,
@@ -214,7 +218,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def __move_file(self, old_name, new_name):
         cmd = self.repository.command("-move",
-                                      "-no-log",
+                                      "-not-logging",
                                       "-project", self.repository.module,
                                       "-change", self.change_number)
         move_file = ExternalCommand(cwd=self.repository.basedir,
@@ -227,7 +231,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def __remove_file(self, file_name):
         cmd = self.repository.command("-remove",
-                                      "-no-log",
+                                      "-not-logging",
                                       "-project", self.repository.module,
                                       "-change", self.change_number)
         remove_file = ExternalCommand(cwd=self.repository.basedir,
