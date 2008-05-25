@@ -44,19 +44,22 @@ darcs initialize --repodir=$work/darcs-repo > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
 activity="create foo"
-cat > $work/darcs-repo/foo.txt <<EOF
+mkdir $work/darcs-repo/dir
+if test $? -ne 0; then no_result; fi
+
+cat > $work/darcs-repo/dir/foo.txt <<EOF
 A simple text file
 EOF
 if test $? -ne 0; then no_result; fi
 
-darcs add foo.txt --repodir=$work/darcs-repo > log 2>&1
+darcs add dir/foo.txt --repodir=$work/darcs-repo > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
 darcs record --repodir=$work/darcs-repo -a -A Nobody -m "initial commit" \
     > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
-cat > $work/darcs-repo/foo.txt <<EOF
+cat > $work/darcs-repo/dir/foo.txt <<EOF
 A simple text file
 wit some more text.
 EOF
@@ -74,7 +77,7 @@ darcs record --repodir=$work/darcs-repo -a -A Nobody --ignore-time \
     -m "second commit" > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
-cat > $work/darcs-repo/foo.txt <<EOF
+cat > $work/darcs-repo/dir/foo.txt <<EOF
 A simple text file
 wit some more text.
 more text again!
@@ -107,14 +110,6 @@ USER=${USER:-${LOGNAME:-`whoami`}}
 
 PAGER=cat
 export PAGER
-AEGIS_FLAGS="delete_file_preference = no_keep; \
-        lock_wait_preference = always; \
-        diff_preference = automatic_merge; \
-        pager_preference = never; \
-        persevere_preference = all; \
-        log_file_preference = never; \
-        default_development_directory = \"$work\";"
-export AEGIS_FLAGS
 AEGIS_THROTTLE=-1
 export AEGIS_THROTTLE
 
@@ -230,7 +225,7 @@ ancora piu\` test
 EOF
 if test $? -ne 0; then no_result; fi
 
-darcs remove foo.txt --repodir=$work/darcs-repo > log 2>&1
+darcs remove dir/foo.txt --repodir=$work/darcs-repo > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
 cat > $work/logfile <<EOF
@@ -290,5 +285,20 @@ if test $? -ne 0; then cat log; no_result; fi
 diff ok change_attr
 if test $? -ne 0; then fail; fi
 
+#
+# test change content
+#
+activity="change 10"
+cat > $work/ok <<EOF
+config create 1 aegis.conf
+source create 1 dir/foo.txt
+EOF
+if test $? -ne 0; then no_result; fi
+
+aegis -list change_files -unf -c 10 > $work/out
+if test $? -ne 0; then no_result; fi
+
+diff $work/ok $work/out
+if test $? -ne 0; then fail; fi
 
 pass

@@ -82,6 +82,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         self.__develop_begin()
         return True
 
+    def _addSubtree(self, subdir):
+        #
+        # Aegis new_file command is recursive, there is no need to
+        # walk the directory tree.
+        #
+        self.__new_file(subdir)
+
     def _addPathnames(self, names):
         for name in names:
             self.__new_file(name)
