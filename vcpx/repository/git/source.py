@@ -50,14 +50,30 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
         return self._changesetForRevision(rev)
 
     def _getUpstreamChangesets(self, since):
+        # Brute-force tag search
+        from os.path import join
+        from os import listdir
+
+        tags = {}
+        tagdir = join(self.repository.basedir, '.git', 'refs', 'tags')
+        try:
+            for tag in listdir(tagdir):
+                tagrev = self.repository.runCommand(['rev-list', '--max-count=1', tag])[0]
+                tags.setdefault(tagrev, []).append(tag)
+        except OSError:
+            # No tag dir
+            pass
+
         self.repository.runCommand(['fetch'], GetUpstreamChangesetsFailure, False)
 
         revs = self.repository.runCommand(['rev-list', '^' + since, 'origin'],
                                            GetUpstreamChangesetsFailure)[:-1]
         revs.reverse()
         for rev in revs:
-            self.log.info('Updating to revision ' + rev)
-            yield self._changesetForRevision(rev)
+            cs = self._changesetForRevision(rev)
+            if rev in tags:
+                cs.tags = tags[rev]
+            yield cs
 
     def _applyChangeset(self, changeset):
         out = self.repository.runCommand(['merge', '-n', '--no-commit', 'fastforward',
@@ -127,23 +143,7 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
 
             entries.append(e)
 
-        # Brute-force tag search
-        from os.path import join
-        from os import listdir
-
-        tags = []
-        tagdir = join(self.repository.basedir, '.git', 'refs', 'tags')
-        try:
-            for tag in listdir(tagdir):
-                # Consider caching stat info per tailor run
-                tagrev = self.repository.runCommand(['rev-list', '--max-count=1', tag])[0]
-                if (tagrev == revision):
-                    tags.append(tag)
-        except OSError:
-            # No tag dir
-            pass
-
-        return Changeset(revision, date, user, message, entries, tags=tags)
+        return Changeset(revision, date, user, message, entries)
 
     def _getRev(self, revision):
         """ Return the git object corresponding to the symbolic revision """
