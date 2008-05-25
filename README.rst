@@ -620,9 +620,9 @@ Repositories
 All the section whose name contains at least one colon character
 denote a repository.  A single repository may be shared by zero, one or
 more projects.  The first part of the name up to the first colon
-indicates the `kind` of the repository, one of ``arx``, ``baz``, ``bzr``,
-``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``, ``monotone``, ``p4``,
-``svn`` and ``tla``.
+indicates the `kind` of the repository, one of ``aegis``, ``arx``,
+``baz``, ``bzr``, ``cdv``, ``cvs``, ``darcs``, ``git``, ``hg``,
+``monotone``, ``p4``,``svn`` and ``tla``.
 
 .. note:: If a particular option is missing from the repository section,
           its value is obtained looking up the same option in the
@@ -738,6 +738,25 @@ post-commit-check : bool
   useful when trying to debug source backends... at a little cost.
 
   *False* by default.
+
+aegis
+%%%%%
+
+.. no specific option
+
+Sample config fragment::
+
+   [aegis:target]
+   #
+   # Se the aegis project as the tailor module, tailor will *not*
+   # create the aegis project for you!
+   #
+   module = $AEGIS_PROJECT
+   #
+   # the subdir will be used as the working directory for aegis
+   # changes, it *must* be different from the target:subdir.
+   #
+   subdir = aegisside
 
 
 arx
