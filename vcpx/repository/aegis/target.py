@@ -15,8 +15,8 @@ import os
 import os.path
 import re
 from tempfile import mkstemp, NamedTemporaryFile
-from textwrap import wrap
 
+from vcpx.changes import ChangesetEntry
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir
@@ -54,6 +54,16 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         self.__integrate_begin()
         self.__finish()
 
+    def __rm_rf(self, dir):
+        self.log.info("RM -RF %s", dir)
+        for dir, subdirs, files in os.walk(dir, False):
+            for f in files:
+                self.log.info("UNLINK: %s", os.path.join(dir, f))
+                os.unlink(os.path.join(dir, f))
+            for d in subdirs:
+                self.log.info("RMDIR: %s", os.path.join(dir, d))
+                os.rmdir(os.path.join(dir, d))
+        os.rmdir(dir)
 
     def _prepareTargetRepository(self):
         #
@@ -61,18 +71,77 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         # development directory of a change.
         #
         if os.path.exists(self.repository.basedir):
-            os.rmdir(self.repository.basedir)
+            self.__rm_rf(self.repository.basedir)
 
     def _prepareToReplayChangeset(self, changeset):
         """
         Runs aegis -New_Change -dir target.basedir
         """
+        if not changeset:
+            return True
+
+        self._prepareTargetRepository()
         self.change_number = self.__new_change(changeset.revision)
         self.__develop_begin()
         #
         # This function MUST return
         #
         return True
+
+    def _adaptChangeset(self, changeset):
+        #
+        # Aegis does not permit to have a changeset whitout modified files.
+        #
+        if not changeset:
+            return None
+
+        project_files = self.repository.project_file_list_get()
+        if not project_files:
+            return SynchronizableTargetWorkingDir._adaptChangeset(self, changeset)
+
+        from copy import deepcopy
+        adapted = deepcopy(changeset)
+
+        #
+        # adapt the entries:
+        # * delete entries with action_kind REMOVE not in the repository (DEL => )
+        # * change to ADD a rename of a file non in the repository (REN => ADD)
+        # * remove from the changeset entries whith 2 operation (REN + UPD => REN);
+        # * change the ADD action_kind for files already in the repository (ADD => UPD);
+        # * change the UPD action_kind for files *non* in the repository (UPD => ADD);
+        #
+        for e in adapted.entries:
+            if e.action_kind == 'DEL' and project_files.count(e.name) == 0:
+                self.log.info("remove delete entry %s", e.name)
+                adapted.entries.remove(e)
+
+        renamed_file = []
+        for e in adapted.entries:
+            if e.action_kind == ChangesetEntry.RENAMED:
+                renamed_file.append(e.name)
+
+        for e in adapted.entries:
+            if renamed_file.count(e.name) > 0 and e.action_kind != ChangesetEntry.RENAMED:
+                adapted.entries.remove(e)
+            if e.action_kind == ChangesetEntry.RENAMED and project_files.count(e.old_name) == 0:
+                e.action_kind = ChangesetEntry.ADDED
+                e.old_name = None
+            if e.action_kind == ChangesetEntry.ADDED and project_files.count(e.name) > 0:
+                e.action_kind = ChangesetEntry.UPDATED
+            elif e.action_kind == ChangesetEntry.UPDATED and project_files.count(e.name) == 0:
+                e.action_kind = ChangesetEntry.ADDED
+
+        if not changeset.entries:
+            self._prepareTargetRepository()
+            return None
+
+        return SynchronizableTargetWorkingDir._adaptChangeset(self, adapted)
+
+    def _initializeWorkingDir(self):
+        #
+        # This method is called only by importFirstRevision
+        #
+        self.__new_file('.')
 
     def _prepareWorkingDirectory(self, source_repo):
         #
@@ -87,7 +156,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Aegis new_file command is recursive, there is no need to
         # walk the directory tree.
         #
-        self.__new_file(subdir)
+        pass
+
+    def _addEntries(self, entries):
+        for e in entries:
+            if e.is_directory:
+                continue
+            self.__new_file(e.name)
 
     def _addPathnames(self, names):
         for name in names:
@@ -97,9 +172,21 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         for name in names:
             self.__copy_file(name)
 
+    def _removeEntries(self, entries):
+        for e in entries:
+            if e.is_directory:
+                continue
+            self.__remove_file(e.name)
+
     def _removePathnames(self, names):
         for name in names:
             self.__remove_file(name)
+
+    def _renameEntries(self, entries):
+        for e in entries:
+            if e.is_directory:
+                continue
+            self.__move_file(e.old_name, e.name)
 
     def _renamePathname(self, oldname, newname):
         self.__move_file(oldname, newname)
@@ -109,8 +196,10 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
     #
     def __new_change(self, title = "none", description = "none"):
         change_attr = NamedTemporaryFile()
-        change_attr.write("brief_description = \"%s\";\n" % title)
-        change_attr.write("description = \"%s\";" % description)
+        change_attr.write("brief_description = \"%s\";\n"
+                          % self.repository.normalize(title))
+        change_attr.write("description = \"%s\";"
+                          % self.repository.normalize(description))
         change_attr.write("cause = external_improvement;\n")
         change_attr.flush()
         change_number_file = mkstemp()[1]
@@ -253,8 +342,14 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Create a temporary file to modify change's attributes.
         """
+        if kwargs['brief_description']:
+            brief_description = \
+                self.repository.normalize(kwargs['brief_description'])
+        else:
+            brief_description = 'none'
         if kwargs['description']:
-            description = "\\n\\\n".join(wrap(kwargs['description']))
+            description = \
+                self.repository.normalize(kwargs['description'])
         else:
             description = "none"
         temp = mkstemp()
@@ -267,7 +362,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             test_baseline_exempt = true;
             regression_test_exempt = true;
             """
-            % (kwargs['brief_description'], description))
+            % (brief_description, description))
         change_attr.close()
         return temp[1]
 
@@ -295,5 +390,7 @@ merge_command = "(diff3 -e $i $orig $mr | sed -e '/^w$$/d' -e '/^q$$/d'; \
         echo '1,$$p' ) | ed - $i > $out";
 patch_diff_command = "set +e; $diff -C0 -L $index -L $index $orig $i > $out; \
 test $$? -le 1";
+
+shell_safe_filenames = false;
 """)
         c.close()

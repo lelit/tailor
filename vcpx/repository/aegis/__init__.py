@@ -5,7 +5,11 @@
 # :Licenza:  GNU General Public License
 #
 
+import vcpx.changes
+from textwrap import wrap
 from vcpx.repository import Repository
+from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
+
 
 class AegisRepository(Repository):
 
@@ -41,3 +45,23 @@ class AegisRepository(Repository):
         rc = Repository.command(self, *args, **kwargs)
         self.EXECUTABLE = original_command
         return rc
+
+    def project_file_list_get(self):
+        cmd = self.command("-project", self.module,
+                           executable = "aelpf")
+        aelpf = ExternalCommand (cwd="/tmp", command=cmd)
+        output = aelpf.execute(stdout = PIPE, stderr = STDOUT)[0]
+        if aelpf.exit_status > 0:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d, saying: %s" %
+                (str(aelpf), aelpf.exit_status, output.read()))
+
+        return [f.strip() for f in output.readlines()]
+
+    def normalize(self, message):
+        #
+        # Aegis use C syntax for strings stored in config files, adapt
+        # the message to conform.
+        #
+        message = message.replace ('\\', '\\\\')
+        return "\\n\\\n".join(wrap(message)).replace('"', '\\"')
