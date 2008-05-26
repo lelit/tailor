@@ -31,6 +31,8 @@ class DarcsRepository(Repository):
         else:
             self.init_options = None
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+        self.split_initial_import_level = int(
+            cget(self.name, 'split-initial-changeset-level', '0'))
         self.replace_badchars = eval(cget(self.name, 'replace-badchars',
                                           "{"
                                           "'\xb4': '&#180;',"

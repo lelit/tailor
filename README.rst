@@ -898,6 +898,17 @@ start-revision : string
             hash value as ``start-revision``, you **must** use a
             ``subdir`` different from ``.``. [#]_
 
+split-initial-changeset-level : integer
+  Sometime it's desiderable to avoid the impact of the huge patch
+  produced by the bootstrap step, that's basically a snapshot of the
+  *whole* working directory. This option controls that: if greater
+  than zero, the inital import will be splitted in multiple
+  changesets, one per directory not deeper than the specified level. A
+  value of 1 will build a changeset for the top level contents
+  (directories and files), then a changeset for each subtree. Finally,
+  a *tag* will comprehend all the changesets.
+
+  *0* by default.
 
 Big repositories
 ................
@@ -916,6 +927,8 @@ illustrates the method::
       tailor -c from-intermediary.tailor
     done
 
+When darcs is the *target*, consider setting a value of 1 or even 2
+for the option `split-initial-changeset-level`.
 
 git target
 %%%%%%%%%%

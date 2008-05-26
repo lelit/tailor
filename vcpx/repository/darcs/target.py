@@ -30,6 +30,52 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
     A target working directory under ``darcs``.
     """
 
+    def importFirstRevision(self, source_repo, changeset, initial):
+        from os import walk, sep
+        from os.path import join
+        from vcpx.dualwd import IGNORED_METADIRS
+
+        if not self.repository.split_initial_import_level:
+            super(DarcsTargetWorkingDir, self).importFirstRevision(
+                source_repo, changeset, initial)
+        else:
+            cmd = self.repository.command("add", "--case-ok", "--quiet")
+            add = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            cmd = self.repository.command("add", "--case-ok", "--recursive",
+                                          "--quiet")
+            addrecurs = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            for root, dirs, files in walk(self.repository.basedir):
+                subtree = root[len(self.repository.basedir)+1:]
+                if subtree:
+                    log = "Import of subtree %s" % subtree
+                    level = len(subtree.split(sep))
+                else:
+                    log = "Import of first level"
+                    level = 0
+                for excd in IGNORED_METADIRS:
+                    if excd in dirs:
+                        dirs.remove(excd)
+                if level>self.repository.split_initial_import_level:
+                    while dirs:
+                        d = dirs.pop(0)
+                        addrecurs.execute(join(subtree, d))
+                    filenames = [join(subtree, f) for f in files]
+                    if filenames:
+                        add.execute(*filenames)
+                else:
+                    dirnames = [join(subtree, d) for d in dirs]
+                    if dirnames:
+                        add.execute(*dirnames)
+                    filenames = [join(subtree, f) for f in files]
+                    if filenames:
+                        add.execute(*filenames)
+                self._commit(changeset.date, "tailor", "Initial import",
+                             log, isinitialcommit=initial)
+
+            cmd = self.repository.command("tag", "--author", "tailor")
+            ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(
+                "Initial import from %s" % source_repo.repository)
+
     def _addSubtree(self, subdir):
         """
         Use the --recursive variant of ``darcs add`` to add a subtree.
