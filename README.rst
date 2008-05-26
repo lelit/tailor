@@ -896,7 +896,7 @@ start-revision : string
 
   .. note:: If you want to start from a particular patch, giving its
             hash value as ``start-revision``, you **must** use a
-            ``subdir`` different from ``.``. [#]_
+            ``subdir`` different from ``"."``. [#]_
 
 split-initial-changeset-level : integer
   Sometime it's desiderable to avoid the impact of the huge patch
@@ -1218,7 +1218,7 @@ UNIX one::
                                    filepruner=lineutil.source_code_filepruner)
         return True
 
-It uses zooko's pyutil[#]_ toolset.  Another approach would be looping
+It uses zooko's pyutil [#]_ toolset.  Another approach would be looping
 over changeset.entries and operating only on added or changed entries.
 
 Example 3
