@@ -209,10 +209,10 @@ if test $? -ne 0; then no_result; fi
 
 activity="check aegis project history"
 aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
-if test $? -ne 0; then cat log; no_result; fi
+if test $? -ne 0; then cat history; no_result; fi
 
 diff ok history
-if test $? -ne 0; then cat tailor.log; fail; fi
+if test $? -ne 0; then fail; fi
 
 #
 # add more darcs changes
@@ -254,7 +254,7 @@ if test $? -ne 0; then no_result; fi
 
 activity="check aegis project history"
 aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
-if test $? -ne 0; then cat log; no_result; fi
+if test $? -ne 0; then cat history; no_result; fi
 
 diff ok history
 if test $? -ne 0; then fail; fi
