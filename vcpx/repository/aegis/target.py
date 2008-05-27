@@ -151,6 +151,9 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         self.__develop_begin()
         return True
 
+    def _tag(self, tag, author, date):
+        self.__delta_name(tag)
+
     def _addSubtree(self, subdir):
         #
         # Aegis new_file command is recursive, there is no need to
@@ -271,6 +274,16 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             raise ChangesetApplicationFailure(
                 "%s returned status %d, saying: %s" %
                 (str(change_attr), change_attr.exit_status, output.read()))
+
+    def __delta_name (self, delta):
+        cmd = self.repository.command ("-delta_name",
+                                       "-project", self.repository.module)
+        delta_name = ExternalCommand (cwd="/tmp", command=cmd)
+        output = delta_name.execute (delta, stdout = PIPE, stderr = STDOUT)[0]
+        if delta_name.exit_status > 0:
+            raise ChangesetApplicationFailure(
+                "%s returned status %d, saying: %s" %
+                (str(delta_name), delta_name.exit_status, output.read()))
 
     #
     # File's related methods.
