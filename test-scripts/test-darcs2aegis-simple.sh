@@ -66,6 +66,9 @@ if test $? -ne 0; then no_result; fi
 
 cd $work
 
+#
+# Prepare the darcs repository
+#
 activity="darcs setup"
 mkdir $work/darcs-repo > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
@@ -171,6 +174,10 @@ if test $? -ne 0; then no_result; cat log; fi
 workproj=$work/foo.proj
 workchan=$work/foo.chan
 
+#
+# The project is NOT created by means of tailor since it should be
+# created with a different user.
+#
 activity="new project"
 aegis -npr $AEGIS_PROJECT -version "" -lib $AEGIS_PATH \
     -dir $workproj/ > log 2>&1
@@ -227,8 +234,8 @@ EOF
 if test $? -ne 0; then no_result; fi
 
 activity="run tailor"
-python $here/tailor -c $work/tailor.conf > tailor.log 2>&1
-if test $? -ne 0; then cat tailor.log; fail; fi
+python $here/tailor -c $work/tailor.conf > $work/tailor.log 2>&1
+if test $? -ne 0; then cat $work/tailor.log; fail; fi
 
 cat > $work/ok <<EOF
 1 10 initial commit
@@ -247,7 +254,7 @@ if test $? -ne 0; then fail; fi
 #
 # add more darcs changes
 #
-cat > $work/darcs-repo/bar.txt <<EOF
+cat > $work/darcs-repo/baz.txt <<EOF
 A simple text file
 wit some more text.
 more text again!
@@ -316,9 +323,9 @@ diff ok change_attr
 if test $? -ne 0; then fail; fi
 
 #
-# test change content
+# test the change content
 #
-activity="change 10"
+activity="change 10 content"
 cat > $work/ok <<EOF
 config create 1 aegis.conf
 source create 1 dir/foo.txt
