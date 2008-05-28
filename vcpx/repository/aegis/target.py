@@ -223,6 +223,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         f = open(change_number_file, "r")
         change_number = f.read()
         f.close()
+        change_attr.close()
         return change_number.strip()
 
     def __develop_begin(self):
