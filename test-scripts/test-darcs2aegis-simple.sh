@@ -2,8 +2,14 @@
 #
 # Copyright (C) 2008 Walter Franzini
 #
+# NOTE: TABS in aegis metadata samples below must be preserved.
+#
 
-
+#
+# This test expects to be run from the tailor top source dir, change
+# the following line if the convention used by tailor developer(s)
+# differs.
+#
 here=`pwd`
 
 #
@@ -60,6 +66,11 @@ check_it()
 }
 
 
+#
+# This test follows Aegis convention, where a test must be able to
+# work even when the development directory is not writable, this
+# happens when running tests in the integration stage.
+#
 work=${TMPDIR-/tmp}/TAILOR.$$
 mkdir $work
 if test $? -ne 0; then no_result; fi
@@ -213,8 +224,8 @@ if test $? -ne 0 ; then cat log; no_result; fi
 #
 cat > $work/tailor.conf <<EOF
 [DEFAULT]
-verbose = True
-Debug = True
+verbose = true
+Debug = true
 
 [project]
 patch-name-format = %(revision)s
@@ -245,10 +256,11 @@ EOF
 if test $? -ne 0; then no_result; fi
 
 activity="check aegis project history"
-aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
-if test $? -ne 0; then cat history; no_result; fi
+aegis -list project_history -unformatted 2> $work/log \
+    | cut -d\  -f 1,7- > $work/history
+if test $? -ne 0; then cat $work/log; no_result; fi
 
-diff ok history
+diff -u $work/ok $work/history
 if test $? -ne 0; then fail; fi
 
 #
@@ -263,6 +275,10 @@ EOF
 if test $? -ne 0; then no_result; fi
 
 darcs remove dir/foo.txt --repodir=$work/darcs-repo > log 2>&1
+if test $? -ne 0; then cat log; no_result; fi
+
+activity="tag 1.0.0"
+darcs tag 1.0.0 --repodir=$work/darcs-repo -A Nobody > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
 cat > $work/logfile <<EOF
@@ -281,21 +297,39 @@ activity="run tailor again"
 python $here/tailor -c $work/tailor.conf > log 2>&1
 if test $? -ne 0; then cat log; fail; fi
 
+#
+# Check the aegis project history.
+# fixme:  there is a gap in the change number sequence (13 is missing)
+#         because currently the change corresponding to the tags is
+#         still created even if it cannot be completed because it's empty
+#
+activity="check aegis project history (again)"
+
 cat > $work/ok <<EOF
 1 10 initial commit
 2 11 second commit
+Name: "1.0.0"
 3 12 third commit
-4 13 fourth commit
+4 14 fourth commit
 EOF
 if test $? -ne 0; then no_result; fi
 
-activity="check aegis project history"
-aegis -list project_history -unformatted 2> log | cut -d\  -f 1,7- > history
+aegis -list project_history -unformatted 2> log > history
 if test $? -ne 0; then cat history; no_result; fi
 
-diff ok history
+cat > $work/massage_history.awk <<'EOF'
+/^Name:/ {print $0}
+/^[0-9]/ {print $1, $7, $8, $9}
+EOF
+if test $? -ne 0; then no_result; fi
+
+awk -f $work/massage_history.awk < history > history.new
+if test $? -ne 0; then no_result; fi
+
+diff -u ok history.new
 if test $? -ne 0; then fail; fi
 
+activity="check change 14 attributes"
 cat > $work/ok <<EOF
 brief_description = "fourth commit";
 description = "This text is now the description of the aegis change splitted on\n\\
@@ -315,8 +349,7 @@ copyright_years =
 EOF
 if test $? -ne 0; then no_result; fi
 
-activity="check project content"
-aegis -ca -l 13 > $work/change_attr 2> log
+aegis -ca -l 14 > $work/change_attr 2> log
 if test $? -ne 0; then cat log; no_result; fi
 
 diff ok change_attr
@@ -335,7 +368,252 @@ if test $? -ne 0; then no_result; fi
 aegis -list change_files -unf -c 10 > $work/out
 if test $? -ne 0; then no_result; fi
 
-diff $work/ok $work/out
+diff -u $work/ok $work/out
+if test $? -ne 0; then fail; fi
+
+#
+# Check the content of change 11 (second commit)
+#
+activity="check change 11 content"
+cat > $work/ok <<EOF
+source create 1 bar.txt
+source modify 1 -> 2 dir/foo.txt
+EOF
+if test $? -ne 0; then no_result; fi
+
+aegis -list change_files -unf -c 11 > $work/out
+if test $? -ne 0; then no_result; fi
+
+diff -u $work/ok $work/out
+if test $? -ne 0; then fail; fi
+
+#
+# Check the content of change 12 (third commit)
+#
+# Note: we check the change fstate file to verify the rename
+#       operation, since the unformatted output lacks some details..
+#
+activity="check change 12 content"
+cat > $work/ok <<EOF
+src =
+[
+	{
+		file_name = "bar.txt";
+		uuid = "UUID";
+		action = remove;
+		edit_origin =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		usage = source;
+		move = "baz.txt";
+	},
+	{
+		file_name = "baz.txt";
+		uuid = "UUID";
+		action = create;
+		edit =
+		{
+			revision = "2";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		usage = source;
+		move = "bar.txt";
+	},
+	{
+		file_name = "dir/foo.txt";
+		uuid = "UUID";
+		action = modify;
+		edit =
+		{
+			revision = "3";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "2";
+			encoding = none;
+		};
+		usage = source;
+	},
+];
+EOF
+if test $? -ne 0; then no_result; fi
+
+check_it ok $workproj/info/change/0/012.fs
+
+#
+# Note: there is a gap in the change numbers sequence, the next should
+#       be 13, because the aegis target back-end needs to be improved
+#       in the case of changeset setting only a tag
+#
+activity="check change 14 content"
+cat > $work/ok <<EOF
+source modify 2 -> 3 baz.txt
+source remove 3 dir/foo.txt
+EOF
+if test $? -ne 0; then no_result; fi
+
+aegis -list change_files -unf -c 14 > $work/out
+if test $? -ne 0; then no_result; fi
+
+diff -u $work/ok $work/out
+if test $? -ne 0; then fail; fi
+
+#
+# Check the content of the baseline
+#
+activity="check the baseline"
+cat > $work/ok <<EOF
+src =
+[
+	{
+		file_name = "aegis.conf";
+		uuid = "UUID";
+		action = create;
+		edit =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		usage = config;
+		file_fp =
+		{
+			youngest = TIME;
+			oldest = TIME;
+			crypto = "GUNK";
+		};
+		diff_file_fp =
+		{
+			youngest = TIME;
+			oldest = TIME;
+			crypto = "GUNK";
+		};
+	},
+	{
+		file_name = "bar.txt";
+		uuid = "UUID";
+		action = remove;
+		edit =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "1";
+			encoding = none;
+		};
+		usage = source;
+		move = "baz.txt";
+		deleted_by = 12;
+	},
+	{
+		file_name = "baz.txt";
+		uuid = "UUID";
+		action = create;
+		edit =
+		{
+			revision = "3";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "3";
+			encoding = none;
+		};
+		usage = source;
+		file_fp =
+		{
+			youngest = TIME;
+			oldest = TIME;
+			crypto = "GUNK";
+		};
+		diff_file_fp =
+		{
+			youngest = TIME;
+			oldest = TIME;
+			crypto = "GUNK";
+		};
+		move = "bar.txt";
+	},
+	{
+		file_name = "dir/foo.txt";
+		uuid = "UUID";
+		action = remove;
+		edit =
+		{
+			revision = "3";
+			encoding = none;
+		};
+		edit_origin =
+		{
+			revision = "3";
+			encoding = none;
+		};
+		usage = source;
+		diff_file_fp =
+		{
+			youngest = TIME;
+			oldest = TIME;
+			crypto = "GUNK";
+		};
+		deleted_by = 14;
+	},
+];
+EOF
+if test $? -ne 0; then no_result; fi
+
+check_it ok $workproj/info/trunk.fs
+
+activity="check aegis.conf baseline copy"
+cat > $work/ok <<'EOF'
+
+build_command = "exit 0";
+link_integration_directory = true;
+
+history_get_command = "aesvt -check-out -edit ${quote $edit} "
+    "-history ${quote $history} -f ${quote $output}";
+history_put_command = "aesvt -check-in -history ${quote $history} "
+    "-f ${quote $input}";
+history_query_command = "aesvt -query -history ${quote $history}";
+history_content_limitation = binary_capable;
+
+diff_command = "set +e; $diff $orig $i > $out; test $$? -le 1";
+merge_command =
+"(diff3 -e $i $orig $mr | sed -e '/^w$$/d' -e '/^q$$/d'; echo '1,$$p') "
+"| ed - $i > $out";
+patch_diff_command =
+"set +e; $diff -C0 -L $index -L $index $orig $i > $out; test $$? -le 1";
+
+shell_safe_filenames = false;
+EOF
+if test $? -ne 0; then no_result; fi
+
+diff ok $workproj/baseline/aegis.conf
+if test $? -ne 0; then fail; fi
+
+activity="check baz.txt baseline copy"
+cat > $work/ok <<EOF
+A simple text file
+wit some more text.
+more text again!
+ancora piu\` test
+EOF
+if test $? -ne 0; then no_result; fi
+
+diff ok $workproj/baseline/baz.txt
 if test $? -ne 0; then fail; fi
 
 pass

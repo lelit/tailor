@@ -34,9 +34,20 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Commit the changeset.
         """
+
+        #
+        # The invocation for the initialcommit does not receive entries.
+        #
         if isinitialcommit:
             self.__new_file("aegis.conf", "config")
             self.__config_file(self.repository.basedir, "aegis.conf")
+        elif not entries:
+            #
+            # Return successfully even if the changeset does not
+            # contain entries just in case it's a tag changeset.
+            #
+            return True
+
 
         change_attribute_file = \
             self.__change_attribute_file(brief_description=patchname,
@@ -77,8 +88,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Runs aegis -New_Change -dir target.basedir
         """
-        if not changeset:
-            return True
 
         self._prepareTargetRepository()
         self.change_number = self.__new_change(changeset.revision)
@@ -89,12 +98,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         return True
 
     def _adaptChangeset(self, changeset):
-        #
-        # Aegis does not permit to have a changeset whitout modified files.
-        #
-        if not changeset:
-            return None
-
         project_files = self.repository.project_file_list_get()
         if not project_files:
             return SynchronizableTargetWorkingDir._adaptChangeset(self, changeset)
@@ -131,10 +134,10 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             elif e.action_kind == ChangesetEntry.UPDATED and project_files.count(e.name) == 0:
                 e.action_kind = ChangesetEntry.ADDED
 
-        if not changeset.entries:
-            self._prepareTargetRepository()
-            return None
-
+        #
+        # Returns even if the changeset does not contain entries to
+        # give the opportunity to still register tags.
+        #
         return SynchronizableTargetWorkingDir._adaptChangeset(self, adapted)
 
     def _initializeWorkingDir(self):
@@ -399,10 +402,11 @@ history_query_command = "aesvt -query -history ${quote $history}";
 history_content_limitation = binary_capable;
 
 diff_command = "set +e; $diff $orig $i > $out; test $$? -le 1";
-merge_command = "(diff3 -e $i $orig $mr | sed -e '/^w$$/d' -e '/^q$$/d'; \
-        echo '1,$$p' ) | ed - $i > $out";
-patch_diff_command = "set +e; $diff -C0 -L $index -L $index $orig $i > $out; \
-test $$? -le 1";
+merge_command =
+"(diff3 -e $i $orig $mr | sed -e '/^w$$/d' -e '/^q$$/d'; echo '1,$$p') "
+"| ed - $i > $out";
+patch_diff_command =
+"set +e; $diff -C0 -L $index -L $index $orig $i > $out; test $$? -le 1";
 
 shell_safe_filenames = false;
 """)
