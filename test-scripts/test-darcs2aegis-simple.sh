@@ -7,6 +7,16 @@
 here=`pwd`
 
 #
+# To test against the stable aegis branch add the stable executables
+# directory to the PATH.  Only needed for aegis contributors.
+#
+aegis_stable_baseline=$(aegis -cd -p aegis.stable -bl 2> /dev/null)
+if test -n "$aegis_stable_baseline"
+then
+    PATH=$aegis_stable_baseline/linux-i486/bin:$PATH
+fi
+
+#
 # Add the development dir to the PATH
 #
 PATH=$here:$PATH
@@ -29,6 +39,26 @@ no_result()
     echo "NO_RESULT: $activity"
     exit 2
 }
+
+#
+# The following function is used to check aegis metadata files.
+#
+check_it()
+{
+	sed	-e "s|$work|...|g" \
+		-e 's|= [0-9][0-9]*; /.*|= TIME;|' \
+		-e "s/\"$USER\"/\"USER\"/g" \
+		-e 's/uuid = ".*"/uuid = "UUID"/' \
+		-e 's/19[0-9][0-9]/YYYY/' \
+		-e 's/20[0-9][0-9]/YYYY/' \
+		-e 's/node = ".*"/node = "NODE"/' \
+		-e 's/crypto = ".*"/crypto = "GUNK"/' \
+	        < $2 > $work/sed.out
+	if test $? -ne 0; then no_result; fi
+	diff -B $1 $work/sed.out
+	if test $? -ne 0; then no_result; fi
+}
+
 
 work=${TMPDIR-/tmp}/TAILOR.$$
 mkdir $work
