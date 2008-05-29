@@ -14,7 +14,7 @@ __docformat__ = 'reStructuredText'
 import re
 
 from vcpx.repository import Repository
-from vcpx.shwrap import ExternalCommand
+from vcpx.shwrap import ExternalCommand, PIPE
 from vcpx.target import TargetInitializationFailure
 
 
@@ -25,6 +25,10 @@ class DarcsRepository(Repository):
         Repository._load(self, project)
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
+        cmd = self.command('--version')
+        version = ExternalCommand(command=cmd)
+        self.darcs_version = version.execute(stdout=PIPE)[0].read().strip()
+        self.log.debug('Using %s, version %s', self.EXECUTABLE, self.darcs_version)
         init_options = cget(self.name, 'init-options', '')
         if init_options:
             self.init_options = tuple(init_options.split(' '))
