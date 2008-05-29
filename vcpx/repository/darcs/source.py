@@ -511,15 +511,21 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 conflicts.extend(files)
             line = output.readline()
 
+        # Complete the changeset with its entries
+
         cmd = self.repository.command("changes", selector, revtag,
                                       "--xml-output", "--summ")
         changes = ExternalCommand(cwd=self.repository.basedir, command=cmd)
         last = changesets_from_darcschanges(changes.execute(stdout=PIPE)[0],
                                             replace_badchars=self.repository.replace_badchars)
         try:
-            changeset.entries.extend(last.next().entries)
+            entries = last.next().entries
         except StopIteration:
-            pass
+            entries = None
+
+        if entries:
+            for e in entries:
+                changeset.addEntry(e, changeset.revision)
 
         return conflicts
 
