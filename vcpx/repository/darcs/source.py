@@ -40,6 +40,18 @@ class DarcsChangeset(Changeset):
             for e in entries:
                 self.addEntry(e, revision)
 
+    def __eq__(self, other):
+        return (self.revision == other.revision and
+                self.date == other.date and
+                self.author == other.author and
+                self.darcs_hash == getattr(other, 'darcs_hash', None))
+
+    def __ne__(self, other):
+        return (self.revision <> other.revision or
+                self.date <> other.date or
+                self.author <> other.author or
+                self.darcs_hash <> getattr(other, 'darcs_hash', None))
+
     def addEntry(self, entry, revision):
         """
         Fixup darcs idiosyncrasies:
