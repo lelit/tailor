@@ -158,17 +158,19 @@ class Changeset(object):
         self.unidiff = None        # This is the unidiff of the whole changeset
         self.tags = other.get('tags', None)
 
+    # Don't take into account the entries, to compare changesets, because they
+    # may be loaded after changeset application: the not-yet-applied changeset
+    # will be different from the same-but-just-applied one.
+
     def __eq__(self, other):
         return (self.revision == other.revision and
                 self.date == other.date and
-                self.author == other.author and
-                self.entries == other.entries)
+                self.author == other.author)
 
     def __ne__(self, other):
         return (self.revision <> other.revision or
                 self.date <> other.date or
-                self.author <> other.author or
-                self.entries <> other.entries)
+                self.author <> other.author)
 
     def setLog(self, log):
         if self.REFILL_MESSAGE:
