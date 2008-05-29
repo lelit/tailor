@@ -14,6 +14,7 @@ __docformat__ = 'reStructuredText'
 import os
 import os.path
 import re
+import shutil
 
 from vcpx.changes import ChangesetEntry
 from vcpx.shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE, STDOUT
@@ -64,24 +65,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         self.__integrate_begin()
         self.__finish()
 
-    def __rm_rf(self, dir):
-        self.log.info("RM -RF %s", dir)
-        for dir, subdirs, files in os.walk(dir, False):
-            for f in files:
-                self.log.info("UNLINK: %s", os.path.join(dir, f))
-                os.unlink(os.path.join(dir, f))
-            for d in subdirs:
-                self.log.info("RMDIR: %s", os.path.join(dir, d))
-                os.rmdir(os.path.join(dir, d))
-        os.rmdir(dir)
-
     def _prepareTargetRepository(self):
         #
         # Aegis refuse to use an already existing directory as the
         # development directory of a change.
         #
         if os.path.exists(self.repository.basedir):
-            self.__rm_rf(self.repository.basedir)
+            shutil.rmtree(self.repository.basedir)
 
     def _prepareToReplayChangeset(self, changeset):
         """
