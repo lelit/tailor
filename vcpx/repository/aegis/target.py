@@ -14,10 +14,9 @@ __docformat__ = 'reStructuredText'
 import os
 import os.path
 import re
-from tempfile import mkstemp, NamedTemporaryFile
 
 from vcpx.changes import ChangesetEntry
-from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
+from vcpx.shwrap import ExternalCommand, ReopenableNamedTemporaryFile, PIPE, STDOUT
 from vcpx.source import ChangesetApplicationFailure
 from vcpx.target import SynchronizableTargetWorkingDir
 
@@ -52,7 +51,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         change_attribute_file = \
             self.__change_attribute_file(brief_description=patchname,
                                          description=changelog)
-        self.__change_attribute(change_attribute_file)
+        self.__change_attribute(change_attribute_file.name)
         self.__develop_end()
         #
         # If the change cannot be closed, e.g. because a file is
@@ -201,18 +200,14 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
     # The following methods wraps change's related aegis commands.
     #
     def __new_change(self, title = "none", description = "none"):
-        change_attr = NamedTemporaryFile()
-        change_attr.write("brief_description = \"%s\";\n"
-                          % self.repository.normalize(title))
-        change_attr.write("description = \"%s\";"
-                          % self.repository.normalize(description))
-        change_attr.write("cause = external_improvement;\n")
-        change_attr.flush()
-        change_number_file = mkstemp()[1]
+        change_attr_file = \
+            self.__change_attribute_file(brief_description = title,
+                                         description = description)
+        change_number_file = ReopenableNamedTemporaryFile('aegis', 'tailor')
         cmd = self.repository.command("-new_change",
                                       "-project", self.repository.module,
-                                      "-file", change_attr.name,
-                                      "-output", change_number_file)
+                                      "-file", change_attr_file.name,
+                                      "-output", change_number_file.name)
         new_change = ExternalCommand(cwd="/tmp", command=cmd)
         output = new_change.execute(stdout = PIPE, stderr = STDOUT)[0]
         if new_change.exit_status > 0:
@@ -220,10 +215,9 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
                 "%s returned status %d, saying: %s" % (str(new_change),
                                                        new_change.exit_status,
                                                        output.read()))
-        f = open(change_number_file, "r")
-        change_number = f.read()
-        f.close()
-        change_attr.close()
+        fd = open(change_number_file.name, "rb")
+        change_number = fd.read()
+        fd.close()
         return change_number.strip()
 
     def __develop_begin(self):
@@ -335,7 +329,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
                                       "-project", self.repository.module,
                                       "-change", self.change_number)
         move_file = ExternalCommand(cwd=self.repository.basedir,
-                               command=cmd)
+                                    command=cmd)
         output = move_file.execute(old_name, new_name, stdout = PIPE, stderr = STDOUT)[0]
         if move_file.exit_status > 0:
             raise ChangesetApplicationFailure(
@@ -369,9 +363,9 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
                 self.repository.normalize(kwargs['description'])
         else:
             description = "none"
-        temp = mkstemp()
-        change_attr = os.fdopen(temp[0], "wb")
-        change_attr.write("""
+        attribute_file = ReopenableNamedTemporaryFile('aegis', 'tailor')
+        fd = open(attribute_file.name, 'wb')
+        fd.write("""
             brief_description = "%s";
             description = "%s";
             cause = external_improvement;
@@ -380,8 +374,8 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             regression_test_exempt = true;
             """
             % (brief_description, description))
-        change_attr.close()
-        return temp[1]
+        fd.close()
+        return attribute_file
 
     def __config_file(self, dir, name):
         """
