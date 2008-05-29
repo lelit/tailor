@@ -331,35 +331,41 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         """
 
         # Use the newer pull --xml-output, if possible
-        cmd = self.repository.command("pull", "--dry-run", "--xml-output")
-        pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        output = pull.execute(self.repository.repository,
-                              stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
-        if pull.exit_status:
-            errormsg = output.read()
-            if "unrecognized option `--xml-output'" in errormsg:
-                self.log.warning('Using darcs 1.0 non-XML parser: it may fail '
-                                 'on patches recorded before november 2003! '
-                                 'I would suggest of upgrading to latest darcs 2.0 '
-                                 '(later than 2.0+233).')
-                # No way, fall back to old behaviour, that will possibly fail,
-                # on patches recorded before 2003-11-01... :-|
-                cmd = self.repository.command("pull", "--dry-run")
-                pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-                output = pull.execute(self.repository.repository,
-                                      stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
-
-                if pull.exit_status:
+        use_xml = False
+        if self.repository.darcs_version.startswith('2'):
+            cmd = self.repository.command("pull", "--dry-run", "--xml-output")
+            pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            output = pull.execute(self.repository.repository,
+                                  stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
+            # pull --xml-output was introduced *after* 2.0.0
+            if pull.exit_status:
+                errormsg = output.read()
+                if "unrecognized option `--xml-output'" in errormsg:
+                    self.log.warning('Using darcs 1.0 non-XML parser: it may fail '
+                                     'on patches recorded before november 2003! '
+                                     'I would suggest of upgrading to latest darcs 2.0 '
+                                     '(later than 2.0+233).')
+                    # No way, fall back to old behaviour, that will possibly fail,
+                    # on patches recorded before 2003-11-01... :-|
+                else:
                     raise GetUpstreamChangesetsFailure(
                         "%s returned status %d saying\n%s" %
-                        (str(pull), pull.exit_status, output.read()))
-
-                return self._parseDarcsPull(output)
+                        (str(pull), pull.exit_status, errormsg))
             else:
+                use_xml = True
+
+        if not use_xml:
+            cmd = self.repository.command("pull", "--dry-run")
+            pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            output = pull.execute(self.repository.repository,
+                                  stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
+
+            if pull.exit_status:
                 raise GetUpstreamChangesetsFailure(
                     "%s returned status %d saying\n%s" %
-                    (str(pull), pull.exit_status, errormsg))
+                    (str(pull), pull.exit_status, output.read()))
 
+            return self._parseDarcsPull(output)
         else:
             # Skip initial verbosity, as well as the one at end
             from cStringIO import StringIO
@@ -369,6 +375,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
             xml = StringIO(''.join(output.readlines()[:-2]))
             xml.seek(0)
             badchars = self.repository.replace_badchars
+
             return changesets_from_darcschanges(xml, replace_badchars=badchars)
 
     def _parseDarcsPull(self, output):
