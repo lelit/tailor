@@ -35,6 +35,7 @@ class DarcsChangeset(Changeset):
         """
 
         super(DarcsChangeset, self).__init__(revision, date, author, log, entries=None, **other)
+        self.darcs_hash = other.get('darcs_hash')
         if entries is not None:
             for e in entries:
                 self.addEntry(e, revision)
@@ -241,8 +242,8 @@ def changesets_from_darcschanges_unsafe(changes, unidiff=False, repodir=None,
                                       self.current['author'],
                                       self.current['comment'],
                                       self.current['entries'],
-                                      tags=self.current.get('tags',[]))
-                cset.darcs_hash = self.current['hash']
+                                      tags=self.current.get('tags',[]),
+                                      darcs_hash=self.current['hash'])
                 if self.darcsdiff:
                     cset.unidiff = self.darcsdiff.execute(TZ='UTC',
                         stdout=PIPE, patchname=cset.revision)[0].read()
