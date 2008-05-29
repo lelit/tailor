@@ -748,13 +748,13 @@ Sample config fragment::
 
    [aegis:target]
    #
-   # Se the aegis project as the tailor module, tailor will *not*
+   # Set the aegis project as the tailor module, tailor will *not*
    # create the aegis project for you!
    #
    module = $AEGIS_PROJECT
    #
    # the subdir will be used as the working directory for aegis
-   # changes, it *must* be different from the target:subdir.
+   # changes, it *must* be different from the source:subdir.
    #
    subdir = aegisside
 
