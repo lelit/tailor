@@ -594,7 +594,9 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         else:
             initial = False
 
-        if self.repository.subdir == '.' or exists(self.repository.basedir):
+        # Darcs 2.0 fails with "darcs get --to-match", see issue885
+        darcs2 = self.repository.darcs_version.startswith('2')
+        if darcs2 or self.repository.subdir == '.' or exists(self.repository.basedir):
             # This is currently *very* slow, compared to the darcs get
             # below!
             if not exists(join(self.repository.basedir, '_darcs')):
