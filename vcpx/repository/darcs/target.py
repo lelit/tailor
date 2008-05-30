@@ -180,29 +180,29 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             p = [ '{\n', '}\n' ]
 
         entries = []
-        adapted = self._adaptChangeset(changeset)
-        while adapted.entries:
-            e = adapted.entries.pop(0)
+
+        while changeset.entries:
+            e = changeset.entries.pop(0)
             if e.action_kind == e.DELETED:
                 elide = False
-                for j,oe in enumerate(adapted.entries):
+                for j,oe in enumerate(changeset.entries):
                     if oe.action_kind == oe.ADDED and e.name == oe.name:
                         self.log.debug('Collapsing a %s and a %s on %s, assuming '
                                        'an upstream "replacement"',
                                        e.action_kind, oe.action_kind, oe.name)
-                        del adapted.entries[j]
+                        del changeset.entries[j]
                         elide = True
                         break
                 if not elide:
                     entries.append(e)
             elif e.action_kind == e.ADDED:
                 elide = False
-                for j,oe in enumerate(adapted.entries):
+                for j,oe in enumerate(changeset.entries):
                     if oe.action_kind == oe.DELETED and e.name == oe.name:
                         self.log.debug('Collapsing a %s and a %s on %s, assuming '
                                        'an upstream "replacement"',
                                        e.action_kind, oe.action_kind, oe.name)
-                        del adapted.entries[j]
+                        del changeset.entries[j]
                         elide = True
                         break
                 if not elide:
