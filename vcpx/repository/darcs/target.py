@@ -76,6 +76,15 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(
                 "Initial import from %s" % source_repo.repository)
 
+    def _addPathnames(self, names):
+        """
+        Add some new filesystem objects.
+        """
+
+        cmd = self.repository.command("add", "--case-ok", "--not-recursive",
+                                      "--quiet")
+        ExternalCommand(cwd=self.repository.basedir, command=cmd).execute(names)
+
     def _addSubtree(self, subdir):
         """
         Use the --recursive variant of ``darcs add`` to add a subtree.
