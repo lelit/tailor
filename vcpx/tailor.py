@@ -15,7 +15,7 @@ __version__ = '0.9.33'
 
 from logging import getLogger
 from optparse import OptionParser, OptionGroup, Option
-from vcpx import TailorException
+from vcpx import TailorBug, TailorException
 from vcpx.config import Config, ConfigurationError
 from vcpx.project import Project
 from vcpx.source import GetUpstreamChangesetsFailure
@@ -156,6 +156,8 @@ class Tailorizer(Project):
                                      'or even "encoding-errors-policy".'
                                      % (exc, self.source.encoding,
                                         self.target.encoding))
+        except TailorBug, e:
+            self.log.fatal("Unexpected internal error, please report", exc_info=e)
         except TailorException:
             raise
         except Exception, e:
