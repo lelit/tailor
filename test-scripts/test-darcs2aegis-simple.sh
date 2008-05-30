@@ -235,7 +235,6 @@ target = aegis:target
 
 [darcs:source]
 repository = $work/darcs-repo
-#module = project
 subdir = darcs1side
 
 [aegis:target]
