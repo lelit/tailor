@@ -384,7 +384,6 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         from datetime import datetime
         from time import strptime
         from sha import new
-        from vcpx.changes import Changeset
 
         l = output.readline()
         while l and not (l.startswith('Would pull the following changes:') or
@@ -429,7 +428,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                     changelog.append(l[2:-1])
                     l = output.readline()
 
-                cset = Changeset(name, date, author, '\n'.join(changelog))
+                cset = DarcsChangeset(name, date, author, '\n'.join(changelog))
                 compactdate = date.strftime("%Y%m%d%H%M%S")
                 if name.startswith('UNDO: '):
                     name = name[6:]
