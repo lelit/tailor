@@ -96,6 +96,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         #
         # adapt the entries:
+        # * delete directory entries
         # * delete entries with action_kind REMOVE not in the repository (DEL => )
         # * change to ADD a rename of a file non in the repository (REN => ADD)
         # * remove from the changeset entries whith 2 operation (REN + UPD => REN);
@@ -103,6 +104,9 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         # * change the UPD action_kind for files *non* in the repository (UPD => ADD);
         #
         for e in adapted.entries:
+            if e.is_directory:
+                adapted.entries.remove(e)
+                continue
             if e.action_kind == 'DEL' and project_files.count(e.name) == 0:
                 self.log.info("remove delete entry %s", e.name)
                 adapted.entries.remove(e)
@@ -155,8 +159,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _addEntries(self, entries):
         for e in entries:
-            if e.is_directory:
-                continue
             self.__new_file(e.name)
 
     def _addPathnames(self, names):
@@ -169,8 +171,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _removeEntries(self, entries):
         for e in entries:
-            if e.is_directory:
-                continue
             self.__remove_file(e.name)
 
     def _removePathnames(self, names):
@@ -179,8 +179,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _renameEntries(self, entries):
         for e in entries:
-            if e.is_directory:
-                continue
             self.__move_file(e.old_name, e.name)
 
     def _renamePathname(self, oldname, newname):
