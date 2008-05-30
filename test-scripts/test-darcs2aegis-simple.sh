@@ -128,6 +128,11 @@ more text again!
 EOF
 if test $? -ne 0; then no_result; fi
 
+cat > $work/darcs-repo/bar.txt <<EOF
+This will be baz.txt
+EOF
+if test $? -ne 0; then no_result; fi
+
 darcs mv bar.txt baz.txt --repodir=$work/darcs-repo > log 2>&1
 if test $? -ne 0; then cat log; no_result; fi
 
@@ -138,7 +143,6 @@ if test $? -ne 0; then cat log; no_result; fi
 #
 # Initialize the aegis repository
 #
-
 unset AEGIS_PROJECT
 unset AEGIS_CHANGE
 unset AEGIS_PATH
@@ -260,6 +264,13 @@ aegis -list project_history -unformatted 2> $work/log \
 if test $? -ne 0; then cat $work/log; no_result; fi
 
 diff -u $work/ok $work/history
+if test $? -ne 0; then fail; fi
+
+activity="check the aegis baseline vs. darcs repository"
+diff $work/darcs-repo/baz.txt $workproj/baseline/baz.txt
+if test $? -ne 0; then fail; fi
+
+diff $work/darcs-repo/dir/foo.txt $workproj/baseline/dir/foo.txt
 if test $? -ne 0; then fail; fi
 
 #
@@ -603,16 +614,7 @@ if test $? -ne 0; then no_result; fi
 diff ok $workproj/baseline/aegis.conf
 if test $? -ne 0; then fail; fi
 
-activity="check baz.txt baseline copy"
-cat > $work/ok <<EOF
-A simple text file
-wit some more text.
-more text again!
-ancora piu\` test
-EOF
-if test $? -ne 0; then no_result; fi
-
-diff ok $workproj/baseline/baz.txt
+diff $work/darcs-repo/baz.txt $workproj/baseline/baz.txt
 if test $? -ne 0; then fail; fi
 
 pass

@@ -314,6 +314,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
                 (str(copy_file), copy_file.exit_status, output.read()))
 
     def __move_file(self, old_name, new_name):
+        #
+        # The aegis command to rename files does not have the -keep
+        # option to preserve the content of the file, do it manually.
+        #
+        fp = open(os.path.join(self.repository.basedir, new_name), 'rb')
+        content = fp.read()
+        fp.close()
         cmd = self.repository.command("-move",
                                       "-not-logging",
                                       "-project", self.repository.module,
@@ -325,6 +332,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             raise ChangesetApplicationFailure(
                 "%s returned status %d, saying: %s" %
                 (str(move_file), move_file.exit_status, output.read()))
+
+        #
+        # Restore the previously saved content of the renamed file.
+        #
+        fp = open(os.path.join(self.repository.basedir, new_name), 'wb')
+        fp.write(content)
+        fp.close()
 
     def __remove_file(self, file_name):
         cmd = self.repository.command("-remove",
