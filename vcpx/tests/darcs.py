@@ -255,6 +255,37 @@ class DarcsChangesParser(DarcsParserTestCase):
         self.assertEqual([], [e for e in cset.entries if e.name == 'ancillary/mbox2rpc.py'])
         self.assertEqual([], [e for e in cset.entries if e.action_kind == e.RENAMED])
 
+    def testAddRenameEdit(self):
+        "Verify if the parser degrades (rename A B)+(add A)+(edit B) to (rename A B)+(edit B)"
+
+        log = self.getDarcsOutput('darcs-rename_add_edit_test')
+        csets = changesets_from_darcschanges(log)
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 5)
+
+        entry = cset.entries[0]
+        self.assertEqual(entry.name, 'vcpx/repository/git')
+        self.assertEqual(entry.is_directory, True)
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[1]
+        self.assertEqual(entry.name, 'vcpx/repository/git/target.py')
+        self.assertEqual(entry.old_name, 'vcpx/repository/git.py')
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+
+        entry = cset.entries[2]
+        self.assertEqual(entry.name, 'vcpx/repository/git/__init__.py')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[3]
+        self.assertEqual(entry.name, 'vcpx/repository/git/source.py')
+        self.assertEqual(entry.action_kind, entry.ADDED)
+
+        entry = cset.entries[4]
+        self.assertEqual(entry.name, 'vcpx/repository/git/target.py')
+        self.assertEqual(entry.action_kind, entry.UPDATED)
+
     def testAddAndRemove(self):
         "Verify if the parser annihilate (add A)+(remove A)"
 

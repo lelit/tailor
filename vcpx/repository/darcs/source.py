@@ -61,6 +61,7 @@ class DarcsChangeset(Changeset):
         - annihilate "add A; remove A"
         - collapse "rename A B; remove B" into "remove A"
         - collapse "rename A B; rename B C" into "rename A C"
+        - collapse "add A; edit A" into "add A"
         """
 
         # This should not happen, since the parser feeds us an already built
@@ -105,6 +106,12 @@ class DarcsChangeset(Changeset):
                             e.action_kind = e.ADDED
                             e.old_name = None
                             e.is_directory = entry.is_directory
+
+                            # Collapse "add A; edit A" into "add A"
+                            for j,oe in enumerate(self.entries):
+                                if oe.action_kind == e.UPDATED and e.name == oe.name:
+                                    del self.entries[j]
+
                             return e
 
                     # The "rename A B; add B" into "add B"
@@ -169,6 +176,7 @@ class DarcsChangeset(Changeset):
         # Ok, it must be either an edit or a rename: the former goes
         # obviously to the end, and since the latter, as said, come
         # in very early, appending is just good.
+
         self.entries.append(entry)
         return entry
 
