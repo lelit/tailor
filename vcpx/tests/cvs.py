@@ -258,6 +258,14 @@ head: 1.2
 
         self.assertEqual(len(csets), 1)
 
+    def testInitialCreationOnBranchBehaviour2(self):
+        """Verify cvs log parser skip spurious entries"""
+
+        log = self.getCvsLog('cvs-created_in_branch_2_test')
+        csets = list(changesets_from_cvslog(log, 'zsh'))
+
+        self.assertEqual(len(csets), 4)
+
     def testDescriptionPresent(self):
         """Verify cvs log parser handle eventual description"""
 

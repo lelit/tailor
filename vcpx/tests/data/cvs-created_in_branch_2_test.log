@@ -1,0 +1,36 @@
+cvs rlog: Logging zsh
+
+RCS file: /cvsroot/zsh/zsh/Completion/User/Attic/_colors,v
+head: 1.5
+branch:
+locks: strict
+access list:
+symbolic names:
+	zsh-3_1_6-pws-2: 1.1.1.5
+	zsh: 1.1.1
+keyword substitution: kv
+total revisions: 13;	selected revisions: 5
+description:
+----------------------------
+revision 1.5
+date: 1999/08/31 10:34:01;  author: akr;  state: dead;  lines: +0 -0
+zsh-workers:7564
+----------------------------
+revision 1.4
+date: 1999/08/13 13:06:34;  author: akr;  state: Exp;  lines: +0 -24
+update.
+----------------------------
+revision 1.3
+date: 1999/08/13 13:06:03;  author: akr;  state: dead;  lines: +0 -0
+update.
+----------------------------
+revision 1.2
+date: 1999/08/12 22:59:07;  author: akr;  state: dead;  lines: +0 -0
+branches:  1.2.2;
+Sync up with zsh-3_1_6-pws-1.
+----------------------------
+revision 1.1
+date: 1999/08/12 21:25:32;  author: akr;  state: Exp;
+branches:  1.1.1;
+Initial revision
+=============================================================================

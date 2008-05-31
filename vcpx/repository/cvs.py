@@ -452,26 +452,27 @@ class ChangeSetCollector(object):
                     expected_revisions -= 1
                     continue
 
-                # Skip spurious entries added in a branch
-                if not (rev == '1.1' and state == 'dead' and
-                        changelog.startswith('file ') and
-                        ' was initially added on branch ' in changelog):
-                    last = self.__collect(date, author, changelog, e, rev)
-                    if state == 'dead':
-                        last.action_kind = last.DELETED
-                    elif newentry:
-                        last.action_kind = last.ADDED
-                    else:
-                        last.action_kind = last.UPDATED
-                found_revisions = found_revisions + 1
+                if not (previous and state == 'dead' and previous.action_kind == previous.DELETED):
+                    # Skip spurious entries added in a branch
+                    if not (rev == '1.1' and state == 'dead' and
+                            changelog.startswith('file ') and
+                            ' was initially added on branch ' in changelog):
+                        last = self.__collect(date, author, changelog, e, rev)
+                        if state == 'dead':
+                            last.action_kind = last.DELETED
+                        elif newentry:
+                            last.action_kind = last.ADDED
+                        else:
+                            last.action_kind = last.UPDATED
+                    found_revisions = found_revisions + 1
 
-                if previous and last.action_kind == last.DELETED:
-                    # For unknown reasons, sometimes there are two dead
-                    # revision is a row.
-                    if previous.action_kind <> last.DELETED:
-                        previous.action_kind = previous.ADDED
+                    if previous and last.action_kind == last.DELETED:
+                        # For unknown reasons, sometimes there are two dead
+                        # revision is a row.
+                        if previous.action_kind <> last.DELETED:
+                            previous.action_kind = previous.ADDED
 
-                previous = last
+                    previous = last
 
             if expected_revisions <> found_revisions:
                 self.log.warning('Expecting %s revisions, found %s',
