@@ -2,7 +2,7 @@
 
 # File: test-darcs2git.include
 #
-# This is an include for all Dracs to Git tests.
+# This is an include for all Darcs to Git tests.
 
 STARTDIR=$PWD
 

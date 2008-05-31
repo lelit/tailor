@@ -240,6 +240,7 @@ target = aegis:target
 [darcs:source]
 repository = $work/darcs-repo
 subdir = darcs1side
+darcs-command = /usr/bin/darcs
 
 [aegis:target]
 module = $AEGIS_PROJECT

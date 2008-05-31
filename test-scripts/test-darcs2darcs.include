@@ -2,7 +2,7 @@
 
 # File: test-darcs2darcs.include
 #
-# This is an include for all Dracs to Dracs tests.
+# This is an include for all Darcs to Darcs tests.
 
 STARTDIR=$PWD
 
