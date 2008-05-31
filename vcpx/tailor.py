@@ -21,6 +21,10 @@ from vcpx.project import Project
 from vcpx.source import GetUpstreamChangesetsFailure
 
 
+class EmptySourceRepository(TailorException):
+    "The source repository appears to be empty"
+
+
 class Tailorizer(Project):
     """
     A Tailorizer has two main capabilities: its able to bootstrap a
@@ -75,6 +79,9 @@ class Tailorizer(Project):
         except:
             self.log.critical("Checkout of %s failed!", self.name)
             raise
+
+        if actual is None:
+            raise EmptySourceRepository("Cannot complete the bootstrap")
 
         try:
             dwd.importFirstRevision(self.source, actual, 'INITIAL'==revision)
@@ -158,6 +165,8 @@ class Tailorizer(Project):
                                         self.target.encoding))
         except TailorBug, e:
             self.log.fatal("Unexpected internal error, please report", exc_info=e)
+        except EmptySourceRepository, e:
+            self.log.warning("Source repository seems empty: %s", e)
         except TailorException:
             raise
         except Exception, e:

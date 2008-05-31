@@ -593,7 +593,11 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                          output and output.read() or ''))
 
                 csets = changesets_from_darcschanges(output, replace_badchars=self.repository.replace_badchars)
-                changeset = csets.next()
+                try:
+                    changeset = csets.next()
+                except StopIteration:
+                    # No changesets, no party!
+                    return None
 
                 revision = 'hash %s' % changeset.darcs_hash
             else:
@@ -656,6 +660,10 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                 "%s returned status %d saying\n%s" %
                 (str(changes), changes.exit_status, output.read()))
 
-        last = changesets_from_darcschanges(output, replace_badchars=self.repository.replace_badchars)
+        try:
+            last = changesets_from_darcschanges(
+                output, replace_badchars=self.repository.replace_badchars).next()
+        except StopIteration:
+            last = None
 
-        return last.next()
+        return last

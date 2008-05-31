@@ -22,6 +22,7 @@ del version_info
 from bzrlib import errors
 from bzrlib.branch import Branch
 from bzrlib.bzrdir import BzrDir
+from bzrlib.errors import NoSuchRevision
 from bzrlib.missing import find_unmerged
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
@@ -318,7 +319,10 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         parent_branch = parent_bzrdir.open_branch()
 
         if revision == "INITIAL":
-            revid = parent_branch.get_rev_id(1)
+            try:
+                revid = parent_branch.get_rev_id(1)
+            except NoSuchRevision:
+                return None
         elif revision == "HEAD":
             revid = None
         else:
