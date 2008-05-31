@@ -1,0 +1,82 @@
+#!/bin/sh
+
+# File: test-darcs2svn.include
+#
+# This is an include for all Darcs to Svn tests.
+
+STARTDIR=$PWD
+
+# Fast exit, if no backend installed
+which darcs >/dev/null 2>&1 || exit 201
+which svn >/dev/null 2>&1 || exit 201
+
+# Exit immediately if a command exits with a non-zero
+set -e
+
+# Create a new empty tempdirectory and work there.
+rm -rf testdir
+mkdir testdir
+cd testdir
+
+DARCSREPOSITORY=$PWD/darcs-repo
+SVNREPOSITORY=file://$PWD/svn-repo
+SVNEXPORT=$PWD/svn-export
+
+darcs_setup()
+{
+        # Creating repository
+        mkdir $DARCSREPOSITORY
+        cd $DARCSREPOSITORY
+        darcs initialize
+}
+
+
+tailorize()
+{
+
+        # create first for tailor
+        cat <<EOF >test-darcs2svn.conf
+[DEFAULT]
+verbose = True
+Debug = True
+
+[project]
+patch-name-format = %(revision)s
+root-directory = $PWD/rootdir
+source = darcs:source
+target = svn:target
+
+[darcs:source]
+repository = $DARCSREPOSITORY
+
+[svn:target]
+repository = $SVNREPOSITORY
+module = /
+EOF
+
+        # Convert from Darcs to Svn
+        python $STARTDIR/tailor -c test-darcs2svn.conf
+	# checkout the svn repo
+	cd rootdir/.svn
+	svn export $SVNREPOSITORY $SVNEXPORT
+	cd - >/dev/null
+}
+
+target_diff()
+{
+        if diff -Naur -x "_darcs" $SVNEXPORT $DARCSREPOSITORY >test0.log
+        then
+                echo "WD-diff: PASS"
+        else
+                echo "WD-diff: Diffs in Working Dir! (see test0.log)" >&2
+                exit 100
+        fi
+}
+
+testing_runs()
+{
+        cd ..
+        tailorize
+        target_diff
+        cd $STARTDIR
+}
