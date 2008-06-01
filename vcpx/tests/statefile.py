@@ -89,6 +89,7 @@ class Statefile(TestCase):
                   Entry(Entry.ADDED, 'dir/a2'),
                   Entry(Entry.ADDED, 'dir/a3'),
                 ]),
+            Changeset("Initially empty", []),
             Changeset("Spread around",
                 [ Entry(Entry.RENAMED, 'a.root', 'dir/a1'),
                   Entry(Entry.RENAMED, 'b.root', 'dir/a2'),
@@ -119,7 +120,18 @@ class Statefile(TestCase):
         self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
         cs = sf.next()
         self.assertEqual(cs, changesets[1])
+
+        # Some source backends refine the just applied changeset,
+        # usually adding entries. Be sure that does not interfere
+        # with the journal
+        cs.entries.append(Entry(Entry.ADDED, 'dir2'))
+        self.assertEqual(cs, changesets[1])
+        self.assertNotEqual(len(cs.entries), len(changesets[1].entries))
         sf.applied()
         self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+        cs = sf.next()
 
         self.assertRaises(StopIteration, sf.next)
