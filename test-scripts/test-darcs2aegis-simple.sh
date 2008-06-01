@@ -252,6 +252,13 @@ activity="run tailor"
 python $here/tailor -c $work/tailor.conf > $work/tailor.log 2>&1
 if test $? -ne 0; then cat $work/tailor.log; fail; fi
 
+cat > $work/massage_history.awk <<'EOF'
+/^Name:/ {print $0}
+/^[0-9]/ {print $1, $7, $8, $9}
+EOF
+if test $? -ne 0; then no_result; fi
+
+activity="check aegis project history"
 cat > $work/ok <<EOF
 1 10 initial commit
 2 11 second commit
@@ -259,12 +266,13 @@ cat > $work/ok <<EOF
 EOF
 if test $? -ne 0; then no_result; fi
 
-activity="check aegis project history"
-aegis -list project_history -unformatted 2> $work/log \
-    | cut -d\  -f 1,7- > $work/history
+aegis -list project_history -unformatted 2> $work/log > $work/history
 if test $? -ne 0; then cat $work/log; no_result; fi
 
-diff -u $work/ok $work/history
+awk -f $work/massage_history.awk < history > history.new
+if test $? -ne 0; then no_result; fi
+
+diff -u $work/ok $work/history.new
 if test $? -ne 0; then fail; fi
 
 activity="check the aegis baseline vs. darcs repository"
@@ -327,12 +335,6 @@ if test $? -ne 0; then no_result; fi
 
 aegis -list project_history -unformatted 2> log > history
 if test $? -ne 0; then cat history; no_result; fi
-
-cat > $work/massage_history.awk <<'EOF'
-/^Name:/ {print $0}
-/^[0-9]/ {print $1, $7, $8, $9}
-EOF
-if test $? -ne 0; then no_result; fi
 
 awk -f $work/massage_history.awk < history > history.new
 if test $? -ne 0; then no_result; fi
