@@ -103,7 +103,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         # * change the ADD action_kind for files already in the repository (ADD => UPD);
         # * change the UPD action_kind for files *non* in the repository (UPD => ADD);
         #
-        for e in adapted.entries:
+        for e in adapted.entries[:]:
             if e.is_directory:
                 adapted.entries.remove(e)
                 continue
@@ -116,7 +116,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             if e.action_kind == e.RENAMED:
                 renamed_file.append(e.name)
 
-        for e in adapted.entries:
+        for e in adapted.entries[:]:
             if renamed_file.count(e.name) and e.action_kind != e.RENAMED:
                 adapted.entries.remove(e)
             if e.action_kind == e.RENAMED and not project_files.count(e.old_name):
