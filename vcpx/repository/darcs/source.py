@@ -41,16 +41,28 @@ class DarcsChangeset(Changeset):
                 self.addEntry(e, revision)
 
     def __eq__(self, other):
-        return (self.revision == other.revision and
-                self.date == other.date and
-                self.author == other.author and
-                self.darcs_hash == getattr(other, 'darcs_hash', None))
+        equal = (self.revision == other.revision and
+                 self.date == other.date and
+                 self.author == other.author)
+        if equal:
+            other_hash = getattr(other, 'darcs_hash', None)
+            if (self.darcs_hash is not None and
+                other_hash is not None and
+                self.darcs_hash != other_hash):
+                equal = False
+        return equal
 
     def __ne__(self, other):
-        return (self.revision <> other.revision or
-                self.date <> other.date or
-                self.author <> other.author or
-                self.darcs_hash <> getattr(other, 'darcs_hash', None))
+        different = (self.revision <> other.revision or
+                     self.date <> other.date or
+                     self.author <> other.author)
+        if not different:
+            other_hash = getattr(other, 'darcs_hash', None)
+            if (self.darcs_hash is not None and
+                other_hash is not None and
+                self.darcs_hash != other_hash):
+                different = True
+        return different
 
     def addEntry(self, entry, revision):
         """

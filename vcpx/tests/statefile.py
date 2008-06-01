@@ -135,3 +135,64 @@ class Statefile(TestCase):
         cs = sf.next()
 
         self.assertRaises(StopIteration, sf.next)
+
+    def testDarcsChangesets(self):
+        """Verify the behaviour with Darcs changesets"""
+
+        from os.path import exists
+        from vcpx.repository.darcs.source import DarcsChangeset
+
+        changesets = [
+            DarcsChangeset("Add dir/a{1,2,3}", None, None, None,
+                           [ Entry(Entry.ADDED, 'dir/'),
+                             Entry(Entry.ADDED, 'dir/a1'),
+                             Entry(Entry.ADDED, 'dir/a2'),
+                             Entry(Entry.ADDED, 'dir/a3'),
+                             ]),
+            DarcsChangeset("Initially empty", None, None, None, []),
+            DarcsChangeset("Spread around", None, None, None,
+                           [ Entry(Entry.RENAMED, 'a.root', 'dir/a1'),
+                             Entry(Entry.RENAMED, 'b.root', 'dir/a2'),
+                             Entry(Entry.RENAMED, 'newdir/', 'dir/'),
+                             Entry(Entry.UPDATED, 'newdir/a3', contents="ciao"),
+                             ]),
+            ]
+
+        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
+
+        sf = StateFile(rontf.name, None)
+        sf.setPendingChangesets(changesets)
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), None)
+        cs = sf.next()
+        sf.applied()
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+
+        # Some source backends refine the just applied changeset,
+        # usually adding entries. Be sure that does not interfere
+        # with the journal
+        cs.entries.append(Entry(Entry.ADDED, 'dir2'))
+        cs.darcs_hash = 'abc'
+        self.assertEqual(cs, changesets[1])
+        self.assertNotEqual(len(cs.entries), len(changesets[1].entries))
+        sf.applied()
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+        cs = sf.next()
+
+        self.assertRaises(StopIteration, sf.next)
