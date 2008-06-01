@@ -107,25 +107,25 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
             if e.is_directory:
                 adapted.entries.remove(e)
                 continue
-            if e.action_kind == 'DEL' and project_files.count(e.name) == 0:
+            if e.action_kind == e.DELETED and not project_files.count(e.name):
                 self.log.info("remove delete entry %s", e.name)
                 adapted.entries.remove(e)
 
         renamed_file = []
         for e in adapted.entries:
-            if e.action_kind == ChangesetEntry.RENAMED:
+            if e.action_kind == e.RENAMED:
                 renamed_file.append(e.name)
 
         for e in adapted.entries:
-            if renamed_file.count(e.name) > 0 and e.action_kind != ChangesetEntry.RENAMED:
+            if renamed_file.count(e.name) and e.action_kind != e.RENAMED:
                 adapted.entries.remove(e)
-            if e.action_kind == ChangesetEntry.RENAMED and project_files.count(e.old_name) == 0:
-                e.action_kind = ChangesetEntry.ADDED
+            if e.action_kind == e.RENAMED and not project_files.count(e.old_name):
+                e.action_kind = e.ADDED
                 e.old_name = None
-            if e.action_kind == ChangesetEntry.ADDED and project_files.count(e.name) > 0:
+            if e.action_kind == e.ADDED and project_files.count(e.name):
                 e.action_kind = ChangesetEntry.UPDATED
-            elif e.action_kind == ChangesetEntry.UPDATED and project_files.count(e.name) == 0:
-                e.action_kind = ChangesetEntry.ADDED
+            elif e.action_kind == e.UPDATED and not project_files.count(e.name):
+                e.action_kind = e.ADDED
 
         #
         # Returns even if the changeset does not contain entries to
