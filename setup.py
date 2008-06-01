@@ -21,8 +21,8 @@ With its ability to "translate the history" from one VCS kind to another,
 this script makes it easier to keep the upstream changes merged in
 a own branch of a product.
 
-Tailor is able to fetch the history from Arch, Bazaar, CVS, Darcs
-Monotone or Subversion and rewrite it over Bazaar, CVS, Darcs, Git,
+Tailor is able to fetch the history from Arch, Bazaar, CVS, Darcs, Monotone,
+Perforce or Subversion and rewrite it over Aegis, Bazaar, CVS, Darcs, Git,
 Mercurial, Monotone and Subversion.
 """,
       classifiers=[
