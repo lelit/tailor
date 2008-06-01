@@ -375,13 +375,22 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
 
             return self._parseDarcsPull(output)
         else:
-            # Skip initial verbosity, as well as the one at end
             from cStringIO import StringIO
 
-            output.readline() # Would pull from "/home/lele/wip/darcs-2.0"...
-            output.readline() # Would pull the following changes:
-            xml = StringIO(''.join(output.readlines()[:-2]))
-            xml.seek(0)
+            # My initial implementation of --xml-output on darcs pull
+            # wasn't perfect, as it was printing useless verbosity before
+            # and after the actual xml. Around 2.0.0+275 I removed that...
+
+            line = output.readline() # Would pull from "/home/lele/wip/darcs-2.0"...
+            if line.startswith('Would pull from '):
+                # Skip the first two lines and drop the last two as well
+                output.readline() # Would pull the following changes:
+                xml = StringIO(''.join(output.readlines()[:-2]))
+                xml.seek(0)
+            else:
+                output.seek(0)
+                xml = output
+
             badchars = self.repository.replace_badchars
 
             return changesets_from_darcschanges(xml, replace_badchars=badchars)
