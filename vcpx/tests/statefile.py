@@ -196,3 +196,81 @@ class Statefile(TestCase):
         cs = sf.next()
 
         self.assertRaises(StopIteration, sf.next)
+
+    def testSimilarChangesets(self):
+        """Verify how the statefile considers two similar changesets"""
+
+        from os.path import exists
+        from vcpx.repository.darcs.source import DarcsChangeset
+
+        ts1 = Changeset.Date.next()
+        ts2 = ts3 = Changeset.Date.next()
+        ts4 = Changeset.Date.next()
+
+        changesets = [
+            DarcsChangeset("Add dir/a{1,2,3}", ts1, 'me@here', None,
+                           [ Entry(Entry.ADDED, 'dir/'),
+                             Entry(Entry.ADDED, 'dir/a1'),
+                             Entry(Entry.ADDED, 'dir/a2'),
+                             Entry(Entry.ADDED, 'dir/a3'),
+                             ],
+                           darcs_hash='abc'),
+            DarcsChangeset("Initially empty", ts2, 'me@here', None, [],
+                           darcs_hash='def'),
+            DarcsChangeset("Initially empty", ts3, 'me@here', None, [],
+                           darcs_hash='ghi'),
+            DarcsChangeset("Spread around", ts4, 'me@here', None,
+                           [ Entry(Entry.RENAMED, 'a.root', 'dir/a1'),
+                             Entry(Entry.RENAMED, 'b.root', 'dir/a2'),
+                             Entry(Entry.RENAMED, 'newdir/', 'dir/'),
+                             Entry(Entry.UPDATED, 'newdir/a3', contents="ciao"),
+                             ],
+                           darcs_hash='xyz'),
+            ]
+
+        self.assertNotEqual(changesets[1], changesets[2])
+
+        rontf = ReopenableNamedTemporaryFile('sf', 'tailor')
+
+        sf = StateFile(rontf.name, None)
+        sf.setPendingChangesets(changesets)
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), None)
+        cs = sf.next()
+        self.assertEqual(cs.darcs_hash, 'abc')
+        sf.applied()
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+        self.assertEqual(cs.darcs_hash, 'def')
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+        sf.finalize()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[0])
+
+        cs = sf.next()
+        self.assertEqual(cs, changesets[1])
+        self.assertEqual(cs.darcs_hash, 'def')
+        cs.entries.append(Entry(Entry.ADDED, 'dir2'))
+        self.assertEqual(cs, changesets[1])
+        self.assertNotEqual(len(cs.entries), len(changesets[1].entries))
+        sf.applied()
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[1])
+
+        cs = sf.next()
+        self.assertEqual(cs, changesets[2])
+        self.assertEqual(cs.darcs_hash, 'ghi')
+        cs.entries.append(Entry(Entry.ADDED, 'dir3'))
+        self.assertEqual(cs, changesets[2])
+        sf.applied()
+
+        sf = StateFile(rontf.name, None)
+        self.assertEqual(sf.lastAppliedChangeset(), changesets[2])
+        cs = sf.next()
+
+        self.assertRaises(StopIteration, sf.next)
