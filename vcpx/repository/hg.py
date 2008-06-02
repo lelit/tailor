@@ -17,7 +17,8 @@ from mercurial import ui, hg, cmdutil, commands
 
 from vcpx.repository import Repository
 from vcpx.source import UpdatableSourceWorkingDir
-from vcpx.target import SynchronizableTargetWorkingDir
+from vcpx.target import PostCommitCheckFailure, \
+                        SynchronizableTargetWorkingDir
 
 
 class HgRepository(Repository):
@@ -306,6 +307,16 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             empty.close()
             self._hg.add(['.hgempty'])
         self._hgCommand('commit', **opts)
+
+    def _postCommitCheck(self):
+        repo = self._getRepo()
+
+        modified, added, removed, deleted, \
+                  unknown, ignored, clean = [n for n in repo.status()]
+        if modified or added or removed or deleted or unknown:
+            raise PostCommitCheckFailure(
+                "Changes left in working dir after commit: %s" %
+                str(modified or added or removed or deleted or unknown))
 
     def _tag(self, tag, date, author):
         """ Tag the tip with a given identifier """
