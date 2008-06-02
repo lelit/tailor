@@ -963,6 +963,13 @@ branchpoint : string
   This is especially useful since the current cvs source
   implementation misses many tags.
 
+overwrite-tags : bool
+  By default the backend does *not* overwrite previous tag with a
+  newer by the same name, and stops with an error. This flag allows
+  you to force git to override preceeding tag with the same name.
+
+  *False* by default.
+
 hg
 %%
 

@@ -171,7 +171,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Allow a new tag to overwrite an older one with -f
         args = ["tag", "-a",]
         if self.repository.overwrite_tags:
-                args.append("-f")
+            args.append("-f")
 
         # Escape the tag name for git
         import re
@@ -196,6 +196,11 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         c.execute(env=env)
 
         if c.exit_status:
+            if not self.repository.overwrite_tags:
+                self.log.critical("Couldn't set tag '%s': maybe it's a "
+                                  "conflict with a previous tag, and "
+                                  "overwrite-tags=True may help" %
+                                  tag_git)
             raise ChangesetApplicationFailure("%s returned status %d" %
                                               (str(c), c.exit_status))
 
