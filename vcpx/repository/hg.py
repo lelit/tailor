@@ -387,8 +387,6 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         from os.path import join
 
-        repo = self._getRepo()
-
         self.log.info('Removing %s...', ', '.join(names))
         for name in names:
             files = self._walk(name)
@@ -396,16 +394,14 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # removed the entry, so we do a dirstate lookup.
             if files:
                 for f in self._walk(name):
-                    repo.remove([join(name, f)], unlink=True)
+                    self._hgCommand('remove', join(name, f), unlink=True)
             else:
-                repo.remove([name], unlink=True)
+                self._hgCommand('remove', name, unlink=True)
 
     def _renamePathname(self, oldname, newname):
         """Rename an entry"""
 
         from os.path import join, isdir, normpath
-
-        repo = self._getRepo()
 
         self.log.info('Renaming %r to %r...', oldname, newname)
         # Check both names, because maybe we are operating in
@@ -418,11 +414,11 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             # do a copy on them.
             for f in self._walk(oldname):
                 oldpath = join(oldname, f)
-                repo.copy(oldpath, join(newname, f))
-                repo.remove([oldpath], unlink=True)
+                self._hgCommand('copy', oldpath, join(newname, f))
+                self._hgCommand('remove', oldpath, unlink=True)
         else:
-            repo.copy(oldname, newname)
-            repo.remove([oldname], unlink=True)
+            self._hgCommand('copy', oldname, newname)
+            self._hgCommand('remove', oldname, unlink=True)
 
     def _prepareTargetRepository(self):
         """
