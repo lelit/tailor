@@ -356,7 +356,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
             cmd = self.repository.command("pull", "--dry-run", "--xml-output")
             pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
             output = pull.execute(self.repository.repository,
-                                  stdout=PIPE, stderr=STDOUT, TZ='UTC0')[0]
+                                  stdout=PIPE, TZ='UTC0')[0]
             # pull --xml-output was introduced *after* 2.0.0
             if pull.exit_status:
                 errormsg = output.read()
@@ -605,7 +605,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
                                               "--repo", self.repository.repository,
                                                "--reverse")
                 changes = ExternalCommand(command=cmd)
-                output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
+                output = changes.execute(stdout=PIPE)[0]
 
                 if changes.exit_status:
                     raise ChangesetApplicationFailure(
@@ -674,7 +674,7 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         cmd = self.repository.command("changes", "--last", "1",
                                       "--xml-output")
         changes = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
+        output = changes.execute(stdout=PIPE)[0]
 
         if changes.exit_status:
             raise ChangesetApplicationFailure(

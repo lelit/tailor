@@ -356,7 +356,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                       "--from-match", "not name ^TAG",
                                       "--xml-output", "--reverse")
         changes =  ExternalCommand(cwd=self.repository.basedir, command=cmd)
-        output = changes.execute(stdout=PIPE, stderr=STDOUT)[0]
+        output = changes.execute(stdout=PIPE)[0]
         if changes.exit_status:
             raise ChangesetReplayFailure(
                 "%s returned status %d saying\n%s" %
