@@ -737,7 +737,7 @@ post-commit-check : bool
   directory asserting there's no changes left. This is particularly
   useful when trying to debug source backends... at a little cost.
 
-  *False* by default.
+  *True* by default.
 
 aegis
 %%%%%
