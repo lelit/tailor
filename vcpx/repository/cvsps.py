@@ -277,7 +277,6 @@ class CvspsWorkingDir(UpdatableSourceWorkingDir,
 
     def _applyChangeset(self, changeset):
         from os.path import join, exists, split
-        from os import listdir
         from shutil import rmtree
         from time import sleep
         from vcpx.repository.cvs import CvsEntries, compare_cvs_revs
