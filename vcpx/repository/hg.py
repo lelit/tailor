@@ -104,7 +104,44 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                           repo.changelog.count()):
             yield self._changesetForRevision(repo, str(rev))
 
+    def __maybeDeleteDirectory(self, entrydir):
+        from os.path import join, exists
+        from os import listdir
+        from vcpx.dualwd import IGNORED_METADIRS
+
+        if not entrydir:
+            return False
+
+        absentrydir = join(self.repository.basedir, entrydir)
+        if not exists(absentrydir):
+            # Oh, the directory disappeared: insert a REMOVE event
+            # against it.
+            return True
+        else:
+            contents = listdir(absentrydir)
+            for imd in IGNORED_METADIRS:
+                if imd in contents:
+                    contents.remove(imd)
+            if contents:
+                return False
+            else:
+                return True
+        return False
+
     def _applyChangeset(self, changeset):
+        from os.path import join, exists, split
+
+        # Collect added and deleted directories
+        addeddirs = []
+        deleteddirs = []
+
+        for e in changeset.entries:
+            if e.action_kind == e.ADDED:
+                entrydir = split(e.name)[0]
+                if entrydir and not exists(join(self.repository.basedir,
+                                                entrydir)):
+                    addeddirs.append((e, entrydir))
+
         repo = self._getRepo()
         node = self._getNode(repo, changeset.revision)
 
@@ -123,8 +160,42 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             modified, added, removed, deleted = repo.changes()[0:4]
             conflicting = modified + added + removed + deleted
             if conflicting:
-                return conflicting
-            return repo.update(node, force=True)
+                res = conflicting
+            else:
+                res = repo.update(node, force=True)
+
+        for e in changeset.entries:
+            if e.action_kind == e.DELETED:
+                entrydir = split(e.name)[0]
+                if self.__maybeDeleteDirectory(entrydir):
+                    deleteddirs.append(entrydir)
+            elif e.action_kind == e.RENAMED:
+                entrydir = split(e.old_name)[0]
+                if self.__maybeDeleteDirectory(entrydir):
+                    deleteddirs.append(entrydir)
+
+        # Fake up ADD and DEL events for the directories implicitly
+        # added/removed, so that the replayer gets their name.
+
+        done = set()
+        for entry,path in addeddirs:
+            if not path in done:
+                done.add(path)
+                entry = changeset.addEntry(path, None, before=entry)
+                entry.action_kind = entry.ADDED
+                entry.is_directory = True
+                self.log.debug("registering new %s directory", entry.name)
+
+        done = set()
+        for path in deleteddirs:
+            if not path in done:
+                done.add(path)
+                deldir = changeset.addEntry(path, None)
+                deldir.action_kind = deldir.DELETED
+                deldir.is_directory = True
+                self.log.debug("registering %s directory deletion", path)
+
+        return res
 
     def _changesetForRevision(self, repo, revision):
         from datetime import datetime
