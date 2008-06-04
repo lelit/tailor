@@ -135,6 +135,10 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         addeddirs = []
         deleteddirs = []
 
+        # Collect renamed entries for each directory, to recognize
+        # directory renames
+        mayberendirs = {}
+
         renamed = set()
         for e in changeset.entries:
             if e.action_kind == e.ADDED:
@@ -158,6 +162,17 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     self.log.warning('Update of missing entry %s, promoting to ADD',
                                      e.name)
             elif e.action_kind == e.RENAMED:
+                entrydir = split(e.name)[0]
+                if entrydir and not exists(join(self.repository.basedir,
+                                                entrydir)):
+                    addeddirs.append((e, entrydir))
+
+                oldentrydir = split(e.old_name)[0]
+                if oldentrydir in mayberendirs:
+                    mayberendirs[oldentrydir].append(e)
+                else:
+                    mayberendirs[oldentrydir] = [e]
+
                 # hg allows to "split" a file in several chunks,
                 # renaming (but it should really be called
                 # "replicating") the same entry to multiple
@@ -196,12 +211,45 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         for e in changeset.entries:
             if e.action_kind == e.DELETED:
                 entrydir = split(e.name)[0]
-                if self.__maybeDeleteDirectory(entrydir):
+                if not entrydir in deleteddirs and self.__maybeDeleteDirectory(entrydir):
                     deleteddirs.append(entrydir)
             elif e.action_kind == e.RENAMED:
                 entrydir = split(e.old_name)[0]
-                if self.__maybeDeleteDirectory(entrydir):
+                if not entrydir in deleteddirs and self.__maybeDeleteDirectory(entrydir):
                     deleteddirs.append(entrydir)
+
+        # Recognize directory renames
+
+        dirsadded = set([d[1] for d in addeddirs])
+        for dir in mayberendirs:
+            entries = mayberendirs[dir]
+            pivottargetdir = split(entries[0].name)[0]
+            # If this is a new directory, and all the entries in the
+            # original directory were moved there...
+            if pivottargetdir in dirsadded and dir in deleteddirs:
+                alltothesamedir = True
+                for e in entries:
+                    if e.action_kind == e.RENAMED \
+                       and split(e.old_name)[0] == dir \
+                       and split(e.name)[0] != pivottargetdir:
+                        alltothesamedir = False
+                        break
+                if alltothesamedir:
+                    # Replace all RENs on the single files with a REN
+                    # on the directory
+                    for e in entries:
+                        if e.action_kind == e.RENAMED \
+                           and split(e.old_name)[0] == dir:
+                            changeset.entries.remove(e)
+                    rendir = changeset.addEntry(pivottargetdir, None)
+                    rendir.action_kind = rendir.RENAMED
+                    rendir.old_name = dir
+                    for d in addeddirs[:]:
+                        if d[1] == pivottargetdir:
+                            addeddirs.remove(d)
+                    deleteddirs.remove(dir)
+                    self.log.debug('Identified directory rename, from %s to %s',
+                                   dir, pivottargetdir)
 
         # Fake up ADD and DEL events for the directories implicitly
         # added/removed, so that the replayer gets their name.
