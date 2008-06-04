@@ -125,7 +125,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         if not logmessage:
             logmessage.append('Unnamed patch')
 
-        cmd = self.repository.command("record", "--all", "--pipe")
+        cmd = self.repository.command("record", "--all", "--pipe", "--ignore-times")
         if not entries:
             entries = ['.']
 
