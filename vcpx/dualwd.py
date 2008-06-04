@@ -120,8 +120,8 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if not (now-last).seconds:
                 cmd.append('--ignore-times')
         self._last_rsync = now
-        for M in IGNORED_METADIRS:
-            cmd.extend(['--exclude', M])
+        for md in IGNORED_METADIRS:
+            cmd.extend(['--exclude', md])
 
         rsync = ExternalCommand(command=cmd)
         rsync.execute(self.source.repository.basedir+'/', self.target.repository.basedir)
