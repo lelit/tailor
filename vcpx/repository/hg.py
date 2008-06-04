@@ -301,10 +301,8 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             return self._ui
         except AttributeError:
             project = self.repository.projectref()
-            self._ui = ui.ui(project.verbose,
-                             project.config.get(self.repository.name,
-                                                'debug', False),
-                             not project.verbose, False)
+            debug = project.config.get(self.repository.name, 'debug', False)
+            self._ui = ui.ui(project.verbose, debug, not debug, False)
             return self._ui
 
     def _getRepo(self):
