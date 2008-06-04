@@ -140,12 +140,14 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                                        output.read()))
 
     def _postCommitCheck(self):
-        cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
-        whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd, ok_status=(1,))
-        output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
-        if not whatsnew.exit_status:
-            raise PostCommitCheckFailure(
-                "Changes left in working dir after commit:\n%s" % output.read())
+        # If we are using --look-for-adds on commit this is useless
+        if not self.repository.use_look_for_adds:
+            cmd = self.repository.command("whatsnew", "--summary", "--look-for-add")
+            whatsnew = ExternalCommand(cwd=self.repository.basedir, command=cmd, ok_status=(1,))
+            output = whatsnew.execute(stdout=PIPE, stderr=STDOUT)[0]
+            if not whatsnew.exit_status:
+                raise PostCommitCheckFailure(
+                    "Changes left in working dir after commit:\n%s" % output.read())
 
     def _replayChangeset(self, changeset):
         """
