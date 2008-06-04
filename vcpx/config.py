@@ -123,7 +123,10 @@ class Config(SafeConfigParser):
                 f = logging.Formatter(fs, dfs)
                 formatters[form] = f
         #next, do the handlers...
-        dbglevel = self._defaults.get('debug', False) and 'DEBUG' or None
+        dbg = self._defaults.get('debug', False)
+        if dbg == 'False':
+            dbg = False
+        dbglevel = dbg and 'DEBUG' or None
         try:
             hlist = cp.get("handlers", "keys")
             if hlist:
