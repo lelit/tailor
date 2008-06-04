@@ -141,6 +141,21 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 if entrydir and not exists(join(self.repository.basedir,
                                                 entrydir)):
                     addeddirs.append((e, entrydir))
+            elif e.action_kind == e.DELETED:
+                # If the file is already missing, this may be a merge
+                # patchset: remove the entry so the target won't try
+                # to delete it twice
+                if not exists(join(self.repository.basedir, e.name)):
+                    changeset.entries.remove(e)
+                    self.log.warning('Repeated deletion of %s, assuming a merge',
+                                     e.name)
+            elif e.action_kind == e.UPDATED:
+                # If an updated entries does not exist promote it to
+                # an addition
+                if not exists(join(self.repository.basedir, e.name)):
+                    e.action_kind = e.ADDED
+                    self.log.warning('Update of missing entry %s, promoting to ADD',
+                                     e.name)
 
         repo = self._getRepo()
         node = self._getNode(repo, changeset.revision)
