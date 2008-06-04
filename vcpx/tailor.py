@@ -120,8 +120,8 @@ class Tailorizer(Project):
                 self.log.warning('Leaving "%s" incomplete, stopped by user',
                                  self.name)
                 raise
-            except:
-                self.log.fatal('Upstream change application failed')
+            except Exception, e:
+                self.log.fatal('Upstream change application failed: %s', e)
                 raise
 
             if last:
