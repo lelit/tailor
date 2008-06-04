@@ -112,8 +112,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
                 try:
                     res = self._applyChangeset(c)
                 except TailorException, e:
-                    self.log.critical("Couldn't apply changeset: %s", e)
-                    self.log.debug("Changeset: %s", c)
+                    self.log.critical("Couldn't apply changeset:\n%s", c)
                     raise
                 except KeyboardInterrupt:
                     self.log.warning("INTERRUPTED BY THE USER!")
@@ -136,8 +135,7 @@ class UpdatableSourceWorkingDir(WorkingDir):
                         try:
                             replay(c)
                         except Exception, e:
-                            self.log.critical("Couldn't replay changeset: %s", e)
-                            self.log.debug("Changeset: %s", c)
+                            self.log.critical("Couldn't replay changeset:\n%s", c)
                             raise
 
                 # Remember it for the finally clause and notify the state
