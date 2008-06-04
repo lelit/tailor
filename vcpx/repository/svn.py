@@ -220,8 +220,8 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
             return relative
 
         # The path is outside our tracked tree...
-        repository.log.warning('Ignoring %r since it is not under %r',
-                               path, module)
+        repository.log.debug('Ignoring "%s" since it is not under "%s"',
+                             path, module)
         return None
 
     class SvnXMLLogHandler(ContentHandler):

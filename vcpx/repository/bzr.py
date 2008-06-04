@@ -373,7 +373,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         if changelog:
             logmessage.append(changelog)
         if logmessage:
-            self.log.info('Committing %r...', logmessage[0])
+            self.log.info('Committing %s...', logmessage[0])
             logmessage = '\n'.join(logmessage)
         else:
             self.log.info('Committing...')

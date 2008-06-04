@@ -38,9 +38,11 @@ class Tailorizer(Project):
         """
 
         if self.verbose:
-            self.log.info('Changeset "%s"', changeset.revision)
+            self.log.info('Upstream revision "%s" by %s, %s',
+                          changeset.revision, changeset.author,
+                          changeset.date)
             if changeset.log:
-                self.log.info("Log message: %s", changeset.log)
+                self.log.info("Log message: %s", changeset.log.rstrip())
         self.log.debug("Going to apply changeset:\n%s", str(changeset))
         return True
 
