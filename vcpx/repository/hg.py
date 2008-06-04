@@ -135,6 +135,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         addeddirs = []
         deleteddirs = []
 
+        renamed = set()
         for e in changeset.entries:
             if e.action_kind == e.ADDED:
                 entrydir = split(e.name)[0]
@@ -156,6 +157,19 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     e.action_kind = e.ADDED
                     self.log.warning('Update of missing entry %s, promoting to ADD',
                                      e.name)
+            elif e.action_kind == e.RENAMED:
+                # hg allows to "split" a file in several chunks,
+                # renaming (but it should really be called
+                # "replicating") the same entry to multiple
+                # destinations. Convert succeding ones to ADDs.
+                if e.old_name in renamed:
+                    self.log.warning('Detected multiple renames of a single '
+                                     'entry %s to %s, converting to ADD',
+                                     e.old_name, e.name)
+                    e.action_kind = e.ADDED
+                    e.old_name = None
+                else:
+                    renamed.add(e.old_name)
 
         repo = self._getRepo()
         node = self._getNode(repo, changeset.revision)
