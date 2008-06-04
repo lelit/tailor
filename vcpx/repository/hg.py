@@ -140,7 +140,7 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         mayberendirs = {}
 
         renamed = set()
-        for e in changeset.entries:
+        for e in changeset.entries[:]:
             if e.action_kind == e.ADDED:
                 entrydir = split(e.name)[0]
                 if entrydir and not exists(join(self.repository.basedir,
