@@ -59,8 +59,7 @@ class TlaRepository(Repository):
         Repository._load(self, project)
         self.EXECUTABLE = project.config.get(self.name, 'tla-command', 'tla')
         self.IGNORE_IDS = project.config.get(self.name, 'ignore-ids', False)
-        if self.IGNORE_IDS:
-            self.EXTRA_METADIRS = ['.arch-ids']
+        self.EXTRA_METADIRS = ['.arch-ids']
 
 
 class TlaWorkingDir(UpdatableSourceWorkingDir):
