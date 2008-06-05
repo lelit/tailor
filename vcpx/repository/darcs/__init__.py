@@ -21,6 +21,10 @@ from vcpx.target import TargetInitializationFailure
 class DarcsRepository(Repository):
     METADIR = '_darcs'
 
+    # Darcs needs the deletion, because of the new way the backend assemble
+    # the new patches by writing directly to the pending file.
+    EXTRA_RSYNC_FLAGS = ['--delete']
+
     def _load(self, project):
         Repository._load(self, project)
         cget = project.config.get

@@ -119,6 +119,9 @@ class DualWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             last = self._last_rsync
             if not (now-last).seconds:
                 cmd.append('--ignore-times')
+        # Add per target specific flags
+        if self.target.repository.EXTRA_RSYNC_FLAGS:
+            cmd.extend(self.target.repository.EXTRA_RSYNC_FLAGS)
         self._last_rsync = now
         for md in IGNORED_METADIRS:
             cmd.extend(['--exclude', md])

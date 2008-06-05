@@ -37,6 +37,11 @@ class Repository(object):
     The name of the external command line tool, for some backends.
     """
 
+    EXTRA_RSYNC_FLAGS = None
+    """
+    Particular flags for rsync, used by disjunct working dirs.
+    """
+
     def __new__(klass, name, project, which):
         """
         Return the right subclass for kind, if it exists.
