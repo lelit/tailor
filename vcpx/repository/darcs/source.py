@@ -166,6 +166,10 @@ class DarcsChangeset(Changeset):
                 elif e.action_kind == e.ADDED and e.name == entry.name:
                     del self.entries[i]
                     return None
+                elif e.action_kind == e.DELETED and e.is_directory and \
+                         entry.name.startswith(e.name+'/'):
+                    self.entries.insert(i, entry)
+                    return e
 
         # The "rename A B; rename B C" to "rename A C" part
         elif entry.action_kind == entry.RENAMED:
