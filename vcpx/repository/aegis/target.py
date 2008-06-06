@@ -88,8 +88,6 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def _adaptChangeset(self, changeset):
         project_files = self.repository.project_file_list_get()
-        if not project_files:
-            return SynchronizableTargetWorkingDir._adaptChangeset(self, changeset)
 
         from copy import deepcopy
         adapted = deepcopy(changeset)
