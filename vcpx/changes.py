@@ -56,6 +56,8 @@ class ChangesetEntry(object):
             s += ' from ' + self.old_name
         else:
             s += '??'
+        if self.is_directory:
+            s += ', DIR'
         s += ')'
         if isinstance(s, unicode):
             s = s.encode('ascii', 'replace')
