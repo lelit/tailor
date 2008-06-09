@@ -40,6 +40,7 @@ class ChangesetEntry(object):
         self.status = None
         self.unidiff = None # This is the unidiff of this particular entry
         self.is_directory = False # This usually makes sense only on ADDs and DELs
+        self.is_symlink = False
 
     def __str__(self):
         s = self.name + '(' + self.action_kind
@@ -58,6 +59,8 @@ class ChangesetEntry(object):
             s += '??'
         if self.is_directory:
             s += ', DIR'
+        if self.is_symlink:
+            s += ', SLNK'
         s += ')'
         if isinstance(s, unicode):
             s = s.encode('ascii', 'replace')
