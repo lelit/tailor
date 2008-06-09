@@ -274,10 +274,14 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
                 for id, revision in revisions:
                     yield self._changesetFromRevision(parent_branch, revision)
-            finally:
+            except:
                 parent_branch.unlock()
-        finally:
+                raise
+            parent_branch.unlock()
+        except:
             branch.unlock()
+            raise
+        branch.unlock()
 
         self.log.info("Fetching concrete changesets")
         branch.lock_write()
