@@ -12,6 +12,11 @@ from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 
 
 class AegisRepository(Repository):
+    USAGE_BUILD = 'build'
+    USAGE_CONFIG = 'config'
+    USAGE_MANUAL_TEST = 'manual-test'
+    USAGE_SOURCE = 'source'
+    USAGE_TEST = 'test'
 
     def _load(self, project):
         Repository._load (self, project)
@@ -46,9 +51,12 @@ class AegisRepository(Repository):
         self.EXECUTABLE = original_command
         return rc
 
-    def project_file_list_get(self):
+    def project_file_list_get(self, usage = None):
         cmd = self.command("-project", self.module,
                            executable = "aelpf")
+        if usage:
+            cmd.append('--usage')
+            cmd.append(usage)
         aelpf = ExternalCommand (cwd="/tmp", command=cmd)
         output = aelpf.execute(stdout = PIPE, stderr = STDOUT)[0]
         if aelpf.exit_status > 0:

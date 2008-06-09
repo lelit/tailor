@@ -35,10 +35,13 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         Commit the changeset.
         """
 
+        config_files = \
+            self.repository.project_file_list_get(self.repository.USAGE_CONFIG)
+
         #
         # The invocation for the initialcommit does not receive entries.
         #
-        if isinitialcommit:
+        if isinitialcommit or not config_files:
             self.__new_file("aegis.conf", "config")
             self.__config_file(self.repository.basedir, "aegis.conf")
         elif not entries:
