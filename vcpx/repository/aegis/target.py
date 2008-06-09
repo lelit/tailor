@@ -105,7 +105,7 @@ class AegisTargetWorkingDir(SynchronizableTargetWorkingDir):
         # * change the UPD action_kind for files *non* in the repository (UPD => ADD);
         #
         for e in adapted.entries[:]:
-            if e.is_directory:
+            if e.is_directory or e.is_symlink:
                 adapted.entries.remove(e)
                 continue
             if e.action_kind == e.DELETED and not project_files.count(e.name):
