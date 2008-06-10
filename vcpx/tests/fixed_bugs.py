@@ -74,35 +74,6 @@ repository = file://%(test_dir)s/repo
             if assert_function is not None:
                 assert_function(project, vcs)
 
-    def testTicket64(self):
-        """#64: support add('foo/bar/baz') even if 'foo' was not previously added"""
-        self.target_vcs = [ 'bzr', 'darcs', 'hg' ]
-        self.source_changesets = [
-            Changeset("Dummy first commit",
-                [ Entry(Entry.ADDED, 'dummy.txt'), ]),
-            Changeset("Add a/b/c",
-                [ Entry(Entry.ADDED, 'a/b/'),
-                  Entry(Entry.ADDED, 'a/b/c'),
-            ]),
-        ]
-        self.run_tailor()
-
-    def testTicket64_2(self):
-        """#64 (2): support update('foo2/bar') even if 'foo2' is added in the same changeset"""
-        self.target_vcs = [ 'bzr', 'darcs', 'hg' ] # XXX bzr 0.8 fails :-?
-        self.source_changesets = [
-            Changeset("Dummy first commit",
-                [ Entry(Entry.ADDED, 'dummy.txt'), ]),
-            Changeset("Add a/b/c",
-                [ Entry(Entry.ADDED, 'a/b/c'),
-            ]),
-            Changeset("Add (cp) a2 and modify a2/b/c",
-                [ Entry(Entry.ADDED, 'a2/b/c'),
-                  Entry(Entry.UPDATED, 'a2/b/c', contents='foo')
-            ]),
-        ]
-        self.run_tailor()
-
     def testTicket74(self):
         """Files must be physically removed on dir removal, so they don't get readded"""
         self.target_vcs = [ 'svn' ] # FAIL: bzr for sure, probably others
