@@ -359,11 +359,11 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
         if self.repository.darcs_version.startswith('2'):
             cmd = self.repository.command("pull", "--dry-run", "--xml-output")
             pull = ExternalCommand(cwd=self.repository.basedir, command=cmd)
-            output = pull.execute(self.repository.repository,
-                                  stdout=PIPE, TZ='UTC0')[0]
+            output,error = pull.execute(self.repository.repository,
+                                        stdout=PIPE, stderr=PIPE, TZ='UTC0')
             # pull --xml-output was introduced *after* 2.0.0
             if pull.exit_status:
-                errormsg = output.read()
+                errormsg = error.read()
                 if "unrecognized option `--xml-output'" in errormsg:
                     self.log.warning('Using darcs 1.0 non-XML parser: it may fail '
                                      'on patches recorded before november 2003! '
