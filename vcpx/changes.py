@@ -43,7 +43,16 @@ class ChangesetEntry(object):
         self.is_symlink = False
 
     def __str__(self):
-        s = self.name + '(' + self.action_kind
+        entry_kind = []
+        if self.is_directory:
+            entry_kind.append('DIR')
+        if self.is_symlink:
+            entry_kind.append('SYMLINK')
+        if entry_kind:
+            kind = '[' + ','.join(entry_kind) + ']'
+        else:
+            kind = ''
+        s = self.name + kind + '(' + self.action_kind
         if self.action_kind == self.ADDED:
             if self.new_revision:
                 s += ' at ' + self.new_revision
@@ -57,10 +66,6 @@ class ChangesetEntry(object):
             s += ' from ' + self.old_name
         else:
             s += '??'
-        if self.is_directory:
-            s += ', DIR'
-        if self.is_symlink:
-            s += ', SLNK'
         s += ')'
         if isinstance(s, unicode):
             s = s.encode('ascii', 'replace')
