@@ -29,10 +29,7 @@ class DarcsRepository(Repository):
         Repository._load(self, project)
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
-        cmd = self.command('--version')
-        version = ExternalCommand(command=cmd)
-        self.darcs_version = version.execute(stdout=PIPE)[0].read().strip()
-        self.log.debug('Using %s, version %s', self.EXECUTABLE, self.darcs_version)
+        self._darcs_version = None
         init_options = cget(self.name, 'init-options', '')
         if init_options:
             self.init_options = tuple(init_options.split(' '))
@@ -68,6 +65,15 @@ class DarcsRepository(Repository):
                                           "'\xfb': '&#369;',"
                                           "'\xfc': '&#252;',"
                                           "}"))
+
+    @property
+    def darcs_version(self):
+        if self._darcs_version is None:
+            cmd = self.command('--version')
+            version = ExternalCommand(command=cmd)
+            self._darcs_version = version.execute(stdout=PIPE)[0].read().strip()
+            self.log.debug('Using %s, version %s', self.EXECUTABLE, self._darcs_version)
+        return self._darcs_version
 
     def command(self, *args, **kwargs):
         if args[0] == 'record' and self.use_look_for_adds:
