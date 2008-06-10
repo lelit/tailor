@@ -91,19 +91,21 @@ class MockChangesetEntry(ChangesetEntry):
     def __init__(self, action, name, old_name=None, contents=None):
         super(MockChangesetEntry, self).__init__(name)
 
-        self.isdir       = False
-        self.contents    = contents
-        self.old_name    = old_name
+        self.contents = contents
+        self.old_name = old_name
         self.action_kind = action
 
-        if self.name[-1] == '/':
-            self.isdir = True
-            self.name  = self.name[:-1]
+        if self.name.endswith('/'):
+            self.is_directory = True
+            self.name = self.name[:-1]
+
+        if self.old_name and self.old_name.endswith('/'):
+            self.old_name = self.old_name[:-1]
 
     def apply(self, where):
         name = os.path.join(where, self.name)
         if self.action_kind == self.ADDED:
-            if self.isdir:
+            if self.is_directory:
                 os.makedirs(name)
             else:
                 dirname = os.path.dirname(name)
@@ -115,7 +117,7 @@ class MockChangesetEntry(ChangesetEntry):
                 f.close()
         elif self.action_kind == self.DELETED:
             if os.path.exists(name):
-                if self.isdir:
+                if self.is_directory:
                     rmtree(name)
                 else:
                     os.unlink(name)
