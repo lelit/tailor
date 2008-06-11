@@ -105,6 +105,8 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         Commit the changeset.
         """
 
+        from os import rename, unlink
+
         logmessage = []
 
         logmessage.append(date.astimezone(UTC).strftime('%Y/%m/%d %H:%M:%S UTC'))
@@ -134,6 +136,13 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                 stdout=PIPE, stderr=STDOUT)[0]
 
         if record.exit_status:
+            pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
+            if exists(pending):
+                wrongpending = pending + '.wrong'
+                if exists(wrongpending):
+                    unlink(wrongpending)
+                rename(pending, wrongpending)
+                self.log.debug("Pending file renamed to %s", wrongpending)
             raise ChangesetReplayFailure(
                 "%s returned status %d, saying: %s" % (str(record),
                                                        record.exit_status,
