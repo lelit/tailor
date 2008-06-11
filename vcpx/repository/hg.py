@@ -215,7 +215,9 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                     deleteddirs.append(entrydir)
             elif e.action_kind == e.RENAMED:
                 entrydir = split(e.old_name)[0]
-                if not entrydir in deleteddirs and self.__maybeDeleteDirectory(entrydir):
+                if (not entrydir in deleteddirs
+                    and not e.name.startswith(entrydir+'/')
+                    and self.__maybeDeleteDirectory(entrydir)):
                     deleteddirs.append(entrydir)
 
         # Recognize directory renames
