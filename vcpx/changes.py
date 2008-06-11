@@ -31,16 +31,17 @@ class ChangesetEntry(object):
     APPLIED = 'APPLIED'
     CONFLICT = 'CONFLICT'
 
+    old_name = None
+    old_revision = None
+    new_revision = None
+    action_kind = None
+    status = None
+    unidiff = None # This is the unidiff of this particular entry
+    is_directory = False # This usually makes sense only on ADDs and DELs
+    is_symlink = False
+
     def __init__(self, name):
         self.name = name
-        self.old_name = None
-        self.old_revision = None
-        self.new_revision = None
-        self.action_kind = None
-        self.status = None
-        self.unidiff = None # This is the unidiff of this particular entry
-        self.is_directory = False # This usually makes sense only on ADDs and DELs
-        self.is_symlink = False
 
     def __str__(self):
         entry_kind = []
