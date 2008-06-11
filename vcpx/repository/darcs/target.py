@@ -11,6 +11,7 @@ This module contains the target specific bits of the darcs backend.
 
 __docformat__ = 'reStructuredText'
 
+from os.path import join, exists
 import re
 
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
@@ -32,7 +33,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
 
     def importFirstRevision(self, source_repo, changeset, initial):
         from os import walk, sep
-        from os.path import join
         from vcpx.dualwd import IGNORED_METADIRS
 
         if not self.repository.split_initial_import_level:
@@ -163,8 +163,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         A with its new content, darcs would move the *wrong* A to B...
         """
 
-        from os.path import join, exists
-
         # The "_darcs/patches/pending" file is basically a patch containing
         # only the changes (hunks, adds...) not yet recorded by darcs: it does
         # contain either a single change (that is, exactly one line), or a
@@ -247,8 +245,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         ``darcs initialize`` if needed.
         """
 
-        from os.path import join, exists
-
         metadir = join(self.repository.basedir, '_darcs')
 
         if not exists(metadir):
@@ -277,8 +273,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         """
         Tweak the default settings of the repository.
         """
-
-        from os.path import join
 
         motd = open(join(self.repository.basedir, '_darcs/prefs/motd'), 'w')
         motd.write(MOTD % str(source_repo))
