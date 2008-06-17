@@ -138,6 +138,11 @@ class Project(object):
 
         self.source = self.__loadRepository('source')
         self.target = self.__loadRepository('target')
+        if self.source.kind == self.target.kind and self.source.basedir == self.target.basedir:
+            raise ConfigurationError('Project "%s" uses the same kind of VCS (%s) '
+                                     'for both the source and the target: you must '
+                                     'use disjunct directories, specifying different '
+                                     'subdir options' % (self.name, self.source.kind))
 
         sfpath = self.config.get(self.name, 'state-file', self.name + '.state')
         sfpath = join(self.rootdir, self.target.stateFilePath(sfpath))
