@@ -955,9 +955,9 @@ class MonotoneWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingD
                                       "--message-file", rontf.name)
         commit = ExternalCommand(cwd=self.repository.basedir, command=cmd)
 
-        entries = None
-        if not entries:
-            entries = ['.']
+        # Always commit everything, ignoring given entries...
+        # XXX is this right?
+        entries = ['.']
 
         output, error = commit.execute(entries, stdout=PIPE, stderr=PIPE)
 
