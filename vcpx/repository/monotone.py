@@ -529,39 +529,39 @@ class MonotoneDiffParser:
                             "Unexpected token sequence: '%s' "
                             "followed by '%s'" %(token, fname))
 
+                    ename = fname[1:-1]
+
                     if token == "content":
                         pass  # ignore it
                     # ok, is a file/dir, control changesets data
                     elif token == "add_file" or token=="add_directory":
-                        chentry = None
-                        for i,e in enumerate(chset.entries):
-                            if e.action_kind == e.DELETED and e.name == fname[1:-1]:
-                               e.action_kind = e.UPDATED
-                               chentry = e
-                               break
-                        if chentry is None:
-                            chentry = chset.addEntry(fname[1:-1], chset.revision)
+                        for e in chset.entries:
+                            if e.action_kind == e.DELETED and e.name == ename:
+                                # If just deleted, collapse the two into an update
+                                e.action_kind = e.UPDATED
+                                break
+                        else:
+                            chentry = chset.addEntry(ename, chset.revision)
                             chentry.action_kind = chentry.ADDED
-                    elif token=="add_dir":
-                        chentry = chset.addEntry(fname[1:-1], chset.revision)
+                    elif token == "add_dir":
+                        chentry = chset.addEntry(ename, chset.revision)
                         chentry.action_kind = chentry.ADDED
-                    elif token=="delete":
-                        chentry = chset.addEntry(fname[1:-1], chset.revision)
+                    elif token == "delete":
+                        chentry = chset.addEntry(ename, chset.revision)
                         chentry.action_kind = chentry.DELETED
-                    elif token=="rename":
+                    elif token == "rename":
                         # renames are in the form:  oldname to newname
                         tow = tkiter.next()
                         newname = tkiter.next()
-                        if tow != "to" or fname[0]!='"':
+                        if tow != "to" or newname[0] != '"':
                             raise GetUpstreamChangesetsFailure(
                                 "Unexpected rename token sequence: '%s' "
-                                "followed by '%s'" %(tow, newname))
+                                "followed by '%s'" % (tow, newname))
                         # Hack a bug from Monotone: rename with same name
                         if fname == newname:
                             self.repository.log.warning("Can not rename '%s' to "
                                                         "'%s' self" % (fname, newname))
                         else:
-
                             # From this commands:
                             #   mtn rename dir/file file
                             #   mtn drop dir
@@ -572,14 +572,14 @@ class MonotoneDiffParser:
                             #
                             # Fix this by insert the RENAME before the DELETE.
                             before = None
-                            for i,e in enumerate(chset.entries):
-                                if e.action_kind == e.DELETED and fname[1:-1].startswith(e.name):
+                            for e in chset.entries:
+                                if e.action_kind == e.DELETED and ename.startswith(e.name):
                                     before = e
                                     break
 
                             chentry = chset.addEntry(newname[1:-1], chset.revision, before)
                             chentry.action_kind = chentry.RENAMED
-                            chentry.old_name= fname[1:-1]
+                            chentry.old_name = ename
                     elif token == "patch":
                         # patch entries are in the form: from oldrev to newrev
                         fromw = tkiter.next()
@@ -592,22 +592,13 @@ class MonotoneDiffParser:
                                 "followed by '%s','%s','%s'" % (fromw, oldr,
                                                                 tow, newr))
 
-                        # The 'chentry' is not nessesary if no other entries exist.
-                        # But needs, if one entry with rename or delete exist before,
-                        # because the list of modifired file will be upstream only
-                        # files from this list (Monotone to Subversion).
-                        # So, the best: Always list the changed files here.
-                        #
-                        # Add file to the list, if no rename or other entry exist.
-                        flag = True
-                        for i,e in enumerate(chset.entries):
-                            if e.name == fname[1:-1]:
-                                flag = False
+                        # Add file to the list only if it isn't already in the changeset.
+                        for e in chset.entries:
+                            if e.name == ename:
                                 break
-                        if flag:
-                            chentry = chset.addEntry(fname[1:-1], chset.revision)
+                        else:
+                            chentry = chset.addEntry(ename, chset.revision)
                             chentry.action_kind = chentry.UPDATED
-
         except StopIteration:
             if in_item:
                 raise GetUpstreamChangesetsFailure("Unexpected end of 'diff' parsing changeset info")
