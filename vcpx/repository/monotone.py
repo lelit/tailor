@@ -307,7 +307,7 @@ class MonotoneCertsParser:
                 continue
 
             pr = self.PrefixRemover(curline)
-            if pr.value == None:
+            if pr.value is None:
                 state = self.DUMMY
                 continue
 
@@ -539,7 +539,7 @@ class MonotoneDiffParser:
                                e.action_kind = e.UPDATED
                                chentry = e
                                break
-                        if chentry == None:
+                        if chentry is None:
                             chentry = chset.addEntry(fname[1:-1], chset.revision)
                             chentry.action_kind = chentry.ADDED
                     elif token=="add_dir":
