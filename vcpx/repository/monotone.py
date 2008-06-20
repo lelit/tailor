@@ -342,7 +342,9 @@ class MonotoneCertsParser:
                     day = dateparts[0]
                     time = dateparts[1]
                     y,m,d = map(int, day.split(day[4]))
-                    hh,mm,ss = map(int, time.split(':'))
+                    # recent mtn adds microsecs to the timestamp
+                    timeparts = time.split('.')
+                    hh,mm,ss = map(int, timeparts[0].split(':'))
                     date = datetime(y,m,d,hh,mm,ss,0,UTC)
                     self.dates.append(date)
                 elif state == self.LOG or state == self.CMT:
