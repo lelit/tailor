@@ -91,7 +91,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
                 name = self._localFilename(f)
                 self._addParents(name, changeset)
 
-        p4.sync('@' + str(changeset.revision))
+        p4.sync(self.repository.depot_path + '...@' + str(changeset.revision))
 
         # dict of {path:str -> e:ChangesetEntry}
         branched = dict()
@@ -196,7 +196,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         p4=self.__getP4()
         desc=p4.describe(revision, shortForm=True)
 
-        p4.sync('@' + str(revision), force=force)
+        p4.sync(self.repository.depot_path + '...@' + str(revision), force=force)
 
         ts=self.__parseDate(desc['date'])
 
