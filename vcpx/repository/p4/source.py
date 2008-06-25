@@ -168,6 +168,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         self.log.info('Adding dir %r' % parent)
         e = changeset.addEntry(parent, changeset.revision)
         e.action_kind = e.ADDED
+        e.is_directory = True
         os.mkdir(path)
 
     # Try to guess when a directory should be removed.
@@ -183,6 +184,7 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
         self.log.info('Removing dir %r' % parent)
         e = changeset.addEntry(parent, changeset.revision)
         e.action_kind = e.DELETED
+        e.is_directory = True
         os.rmdir(path)
 
         self._delParents(parent, changeset)
