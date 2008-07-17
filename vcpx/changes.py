@@ -207,7 +207,7 @@ class Changeset(object):
         s.append('Revision: %s' % self.revision)
         s.append('Date: %s' % str(self.date))
         s.append('Author: %s' % self.author)
-        s.append('Entries: %s' % ', '.join([str(x) for x in self.entries]))
+        s.append('Entries: %s' % '\n\t '.join([str(x) for x in self.entries]))
         s.append('Log: %s' % self.log)
         s = '\n'.join(s)
         if isinstance(s, unicode):
