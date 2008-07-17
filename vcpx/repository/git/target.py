@@ -276,7 +276,18 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
                     raise ChangesetApplicationFailure(
                         "Cannot rename since actual target not found: %s" % newnametmp)
 
-                self.repository.runCommand(['mv', oldname, newname])
+                if exists(oldpath):
+                    # Under normal operation, just git-mv the old name to the new
+                    # name.  Git will notice the changes too.
+                    self.repository.runCommand(['mv', oldname, newname])
+                else:
+                    # If a revision renames directory A/ to B/, plus file A/a to
+                    # B/b, *and if* A -> B happened already, then the superclass
+                    # already made B/b.  We cannot git-mv B/a to B/b since B/a is
+                    # gone.  The workaround is git-add B/b-TAILOR-HACKED-TEMP-NAME,
+                    # then git-mv it to B/b.
+                    self.repository.runCommand(['add', newnametmp])
+                    self.repository.runCommand(['mv', newnametmp, newname])
 
     def _prepareTargetRepository(self):
         self.repository.create()

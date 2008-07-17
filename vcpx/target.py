@@ -549,7 +549,8 @@ class SynchronizableTargetWorkingDir(WorkingDir):
 
                             rmtree(absnew)
 
-                        rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
+                        if exists(absnew + '-TAILOR-HACKED-TEMP-NAME'):
+                            rename(absnew + '-TAILOR-HACKED-TEMP-NAME', absnew)
 
     def _renamePathname(self, oldname, newname):
         """
