@@ -14,6 +14,7 @@ from vcpx.tzinfo import UTC
 class FakeLogger:
     def warning(self, *args):
         pass
+    debug = warning
 
 
 class FakeRepository:
