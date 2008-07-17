@@ -163,6 +163,32 @@ class SvnLogParser(TestCase):
 
         self.assertRaises(StopIteration, csets.next)
 
+    def testRenameReplace(self):
+        """Verify how tailor handle svn "R" event on renames"""
+
+        log = self.getSvnLog('svn-rename_replace')
+        csets = changesets_from_svnlog(log, FR('file:///tmp/rep',
+                                               '/cedar-backup2/trunk'))
+
+        cset = csets.next()
+        self.assertEqual(len(cset.entries), 7)
+        for entry, expected in map(None, cset.entries,
+                                   (('Makefile', 'UPD'),
+                                    ('test', 'REN', 'unittest'),
+                                    ('test/__init__.py', 'ADD'),
+                                    ('test/filesystemtests.py', 'ADD'),
+                                    ('test/knapsacktests.py', 'ADD'),
+                                    ('util/createtree.py', 'UPD'),
+                                    ('test/data', 'REN', 'unittest/data'))):
+            self.assertEqual(entry.name, expected[0])
+            self.assertEqual(entry.action_kind, expected[1],
+                             msg=entry.name+': got %r, expected %r' %
+                             (entry.action_kind, expected[1]))
+            if expected[1]=='REN':
+                self.assertEqual(entry.old_name, expected[2],
+                                 msg=entry.name+': got %r, expected %r' %
+                                 (entry.old_name, expected[2]))
+
     def testTrackingRoot(self):
         """Verify we are able to track the root of the repository"""
 
@@ -206,7 +232,8 @@ class SvnLogParser(TestCase):
 
         entry = cset.entries[2]
         self.assertEqual(entry.name, 'py/documentation/example/test')
-        self.assertEqual(entry.action_kind, entry.ADDED)
+        self.assertEqual(entry.action_kind, entry.RENAMED)
+        self.assertEqual(entry.old_name, 'example/test')
 
         self.assertRaises(StopIteration, csets.next)
 

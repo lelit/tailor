@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<log>
+<logentry
+   revision="119">
+<author>pronovic</author>
+<date>2004-08-10T22:52:25.658089Z</date>
+<paths>
+<path
+   action="M">/cedar-backup2/trunk/Makefile</path>
+<path
+   copyfrom-path="/cedar-backup2/trunk/unittest/filesystemtests.py"
+   copyfrom-rev="118"
+   action="A">/cedar-backup2/trunk/test/filesystemtests.py</path>
+<path
+   copyfrom-path="/cedar-backup2/trunk/unittest"
+   copyfrom-rev="115"
+   action="A">/cedar-backup2/trunk/test</path>
+<path
+   action="D">/cedar-backup2/trunk/unittest</path>
+<path
+   copyfrom-path="/cedar-backup2/trunk/unittest/knapsacktests.py"
+   copyfrom-rev="118"
+   action="A">/cedar-backup2/trunk/test/knapsacktests.py</path>
+<path
+   action="A">/cedar-backup2/trunk/test/__init__.py</path>
+<path
+   action="M">/cedar-backup2/trunk/util/createtree.py</path>
+<path
+   copyfrom-path="/cedar-backup2/trunk/unittest/data"
+   copyfrom-rev="118"
+   action="R">/cedar-backup2/trunk/test/data</path>
+</paths>
+<msg>Checkpoint</msg>
+</logentry>
+</log>

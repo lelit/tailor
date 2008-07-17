@@ -293,11 +293,17 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                 # that are below a dir that was "copyfrom" from a path
                 # outside of this module:
                 #  D -> Remove entry completely (it's not going to be in here)
-                #  (M,A,R) -> A
+                #  (M,A) -> A
+
+                # Finally, take care of the 'R' entries: if the entry
+                # is a target of a rename, just discard it (hopefully
+                # the target VC will do the right thing), otherwise
+                # change those to 'A'.
 
                 mv_or_cp = {}
                 for e in self.current['entries']:
-                    if e.action_kind == e.ADDED and e.old_name is not None:
+                    if (e.action_kind == e.ADDED or
+                        e.action_kind == 'R') and e.old_name is not None:
                         mv_or_cp[e.old_name] = e
 
                 def parent_was_copied(n):
@@ -333,7 +339,16 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
                             mv_or_cp[e.name].action_kind = e.RENAMED
                         else:
                             check_renames_from_dir(e.name)
-                        e.action_kind = e.ADDED
+
+                        # Another scenario is
+                        #   $ svn mv dir otherdir
+                        #   $ svn rm otherdir/subdir
+                        #   $ svn mv olddir/subdir otherdir
+                        #   $ svn rm olddir
+                        if e.old_name is not None:
+                            e.action_kind = e.RENAMED
+                        else:
+                            e.action_kind = e.ADDED
                         entries2.append(e)
                     elif parent_was_copied(e.name):
                         if e.action_kind != e.DELETED:
