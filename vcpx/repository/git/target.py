@@ -235,9 +235,14 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         oldpath = join(self.repository.basedir, oldname)
         newpath = join(self.repository.basedir, newname)
 
+        # These are used with disjunct directories.
+        newpathtmp = newpath + '-TAILOR-HACKED-TEMP-NAME'
+        newnametmp = newname + '-TAILOR-HACKED-TEMP-NAME'
+
         # Git does not track empty directories, so if there is only an
         # empty dir, we have nothing to do.
-        if isdir(newpath) and not len(listdir(newpath)):
+        if (isdir(newpath) and not len(listdir(newpath))) or \
+           (isdir(newpathtmp) and not len(listdir(newpathtmp))):
             return
 
         # rename() won't work for rename(a/b, a)
@@ -261,8 +266,6 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
                 # For disjunct directories, the real new entry has been moved
                 # out of the way, and the superclass expects us to rename the
                 # the file or directory via git.
-                newpathtmp = newpath + '-TAILOR-HACKED-TEMP-NAME'
-                newnametmp = newname + '-TAILOR-HACKED-TEMP-NAME'
                 if exists(newpath) or not exists(newpathtmp):
                     raise ChangesetApplicationFailure("Unsure how to handle disjunct rename of %s"
                                                           % newname)
