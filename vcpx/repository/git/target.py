@@ -253,9 +253,20 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             self.repository.runCommand(['mv', oldname, newname.replace(oldname, oldnametmp, 1)])
             self.repository.runCommand(['mv', oldnametmp, oldname])
         else:
-            # we can just add the new path, commit will detect the
-            # deleted ones automatically
-            self.repository.runCommand(['add', newname])
+            if self.shared_basedirs:
+                # we can just add the new path, commit will detect the
+                # deleted ones automatically
+                self.repository.runCommand(['add', newname])
+            else:
+                # For disjunct directories, the real new entry has been moved
+                # out of the way, and the superclass expects us to rename the
+                # the file or directory via git.
+                newpathtmp = newpath + '-TAILOR-HACKED-TEMP-NAME'
+                newnametmp = newname + '-TAILOR-HACKED-TEMP-NAME'
+                if exists(newpath) or not exists(newpathtmp):
+                    raise ChangesetApplicationFailure("Unsure how to handle disjunct rename of %s"
+                                                          % newname)
+                self.repository.runCommand(['mv', oldname, newname])
 
     def _prepareTargetRepository(self):
         self.repository.create()
