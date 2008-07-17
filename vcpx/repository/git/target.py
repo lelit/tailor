@@ -266,9 +266,16 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
                 # For disjunct directories, the real new entry has been moved
                 # out of the way, and the superclass expects us to rename the
                 # the file or directory via git.
-                if exists(newpath) or not exists(newpathtmp):
-                    raise ChangesetApplicationFailure("Unsure how to handle disjunct rename of %s"
-                                                          % newname)
+
+                # First, some sanity checks.
+                if exists(newpath):
+                    raise ChangesetApplicationFailure(
+                        "Cannot rename since target already exists: %s" % newname)
+
+                if not exists(newpathtmp):
+                    raise ChangesetApplicationFailure(
+                        "Cannot rename since actual target not found: %s" % newnametmp)
+
                 self.repository.runCommand(['mv', oldname, newname])
 
     def _prepareTargetRepository(self):
