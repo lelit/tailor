@@ -105,12 +105,15 @@ class P4SourceWorkingDir(UpdatableSourceWorkingDir):
                 e.action_kind = e.ADDED
 
                 log = p4.filelog(path+'#'+str(f['rev']), maxRevs=1)
-                note = log[0]['revs'][0]['notes'][0]
-                m = self.branchRE.match(note)
-                if m:
-                    old = m.group('path')
-                    branched[old] = e
-                    self.log.info('Branch %r to %r' % (old, name))
+
+                # rev['notes'] may be empty
+                notes = log[0]['revs'][0]['notes']
+                if len(notes) > 0:
+                    m = self.branchRE.match(notes[0])
+                    if m:
+                        old = m.group('path')
+                        branched[old] = e
+                        self.log.info('Branch %r to %r' % (old, name))
 
         for f in desc['files']:
             name = self._localFilename(f)
