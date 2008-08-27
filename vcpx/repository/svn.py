@@ -189,15 +189,13 @@ class SvnRepository(Repository):
                         paths.append(path)
 
                 paths.append(self.repository + self.module)
-                cmd = self.command("mkdir", "-m",
+                cmd = self.command("mkdir", "--parents", "-m",
                                    "This directory will host the upstream sources")
                 svnmkdir = ExternalCommand(command=cmd)
                 svnmkdir.execute(paths)
                 if svnmkdir.exit_status:
                     raise TargetInitializationFailure("Was not able to create the "
-                                                      "module %r, maybe more than "
-                                                      "one level directory?" %
-                                                      self.module)
+                                                      "module %r" % self.module)
 
 def changesets_from_svnlog(log, repository, chunksize=2**15):
     from xml.sax import make_parser
