@@ -19,6 +19,7 @@ from vcpx.source import UpdatableSourceWorkingDir, GetUpstreamChangesetsFailure
 from vcpx.source import ChangesetApplicationFailure
 from vcpx.tzinfo import FixedOffset
 
+
 class GitSourceWorkingDir(UpdatableSourceWorkingDir):
 
     def _checkoutUpstreamRevision(self, revision):
@@ -51,18 +52,15 @@ class GitSourceWorkingDir(UpdatableSourceWorkingDir):
 
     def _getUpstreamChangesets(self, since):
         # Brute-force tag search
-        from os.path import join
         from os import listdir
+        from os.path import exists, join
 
         tags = {}
         tagdir = join(self.repository.basedir, '.git', 'refs', 'tags')
-        try:
+        if exists(tagdir):
             for tag in listdir(tagdir):
                 tagrev = self.repository.runCommand(['rev-list', '--max-count=1', tag])[0]
                 tags.setdefault(tagrev, []).append(tag)
-        except OSError:
-            # No tag dir
-            pass
 
         self.repository.runCommand(['fetch'], GetUpstreamChangesetsFailure, False)
 
