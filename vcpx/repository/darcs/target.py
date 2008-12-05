@@ -135,6 +135,22 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         output = record.execute(input=self.repository.encode('\n'.join(logmessage)),
                                 stdout=PIPE, stderr=STDOUT)[0]
 
+        # Repair afterwards, for http://bugs.darcs.net/issue693
+        #
+        # Verified that this is still needed for darcs 2.1.2 (+ 343 patches)
+        # using the config.tailor file that is attached to issue693 above.
+        if record.exit_status == 2:
+            self.log.debug("Trying to repair record failure...")
+            cmd = self.repository.command("repair")
+            repair = ExternalCommand(cwd=self.repository.basedir, command=cmd)
+            repairoutput = repair.execute(stdout=PIPE, stderr=STDOUT)[0]
+            if not repair.exit_status:
+                record.exit_status = repair.exit_status
+            else:
+                self.log.warning("%s returned status %d, saying %s",
+                                 str(repair), repair.exit_status,
+                                 repairoutput.read())
+
         if record.exit_status:
             pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
             if exists(pending):
