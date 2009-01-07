@@ -502,9 +502,12 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
             if cmdutil.findcmd.func_code.co_argcount == 2:     # 0.9.4
                 def findcmd(cmd):
                     return cmdutil.findcmd(self._getUI(), cmd)
-            elif cmdutil.findcmd.func_code.co_argcount == 3:   # 0.9.5
+            elif cmdutil.findcmd.func_code.co_argcount == 3: #  >= 0.9.5
                 def findcmd(cmd):
-                    return cmdutil.findcmd(self._getUI(), cmd, commands.table)
+                    if cmdutil.findcmd.func_code.co_varnames[0] == "ui": # < 1.1.0
+                        return cmdutil.findcmd(self._getUI(), cmd, commands.table)
+                    else: # >= 1.1.0
+                        return cmdutil.findcmd(cmd, commands.table)
         elif hasattr(commands, 'findcmd'):         # < 0.9.4
             if commands.findcmd.func_code.co_argcount == 1:
                 findcmd = commands.findcmd
