@@ -43,24 +43,24 @@ class GitRepository(Repository):
 
         self.env = {}
 
-        # XXX: this seems plain wrong to me [who does not know git at
-        # all!]: why storagedir gets set to repository here? and why
-        # the need for the GIT_DIR envvar? I fail to see when
-        # storagedir should be different from '.git', the default,
-        # given how it's being used by this class! The same with
-        # GIT_INDEX_FILE, that accordingly with the man page defaults
-        # to ".git/index" anyway...
-        #
-        self.storagedir = self.METADIR
+        # The git storage directory can track both the repository and
+        # the working directory.  If the repository directory is
+        # specified, make sure git stores its repository there by
+        # setting $GIT_DIR.  However, this repository will typically be
+        # a "bare" repository that can't directly track a working
+        # directory.  As such, it is necessary to tell it where to find
+        # the working directory and index through $GIT_WORK_TREE and
+        # $GIT_INDEX_FILE.
+
         if self.repository:
             from os.path import join
-
-            #self.storagedir = self.repository
-            #self.env['GIT_DIR'] = self.storagedir
-            self.env['GIT_DIR'] = join(self.basedir, self.METADIR)
-            self.env['GIT_INDEX_FILE'] = self.METADIR + '/index'
-        #else:
-        #    self.storagedir = self.METADIR
+            self.storagedir = self.repository
+            self.env['GIT_DIR'] = self.storagedir
+            self.env['GIT_INDEX_FILE'] = join(self.METADIR, 'index')
+            self.env['GIT_WORK_TREE'] = self.basedir
+        else:
+            self.storagedir = self.METADIR
+            # No need to set $GIT_*, since the defaults are appropriate
 
     def runCommand(self, cmd, exception=Exception, pipe=True):
         """
