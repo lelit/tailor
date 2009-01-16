@@ -99,9 +99,15 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         self._hgCommand('pull', 'default')
 
+        if hasattr(repo.changelog, 'count'):
+            # hg < 1.1
+            numcs = repo.changelog.count()
+        else:
+            # hg >= 1.1
+            numcs = len(repo)
+
         from mercurial.node import bin
-        for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1,
-                          repo.changelog.count()):
+        for rev in xrange(repo.changelog.rev(bin(sincerev)) + 1, numcs):
             yield self._changesetForRevision(repo, str(rev))
 
     def __maybeDeleteDirectory(self, entrydir):
