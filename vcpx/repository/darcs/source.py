@@ -64,6 +64,15 @@ class DarcsChangeset(Changeset):
                 different = True
         return different
 
+    # Match darcs 2.1+ junk: hopefully this regex is strict enough to
+    # not obliterate useful info...
+    ignore_this = re.compile('^Ignore-this: [a-f\\d]+\\n?')
+
+    def setLog(self, log):
+        """Strip away the "Ignore-this:" noise from the changelog."""
+
+        super(DarcsChangeset, self).setLog(self.ignore_this.sub('', log))
+
     def addEntry(self, entry, revision):
         """
         Fixup darcs idiosyncrasies:
