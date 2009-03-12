@@ -216,7 +216,7 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
 
         notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
         if notdirs:
-            self.repository.runCommand(['update-index', '--remove'] + notdirs)
+            self.repository.runCommand(['rm'] + notdirs)
 
     def _renamePathname(self, oldname, newname):
         """
@@ -259,9 +259,8 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
             self.repository.runCommand(['mv', oldnametmp, oldname])
         else:
             if self.shared_basedirs:
-                # we can just add the new path, commit will detect the
-                # deleted ones automatically
-                self.repository.runCommand(['add', newname])
+                # Recent gits handle this correctly
+                self.repository.runCommand(['mv', oldname, newname])
             else:
                 # For disjunct directories, the real new entry has been moved
                 # out of the way, and the superclass expects us to rename the
