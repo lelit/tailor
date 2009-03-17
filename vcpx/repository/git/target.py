@@ -209,12 +209,19 @@ class GitTargetWorkingDir(SynchronizableTargetWorkingDir):
         Remove some filesystem object.
         """
 
-        from os.path import join, isdir
+        from os.path import exists, isdir, join
 
         # Currently git does not handle directories at all, so filter
         # them out.
 
-        notdirs = [n for n in names if not isdir(join(self.repository.basedir, n))]
+        notdirs = []
+        for name in names:
+            fname = join(self.repository.basedir, name)
+            if not exists(fname):
+                self.log.warning("Ignoring deletion of non existing '%s'",
+                                 name)
+            elif not isdir(fname):
+                notdirs.append(name)
         if notdirs:
             self.repository.runCommand(['rm'] + notdirs)
 
