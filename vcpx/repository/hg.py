@@ -641,7 +641,29 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         from os.path import join, split
 
         files = []
-        for src, path in self._getRepo().dirstate.walk([subdir]):
+        try:
+            # hg >= 1.1
+            # def walk(self, match, unknown, ignored)
+
+            from mercurial import match
+
+            def get_paths():
+                matcher = match.exact(self.repository.basedir,
+                                      self.repository.basedir,
+                                      [subdir])
+                walk = self._getRepo().dirstate.walk
+                for path in walk(matcher, True, False):
+                    yield path
+        except ImportError:
+            # hg < 1.1
+            # def walk(self, files=None, match=util.always, badmatch=None)
+
+            def get_paths():
+                walk = self._getRepo().dirstate.walk
+                for src, path in walk([subdir]):
+                    yield path
+
+        for path in get_paths():
             # If subdir is a plain file, just return
             if path == subdir:
                 return None
@@ -650,4 +672,5 @@ class HgWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                 hd, nt = split(hd)
                 tl = join(nt, tl)
             files.append(tl)
+
         return files
