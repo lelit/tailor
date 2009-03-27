@@ -196,11 +196,6 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Order is significant!
 
         pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
-        # If we are using darcs v2 and the old "pending" file is there,
-        # assume we are operating on a darcs v1 managed repository and keep
-        # using v1's name.
-        if self.repository.darcs_version.startswith('2') and not exists(pending):
-            pending += '.tentative'
         if exists(pending):
             p = open(pending).readlines()
             if p[0] != '{\n':
