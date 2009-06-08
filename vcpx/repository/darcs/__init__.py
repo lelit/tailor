@@ -26,6 +26,8 @@ class DarcsRepository(Repository):
     EXTRA_RSYNC_FLAGS = ['--delete']
 
     def _load(self, project):
+        from os.path import join
+
         Repository._load(self, project)
         cget = project.config.get
         self.EXECUTABLE = cget(self.name, 'darcs-command', 'darcs')
@@ -36,6 +38,8 @@ class DarcsRepository(Repository):
         else:
             self.init_options = None
         self.use_look_for_adds = cget(self.name, 'look-for-adds', 'False')
+        self.metadir = join(self.basedir, cget(
+            self.name, 'metadir', '_darcs'))
         self.split_initial_import_level = int(
             cget(self.name, 'split-initial-changeset-level', '0'))
         self.replace_badchars = eval(cget(self.name, 'replace-badchars',
@@ -94,8 +98,7 @@ class DarcsRepository(Repository):
             raise TargetInitializationFailure(
                 "%s returned status %s" % (str(init), init.exit_status))
 
-        metadir = join(self.basedir, '_darcs')
-        prefsdir = join(metadir, 'prefs')
+        prefsdir = join(self.metadir, 'prefs')
         prefsname = join(prefsdir, 'prefs')
         boringname = join(prefsdir, 'boring')
 

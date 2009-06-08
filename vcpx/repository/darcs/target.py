@@ -151,7 +151,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                                  repairoutput.read())
 
         if record.exit_status:
-            pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
+            pending = join(self.repository.metadir, 'patches', 'pending')
             if exists(pending):
                 wrongpending = pending + '.wrong'
                 if exists(wrongpending):
@@ -194,7 +194,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         # Filenames must begin with "./", and eventual spaces replaced by '\32\'.
         # Order is significant!
 
-        pending = join(self.repository.basedir, '_darcs', 'patches', 'pending')
+        pending = join(self.repository.metadir, 'patches', 'pending')
         if exists(pending):
             p = open(pending).readlines()
             if p[0] != '{\n':
@@ -269,12 +269,10 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         ``darcs initialize`` if needed.
         """
 
-        metadir = join(self.repository.basedir, '_darcs')
-
-        if not exists(metadir):
+        if not exists(self.repository.metadir):
             self.repository.create()
 
-        prefsdir = join(metadir, 'prefs')
+        prefsdir = join(self.repository.metadir, 'prefs')
         prefsname = join(prefsdir, 'prefs')
         boringname = join(prefsdir, 'boring')
         if exists(prefsname):
@@ -298,7 +296,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         Tweak the default settings of the repository.
         """
 
-        motd = open(join(self.repository.basedir, '_darcs/prefs/motd'), 'w')
+        motd = open(join(self.repository.metadir, 'prefs/motd'), 'w')
         motd.write(MOTD % str(source_repo))
         motd.close()
 

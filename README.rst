@@ -910,6 +910,18 @@ split-initial-changeset-level : integer
 
   *0* by default.
 
+metadir : string
+  The location of the _darcs repository, relative to ``subdir``. This is
+  useful, e.g., to handle svn:externals, and more generally to merge
+  multiple sources to a single darcs repository.
+
+  *_darcs* by default.
+
+  .. note:: This setting must not be mistaken with the ``--repodir`` option
+            from darcs. It should always match the following regexp:
+            ``(../)*_darcs``, since the metadir must be somewhere above
+            ``subdir`` for darcs to handle it automatically.
+
 Big repositories
 ................
 
