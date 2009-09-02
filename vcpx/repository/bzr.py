@@ -22,7 +22,7 @@ del version_info
 from bzrlib import errors
 from bzrlib.branch import Branch
 from bzrlib.bzrdir import BzrDir
-from bzrlib.errors import NoSuchRevision
+from bzrlib.errors import NoSuchRevision, TagsNotSupported
 from bzrlib.missing import find_unmerged
 from bzrlib.osutils import normpath, pathjoin
 from bzrlib.plugin import load_plugins
@@ -394,6 +394,16 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
                                   specific_files=entries,
                                   verbose=self.repository.projectref().verbose,
                                   timestamp=timestamp, timezone=timezone)
+
+    def _tag(self, tagname, date, author):
+        """
+        Tag the current version, if supported.
+        """
+        branch = self._working_tree.branch
+        try:
+            branch.tags.set_tag(tagname, branch.last_revision())
+        except TagsNotSupported:
+            pass
 
     def _removePathnames(self, names):
         """
