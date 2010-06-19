@@ -405,13 +405,23 @@ class DarcsSourceWorkingDir(UpdatableSourceWorkingDir):
             # My initial implementation of --xml-output on darcs pull
             # wasn't perfect, as it was printing useless verbosity before
             # and after the actual xml. Around 2.0.0+275 I removed that...
+            # Darcs 2.4 however still emits the first line :-\
 
-            line = output.readline() # Would pull from "/home/lele/wip/darcs-2.0"...
+            line = output.readline()
             if line.startswith('Would pull from '):
-                # Skip the first two lines and drop the last two as well
-                output.readline() # Would pull the following changes:
-                xml = StringIO(''.join(output.readlines()[:-2]))
-                xml.seek(0)
+                # Ok, this is either darcs>2.4 or my early even noisier implementation
+                pos = output.tell()
+                line = output.readline()
+                if line.startswith('Would pull the following changes:'):
+                    # This is early implementation: skip the first two lines
+                    # (discarded above) and drop the last two as well
+                    xml = StringIO(''.join(output.readlines()[:-2]))
+                    xml.seek(0)
+                else:
+                    # This is darcs>2.4, go back to the second line,
+                    # thus ignoring only the first
+                    output.seek(pos)
+                    xml = output
             else:
                 output.seek(0)
                 xml = output
