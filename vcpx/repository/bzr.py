@@ -319,25 +319,36 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         Initial checkout of upstream branch, equivalent of 'bzr branch -r',
         and return the last changeset.
         """
-        parent_bzrdir = BzrDir.open(self.repository.repository)
-        parent_branch = parent_bzrdir.open_branch()
 
-        if revision == "INITIAL":
-            try:
-                revid = parent_branch.get_rev_id(1)
-            except NoSuchRevision:
-                return None
-        elif revision == "HEAD":
-            revid = None
+        from os.path import join, exists
+
+        if exists(join(self.repository.basedir, '.bzr')):
+            bzrdir = BzrDir.open(self.repository.basedir)
+            branch = bzrdir.open_branch()
+            self._working_tree = bzrdir.open_workingtree()
+            revid = self._working_tree.last_revision()
+            return self._changesetFromRevision(branch, revid)
         else:
-            revid = revision
+            parent_bzrdir = BzrDir.open(self.repository.repository)
+            parent_branch = parent_bzrdir.open_branch()
 
-        self.log.info('Extracting %r out of %r in %r...',
-                      revid, parent_bzrdir.root_transport.base, self.repository.basedir)
-        bzrdir = parent_bzrdir.sprout(self.repository.basedir, revid)
-        self._working_tree = bzrdir.open_workingtree()
+            if revision == "INITIAL":
+                try:
+                    revid = parent_branch.get_rev_id(1)
+                except NoSuchRevision:
+                    return None
+            elif revision == "HEAD":
+                revid = None
+            else:
+                revid = revision
 
-        return self._changesetFromRevision(parent_branch, revid)
+            self.log.info('Extracting %r out of %r in %r...',
+                          revid, parent_bzrdir.root_transport.base,
+                          self.repository.basedir)
+            bzrdir = parent_bzrdir.sprout(self.repository.basedir, revid)
+            self._working_tree = bzrdir.open_workingtree()
+
+            return self._changesetFromRevision(parent_branch, revid)
 
     #################################
     ## SynchronizableTargetWorkingDir
