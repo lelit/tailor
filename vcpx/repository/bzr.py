@@ -247,7 +247,7 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
 
         return BzrChangeset(revision.revision_id,
                             datetime.fromtimestamp(revision.timestamp, timezone),
-                            revision.committer,
+                            revision.get_apparent_author(),
                             revision.message,
                             entries)
 
