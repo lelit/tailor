@@ -123,8 +123,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
                     changelog = changelog[1:]
         if changelog:
             logmessage.append(changelog)
-
-        if not logmessage:
+        else:
             logmessage.append('Unnamed patch')
 
         cmd = self.repository.command("record", "--all", "--pipe", "--ignore-times")
