@@ -17,7 +17,7 @@ from vcpx.changes import ChangesetEntry, Changeset
 from vcpx.shwrap import ExternalCommand, PIPE, STDOUT
 from vcpx.source import UpdatableSourceWorkingDir, ChangesetApplicationFailure, \
                         GetUpstreamChangesetsFailure
-from vcpx.target import TargetInitializationFailure
+from vcpx.target import SynchronizableTargetWorkingDir, TargetInitializationFailure
 from vcpx.tzinfo import UTC
 
 
@@ -71,7 +71,13 @@ class DarcsChangeset(Changeset):
     def setLog(self, log):
         """Strip away the "Ignore-this:" noise from the changelog."""
 
-        super(DarcsChangeset, self).setLog(self.ignore_this.sub('', log))
+        log = self.ignore_this.sub('', log)
+        if not SynchronizableTargetWorkingDir.PATCH_NAME_FORMAT:
+            if log:
+                log = self.revision + '\n' + log
+            else:
+                log = self.revision
+        super(DarcsChangeset, self).setLog(log)
 
     def addEntry(self, entry, revision):
         """
