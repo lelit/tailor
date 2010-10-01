@@ -63,6 +63,7 @@ class SynchronizableTargetWorkingDir(WorkingDir):
     PATCH_NAME_FORMAT = '[%(project)s @ %(revision)s]'
     """
     The format string used to compute the patch name, used by underlying VCS.
+    When empty, use the original changelog.
     """
 
     REMOVE_FIRST_LOG_LINE = False
@@ -75,6 +76,9 @@ class SynchronizableTargetWorkingDir(WorkingDir):
         Return a tuple (patchname, changelog) interpolating changeset's
         information with the template above.
         """
+
+        if not self.PATCH_NAME_FORMAT:
+            return changeset.log, ''
 
         if changeset.log == '':
             firstlogline = 'Empty log message'
