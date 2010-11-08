@@ -917,6 +917,59 @@ metadir : string
 
   *_darcs* by default.
 
+  It allows you to specify the location of the _darcs repository,
+  which makes it possible to have the following structure::
+
+      - target_repo
+        | _darcs
+        | source_repo_A
+          | source_repo_C
+          | source_repo_D
+        | source_repo_B
+          | source_repo_E
+
+  Every source_repo (from A to E) is registered in target_repo, merging
+  them in a single darcs repository (but you still need five target
+  repository in the config file, to specify each metadir).
+
+  Here is a sample config (from a real-world example) to give you and idea
+  of how I use it (with a "disjunct working directories" scheme)::
+
+      [DEFAULT]
+      projects = cil,ocamlutil
+      root-directory = /tmp/test
+
+      [cil]
+      source = svn:cil
+      start-revision = 10792
+      state-file = cil.tailor.state
+      target = darcs:cil
+      filter-badchars = True
+
+      [ocamlutil]
+      source = svn:ocamlutil
+      start-revision = 10719
+      state-file = ocamlutil.tailor.state
+      target = darcs:ocamlutil
+      filter-badchars = True
+
+      [svn:cil]
+      module = /trunk/cil
+      repository = svn://hal.cs.berkeley.edu/home/svn/projects
+      subdir = cil-svn
+
+      [darcs:cil]
+      subdir = cil-patched
+
+      [svn:ocamlutil]
+      module = /trunk/ocamlutil
+      repository = svn://hal.cs.berkeley.edu/home/svn/projects
+      subdir = cil-svn/ocamlutil
+
+      [darcs:ocamlutil]
+      subdir = cil-patched/ocamlutil
+      metadir = ../_darcs
+
   .. note:: This setting must not be mistaken with the ``--repodir`` option
             from darcs. It should always match the following regexp:
             ``(../)*_darcs``, since the metadir must be somewhere above
