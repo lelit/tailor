@@ -296,7 +296,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         Tweak the default settings of the repository.
         """
 
-        motd = open(join(self.repository.metadir, 'prefs/motd'), 'w')
+        motd = open(join(self.repository.metadir, 'prefs', 'motd'), 'w')
         motd.write(MOTD % str(source_repo))
         motd.close()
 
