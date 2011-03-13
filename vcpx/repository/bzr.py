@@ -211,7 +211,6 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         """
         from datetime import datetime
         from vcpx.tzinfo import FixedOffset, UTC
-        from bzrlib import version_info
 
         revision = branch.repository.get_revision(revision_id)
         deltatree = branch.get_revision_delta(branch.revision_id_to_revno(revision_id))
@@ -246,12 +245,11 @@ class BzrWorkingDir(UpdatableSourceWorkingDir, SynchronizableTargetWorkingDir):
         else:
             timezone = UTC
 
-        if version_info > (2,3):
-            author = revision.get_apparent_authors()[0]
-        else:
-            author = revision.get_apparent_author()
+        timestamp = datetime.fromtimestamp(revision.timestamp, timezone)
+        author = revision.get_apparent_authors()[0]
+
         return BzrChangeset(revision.revision_id,
-                            datetime.fromtimestamp(revision.timestamp, timezone),
+                            timestamp,
                             author,
                             revision.message,
                             entries)
