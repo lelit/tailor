@@ -271,6 +271,15 @@ def changesets_from_svnlog(log, repository, chunksize=2**15):
 
         def endElement(self, name):
             if name == 'logentry':
+                # Consider the case of "restricted view" on
+                # repository: as reported, when the user cannot view
+                # all the entries in a changeset, it still emit an
+                # empty logentry, containing just the revision and
+                # nothing else. Just skip those.
+                if len(self.current) == 1:
+                    self.current = None
+                    return
+
                 # Sort the paths to make tests easier
                 self.current['entries'].sort(lambda a,b: cmp(a.name, b.name))
 
