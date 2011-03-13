@@ -110,7 +110,10 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
         logmessage = []
 
         logmessage.append(date.astimezone(UTC).strftime('%Y/%m/%d %H:%M:%S UTC'))
-        logmessage.append(author)
+        # Paranoid protection against newlines in author
+        logmessage.append(''.join(author.split('\n')))
+        # Patchname cannot start with a newline
+        patchname = patchname.lstrip('\n')
         if patchname:
             logmessage.append(patchname)
         else:
@@ -121,10 +124,11 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             if changelog:
                 while changelog.startswith('\n'):
                     changelog = changelog[1:]
+            if not changelog:
+                # No patch name and no changelog: force non empty one
+                logmessage.append(' ')
         if changelog:
             logmessage.append(changelog)
-        else:
-            logmessage.append('Unnamed patch')
 
         cmd = self.repository.command("record", "--all", "--pipe", "--ignore-times")
         if not entries:
