@@ -118,7 +118,7 @@ class DarcsTargetWorkingDir(SynchronizableTargetWorkingDir):
             # effect and the changelog starts with newlines: discard
             # those, otherwise darcs will complain about invalid patch
             # name
-            if changelog and changelog.startswith('\n'):
+            if changelog:
                 while changelog.startswith('\n'):
                     changelog = changelog[1:]
         if changelog:
