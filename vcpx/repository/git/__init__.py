@@ -142,6 +142,9 @@ class GitExternalCommand(ExternalCommand):
         for each execute().
         """
 
+	#escape % signs in the command
+	command = [c.replace("%","%%") for c in command]
+
         self.repo = repo
         return ExternalCommand.__init__(self, command, cwd)
 
